@@ -25,7 +25,8 @@ export default function BookingConfirmation(
                         Booking Confirmation
                     </AlertDialogTitle>
                     <AlertDialogCancel
-                        className="body-sm border-transparent shadow-transparent"
+                        className="body-sm border-transparent shadow-transparent
+                        hover:text-gray-4"
                     >
                         ✕
                     </AlertDialogCancel>
@@ -42,13 +43,14 @@ export default function BookingConfirmation(
                         <AlertDialogCancel asChild>
                             <Button
                                 variant="outline"
-                                className="bg-orange-50 text-orange-500 hover:bg-orange-100 border-0"
+                                className="bg-orange-1 text-orange-500 hover:bg-orange-2 
+                                border-0"
                             >
                                 Cancel
                             </Button>
                         </AlertDialogCancel>
                         <Button
-                            className="bg-orange-500 hover:bg-orange-600 text-white"
+                            className="bg-orange-5 hover:bg-orange-6 text-white"
                             onClick={onConfirm}
                         >
                             Yes, I’m sure
