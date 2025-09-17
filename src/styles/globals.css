@@ -4,10 +4,10 @@
 --------------------------------------------------------- */
 
 @import "tailwindcss";
-@import "./tokens.css";
+@import "./token.css";
 
 
-@source "../app/**/*.{js,ts,jsx,tsx}" "../components/**/*.{js,ts,jsx,tsx}" "../pages/**/*.{js,ts,jsx,tsx}";
+@source "../**/*.{js,ts,jsx,tsx,mdx}";
 
 /* === theme tokens (semantic) === */
 @theme {
