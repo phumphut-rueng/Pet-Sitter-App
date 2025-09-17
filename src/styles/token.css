@@ -1,0 +1,80 @@
+/* ---------------------------------------------------------
+   pet-sitter: base design tokens (light/dark)
+   ถ้าทีมเปลี่ยนพาเลต เปลี่ยนที่ไฟล์นี้ไฟล์เดียวพอ
+--------------------------------------------------------- */
+
+:root {
+    /* surfaces */
+    --bg: #FFFFFF;
+    --fg: #323640;
+    --muted: #F6F6F9;
+    --muted-fg: #7B7E8F;
+    --border: #DCDFED;
+  
+    /* brand */
+    --brand: #FF7037;
+    --on-brand: #FFFFFF;
+  
+    /* secondary surface ตาม figma */
+    --secondary: #FFF1EC;
+    --on-secondary: #E44A0C;
+  
+    /* states */
+    --success: #1CCD83;
+    --warning: #FBBC04;
+    --error:   #E44A0C;
+    --disabled:#AEB1C3;
+  
+    /* status */
+    --status-waiting-confirm: #FBBC04;
+    --status-waiting-service:#76D0FC;
+    --status-in-service:     #3A3B46;
+    --status-success:        #1CCD83;
+    --status-canceled:       #EA1010;
+  
+    /* report */
+    --report-new:      #F59E0B;
+    --report-pending:  #FBBC04;
+    --report-resolved: #22C55E;
+    --report-canceled: #EA1010;
+  
+    /* sitter */
+    --sitter-waiting-approve:#F59E0B;
+    --sitter-approved:       #1CCD83;
+    --sitter-rejected:       #EA1010;
+  
+    /* pet/social */
+    --pet-dog:#FF7037; --pet-cat:#5B5D6F; --pet-bird:#76D0FC; --pet-rabbit:#A3E635;
+    --facebook:#1877F2; --google-blue:#4285F4; --google-green:#34A853;
+    --google-red:#EA4335; --google-yellow:#FBBC04;
+  
+    /* type & radii & shadow */
+    --font-sans-base: "Satoshi", ui-sans-serif, system-ui, -apple-system,
+                      "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans";
+  
+    --text-display: 56px/64px var(--font-sans-base);
+    --text-h1: 36px/44px var(--font-sans-base);
+    --text-h2: 24px/32px var(--font-sans-base);
+    --text-h3: 20px/28px var(--font-sans-base);
+    --text-h4: 18px/26px var(--font-sans-base);
+    --text-body1: 16px/28px var(--font-sans-base);
+    --text-body2: 14px/24px var(--font-sans-base);
+    --text-body3: 12px/20px var(--font-sans-base);
+  
+    --r-sm: .375rem; --r-md: .75rem; --r-lg: 1rem;
+  
+    --shadow-sm-base: 0 1px 2px rgba(0,0,0,.05);
+    --shadow-md-base: 0 4px 6px rgba(0,0,0,.10);
+    --shadow-lg-base: 0 10px 15px rgba(0,0,0,.15);
+  }
+  
+  /* --- Dark (override ) --- */
+  :root.dark {
+    color-scheme: dark;
+    --bg:#323640;          
+    --fg:#F9FAFB;
+    --muted:#3A3B46;
+    --muted-fg:#C8CCDB;
+    --border:#454754;
+  }
+  
