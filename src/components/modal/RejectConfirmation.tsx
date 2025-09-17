@@ -51,13 +51,13 @@ export default function RejectConfirmation(
                         <AlertDialogCancel asChild>
                             <Button
                                 variant="outline"
-                                className="bg-orange-50 text-orange-500 hover:bg-orange-100 border-0"
+                                className="bg-orange-50 text-orange-500 hover:bg-orange-2 border-0"
                             >
                                 Cancel
                             </Button>
                         </AlertDialogCancel>
                         <Button
-                            className="bg-orange-500 hover:bg-orange-600 text-white"
+                            className="bg-orange-5 hover:bg-orange-6 text-white"
                             onClick={onReject}
                         >
                             Reject
