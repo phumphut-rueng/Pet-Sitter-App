@@ -18,6 +18,7 @@
   --orange-4: #FF986F;
   --orange-3: #FFB899;
   --orange-2: #FFD5C2;  /* lighter */
+  --orange-1: #FFF1EC;  /* lightest - พื้นอ่อน */
 
   /* Accent Colors */
   --yellow: #FFCA62;
@@ -33,9 +34,12 @@
   --pink-bg:   #FFF0F1;
   --orange-bg: #FFF1EC;
 
+  /*  alias สำหรับ legacy secondary */
+  --brand-bg: var(--orange-bg);
+
   /* Pet Colors */
   --dog:    var(--orange-5);
-  --cat:    var(--gray-7);  
+  --cat:    var(--gray-7);
   --bird:   var(--blue);
   --rabbit: #A3E635;
 
@@ -105,4 +109,3 @@
   --muted-text: #C8CCDB;
   --border: #454754;
 }
-
