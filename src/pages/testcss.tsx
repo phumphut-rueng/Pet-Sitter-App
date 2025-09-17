@@ -235,7 +235,7 @@ export default function ThemeSanity() {
           <div className="p-3 rounded bg-approved text-white text-center font-bold">Approved</div>
           <div className="p-3 rounded bg-rejected text-white text-center font-bold">Rejected</div>
         </div>
-        
+
         {/* Text variants */}
         <div className="space-y-1">
           <p className="text-success">✅ text-success</p>
