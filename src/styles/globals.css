@@ -1,99 +1,178 @@
-/* ---------------------------------------------------------
-   pet-sitter: globals + tailwind theme mapping
-   trip: map จาก base tokens  theme tokens (ห้ามอ้างตัวเอง)
---------------------------------------------------------- */
+/* =========================================================
+   globals.css • Tailwind v4 + Theme Mapping (ใช้ชื่อสั้น ๆ)
+========================================================= */
 
 @import "tailwindcss";
 @import "./token.css";
 
-
 @source "../**/*.{js,ts,jsx,tsx,mdx}";
 
-/* === theme tokens (semantic) === */
+/* ---------- TAILWIND THEME MAPPING ---------- */
 @theme {
-  /* surfaces */
-  --color-background: var(--bg);
-  --color-foreground: var(--fg);
+  /* Base Surfaces */
+  --color-bg: var(--bg);
+  --color-text: var(--text);
   --color-muted: var(--muted);
-  --color-muted-foreground: var(--muted-fg);
+  --color-muted-text: var(--muted-text);
   --color-border: var(--border);
 
-  /* brand & secondary */
-  --color-primary: var(--brand);
-  --color-primary-foreground: var(--on-brand);
-  --color-secondary: var(--secondary);
-  --color-secondary-foreground: var(--on-secondary);
+  /* Brand */
+  --color-brand: var(--brand);
+  --color-brand-text: var(--brand-text);
+  --color-brand-dark: var(--orange-6);
+  --color-brand-light: var(--orange-2);
+  --color-brand-bg: var(--orange-bg);
 
-  /* states */
+  /* Gray Scale */
+  --color-gray-9: var(--gray-9);
+  --color-gray-7: var(--gray-7);
+  --color-gray-6: var(--gray-6);
+  --color-gray-4: var(--gray-4);
+  --color-gray-2: var(--gray-2);
+  --color-gray-1: var(--gray-1);
+  --color-white: var(--white);
+
+  /* Brown Scale (เพิ่ม) */
+  --color-brown-700: #8B4513;
+  --color-brown-600: #A0522D;
+  --color-brown-500: #CD853F;
+  --color-brown-400: #DEB887;
+  --color-brown-300: #F5DEB3;
+  --color-brown-200: #FAF0E6;
+  --color-brown-100: #FDF8F0;
+
+  /* Orange Scale (เพิ่ม) */
+  --color-orange: var(--orange-5);
+  --color-orange-light: var(--orange-3);
+
+  /* Green Scale (เพิ่ม) */  
+  --color-green: var(--green);
+  --color-green-light: var(--green-bg);
+
+  /* Accents */
+  --color-yellow: var(--yellow);
+  --color-blue: var(--blue);
+  --color-green: var(--green);
+  --color-pink: var(--pink);
+  --color-red: var(--red);
+
+  /* Green Scale */ 
+  --color-green: var(--green);
+  --color-green-light: var(--green-bg);
+
+  /* Accent Backgrounds */
+  --color-yellow-bg: var(--yellow-bg);
+  --color-blue-bg: var(--blue-bg);
+  --color-green-bg: var(--green-bg);
+  --color-pink-bg: var(--pink-bg);
+
+  /* Status */
+  --color-waiting: var(--waiting);
+  --color-active: var(--active);
   --color-success: var(--success);
-  --color-warning: var(--warning);
-  --color-error:   var(--error);
-  --color-disabled:var(--disabled);
+  --color-canceled: var(--canceled);
+  --color-pending: var(--pending);
+  --color-approved: var(--approved);
+  --color-rejected: var(--rejected);
 
-  /* status/report/sitter */
-  --color-status-waiting-confirm: var(--status-waiting-confirm);
-  --color-status-waiting-service: var(--status-waiting-service);
-  --color-status-in-service: var(--status-in-service);
-  --color-status-success: var(--status-success);
-  --color-status-canceled: var(--status-canceled);
+  /* Pets */
+  --color-dog: var(--dog);
+  --color-cat: var(--cat);
+  --color-bird: var(--bird);
+  --color-rabbit: var(--rabbit);
 
-  --color-report-new: var(--report-new);
-  --color-report-pending: var(--report-pending);
-  --color-report-resolved: var(--report-resolved);
-  --color-report-canceled: var(--report-canceled);
-
-  --color-sitter-waiting-approve: var(--sitter-waiting-approve);
-  --color-sitter-approved: var(--sitter-approved);
-  --color-sitter-rejected: var(--sitter-rejected);
-
-  /* pet/social */
-  --color-pet-dog: var(--pet-dog);
-  --color-pet-cat: var(--pet-cat);
-  --color-pet-bird: var(--pet-bird);
-  --color-pet-rabbit: var(--pet-rabbit);
-
+  /* Social */
   --color-facebook: var(--facebook);
   --color-google-blue: var(--google-blue);
   --color-google-green: var(--google-green);
   --color-google-red: var(--google-red);
   --color-google-yellow: var(--google-yellow);
 
-  /* focus ring (ใช้กับ ring-* ของ tailwind/shadcn) */
+  /* Legacy Compatibility */
+  --color-background: var(--bg);
+  --color-foreground: var(--text);
+  --color-primary: var(--brand);
+  --color-primary-foreground: var(--brand-text);
+  --color-secondary: var(--brand-bg);
+  --color-secondary-foreground: var(--orange-6);
+  --color-card: var(--bg);
+  --color-card-foreground: var(--text);
+
+  /* Focus Ring คือกรอบเรืองแสง */
   --ring: var(--brand);
 
-  /* misc */
-  --font-sans: var(--font-sans-base);
+  /* Typography */
+  --font-sans: var(--font);
 
-  --radius-sm: var(--r-sm);
-  --radius-md: var(--r-md);
-  --radius-lg: var(--r-lg);
+  /* Text Sizes (for font-[var(--text-lg)] usage) */
+  --text-display: var(--text-xl);
+  --text-h1: var(--text-lg);
+  --text-h2: var(--text-md);
+  --text-h3: var(--text-sm);
+  --text-h4: var(--text-xs);
+  --text-body1: var(--text-base);
+  --text-body2: var(--text-sm2);
+  --text-body3: var(--text-xs2);
 
-  --shadow-sm: var(--shadow-sm-base);
-  --shadow-md: var(--shadow-md-base);
-  --shadow-lg: var(--shadow-lg-base);
+  /* Spacing */
+  --radius-sm: var(--radius-sm);
+  --radius-md: var(--radius);
+  --radius-lg: var(--radius-lg);
 
-  /* เผื่ออยากใช้ text tokens ตรงๆ ใน CSS */
-  --text-display: var(--text-display);
-  --text-h1: var(--text-h1);
-  --text-h2: var(--text-h2);
-  --text-h3: var(--text-h3);
-  --text-h4: var(--text-h4);
-  --text-body1: var(--text-body1);
-  --text-body2: var(--text-body2);
-  --text-body3: var(--text-body3);
+  /* Shadows */
+  --shadow-sm: var(--shadow-sm);
+  --shadow-md: var(--shadow);
+  --shadow-lg: var(--shadow-lg);
 }
 
-/* --- base resets --- */
-*, *::before, *::after { box-sizing: border-box; }
-html, body, #__next { height: 100%; }
+/* ---------- BASE STYLES ---------- */
+*, *::before, *::after { 
+  box-sizing: border-box; 
+}
+
+html, body, #__next { 
+  height: 100%; 
+}
 
 body {
   margin: 0;
   font-family: var(--font-sans);
-  background: var(--color-background);
-  color: var(--color-foreground);
+  background: var(--color-bg);
+  color: var(--color-text);
   -webkit-font-smoothing: antialiased;
 }
 
-::selection { background: var(--color-primary); color: var(--color-primary-foreground); }
+::selection { 
+  background: var(--color-brand); 
+  color: var(--color-brand-text); 
+}
 
+/* ---------- TYPOGRAPHY UTILITIES ---------- */
+@layer utilities {
+  .display { font: var(--text-xl); font-weight: 900; }
+  .h1 { font: var(--text-lg); font-weight: 700; }
+  .h2 { font: var(--text-md); font-weight: 700; }
+  .h3 { font: var(--text-sm); font-weight: 700; }
+  .h4 { font: var(--text-xs); font-weight: 700; }
+  .body { font: var(--text-base); font-weight: 500; }
+  .body-sm { font: var(--text-sm2); font-weight: 500; }
+  .caption { font: var(--text-xs2); font-weight: 500; }
+
+  /* Quick Color Utilities */
+  .text-brand { color: var(--brand); }
+  .bg-brand { background: var(--brand); }
+  .border-brand { border-color: var(--brand); }
+  
+  .text-muted { color: var(--muted-text); }
+  .bg-muted { background: var(--muted); }
+  
+  .text-success { color: var(--success); }
+  .text-waiting { color: var(--waiting); }
+  .text-error { color: var(--red); }
+  .text-pending { color: var(--pending); }
+
+  .bg-success { background: var(--success); }
+  .bg-waiting { background: var(--waiting); }
+  .bg-error { background: var(--red); }
+  .bg-pending { background: var(--pending); }
+}

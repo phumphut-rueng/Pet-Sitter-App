@@ -1,80 +1,108 @@
-/* ---------------------------------------------------------
-   pet-sitter: base design tokens (light/dark)
-   ถ้าทีมเปลี่ยนพาเลต เปลี่ยนที่ไฟล์นี้ไฟล์เดียวพอ
---------------------------------------------------------- */
+/* =========================================================
+   token.css • Base Design Tokens 
+========================================================= */
 
 :root {
-    /* surfaces */
-    --bg: #FFFFFF;
-    --fg: #323640;
-    --muted: #F6F6F9;
-    --muted-fg: #7B7E8F;
-    --border: #DCDFED;
+  /* Colors - Gray Scale */
+  --gray-9: #3A3B46;   /* darkest */
+  --gray-7: #5B5D6F;
+  --gray-6: #7B7E8F;
+  --gray-4: #AEB1C3;
+  --gray-2: #DCDFED;
+  --gray-1: #F6F6F9;   /* lightest */
+  --white:  #FFFFFF;
+
+  /* Brand Colors */
+  --orange-6: #E44A0C;  /* darker */
+  --orange-5: #FF7037;  /* main brand */
+  --orange-4: #FF986F;
+  --orange-3: #FFB899;
+  --orange-2: #FFD5C2;  /* lighter */
+
+  /* Accent Colors */
+  --yellow: #FFCA62;
+  --blue:   #76D0FC;
+  --green:  #1CCD83;
+  --pink:   #FA8AC0;
+  --red:    #EA1010;
+
+  /* Soft Backgrounds */
+  --yellow-bg: #FFF5EC;
+  --blue-bg:   #ECFBFF;
+  --green-bg:  #E7FDF4;
+  --pink-bg:   #FFF0F1;
+  --orange-bg: #FFF1EC;
+
+  /* Pet Colors */
+  --dog:    var(--orange-5);
+  --cat:    var(--gray-7);  
+  --bird:   var(--blue);
+  --rabbit: #A3E635;
+
+  /* Status Colors */  
+  --waiting:   #FBBC04;
+  --active:    var(--gray-9);
+  --success:   var(--green);
+  --canceled:  var(--red);
+  --pending:   var(--blue);
+  --approved:  var(--green);
+  --rejected:  var(--red);
+
+  /* Brown Scale */
+  --brown-700: #8B4513;
+  --brown-600: #A0522D; 
+  --brown-500: #CD853F;
+  --brown-400: #DEB887;
+  --brown-300: #F5DEB3;
+  --brown-200: #FAF0E6;
+  --brown-100: #FDF8F0;
+
+  /* Social Colors */
+  --facebook: #1877F2;
+  --google-blue:  #4285F4;
+  --google-green: #34A853;
+  --google-red:   #EA4335;
+  --google-yellow:#FBBC04;
+
+  /* Typography */
+  --font: "Satoshi", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto;
   
-    /* brand */
-    --brand: #FF7037;
-    --on-brand: #FFFFFF;
-  
-    /* secondary surface ตาม figma */
-    --secondary: #FFF1EC;
-    --on-secondary: #E44A0C;
-  
-    /* states */
-    --success: #1CCD83;
-    --warning: #FBBC04;
-    --error:   #E44A0C;
-    --disabled:#AEB1C3;
-  
-    /* status */
-    --status-waiting-confirm: #FBBC04;
-    --status-waiting-service:#76D0FC;
-    --status-in-service:     #3A3B46;
-    --status-success:        #1CCD83;
-    --status-canceled:       #EA1010;
-  
-    /* report */
-    --report-new:      #F59E0B;
-    --report-pending:  #FBBC04;
-    --report-resolved: #22C55E;
-    --report-canceled: #EA1010;
-  
-    /* sitter */
-    --sitter-waiting-approve:#F59E0B;
-    --sitter-approved:       #1CCD83;
-    --sitter-rejected:       #EA1010;
-  
-    /* pet/social */
-    --pet-dog:#FF7037; --pet-cat:#5B5D6F; --pet-bird:#76D0FC; --pet-rabbit:#A3E635;
-    --facebook:#1877F2; --google-blue:#4285F4; --google-green:#34A853;
-    --google-red:#EA4335; --google-yellow:#FBBC04;
-  
-    /* type & radii & shadow */
-    --font-sans-base: "Satoshi", ui-sans-serif, system-ui, -apple-system,
-                      "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans";
-  
-    --text-display: 56px/64px var(--font-sans-base);
-    --text-h1: 36px/44px var(--font-sans-base);
-    --text-h2: 24px/32px var(--font-sans-base);
-    --text-h3: 20px/28px var(--font-sans-base);
-    --text-h4: 18px/26px var(--font-sans-base);
-    --text-body1: 16px/28px var(--font-sans-base);
-    --text-body2: 14px/24px var(--font-sans-base);
-    --text-body3: 12px/20px var(--font-sans-base);
-  
-    --r-sm: .375rem; --r-md: .75rem; --r-lg: 1rem;
-  
-    --shadow-sm-base: 0 1px 2px rgba(0,0,0,.05);
-    --shadow-md-base: 0 4px 6px rgba(0,0,0,.10);
-    --shadow-lg-base: 0 10px 15px rgba(0,0,0,.15);
-  }
-  
-  /* --- Dark (override ) --- */
-  :root.dark {
-    color-scheme: dark;
-    --bg:#323640;          
-    --fg:#F9FAFB;
-    --muted:#3A3B46;
-    --muted-fg:#C8CCDB;
-    --border:#454754;
-  }
-  
+  --text-xl:  88px/96px var(--font);  /* Display */
+  --text-lg:  56px/64px var(--font);  /* H1 */
+  --text-md:  36px/44px var(--font);  /* H2 */
+  --text-sm:  24px/32px var(--font);  /* H3 */
+  --text-xs:  20px/28px var(--font);  /* H4 */
+  --text-base: 18px/26px var(--font); /* Body 1 */
+  --text-sm2:  16px/28px var(--font); /* Body 2 */
+  --text-xs2:  14px/24px var(--font); /* Body 3 */
+
+  /* Spacing */
+  --radius: .75rem;
+  --radius-sm: .375rem;
+  --radius-lg: 1rem;
+
+  /* Shadows */
+  --shadow: 0 4px 6px rgba(0,0,0,.10);
+  --shadow-sm: 0 1px 2px rgba(0,0,0,.05);
+  --shadow-lg: 0 10px 15px rgba(0,0,0,.15);
+
+  /* Semantic Base (Light Mode) */
+  --bg: var(--white);
+  --text: var(--gray-9);
+  --muted: var(--gray-1);
+  --muted-text: var(--gray-6);
+  --border: var(--gray-2);
+  --brand: var(--orange-5);
+  --brand-text: var(--white);
+}
+
+/* Dark Mode Override */
+:root.dark {
+  color-scheme: dark;
+  --bg: var(--gray-9);
+  --text: #F9FAFB;
+  --muted: var(--gray-9);
+  --muted-text: #C8CCDB;
+  --border: #454754;
+}
+
