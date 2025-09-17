@@ -1,23 +1,13 @@
 import { useState } from "react";
-import RejectConfirmation from "@/components/modal/RejectConfirmation";
+import ProgressBar from "@/components/progressStep/ProgressBar";
+import ProgressStep from "@/components/progressStep/ProgressStep";
 
 export default function register() {
-  const [isOpenAlert, setisOpenAlert] = useState(false);
+  // const [isOpenAlert, setisOpenAlert] = useState(false);
 
   return (
     <>
-      <button
-        onClick={() => { setisOpenAlert(true) }}
-      >
-        Click!!!
-      </button>
 
-      {/* <BookingConfirmation open={isOpenAlert} onOpenChange={setisOpenAlert} /> */}
-      <RejectConfirmation
-        open={isOpenAlert}
-        onOpenChange={setisOpenAlert}
-        onReject={() => { }}
-      />
     </>
   );
 }
