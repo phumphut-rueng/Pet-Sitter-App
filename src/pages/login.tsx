@@ -58,7 +58,7 @@ export default function Login() {
             </div>
 
             {/* signin button */}
-            <PrimaryButton text="Login" bgColor="primary"
+            <PrimaryButton text="Login" bgColor="primary" className="w-full"/>
 
             {/* register prompt */}
             <div className="text-center">
