@@ -69,7 +69,7 @@
   --google-yellow:#FBBC04;
 
   /* Typography */
-  --font: "Satoshi", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto;
+  --font: var(--font-satoshi), var(--font-noto-thai), ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Arial;
   
   --text-xl:  88px/96px var(--font);  /* Display */
   --text-lg:  56px/64px var(--font);  /* H1 */
@@ -109,3 +109,4 @@
   --muted-text: #C8CCDB;
   --border: #454754;
 }
+
