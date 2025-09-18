@@ -1,14 +1,11 @@
 import { Html, Head, Main, NextScript } from "next/document";
+import { satoshi, notoThai } from "@/fonts";
 
 export default function Document() {
   return (
-    <Html lang="en">
+    <Html lang="th" className={`${satoshi.variable} ${notoThai.variable}`}>
       <Head />
-      <body className="antialiased">
-        <Main />
-        <NextScript />
-      </body>
+      <body><Main /><NextScript /></body>
     </Html>
   );
 }
-

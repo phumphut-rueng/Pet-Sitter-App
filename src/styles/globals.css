@@ -1,5 +1,5 @@
 /* ---------------------------------------------------------
-  🔎 Cheat-sheet (Tailwind  + Theme Mapping)
+  🔎 Cheat-sheet (Tailwind + Theme Mapping)
   ใช้เป็นคู่มืออ่านคลาส + ตัวแปรที่เจอบ่อยในโปรเจกต์นี้
 ------------------------------------------------------------
 
@@ -13,38 +13,25 @@
 เขียนแบบนี้อ่านง่ายและไม่เตือนซ้ำซ้อนจาก IntelliSense:
   class="ring-2 ring-brand ring-offset-2 ring-offset-bg"
 
-(เลี่ยงเขียน "ring" เปล่าๆ คู่กับ "ring-2" เพราะตัวปลั๊กอินบางตัวมองว่าทับ property เดียวกัน)
+(เลี่ยงเขียน "ring" เปล่าๆ คู่กับ "ring-2" เพราะปลั๊กอินบางตัวจะเตือนว่าเขียน property เดียวกัน)
 
 [สีพื้นฐาน & การแม็ป @theme]
-- bg-bg / text-text / border-border      → พื้น/ตัวอักษร/เส้นขอบหลัก
-- bg-card / text-card-foreground         → card surface & text
-- bg-muted / text-muted                  → พื้นอ่อน/ข้อความอ่อน
-- bg-primary / text-primary-foreground   → ปุ่มหลัก (เราใช้ชื่อย่อ bg-brand ก็มี)
-- bg-secondary / text-secondary-foreground → พื้นส้มอ่อน (ตาม Figma)
+- bg-bg / text-text / border-border
+- bg-card / text-card-foreground
+- bg-muted / text-muted
+- bg-primary / text-primary-foreground
+- bg-secondary / text-secondary-foreground
 
-[สเกลสีแบรนด์]
-- bg-brand-600 / 500 / 400 / 300 / 200 / 50
-  600 = เข้มสุด (#E44A0C) → 50 = อ่อนสุด (#FFF1EC)
+[สเกลสีแบรนด์/ส้ม]
+- bg-orange-6..1 / text-orange-6..1
+- bg-orange-50 (พื้นส้มอ่อน)
 
 [โทเคนฟอนต์แบบสั้น]
 - .display / .h1 / .h2 / .h3 / .h4 / .body / .body-sm / .caption
-  (font-size/line-height/weight ตรง Figma แล้ว ไม่ต้องจำตัวเลข)
-
-[รัศมี & เงา (ถ้าอยากยึดโทเคน)]
-- rounded-[var(--radius-md)]    : รัศมีมุมจากโทเคน
-- shadow-[var(--shadow-md)]     : เงาตามโทเคน
-  (เลือกใช้ rounded-md / shadow-md ของ Tailwind ปกติก็ได้ ถ้าไม่ต้องการผูกกับโทเคน)
 
 [Dark mode]
-- ใช้คลาส .dark บน <html> เพื่อสลับชุดสีที่ :root.dark กำหนด
-  document.documentElement.classList.add('dark')
-
-[TIPS]
-- สีตระกูลเทาใช้ gray-* (อเมริกัน) เช่น text-gray-6 / bg-gray-2
-- เรียก asset ใน public ใช้ path เริ่มด้วย / เช่น "/images/pets/xxx.svg"
-- ถ้าใช้ SVG ใน <Image> แนะนำ width/height + object-contain (ไม่ใช้ fill)
+- ใส่ .dark บน <html> เพื่อสลับชุดสี :root.dark
 -----------------------------------------------------------*/
-
 
 @import "tailwindcss";
 @import "./token.css";
@@ -66,16 +53,6 @@
   --color-brand-dark: var(--orange-6);
   --color-brand-light: var(--orange-2);
   --color-brand-bg: var(--orange-bg);
-
-  /*  NEW: Orange scale เรียกแบบ gray-*  */
-  --color-orange-6: var(--orange-6); /* #E44A0C */
-  --color-orange-5: var(--orange-5); /* #FF7037 */
-  --color-orange-4: var(--orange-4); /* #FF986F */
-  --color-orange-3: var(--orange-3); /* #FFB899 */
-  --color-orange-2: var(--orange-2); /* #FFD5C2 */
-  --color-orange-1: var(--orange-1); /* #FFF1EC */
-  --color-orange-50: var(--orange-bg); /* พื้นส้มอ่อน */
-
 
   /* Gray Scale */
   --color-gray-9: var(--gray-9);
@@ -147,12 +124,12 @@
   --color-foreground: var(--text);
   --color-primary: var(--brand);
   --color-primary-foreground: var(--brand-text);
-  --color-secondary: var(--brand-bg);           
+  --color-secondary: var(--brand-bg);
   --color-secondary-foreground: var(--orange-6);
   --color-card: var(--bg);
   --color-card-foreground: var(--text);
 
-  /* Focus Ring คือกรอบเรืองแสง */
+  /* Focus Ring */
   --ring: var(--brand);
 
   /* Typography */
