@@ -25,7 +25,7 @@ const Header = () => {
             <button className="text-gray-700 hover:text-pet-secondary-orange transition-colors font-medium">
               Login
             </button>
-            <button className="bg-pet-secondary-orange hover:bg-pet-secondary-coral text-white px-6 py-3 rounded-full transition-colors font-medium shadow-lg">
+            <button className="bg-primary hover:bg-pet-secondary-coral text-white px-6 py-3 rounded-full transition-colors font-medium shadow-lg">
               Find A Pet Sitter
             </button>
           </nav>
