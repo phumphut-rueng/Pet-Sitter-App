@@ -1,13 +1,13 @@
 import Image from "next/image";
-import { Input } from "@/components/ui/input";
+import InputText from "@/components/input/InputText";
 
 export default function Login() {
   return (
     <>
       <div className="flex items-center justify-center h-screen overflow-hidden relative">
-        {/* main container */}
+
         <div className="w-full p-4 max-w-[440px] gap-14 flex flex-col">
-          {/* Welcome header */}
+
           <div className="text-center gap-2">
             <h1 className="font-bold font-weight-700 text-[56px] text-center text-black">
               Welcome back!
@@ -17,45 +17,22 @@ export default function Login() {
             </h3>
           </div>
 
-          {/* login form */}
           <div className="gap-8 flex flex-col">
-            {/* email field */}
-            <div className="gap-1 flex flex-col">
-              <label
-                htmlFor="email"
-                className="text-[16px] font-weight-500 font-medium text-black"
-              >
-                Email
-              </label>
-              <Input
-                id="email"
-                name="email"
+              <InputText
+                label="Email"
                 type="email"
                 placeholder="email@company.com"
-                autoComplete="email"
-                variant="success"
+                variant="default"
+                className=""
               />
-            </div>
-
-            {/* password field */}
-            <div className="gap-1 flex flex-col">
-              <label
-                htmlFor="password"
-                className="text-[16px] font-weight-500 font-medium text-black"
-              >
-                Password
-              </label>
-              <Input
-                id="password"
-                name="password"
+              <InputText
+                label="Password"
                 type="password"
                 placeholder="Password"
-                autoComplete="current-password"
                 variant="success"
+                className=""
               />
-            </div>
-
-            {/* remember and forgot password */}
+         
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <input
