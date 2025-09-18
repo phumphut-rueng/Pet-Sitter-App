@@ -1,5 +1,7 @@
 export default function ThemeSanity() {
   return (
+
+    
     <main className="p-6 space-y-8 bg-bg text-text min-h-screen">
       {/* Header */}
       <header className="space-y-2">
@@ -333,7 +335,11 @@ export default function ThemeSanity() {
         <div className="caption text-muted-text">
           🎉 Pet Sitter Design System - ทุกสีและ token ทำงานปกติ!
         </div>
+
+        <p className="body text-ink">Don’t have any account?</p>
+
       </footer>
     </main>
   );
+  
 }

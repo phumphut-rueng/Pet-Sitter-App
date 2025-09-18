@@ -47,6 +47,9 @@
   --color-muted-text: var(--muted-text);
   --color-border: var(--border);
 
+    /* NEW: ink (Figma black) */
+  --color-ink: var(--ink);  /* => text-ink / bg-ink / border-ink */
+
   /* Brand */
   --color-brand: var(--brand);
   --color-brand-text: var(--brand-text);
