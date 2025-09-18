@@ -63,22 +63,27 @@
   --color-gray-1: var(--gray-1);
   --color-white: var(--white);
 
-  /* Brown Scale (เพิ่ม) */
-  --color-brown-700: #8B4513;
-  --color-brown-600: #A0522D;
-  --color-brown-500: #CD853F;
-  --color-brown-400: #DEB887;
-  --color-brown-300: #F5DEB3;
-  --color-brown-200: #FAF0E6;
-  --color-brown-100: #FDF8F0;
+  /* Brown Scale */
+  --color-brown-700: var(--brown-700);
+  --color-brown-600: var(--brown-600);
+  --color-brown-500: var(--brown-500);
+  --color-brown-400: var(--brown-400);
+  --color-brown-300: var(--brown-300);
+  --color-brown-200: var(--brown-200);
+  --color-brown-100: var(--brown-100);
 
-  /* Orange Scale (เพิ่ม) */
+  /* Orange scale (เรียกแบบ gray-*) */
+  --color-orange-6: var(--orange-6); /* #E44A0C */
+  --color-orange-5: var(--orange-5); /* #FF7037 */
+  --color-orange-4: var(--orange-4); /* #FF986F */
+  --color-orange-3: var(--orange-3); /* #FFB899 */
+  --color-orange-2: var(--orange-2); /* #FFD5C2 */
+  --color-orange-1: var(--orange-1); /* #FFF1EC */
+  --color-orange-50: var(--orange-bg); /* พื้นส้มอ่อน */
+
+  /* Shortcuts (ถ้าชอบเรียกแบบสั้น) */
   --color-orange: var(--orange-5);
   --color-orange-light: var(--orange-3);
-
-  /* Green Scale (เพิ่ม) */  
-  --color-green: var(--green);
-  --color-green-light: var(--green-bg);
 
   /* Accents */
   --color-yellow: var(--yellow);
@@ -88,7 +93,6 @@
   --color-red: var(--red);
 
   /* Green Scale */ 
-  --color-green: var(--green);
   --color-green-light: var(--green-bg);
 
   /* Accent Backgrounds */
@@ -180,30 +184,38 @@ body {
 
 /* ---------- TYPOGRAPHY UTILITIES ---------- */
 @layer utilities {
-  .display { font: var(--text-xl); font-weight: 900; }
-  .h1 { font: var(--text-lg); font-weight: 700; }
-  .h2 { font: var(--text-md); font-weight: 700; }
-  .h3 { font: var(--text-sm); font-weight: 700; }
-  .h4 { font: var(--text-xs); font-weight: 700; }
-  .body { font: var(--text-base); font-weight: 500; }
-  .body-sm { font: var(--text-sm2); font-weight: 500; }
-  .caption { font: var(--text-xs2); font-weight: 500; }
+  /* === Typography (single source of truth) === */
+  .display { font-size: 88px; line-height: 96px; font-family: var(--font-sans); font-weight: 900; }
+  .h1      { font-size: 56px; line-height: 64px; font-family: var(--font-sans); font-weight: 700; }
+  .h2      { font-size: 36px; line-height: 44px; font-family: var(--font-sans); font-weight: 700; }
+  .h3      { font-size: 24px; line-height: 32px; font-family: var(--font-sans); font-weight: 700; }
+  .h4      { font-size: 20px; line-height: 28px; font-family: var(--font-sans); font-weight: 700; }
+  .body    { font-size: 18px; line-height: 26px; font-family: var(--font-sans); font-weight: 500; }
+  .body-sm { font-size: 16px; line-height: 28px; font-family: var(--font-sans); font-weight: 500; }
+  .caption { font-size: 14px; line-height: 24px; font-family: var(--font-sans); font-weight: 500; }
 
-  /* Quick Color Utilities */
-  .text-brand { color: var(--brand); }
-  .bg-brand { background: var(--brand); }
+  /* Responsive Typography */
+  @media (max-width: 768px) {
+    .display { font-size: 56px; line-height: 64px; }
+    .h1      { font-size: 36px; line-height: 44px; }
+    .h2      { font-size: 24px; line-height: 32px; }
+  }
+
+  /* === Quick Color Utilities === */
+  .text-brand   { color: var(--brand); }
+  .bg-brand     { background: var(--brand); }
   .border-brand { border-color: var(--brand); }
-  
-  .text-muted { color: var(--muted-text); }
-  .bg-muted { background: var(--muted); }
-  
+
+  .text-muted   { color: var(--muted-text); }
+  .bg-muted     { background: var(--muted); }
+
   .text-success { color: var(--success); }
   .text-waiting { color: var(--waiting); }
-  .text-error { color: var(--red); }
+  .text-error   { color: var(--red); }
   .text-pending { color: var(--pending); }
 
-  .bg-success { background: var(--success); }
-  .bg-waiting { background: var(--waiting); }
-  .bg-error { background: var(--red); }
-  .bg-pending { background: var(--pending); }
+  .bg-success   { background: var(--success); }
+  .bg-waiting   { background: var(--waiting); }
+  .bg-error     { background: var(--red); }
+  .bg-pending   { background: var(--pending); }
 }

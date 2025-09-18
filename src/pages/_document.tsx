@@ -3,9 +3,12 @@ import { satoshi, notoThai } from "@/fonts";
 
 export default function Document() {
   return (
-    <Html lang="th" className={`${satoshi.variable} ${notoThai.variable}`}>
+    <Html className={`${satoshi.variable} ${notoThai.variable}`}>
       <Head />
-      <body><Main /><NextScript /></body>
+      <body>
+        <Main />
+        <NextScript />
+      </body>
     </Html>
   );
 }
