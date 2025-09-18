@@ -51,7 +51,7 @@ export default function RejectConfirmation(
                         <AlertDialogCancel asChild>
                             <Button
                                 variant="outline"
-                                className="bg-orange-50 text-orange-500 hover:bg-orange-2 border-0"
+                                className="bg-orange-1 text-orange-5 hover:bg-orange-2 border-0"
                             >
                                 Cancel
                             </Button>

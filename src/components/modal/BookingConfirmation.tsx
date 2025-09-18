@@ -43,7 +43,7 @@ export default function BookingConfirmation(
                         <AlertDialogCancel asChild>
                             <Button
                                 variant="outline"
-                                className="bg-orange-1 text-orange-500 hover:bg-orange-2 
+                                className="bg-orange-1 text-orange-5 hover:bg-orange-2 
                                 border-0"
                             >
                                 Cancel
