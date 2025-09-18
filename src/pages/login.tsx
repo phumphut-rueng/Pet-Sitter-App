@@ -1,5 +1,6 @@
 import Image from "next/image";
 import InputText from "@/components/input/InputText";
+import PrimaryButton from "@/components/buttons/primaryButton";
 
 export default function Login() {
   return (
@@ -57,12 +58,7 @@ export default function Login() {
             </div>
 
             {/* signin button */}
-            <button
-              type="submit"
-              className="w-full bg-orange-5 hover:bg-orange-6 text-white text-[16px] font-bold py-3 px-4 rounded-[99px] text-sm transition-colors duration-200 cursor-pointer"
-            >
-              Login
-            </button>
+            <PrimaryButton text="Login" bgColor="primary"
 
             {/* register prompt */}
             <div className="text-center">
