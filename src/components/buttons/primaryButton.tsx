@@ -11,7 +11,7 @@
 
 const bgColorMap = {
   primary: "bg-orange-5",
-  secondery: "bg-orange-1",
+  secondary: "bg-orange-1",
   gray: "bg-gray-1",
   ghost: "bg-transparent",
 } as const;
