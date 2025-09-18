@@ -7,8 +7,8 @@ import { cn } from "@/lib/utils"
 const inputVariants = cva(
   [
     "w-full h-12 px-3 pl-3 text-sm border transition-all outline-none gap-2",
-    "rounded-lg opacity-100 bg-[var(--white)]",
-    "placeholder:text-[var(--gray-6)] selection:bg-transparent",
+    "rounded-lg opacity-100 bg-white",
+    "placeholder:text-gray-6 selection:bg-transparent",
     "file:inline-flex file:h-7 file:border-0 file:bg-transparent file:text-sm file:font-medium",
     "disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50"
   ],
@@ -16,16 +16,16 @@ const inputVariants = cva(
     variants: {
       variant: {
         default: [
-          "border-[#DCDFED] pr-4",
-          "focus:border-[var(--orange-5)] focus:outline-none"
+          "border-gray-2 pr-4",
+          "focus:border-orange-5 focus:outline-none"
         ],
         success: [
-          "border-[#DCDFED] pr-4",
-          "focus:border-[var(--orange-5)] focus:outline-none"
+          "border-gray-2 pr-4",
+          "focus:border-orange-5  focus:outline-none"
         ],
         error: [
-          "border-[#EA1010] pr-12",
-          "focus:border-[var(--red)] focus:outline-none"
+          "border-red pr-12",
+          "focus:border-red focus:outline-none"
         ]
       }
     },
