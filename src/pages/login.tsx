@@ -39,11 +39,11 @@ export default function Login() {
                   id="remember-me"
                   name="remember-me"
                   type="checkbox"
-                  className="h-6 w-6 border border-gray-200 rounded-[6px] "
+                  className="h-6 w-6 border border-gray-2 rounded-[6px] "
                 />
                 <label
                   htmlFor="remember-me"
-                  className="text-[16px] font-weight-500 font-medium text-gray-600"
+                  className="text-[16px] font-weight-500 font-medium text-gray-9"
                 >
                   Remember?
                 </label>
