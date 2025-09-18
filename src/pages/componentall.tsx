@@ -31,6 +31,10 @@ export default function ComponentAll() {
                 {/* Pagination */}
                 <Section title="Pagination">
                     <SubSection title="Example">
+                        {/* 
+                        currentPage = หน้าที่เลือกอยู่
+                        totalPages = หน้าทั้งหมด
+                        */}
                         <Pagination
                             currentPage={5}
                             totalPages={45}
@@ -41,6 +45,11 @@ export default function ComponentAll() {
                 {/* Progress */}
                 <Section title="Progress">
                     <SubSection title="Progress Bar">
+                        {/* 
+                        number = เลขในวงกลม
+                        label = ตัวหนังสือ
+                        status = สีของวงกลม
+                        */}
                         <ProgressBar
                             label="Booking"
                             status="active"
@@ -58,6 +67,9 @@ export default function ComponentAll() {
                     </SubSection>
 
                     <SubSection title="Progress Step">
+                        {/* 
+                        activeNumner = วงที่กลมที่กำลัง active อยู่
+                        */}
                         <ProgressStep
                             activeNumner={2} />
                     </SubSection>
@@ -65,6 +77,10 @@ export default function ComponentAll() {
 
                 {/* Modal */}
                 <Section title="Modal">
+                    {/* 
+                    สร้าง button เอามาไว้กดเรียกใช้ popup เฉยๆ
+                    component นี้ต้องใช้กับ useState
+                    */}
                     <SubSection title="Confirmation">
                         <button
                             className="bg-orange-5 text-white px-3 py-1 rounded hover:bg-orange-4 text-sm"
@@ -80,6 +96,11 @@ export default function ComponentAll() {
                         </button>
                     </SubSection>
 
+                    {/* 
+                    open = ค่าที่เอาไว้สั่ง เปิด/ปิด
+                    onOpenChange = เอาไว้ใช้กับ X
+                    onConfirm = กด Confirm แล้วให้ทำอะไร
+                    */}
                     <BookingConfirmation
                         open={isOpenBooking}
                         onOpenChange={setIsOpenBooking}
