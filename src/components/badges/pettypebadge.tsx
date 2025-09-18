@@ -13,7 +13,7 @@ const TONE: Record<PetTypeKey, string> = {
   dog: "text-green bg-green-bg",
   cat: "text-pink bg-pink-bg",
   bird: "text-blue bg-blue-bg",
-  rabbit: "text-[var(--orange-4)] bg-yellow-bg",
+  rabbit: "text-orange-4 bg-yellow-bg",
 };
 
 type Props = { typeKey: PetTypeKey; className?: string };
