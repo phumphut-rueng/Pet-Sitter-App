@@ -12,6 +12,9 @@
   --gray-1: #F6F6F9;   /* lightest */
   --white:  #FFFFFF;
 
+    /* NEW: Figma Black for body text */
+    --ink: #060D18; /* <— ใช้กับ text-ink */
+
   /* Brand Colors */
   --orange-6: #E44A0C;  /* darker */
   --orange-5: #FF7037;  /* main brand */
