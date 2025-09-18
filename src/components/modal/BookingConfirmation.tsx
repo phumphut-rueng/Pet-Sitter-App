@@ -1,40 +1,30 @@
 import {
-    AlertDialog,
     AlertDialogCancel,
-    AlertDialogContent,
     AlertDialogDescription,
-    AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
 import { Button } from "@/components/ui/button"
+import AlertConfirm from "./AlertConfirm"
 
-interface BookingConfirmationProps {
+interface ConfirmationProps {
     open: boolean
     onOpenChange: (open: boolean) => void
     onConfirm: () => void
 }
 
-export default function BookingConfirmation(
-    { open, onOpenChange, onConfirm }: BookingConfirmationProps
-) {
+export default function BookingConfirmation({
+    open,
+    onOpenChange,
+    onConfirm,
+}: ConfirmationProps) {
     return (
-        <AlertDialog open={open} onOpenChange={onOpenChange}>
-            <AlertDialogContent className="p-0 rounded-xl w-[400px] border-transparent">
-                {/* Header */}
-                <div className="p-3 pl-5 flex justify-between items-center border-b border-gray-2">
-                    <AlertDialogTitle className="h4">
-                        Booking Confirmation
-                    </AlertDialogTitle>
-                    <AlertDialogCancel
-                        className="body-sm border-transparent shadow-transparent
-                        hover:text-gray-4"
-                    >
-                        ✕
-                    </AlertDialogCancel>
-                </div>
-
-                <div className="pl-5 pr-4 pb-4">
+        <AlertConfirm
+            open={open}
+            onOpenChange={onOpenChange}
+            title="Booking Confirmation"
+            description={
+                <>
                     {/* Description */}
-                    <AlertDialogDescription className="pb-3 body-sm">
+                    <AlertDialogDescription className="pb-3 text-gray-6">
                         Are you sure to booking this pet sitter?
                     </AlertDialogDescription>
 
@@ -43,8 +33,7 @@ export default function BookingConfirmation(
                         <AlertDialogCancel asChild>
                             <Button
                                 variant="outline"
-                                className="bg-orange-1 text-orange-5 hover:bg-orange-2 
-                                border-0"
+                                className="bg-orange-1 text-orange-5 hover:bg-orange-2 border-0"
                             >
                                 Cancel
                             </Button>
@@ -56,19 +45,8 @@ export default function BookingConfirmation(
                             Yes, I’m sure
                         </Button>
                     </div>
-                </div>
-            </AlertDialogContent>
-        </AlertDialog>
-    );
+                </>
+            }
+        />
+    )
 }
-
-
-{/* 
-    const [isOpenAlert, setisOpenAlert] = useState(false);
-
-    <BookingConfirmation
-        open={isOpenAlert}
-        onOpenChange={setisOpenAlert}
-        onConfirm={() => { }}
-    />
-*/}

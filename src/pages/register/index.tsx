@@ -1,5 +1,6 @@
 import * as React from "react"
 import Link from "next/link"
+import { Pagination } from "@/components/pagination/Pagination"
 
 interface RegisterForm {
   email: string
@@ -27,6 +28,7 @@ export default function RegisterPage() {
 
   return (
     <>
+      <Pagination currentPage={45} totalPages={45} />
       <div className="flex min-h-screen items-center justify-center bg-white">
         <div className="relative w-full max-w-md rounded-lg bg-white p-8 shadow">
           {/* Decoration */}
