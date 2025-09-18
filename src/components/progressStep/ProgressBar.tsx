@@ -9,7 +9,7 @@ interface ProgressBarProps {
     status?: StepStatus;
 }
 
-export default function ProgressBar({ number, label, status = "inactive" }: ProgressBarProps) {
+export default function ProgressBar({ number = 1, label, status = "inactive" }: ProgressBarProps) {
     return (
         <div className="flex items-center gap-2">
             {/* Circle number */}
