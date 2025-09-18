@@ -39,18 +39,18 @@ export default function Login() {
                   id="remember-me"
                   name="remember-me"
                   type="checkbox"
-                  className="h-6 w-6 border border-gray-200 rounded-[6px] "
+                  className="h-6 w-6 border border-gray-2 rounded-[6px] "
                 />
                 <label
                   htmlFor="remember-me"
-                  className="text-[16px] font-weight-500 font-medium text-gray-600"
+                  className="text-[16px] font-weight-500 font-medium text-gray-9"
                 >
                   Remember?
                 </label>
               </div>
 
               <div className="text-center">
-                <span className="text-[16px] font-weight-700 font-bold text-orange-500 cursor-pointer">
+                <span className="text-[16px] font-weight-700 font-bold text-orange-5 cursor-pointer">
                   Forget Password
                 </span>
               </div>
@@ -59,16 +59,16 @@ export default function Login() {
             {/* signin button */}
             <button
               type="submit"
-              className="w-full bg-orange-500 hover:bg-orange-600 text-white text-[16px] font-bold py-3 px-4 rounded-[99px] text-sm transition-colors duration-200 cursor-pointer"
+              className="w-full bg-orange-5 hover:bg-orange-6 text-white text-[16px] font-bold py-3 px-4 rounded-[99px] text-sm transition-colors duration-200 cursor-pointer"
             >
               Login
             </button>
 
             {/* register prompt */}
             <div className="text-center">
-              <p className="text-[18px] font-weight-500 font-medium text-[#060D18]">
+              <p className="text-[18px] font-weight-500 font-medium text-ink">
                 Don&apos;t have any account?
-                <span className=" text-orange-500 hover:text-orange-600 cursor-pointer ml-2">
+                <span className=" text-orange-5 hover:text-orange-6 cursor-pointer ml-2">
                   Register
                 </span>
               </p>
