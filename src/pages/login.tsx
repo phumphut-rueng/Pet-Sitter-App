@@ -12,7 +12,7 @@ export default function Login() {
             <h1 className="font-bold font-weight-700 text-[56px] text-center text-black">
               Welcome back!
             </h1>
-            <h3 className="font-bold text-[24px] text-center text-gray-400">
+            <h3 className="font-bold text-[24px] text-center text-gray-400 tracking-tight" >
               Find your perfect pet sitter with us
             </h3>
           </div>
@@ -53,7 +53,6 @@ export default function Login() {
                 autoComplete="current-password"
                 variant="success"
               />
-              
             </div>
 
             {/* remember and forgot password */}
@@ -91,7 +90,7 @@ export default function Login() {
             {/* register prompt */}
             <div className="text-center">
               <p className="text-[18px] font-weight-500 font-medium text-[#060D18]">
-                Don't have any account?
+                Don&apos;t have any account?
                 <span className=" text-orange-500 hover:text-orange-600 cursor-pointer ml-2">
                   Register
                 </span>
