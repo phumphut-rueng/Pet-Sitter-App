@@ -22,6 +22,7 @@ const textColorMap = {
   white: "text-white",
   black: "text-black",
   orange: "text-orange-5",
+  gray: "text-gray-6",
 } as const;
 
 
@@ -55,7 +56,7 @@ export default function PrimaryButton({
         <img
           src={srcImage}
           alt="icon"
-          className="inline-block mr-2 w-6 h-6 "
+          className="inline-block mr-2 w-6 h-6"
         />
       )}
       {text}
