@@ -1,9 +1,11 @@
-import Navbar from "@/components/Navbar";
+import ComponentAll from "./componentall";
+
+
 
 export default function Home() {
   return (
     <>
-      <Navbar />
+      <ComponentAll />
     </>
   );
 }

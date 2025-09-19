@@ -13,7 +13,9 @@ import { StatusBadge } from "@/components/badges/statusbadge";
 import ImageGallery from "@/components/form/imagegalleryupload";
 import AvatarUploader from "@/components/form/avatarupload";
 import { cn } from "@/lib/utils";
-
+import PinSelection from "@/components/PinSelection";
+import ChatList from "@/components/Chat/ChatList";
+import ChatContainer from "@/components/Chat/ChatContainer";
 // Section Wrapper
 const Section = ({ title, cols = 2, children }: {
     title: string;
@@ -57,8 +59,8 @@ export default function ComponentAll() {
                             value={5}
                         />
                     </SubSection>
-                    <SubSection title="Pin Selection [คุณชิน]">
-                        <></>
+                    <SubSection title="Pin Selection">
+                        <PinSelection/>
                     </SubSection>
                     <SubSection title="Payment Selection [คุณเอป]">
                         <></>
@@ -336,8 +338,11 @@ export default function ComponentAll() {
 
                 {/* Chat */}
                 <Section title="Chat">
-                    <SubSection title="รอคุณชิน">
-                        <></>
+                    <SubSection title="Chat List and Chat Container">
+                        <div className="flex flex-row gap-4">
+                            <ChatList/>
+                            <ChatContainer/>
+                        </div>
                     </SubSection>
                 </Section>
             </div>
