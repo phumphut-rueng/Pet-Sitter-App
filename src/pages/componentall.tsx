@@ -4,16 +4,29 @@ import ProgressBar from "@/components/progressStep/ProgressBar";
 import ProgressStep from "@/components/progressStep/ProgressStep";
 import BookingConfirmation from "@/components/modal/BookingConfirmation";
 import RejectConfirmation from "@/components/modal/RejectConfirmation";
+import RatingSelect from "@/components/ratingStar";
+import PrimaryButton from "@/components/buttons/primaryButton";
+import InputText from "@/components/input/InputText";
+import InputTextArea from "@/components/input/InputTextArea";
+import { PetTypeBadge } from "@/components/badges/pettypebadge";
+import { StatusBadge } from "@/components/badges/statusbadge";
+import ImageGallery from "@/components/form/imagegalleryupload";
+import AvatarUploader from "@/components/form/avatarupload";
+import { cn } from "@/lib/utils";
 
-// 🔹 Section Wrapper
-const Section = ({ title, children }: { title: string; children: React.ReactNode }) => (
+// Section Wrapper
+const Section = ({ title, cols = 2, children }: {
+    title: string;
+    cols?: number;
+    children: React.ReactNode
+}) => (
     <div className="space-y-4">
         <h2 className="text-xl font-bold text-center text-orange-5">{title}</h2>
-        <div className="grid gap-4 sm:grid-cols-2">{children}</div>
+        <div className={cn("grid gap-4", `sm:grid-cols-${cols}`)}>{children}</div>
     </div>
 );
 
-// 🔹 SubSection Card
+// SubSection Card
 const SubSection = ({ title, children }: { title: string; children: React.ReactNode }) => (
     <div className="p-4 border border-orange-5 rounded-lg  shadow-sm">
         <p className="text-sm font-semibold text-gray-6 mb-2">{title}</p>
@@ -28,16 +41,203 @@ export default function ComponentAll() {
     return (
         <div className="min-h-screen text-white p-6">
             <div className=" mx-auto space-y-10">
-                {/* Pagination */}
-                <Section title="Pagination">
-                    <SubSection title="Example">
+                {/* Rating */}
+                <Section title="Selection">
+                    <SubSection title="Checkbox - Radio [คุณเอป]">
+                        <></>
+                    </SubSection>
+                    <SubSection title="Rating">
+                        {/* 
+                        value = Rating
+                        */}
+                        <RatingSelect
+                            value={1}
+                        />
+                        <RatingSelect
+                            value={5}
+                        />
+                    </SubSection>
+                    <SubSection title="Pin Selection [คุณชิน]">
+                        <></>
+                    </SubSection>
+                    <SubSection title="Payment Selection [คุณเอป]">
+                        <></>
+                    </SubSection>
+                </Section>
+
+                {/* Icon */}
+                <Section title="Icon">
+                    <SubSection title="[เดี๋ยวเอามาใส่]">
+                        <></>
+                    </SubSection>
+                </Section>
+
+                {/* Button */}
+                <Section title="Button" cols={1}>
+                    <SubSection title="">
+                        {/* 
+                        วิธีใช้ เลือกสี bg ปุ่มได้เฉพาะใน bgColorMap และ textColor ได้เฉพาะใน textColorMap ถ้าอยากใช้สีอื่นต้อมาเพิ่มในนี้ก่อน
+                        //สามารถเพิ่มเขียน override className ได้ เช่น เเก้ความยาวปุ่มด้วย px
+                        */}
+                        <PrimaryButton
+                            text="facebook"
+                            srcImage="/icons/fbIcon.svg"
+                            bgColor="primary"
+                            textColor="white"
+                            className="px-16"
+                        />
+                        <PrimaryButton
+                            text="facebook"
+                            srcImage="/icons/fbIcon.svg"
+                            bgColor="secondary"
+                            textColor="orange"
+                            className="px-16"
+                        />
+                        <PrimaryButton
+                            text="facebook"
+                            srcImage="/icons/fbIcon.svg"
+                            bgColor="ghost"
+                            textColor="orange"
+                            className="px-16"
+                        />
+                        <PrimaryButton
+                            text="facebook"
+                            srcImage="/icons/fbIcon.svg"
+                            bgColor="gray"
+                            textColor="black"
+                            className="px-16"
+                        />
+                        <PrimaryButton
+                            srcImage="/icons/fbIcon.svg"
+                            bgColor="secondary"
+                            textColor="orange"
+                        />
+                    </SubSection>
+                </Section>
+
+                {/* Input */}
+                <Section title="Input" cols={1}>
+                    <SubSection title="Input Field">
+                        <InputText
+                            label="Normal"
+                            placeholder="placeholder"
+                            type="text"
+                            variant="default"
+                        />
+                        <InputText
+                            label="Success"
+                            placeholder="placeholder"
+                            type="text"
+                            variant="success"
+                        />
+                        <InputText
+                            label="error"
+                            placeholder="placeholder"
+                            type="text"
+                            variant="error"
+                        />
+                        <InputText
+                            label="disabled"
+                            placeholder="placeholder"
+                            type="text"
+                            variant="default"
+                            disabled={true}
+                        />
+                        <InputTextArea
+                            label="TextArea"
+                            placeholder="placeholder"
+                        />
+                    </SubSection>
+                </Section>
+
+                {/* Upload Image */}
+                <Section title="Upload Image">
+                    <SubSection title="Upload Image">
                         {/* 
                         currentPage = หน้าที่เลือกอยู่
                         totalPages = หน้าทั้งหมด
                         */}
-                        <Pagination
-                            currentPage={5}
-                            totalPages={45}
+                        <ImageGallery
+                        />
+                    </SubSection>
+                    <SubSection title="Avatar">
+                        {/* 
+                        currentPage = หน้าที่เลือกอยู่
+                        totalPages = หน้าทั้งหมด
+                        */}
+                        <AvatarUploader
+                        />
+                    </SubSection>
+                </Section>
+
+                {/* Badge */}
+                <Section title="Badge">
+                    {/* 
+                    status = ชื่อ
+                    */}
+                    <SubSection title="Booking Status">
+                        <StatusBadge
+                            status="waitingConfirm"
+                        />
+                        <StatusBadge
+                            status="waitingService"
+                        />
+                        <StatusBadge
+                            status="inService"
+                        />
+                        <StatusBadge
+                            status="success"
+                        />
+                    </SubSection>
+
+                    <SubSection title="Pet Sitter Status">
+                        <StatusBadge
+                            status="waitingApprove"
+                        />
+                        <StatusBadge
+                            status="approved"
+                        />
+                        <StatusBadge
+                            status="rejected"
+                        />
+                    </SubSection>
+
+                    <SubSection title="Pet OwnerStatus">
+                        <StatusBadge
+                            status="normal"
+                        />
+                        <StatusBadge
+                            status="banned"
+                        />
+                    </SubSection>
+
+                    <SubSection title="Report Status">
+                        <StatusBadge
+                            status="newReport"
+                        />
+                        <StatusBadge
+                            status="pending"
+                        />
+                        <StatusBadge
+                            status="resolved"
+                        />
+                    </SubSection>
+
+                    <SubSection title="Pet Type">
+                        {/* 
+                        typeKey = ชื่อ
+                        */}
+                        <PetTypeBadge
+                            typeKey="dog"
+                        />
+                        <PetTypeBadge
+                            typeKey="cat"
+                        />
+                        <PetTypeBadge
+                            typeKey="bird"
+                        />
+                        <PetTypeBadge
+                            typeKey="rabbit"
                         />
                     </SubSection>
                 </Section>
@@ -72,6 +272,27 @@ export default function ComponentAll() {
                         */}
                         <ProgressStep
                             activeNumner={2} />
+                    </SubSection>
+                </Section>
+
+                {/* Card */}
+                <Section title="Card ">
+                    <SubSection title="รอคุณยู">
+                        <></>
+                    </SubSection>
+                </Section>
+
+                {/* Pagination */}
+                <Section title="Pagination">
+                    <SubSection title="">
+                        {/* 
+                        currentPage = หน้าที่เลือกอยู่
+                        totalPages = หน้าทั้งหมด
+                        */}
+                        <Pagination
+                            currentPage={5}
+                            totalPages={45}
+                        />
                     </SubSection>
                 </Section>
 
@@ -111,6 +332,13 @@ export default function ComponentAll() {
                         onOpenChange={setIsOpenReject}
                         onConfirm={() => console.log("Rejected")}
                     />
+                </Section>
+
+                {/* Chat */}
+                <Section title="Chat">
+                    <SubSection title="รอคุณชิน">
+                        <></>
+                    </SubSection>
                 </Section>
             </div>
         </div>
