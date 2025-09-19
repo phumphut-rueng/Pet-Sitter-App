@@ -36,7 +36,7 @@ export default function SearchSitter() {
           </SelectContent>
         </Select>
 
-        <PrimaryButton text="Cash"  srcImage="/icons/cash.svg" className="h-20 border hover:border-orange-5"/>
+        <PrimaryButton text="Search" textColor="white" bgColor="primary"/>
       </div>
     </div>
   );

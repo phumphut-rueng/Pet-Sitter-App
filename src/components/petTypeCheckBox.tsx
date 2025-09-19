@@ -12,15 +12,15 @@ export default function PetTypeCheckBox({layout = "row"}: PetTypeCheckBoxProps) 
 
   return (
     <div className={`flex ${layout === "row" ? "flex-row gap-4" : "flex-col gap-3"}`}>
-      <p className="font-bold text-sm">Pet Type:</p>
+      <p className="font-bold text-sm text-gray-9">Pet Type:</p>
       <div className="flex row gap-3">
       {petTypes.map((petType) => (
         <div key={petType} className="flex items-center gap-1 mr-3">
           <Checkbox
             id={petType}
-            className="hover:cursor-pointer hover:border-orange-5"
+            className="border border-border hover:cursor-pointer hover:border-orange-5"
           />
-          <Label htmlFor={petType} className="hover:cursor-pointer">
+          <Label htmlFor={petType} className="hover:cursor-pointer text-gray-9">
             {petType}
           </Label>
         </div>
