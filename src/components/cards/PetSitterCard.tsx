@@ -1,3 +1,5 @@
+//เดะมีแก้ต่อ
+
 import * as React from "react";
 
 type Size = "lg" | "sm";
@@ -21,13 +23,6 @@ function cn(...xs: Array<string | undefined | false | null>) {
   return xs.filter(Boolean).join(" ");
 }
 
-const TOKENS = {
-  success: "#1CCD83",
-  text: "#323640",
-  subtext: "#7B7E8F",
-  border: "#DCDFED",
-};
-
 const IconLocation = ({ className = "h-4 w-4" }: { className?: string }) => (
   <svg viewBox="0 0 24 24" aria-hidden className={className}>
     <path
@@ -49,7 +44,7 @@ function Rating({ value = 0, size = "md" }: { value?: number; size?: "sm" | "md"
   const arr = Array.from({ length: 5 }, (_, i) => (i < full ? 1 : i === full && half ? 0.5 : 0));
   const starBox = size === "sm" ? "h-3 w-3" : "h-4 w-4";
   return (
-    <div className="flex items-center gap-1" style={{ color: TOKENS.success }}>
+    <div className="flex items-center gap-1 text-success">
       {arr.map((s, i) => (
         <div key={i} className={starBox}>
           {s === 1 ? (
@@ -72,16 +67,16 @@ function Rating({ value = 0, size = "md" }: { value?: number; size?: "sm" | "md"
 
 function Tag({ label }: { label: string }) {
   const palette: Record<string, string> = {
-    Dog: "bg-emerald-50 text-emerald-600 ring-emerald-200",
-    Cat: "bg-pink-50 text-pink-600 ring-pink-200",
-    Bird: "bg-sky-50 text-sky-600 ring-sky-200",
-    Rabbit: "bg-orange-50 text-orange-600 ring-orange-200",
+    Dog: "bg-green-bg text-success ring-success",
+    Cat: "bg-pink-bg text-pink ring-pink",
+    Bird: "bg-blue-bg text-blue ring-blue",
+    Rabbit: "bg-orange-1 text-orange-6 ring-orange-2",
   };
   return (
     <span
       className={cn(
         "inline-flex h-7 items-center rounded-full px-3 text-[12px] font-medium ring-1 ring-inset",
-        palette[label] || "bg-gray-50 text-gray-600 ring-gray-200"
+        palette[label] || "bg-muted text-muted-text ring-border"
       )}
     >
       {label}
@@ -105,7 +100,6 @@ export function PetSitterCard({
   const isSm = size === "sm";
   const showAvatarComputed = showAvatar ?? !isSm;
 
-
   const gridCols =
     variant === "chips"
       ? isSm
@@ -123,17 +117,15 @@ export function PetSitterCard({
     <article
       tabIndex={0}
       className={cn(
-        "group grid rounded-2xl border bg-white transition-shadow cursor-pointer hover:shadow-[0_6px_24px_rgba(50,54,64,0.08)] focus-visible:outline-none",
+        "group grid rounded-2xl border border-border bg-white transition-shadow cursor-pointer hover:shadow-[0_6px_24px_rgba(50,54,64,0.08)] focus-visible:outline-none",
         gridCols,
         isSm ? "gap-3 p-3" : "gap-4 p-4",
         className
       )}
-      style={{ borderColor: TOKENS.border, boxShadow: "0 1px 0 rgba(220,223,237,0.6) inset" }}
     >
-  
       <div
         className={cn(
-          "overflow-hidden rounded-xl bg-[#F6F6F9]",
+          "overflow-hidden rounded-xl bg-muted",
           variant === "chips"
             ? isSm
               ? "h-24 w-28"
@@ -148,7 +140,7 @@ export function PetSitterCard({
 
       {variant === "chips" ? (
         <div className="min-w-0 self-center">
-          <div className="mb-3 text-[#AEB1C3]">
+          <div className="mb-3 text-muted-text">
             <IconLocation className="h-5 w-5" />
           </div>
           <div className={cn("flex items-start", isSm ? "flex-row flex-wrap gap-2" : "flex-col gap-4")}>
@@ -180,16 +172,16 @@ export function PetSitterCard({
                   <img src={avatarUrl || coverUrl} alt="" className="h-10 w-10 rounded-full object-cover" />
                 )}
                 <div className="min-w-0">
-                  <h3 className="truncate text-[16px] font-semibold leading-6" style={{ color: TOKENS.text }}>
+                  <h3 className="truncate text-[16px] font-semibold leading-6 text-ink">
                     {title}
                   </h3>
-                  <p className="truncate text-[14px] leading-5" style={{ color: TOKENS.subtext }}>
+                  <p className="truncate text-[14px] leading-5 text-muted-text">
                     By {hostName}
                   </p>
                 </div>
               </div>
 
-              <div className="flex items-center gap-1" style={{ color: TOKENS.subtext }}>
+              <div className="flex items-center gap-1 text-muted-text">
                 <IconLocation />
                 <span className="truncate text-[14px] leading-5">{location}</span>
               </div>
@@ -202,18 +194,17 @@ export function PetSitterCard({
             </div>
           )}
 
-          //*รอแก้เพิ่มมมมมมมมมมมมม
           {isSm && (
             <div className="space-y-2">
               <div className="flex items-center justify-between">
-                <h3 className="truncate text-[14px] font-semibold leading-5" style={{ color: TOKENS.text }}>
+                <h3 className="truncate text-[14px] font-semibold leading-5 text-ink">
                   {title}
                 </h3>
                 <div className="ml-2 flex-shrink-0">
                   <Rating value={rating} size="sm" />
                 </div>
               </div>
-              <p className="truncate text-[12px] leading-4" style={{ color: TOKENS.subtext }}>
+              <p className="truncate text-[12px] leading-4 text-muted-text">
                 By {hostName}
               </p>
               <div className="flex flex-row flex-wrap items-center gap-2">
@@ -226,7 +217,6 @@ export function PetSitterCard({
         </div>
       )}
 
-     
       {variant !== "compact" && !isSm && (
         <div className={cn("justify-self-end", variant === "chips" ? "self-center" : "self-center")}>
           <Rating value={rating} size="md" />
