@@ -38,11 +38,11 @@ export default function PetCard({
   onClick,
 }: Props) {
   const base =
-    "relative flex w-[240px] h-[240px] flex-col items-center gap-4 rounded-[16px] border bg-white p-6 transition";
+    "relative flex w-[240px] h-[240px] flex-col items-center gap-4 rounded-[16px] border bg-white p-6 transition ";
   const borderSel = selected ? "border-[#FF7037]" : "border-[#DCDFED]";
   const state = disabled
     ? "opacity-40 cursor-not-allowed"
-    : "hover:shadow-[0_6px_24px_rgba(50,54,64,0.08)] active:scale-[.99]";
+    : "cursor-pointer hover:shadow-[0_6px_24px_rgba(50,54,64,0.08)] active:scale-[.99]";
 
   return (
     <button

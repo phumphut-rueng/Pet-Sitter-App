@@ -19,6 +19,10 @@ import ChatContainer from "@/components/Chat/ChatContainer";
 import PetTypeCheckBox from "@/components/petTypeCheckBox";
 import CashButton from "@/components/buttons/cashButton";
 import IconButton from "@/components/buttons/iconButton";
+import Sidebar from "@/components/layout/SitterSidebar";
+import { PetSitterCard, PetSitterCardLarge, PetSitterCardSmall } from "@/components/cards/PetSitterCard";
+import BookingCard from "@/components/cards/BookingCard";
+import PetCard from "@/components/cards/PetCard";
 
 
 // Section Wrapper
@@ -40,6 +44,103 @@ const SubSection = ({ title, children }: { title: string; children: React.ReactN
         <div className="flex flex-wrap justify-center gap-3">{children}</div>
     </div>
 );
+
+//sidebar
+const SidebarDemo: React.FC = () => {
+    return (
+      <div className="flex h-[520px] overflow-hidden rounded-xl border border-border">
+        <Sidebar
+          logoSrc="/icons/sitter-logo-1.svg"  
+          onNavigate={(id) => console.log("goto:", id)}
+        />
+        <main className="flex-1 bg-white" />
+      </div>
+    );
+  };
+
+//card 123 
+// assets
+const COVER  = "/images/cards/pet-sitter-cover.svg";
+const AVATAR = "/images/cards/jane-maison.svg";
+const PETIMG = "/images/cards/pet-cat-mr-hem-card.svg";
+
+// star (ใช้ในรีวิวตัวอย่าง)
+const Star = ({ className = "" }: { className?: string }) => (
+  <svg viewBox="0 0 24 24" className={`h-3.5 w-3.5 fill-current ${className}`}>
+    <path d="M12 3.75l2.72 5.51 6.08.88-4.4 4.29 1.04 6.07L12 17.77l-5.44 2.85 1.04-6.07-4.4-4.29 6.08-.88L12 3.75z" />
+  </svg>
+);
+
+// chip สำหรับแสดง tags
+function Chip({ label }: { label: string }) {
+  const palette: Record<string, string> = {
+    Dog: "bg-emerald-50 text-emerald-600 ring-emerald-200",
+    Cat: "bg-pink-50 text-pink-600 ring-pink-200",
+    Bird: "bg-sky-50 text-sky-600 ring-sky-200",
+    Rabbit: "bg-orange-50 text-orange-600 ring-orange-200",
+  };
+  return (
+    <span
+      className={`inline-flex h-6 items-center rounded-full px-2.5 text-[11px] font-medium ring-1 ring-inset ${
+        palette[label] || "bg-gray-50 text-gray-600 ring-gray-200"
+      }`}
+    >
+      {label}
+    </span>
+  );
+}
+
+// mock สำหรับ PetCard grid
+const pets = [
+  { id: 1, name: "Mr. Ham", selected: false },
+  { id: 2, name: "Mr. Ham", selected: true },
+  { id: 3, name: "Mr. Ham", disabled: true },
+  { id: 4, name: "Mr. Ham" },
+];
+
+// grid แสดง PetCard
+function PetCardGrid() {
+  return (
+    <section className="mt-4">
+      <div className="grid gap-6 [grid-template-columns:repeat(auto-fit,minmax(240px,1fr))]">
+        {pets.map((p) => (
+          <PetCard
+            key={p.id}
+            name={p.name}
+            species="Cat"
+            img={PETIMG}
+            selected={p.selected}
+            disabled={p.disabled}
+            className="!w-full"
+          />
+        ))}
+      </div>
+    </section>
+  );
+}
+
+// ข้อมูลร่วมสำหรับนามบัตร Sitter
+const sitterCommon = {
+  title: "Happy House!",
+  hostName: "Jame Maison",
+  location: "Senanikom, Bangkok",
+  coverUrl: COVER,
+  avatarUrl: AVATAR,
+};
+
+// ข้อมูลร่วมสำหรับ BookingCard
+const bookingBase = {
+  title: "Happy House!",
+  sitterName: "Jame Maison",
+  avatarUrl: AVATAR,
+  dateTime: "25 Aug, 2023 | 7 AM – 10 AM",
+  duration: "3 hours",
+  pet: "Mr.Ham, Binguo",
+  transactionDate: "Tue, 16 Aug 2023",
+};
+
+
+  
 
 export default function ComponentAll() {
     const [isOpenBooking, setIsOpenBooking] = useState(false);
@@ -279,9 +380,163 @@ export default function ComponentAll() {
                 </Section>
 
                 {/* Card */}
-                <Section title="Card ">
-                    <SubSection title="รอคุณยู">
-                        <></>
+                <Section title="sidebar + card ">
+                    <SubSection title="card ยังไม่เสร็จ อีก 2 บางไสตล์">
+                    <SidebarDemo />
+                    {/* ============ (A) PET CARD DEMO ============ */}
+                <div className="space-y-6">
+                 <h3 className="text-lg font-semibold text-ink/90">Pet Card</h3>
+                 <PetCardGrid />
+                </div>
+
+{/* ============ (B) PET SITTER CARD – LARGE ============ */}
+                    <div className="space-y-3 rounded-2xl border border-dashed border-purple-300 p-5">
+                <h3 className="text-lg font-semibold text-ink/90">Pet Sitter Card – Large</h3>
+
+{/* Large #1 */}
+            <div>
+    {/* desktop */}
+                 <div className="hidden md:block">
+                     <PetSitterCardLarge
+                          {...sitterCommon}
+                             rating={5}
+                             tags={["Dog", "Cat", "Rabbit"]}
+                             variant="default"
+                           />
+                 </div>
+    {/* mobile → chips */}
+                                     <div className="md:hidden">
+                                <PetSitterCard
+                                    {...sitterCommon}
+                                    size="sm"
+                                    variant="chips"
+                                    rating={5}
+                                    tags={["Dog", "Cat", "Rabbit"]}
+                                />
+                                </div>
+                            </div>
+
+  {/* Large #2 (border ส้มบน desktop) */}
+                    <div>
+                        <div className="hidden md:block">
+                        <PetSitterCardLarge
+                            {...sitterCommon}
+                            rating={5}
+                            className="border-orange-200"
+                            tags={["Dog", "Cat", "Rabbit"]}
+                            variant="default"
+                        />
+                        </div>
+                        <div className="md:hidden">
+                        <PetSitterCard
+                            {...sitterCommon}
+                            size="sm"
+                            variant="chips"
+                            rating={5}
+                            tags={["Dog", "Cat", "Rabbit"]}
+                        />
+                        </div>
+                    </div>
+
+  {/* mini 335×268 ( Variant3, mb) */}
+                            <div className="w-[335px]">
+                                <PetSitterCard
+                                {...sitterCommon}
+                                size="sm"
+                                variant="default"
+                                rating={5}
+                                tags={["Dog", "Cat", "Rabbit"]}
+                                />
+                            </div>
+                            </div>
+
+{/* ============ (C) PET SITTER CARD – SMALL ============ */}
+                                <div className="space-y-3 rounded-2xl border border-dashed border-purple-300 p-5">
+                                <h3 className="text-lg font-semibold text-ink/90">Pet Sitter Card – Small</h3>
+                                <div className="grid grid-cols-2 gap-4">
+                                    <PetSitterCardSmall
+                                    {...sitterCommon}
+                                    variant="default"
+                                    rating={5}
+                                    tags={["Dog", "Cat", "Bird", "Rabbit"]}
+                                    />
+                                    <PetSitterCardSmall
+                                    {...sitterCommon}
+                                    variant="default"
+                                    rating={5}
+                                    className="border-orange-200"
+                                    tags={["Dog", "Cat", "Bird", "Rabbit"]}
+                                    />
+                                    <PetSitterCardSmall
+                                    {...sitterCommon}
+                                    variant="default"
+                                    rating={5}
+                                    className="border-orange-200"
+                                    tags={["Dog", "Cat", "Rabbit"]}
+                                    />
+                                    <PetSitterCardSmall
+                                    {...sitterCommon}
+                                    variant="default"
+                                    rating={5}
+                                    className="border-green-200"
+                                    tags={["Dog", "Cat", "Rabbit"]}
+                                    />
+                                </div>
+                                </div>
+
+{/* ============ (D) BOOKING CARD ============ */}
+                                            <div className="space-y-3 rounded-2xl border border-dashed border-purple-300 p-5">
+                                            <h3 className="text-lg font-semibold text-ink/90">Booking Card</h3>
+
+                                            {/* wide */}
+                                            <div className="space-y-4">
+                                                <BookingCard
+                                                {...bookingBase}
+                                                status="waiting"
+                                                note="Waiting for Sitter to confirm booking"
+                                                layout="wide"
+                                                actions={[{ key: "message" }]}
+                                                />
+                                                <BookingCard
+                                                {...bookingBase}
+                                                status="in_service"
+                                                note="You are already in Sitter card"
+                                                layout="wide"
+                                                actions={[{ key: "message" }]}
+                                                />
+                                                <BookingCard
+                                                {...bookingBase}
+                                                status="success"
+                                                successDate="Tue, 25 Oct 2022 | 11:03 AM"
+                                                layout="wide"
+                                                actions={[{ key: "report" }, { key: "review" }]}
+                                                />
+                                            </div>
+
+  {/* compact */}
+                                            <div className="mt-6 grid gap-4 md:grid-cols-3">
+                                                <BookingCard
+                                                {...bookingBase}
+                                                status="waiting"
+                                                layout="compact"
+                                                actions={[{ key: "message" }]}
+                                                />
+                                                <BookingCard
+                                                {...bookingBase}
+                                                status="in_service"
+                                                layout="compact"
+                                                actions={[{ key: "message" }]}
+                                                />
+                                                <BookingCard
+                                                {...bookingBase}
+                                                status="success"
+                                                successDate="Tue, 25 Oct 2022 | 11:03 AM"
+                                                layout="compact"
+                                                actions={[{ key: "report" }, { key: "review" }]}
+                                                />
+                                            </div>
+                                            </div>
+
                     </SubSection>
                 </Section>
 

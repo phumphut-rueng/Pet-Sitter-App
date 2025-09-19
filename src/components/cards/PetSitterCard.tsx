@@ -123,7 +123,7 @@ export function PetSitterCard({
     <article
       tabIndex={0}
       className={cn(
-        "group grid rounded-2xl border bg-white transition-shadow hover:shadow-[0_6px_24px_rgba(50,54,64,0.08)] focus-visible:outline-none",
+        "group grid rounded-2xl border bg-white transition-shadow cursor-pointer hover:shadow-[0_6px_24px_rgba(50,54,64,0.08)] focus-visible:outline-none",
         gridCols,
         isSm ? "gap-3 p-3" : "gap-4 p-4",
         className
@@ -146,7 +146,6 @@ export function PetSitterCard({
         <img src={coverUrl} alt="" className="h-full w-full object-cover" />
       </div>
 
-      {/* content */}
       {variant === "chips" ? (
         <div className="min-w-0 self-center">
           <div className="mb-3 text-[#AEB1C3]">
@@ -173,7 +172,7 @@ export function PetSitterCard({
         </>
       ) : (
         <div className="min-w-0 self-center">
-          {/* Desktop default */}
+          
           {!isSm && (
             <div className="space-y-3">
               <div className="flex items-center gap-3">
