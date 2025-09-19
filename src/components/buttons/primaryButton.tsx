@@ -12,9 +12,9 @@
       /> */}
 
 const bgColorMap = {
-  primary: "bg-orange-5",
-  secondary: "bg-orange-1",
-  gray: "bg-gray-1",
+  primary: "bg-orange-5 hover:bg-orange-6",
+  secondary: "bg-orange-1 hover:bg-orange-2",
+  gray: "bg-gray-1 hover:bg-gray-2",
   ghost: "bg-transparent",
 } as const;
 
