@@ -35,7 +35,7 @@ export default function RegisterPage() {
         src="/icons/register02.svg"
         width={255}
         height={371}
-        alt="Decoration"
+        alt="register"
         className="absolute bottom-0 left-0 "
       />
 
@@ -44,7 +44,7 @@ export default function RegisterPage() {
         src="/icons/register01.svg"
         width={239}
         height={350}
-        alt="Decoration"
+        alt="register"
         className="absolute top-0 right-0"
       />
 
@@ -97,6 +97,7 @@ export default function RegisterPage() {
               text="Register"
               bgColor="primary"
               textColor="white"
+              type="submit"
               className="w-full justify-center"
             />
           </form>

@@ -152,7 +152,7 @@ export default function ComponentAll() {
                 {/* Rating */}
                 <Section title="Selection">
                     <SubSection title="Checkbox - Radio [คุณเอป]">
-                    <PetTypeCheckBox layout="column"/>
+                        <PetTypeCheckBox layout="column" />
                     </SubSection>
                     <SubSection title="Rating">
                         {/* 
@@ -166,10 +166,10 @@ export default function ComponentAll() {
                         />
                     </SubSection>
                     <SubSection title="Pin Selection">
-                        <PinSelection/>
+                        <PinSelection />
                     </SubSection>
                     <SubSection title="Payment Selection [คุณเอป]">
-                        <CashButton/>
+                        <CashButton />
                     </SubSection>
                 </Section>
 
@@ -628,8 +628,8 @@ export default function ComponentAll() {
                 <Section title="Chat">
                     <SubSection title="Chat List and Chat Container">
                         <div className="flex flex-row gap-4">
-                            <ChatList/>
-                            <ChatContainer/>
+                            <ChatList />
+                            <ChatContainer />
                         </div>
                     </SubSection>
                 </Section>
