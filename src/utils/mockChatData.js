@@ -20,6 +20,7 @@ const sampleMessages = [
       id: '3',
       message: 'Hello World! This is a test message from user.',
       sender: 'user',
+      avatar: '/images/landing_page/lovely-pet-portrait-isolated.svg',
       timestamp: '10:32 AM',
       isImage: false
     },
@@ -27,6 +28,7 @@ const sampleMessages = [
       id: '4',
       message: '',
       sender: 'user',
+      avatar: '/images/landing_page/lovely-pet-portrait-isolated.svg',
       timestamp: '10:33 AM',
       isImage: true,
       imageUrl: '/images/landing_page/GlassesDog.svg'

@@ -33,7 +33,7 @@ const ChatList: React.FC = () => {
                 />
                 {/* Online indicator */}
                 {chat.isOnline && (
-                  <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 border-2 border-white rounded-full"></div>
+                  <div className="absolute bottom-0 right-0 w-3 h-3 bg-green border-2 border-white rounded-full"></div>
                 )}
               </div>
 
@@ -43,17 +43,13 @@ const ChatList: React.FC = () => {
                   <h4 className={`text-sm font-medium truncate text-white`}>
                     {chat.name}
                   </h4>
-                  <span className={`text-xs ${
-                    isSelected ? 'text-gray-600' : 'text-gray-300'
-                  }`}>
+                  <span className={`text-xs text-gray-4`}>
                     {chat.timestamp}
                   </span>
                 </div>
                 
                 <div className="flex items-center justify-between mt-1">
-                  <p className={`text-sm truncate ${
-                    isSelected ? 'text-gray-600' : 'text-gray-300'
-                  }`}>
+                  <p className={`text-sm truncate text-gray-4`}>
                     {chat.lastMessage}
                   </p>
                   

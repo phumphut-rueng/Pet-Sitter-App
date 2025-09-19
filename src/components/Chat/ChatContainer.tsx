@@ -34,8 +34,8 @@ const ChatContainer: React.FC<ChatContainerProps> = ({
   }, []);
 
   return (
-    <div className={`bg-white rounded-lg border-2 border-dashed border-purple-500 p-4 ${className}`}>
-      <h3 className="text-lg font-semibold text-gray-800 mb-4">Chat Bubble</h3>
+    <div className={`bg-white rounded-lg border-2 border-dashed p-4 ${className}`}>
+      <h3 className="text-lg font-semibold text-gray-8 mb-4">Chat Bubble</h3>
       <div ref={scrollContainerRef} className="space-y-2 max-h-150 overflow-y-auto">
         {sampleMessages.map((msg) => (
           <ChatBubble

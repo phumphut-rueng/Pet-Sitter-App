@@ -24,8 +24,8 @@ const ChatBubble: React.FC<ChatBubbleProps> = ({
     <div className={`flex ${isUser ? 'justify-end' : 'justify-start'} mb-4`}>
       <div className={`flex ${isUser ? 'flex-row-reverse' : 'flex-row'} items-end max-w-[80%]`}>
         {/* Avatar */}
-        {avatar && (
-          <div className={`${isUser ? 'ml-3' : 'mr-3'} flex-shrink-0`}>
+        {avatar && isUser === false && (
+          <div className={`ml-3 flex-shrink-0`}>
             <img
               src={avatar}
               alt="Avatar"
@@ -41,7 +41,7 @@ const ChatBubble: React.FC<ChatBubbleProps> = ({
             className={`px-4 py-2 max-w-full ${
               isUser
                 ? 'bg-orange-6 text-brand-text rounded-tl-lg rounded-tr-lg rounded-bl-lg'
-                : 'bg-white border-1 border-gray-2 text-gray-800 rounded-tl-lg rounded-tr-lg rounded-br-lg'
+                : 'bg-white border-1 border-gray-2 text-gray-9 rounded-tl-lg rounded-tr-lg rounded-br-lg'
             }`}
           >
             {isImage && imageUrl ? (
@@ -59,7 +59,7 @@ const ChatBubble: React.FC<ChatBubbleProps> = ({
 
           {/* Timestamp */}
           {timestamp && (
-            <span className="text-xs text-gray-500 mt-1 px-2">
+            <span className="text-xs text-gray-7 mt-1 px-2">
               {timestamp}
             </span>
           )}
