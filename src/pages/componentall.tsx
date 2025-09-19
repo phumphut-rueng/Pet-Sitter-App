@@ -15,9 +15,11 @@ import AvatarUploader from "@/components/form/avatarupload";
 import { cn } from "@/lib/utils";
 import PinSelection from "@/components/PinSelection";
 import ChatList from "@/components/Chat/ChatList";
-import ChatContainer from "@/components/Chat/ChatContainer";import PetTypeCheckBox from "@/components/petTypeCheckBox";
+import ChatContainer from "@/components/Chat/ChatContainer";
+import PetTypeCheckBox from "@/components/petTypeCheckBox";
 import CashButton from "@/components/buttons/cashButton";
 import IconButton from "@/components/buttons/iconButton";
+
 
 // Section Wrapper
 const Section = ({ title, cols = 2, children }: {
