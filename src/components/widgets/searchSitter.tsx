@@ -17,7 +17,7 @@ export default function SearchSitter() {
   };
   return (
     <div className="flex flex-col items-center gap-4 bg-gray-1 mt-5 ">
-      <PetTypeCheckBox layout="row" />
+      <PetTypeCheckBox layout="row" onChange={(selected) => console.log("Selected pets:", selected)}/>
       <div className="flex flex-row items-center gap-2 bg-white">
         <p className="text-sm font-bold">Rating:</p>
         <RatingSelect value={5} selectRating={rating} onChange={handleChange} />
