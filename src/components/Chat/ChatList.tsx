@@ -9,7 +9,7 @@ const ChatList: React.FC = () => {
   };
 
   return (
-    <div className="w-80 bg-white rounded-lg shadow-lg">
+    <div className="w-80 bg-black rounded-lg shadow-lg">
       {sampleChats.map((chat) => {
         const isSelected = selectedChatId === chat.id;
         
@@ -17,7 +17,7 @@ const ChatList: React.FC = () => {
           <div
             key={chat.id}
             onClick={() => handleChatSelect(chat.id)}
-            className={`p-4 cursor-pointer transition-colors duration-200 border-b border-gray-2 last:border-b-0 ${
+            className={`p-4 cursor-pointer transition-colors duration-200 border-b border-gray-2  ${
               isSelected
                 ? 'bg-gray-6' // selected state - เทาอ่อน
                 : 'bg-black text-white' // default state - สีดำ
