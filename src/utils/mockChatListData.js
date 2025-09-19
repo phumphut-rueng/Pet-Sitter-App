@@ -2,7 +2,7 @@ const sampleChats = [
   {
     id: '1',
     name: 'Jane Maison',
-    lastMessage: 'You: hi',
+    lastMessage: 'You: hi this is a long message',
     timestamp: '2m',
     avatar: '/images/landing_page/lovely-pet-portrait-isolated.svg',
     unreadCount: 1,
@@ -11,7 +11,7 @@ const sampleChats = [
   {
     id: '2',
     name: 'John Smith',
-    lastMessage: 'Thanks for the help!',
+    lastMessage: 'Thanks for the help! this is a long message',
     timestamp: '5m',
     avatar: '/images/landing_page/lovely-pet-portrait-isolated.svg',
     unreadCount: 0,

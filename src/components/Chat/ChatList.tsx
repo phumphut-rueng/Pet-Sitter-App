@@ -40,7 +40,7 @@ const ChatList: React.FC = () => {
               {/* Chat Info */}
               <div className="flex-1 min-w-0">
                 <div className="flex items-center justify-between">
-                  <h4 className={`text-sm font-medium truncate text-white`}>
+                  <h4 className={`text-sm font-medium truncate overflow-hidden text-ellipsis whitespace-nowrap text-white max-w-[150px]`}>
                     {chat.name}
                   </h4>
                   <span className={`text-xs text-gray-4`}>
@@ -49,7 +49,7 @@ const ChatList: React.FC = () => {
                 </div>
                 
                 <div className="flex items-center justify-between mt-1">
-                  <p className={`text-sm truncate text-gray-4`}>
+                  <p className={`text-sm truncate overflow-hidden text-ellipsis whitespace-nowrap text-gray-4 max-w-[200px]`}>
                     {chat.lastMessage}
                   </p>
                   
