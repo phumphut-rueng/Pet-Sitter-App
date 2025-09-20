@@ -12,7 +12,7 @@ import {
 import { UserRound, Bookmark, History, LogOut } from "lucide-react"
 import Link from "next/link"
 
-const AvatarDropdown = () => {
+const AvatarDropdown = ({isSitter}: {isSitter: boolean}) => {
   const [isOpen, setIsOpen] = useState(false)
 
   useEffect(() => {
@@ -64,6 +64,17 @@ const AvatarDropdown = () => {
             <span className="text-[16px] font-medium font-weight-500">History</span>
           </DropdownMenuItem>
         </Link>
+
+        {/* Sitter Profile */}
+        {/* show only if user is a sitter */}
+        {isSitter && (
+        <Link href="/sitter-profile">
+          <DropdownMenuItem className="flex items-center gap-3 px-6 py-2 cursor-pointer">
+            <UserRound className="size-5" />
+            <span className="text-[16px] font-medium font-weight-500">Sitter Profile</span>
+          </DropdownMenuItem>
+        </Link>
+        )}
 
         <DropdownMenuSeparator className="my-2 bg-gray-2" />
 
