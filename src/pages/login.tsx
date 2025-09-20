@@ -1,75 +1,155 @@
 import Image from "next/image";
 import InputText from "@/components/input/InputText";
 import PrimaryButton from "@/components/buttons/primaryButton";
+import { Checkbox } from "@/components/ui/checkbox";
+import { useState, useEffect } from "react";
+import Link from "next/link";
+// import { useAuth } from "@context/authentication"
 
 export default function Login() {
+
+  // const {login} = useAuth;
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [rememberMe, setRememberMe] = useState(false);
+  const [emailError, setEmailError] = useState("");
+  const [passwordError, setPasswordError] = useState("");
+
+  
+  const validateEmail = (email: string) => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!email) return "Email is required";
+    if (!emailRegex.test(email)) return "Please enter a valid email";
+    return "";
+  };
+
+  const validatePassword = (password: string) => {
+    if (!password) return "Password is required";
+    if (password.length < 8) return "Password must be at least 8 characters";
+    if (!/(?=.*[a-z])/.test(password)) return "Password must contain lowercase letter";
+    if (!/(?=.*[A-Z])/.test(password)) return "Password must contain uppercase letter";
+    if (!/(?=.*\d)/.test(password)) return "Password must contain a number";
+    return "";
+  };
+
+const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+  e.preventDefault();
+
+  const emailErr = validateEmail(email);
+  const passwordErr = validatePassword(password);
+
+  setEmailError(emailErr);
+  setPasswordError(passwordErr);
+
+  if (emailErr || passwordErr) return;
+
+  // login(email, password);
+
+  console.log(email, password, rememberMe);
+
+  if (rememberMe) {
+    localStorage.setItem('rememberedEmail', email);
+  } else {
+    localStorage.removeItem('rememberedEmail');
+  }
+}
+
+useEffect(() => {
+  const rememberedEmail = localStorage.getItem('rememberedEmail');
+  if (rememberedEmail) {
+    setEmail(rememberedEmail);
+    setRememberMe(true);
+  }
+}, []);
+
+
   return (
-    <>
       <div className="flex items-center justify-center h-screen overflow-hidden relative">
-
+        {/* login container */}
         <div className="w-full p-4 max-w-[440px] gap-14 flex flex-col">
-
+          {/* login header */}
           <div className="text-center gap-2">
-            <h1 className="font-bold font-weight-700 text-[56px] text-center text-black">
+            <h1 className="font-bold text-[56px] text-black">
               Welcome back!
             </h1>
-            <h3 className="font-bold text-[24px] text-center text-gray-400 tracking-tight" >
+            <h3 className="font-bold text-[24px] text-gray-400 tracking-tight">
               Find your perfect pet sitter with us
             </h3>
           </div>
 
-          <div className="gap-8 flex flex-col">
-              <InputText
-                label="Email"
-                type="email"
-                placeholder="email@company.com"
-                variant="default"
-                className=""
-              />
-              <InputText
-                label="Password"
-                type="password"
-                placeholder="Password"
-                variant="success"
-                className=""
-              />
-         
+          {/* login form */}
+          <form onSubmit={handleSubmit} className="gap-8 flex flex-col">
+              {/* email input */}
+              <div>
+                <InputText
+                  label="Email"
+                  type="email"
+                  placeholder="email@company.com"
+                  variant={emailError ? "error" : "default"}
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                />
+                {emailError && (
+                  <p className="text-red text-sm mt-1">{emailError}</p>
+                )}
+              </div>
+
+              {/* password input */}
+              <div>
+                <InputText
+                  label="Password"
+                  type="password"
+                  placeholder="Password"
+                  variant={passwordError ? "error" : "default"}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                />
+                {passwordError && (
+                  <p className="text-red text-sm mt-1">{passwordError}</p>
+                )}
+              </div>
+
+            {/* remember me and forget password */}
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <input
+
+                <Checkbox
                   id="remember-me"
                   name="remember-me"
-                  type="checkbox"
-                  className="h-6 w-6 border border-gray-2 rounded-[6px] "
+                  checked={rememberMe}
+                  onCheckedChange={(checked) => setRememberMe(checked === "indeterminate" ? false : checked)}
+                  className="h-6 w-6 border border-border hover:cursor-pointer hover:border-orange-5"
                 />
                 <label
                   htmlFor="remember-me"
-                  className="text-[16px] font-weight-500 font-medium text-gray-9"
+                  className="text-[16px] font-medium text-gray-9"
                 >
                   Remember?
                 </label>
               </div>
 
-              <div className="text-center">
-                <span className="text-[16px] font-weight-700 font-bold text-orange-5 cursor-pointer">
-                  Forget Password
+              {/* forget password */}
+              <div>
+                <span className="text-[16px] font-bold text-orange-5 cursor-pointer">
+                  <Link href="/forget-password">Forget Password</Link>
                 </span>
               </div>
             </div>
 
-            {/* signin button */}
-            <PrimaryButton text="Login" bgColor="primary" className="w-full"/>
+            {/* login button */}
+            <PrimaryButton text="Login" bgColor="primary" textColor="white" className="w-full justify-center" type="submit"/>
 
             {/* register prompt */}
             <div className="text-center">
-              <p className="text-[18px] font-weight-500 font-medium text-ink">
+              <p className="text-[18px] font-medium text-ink">
                 Don&apos;t have any account?
-                <span className=" text-orange-5 hover:text-orange-6 cursor-pointer ml-2">
-                  Register
+                <span className="text-orange-5 hover:text-orange-6 cursor-pointer ml-2">
+                  <Link href="/register">Register</Link>
+                  
                 </span>
               </p>
             </div>
-          </div>
+          </form>
         </div>
 
         {/* decorative elements container*/}
@@ -94,7 +174,7 @@ export default function Login() {
           </div>
           <div className="absolute top-[-100px] right-[-20px] md:top-24 md:right-24">
             <Image
-              src="/icons/Vector.svg"
+              src="/icons/PinkPaw.svg"
               alt="Decorative element"
               width={250}
               height={250}
@@ -103,6 +183,5 @@ export default function Login() {
           </div>
         </div>
       </div>
-    </>
   );
 }
