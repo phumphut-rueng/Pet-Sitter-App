@@ -379,166 +379,198 @@ export default function ComponentAll() {
                     </SubSection>
                 </Section>
 
-                {/* Card */}
-                <Section title="sidebar + card ">
-                    <SubSection title="card ยังไม่เสร็จ อีก 2 บางไสตล์">
-                    <SidebarDemo />
-                    {/* ============ (A) PET CARD DEMO ============ */}
-                <div className="space-y-6">
-                 <h3 className="text-lg font-semibold text-ink/90">Pet Card</h3>
-                 <PetCardGrid />
-                </div>
+{/* ========================== CARD SYSTEM ========================== */}
+{/*
+  notekaa:
+  - ใช้ {...sitterCommon}  มีข้อมูล: title, hostName, location, coverUrl, avatarUrl
+  - ใช้ {...bookingBase}  มีข้อมูล: title, sitterName, avatarUrl, transactionDate, dateTime, duration, pet
+  - สีกรอบส้ม: Large=border-orange-5 (#FF7037), Small=border-orange-6 (#E44A0C)
+  - Responsive: Desktop="hidden md:block", Mobile="md:hidden"
+*/}
 
-{/* ============ (B) PET SITTER CARD – LARGE ============ */}
-                    <div className="space-y-3 rounded-2xl border border-dashed border-purple-300 p-5">
-                <h3 className="text-lg font-semibold text-ink/90">Pet Sitter Card – Large</h3>
+<Section title="การ์ด + Sidebar">
+  <SubSection title="card เกือบเสร็จ ขาดนิดเดียว 😅">
+    
+    {/* ===================== SIDEBAR ===================== */}
+    {/* : <SidebarDemo /> */}
+    <SidebarDemo />
 
-{/* Large #1 */}
-            <div>
-    {/* desktop */}
-                 <div className="hidden md:block">
-                     <PetSitterCardLarge
-                          {...sitterCommon}
-                             rating={5}
-                             tags={["Dog", "Cat", "Rabbit"]}
-                             variant="default"
-                           />
-                 </div>
-    {/* mobile → chips */}
-                                     <div className="md:hidden">
-                                <PetSitterCard
-                                    {...sitterCommon}
-                                    size="sm"
-                                    variant="chips"
-                                    rating={5}
-                                    tags={["Dog", "Cat", "Rabbit"]}
-                                />
-                                </div>
-                            </div>
+    {/* ===================== PET CARDS ===================== */}
+    {/* 
+      วิธีใช้ PetCard:
+      <PetCard 
+        name="ชื่อสัตว์เลี้ยง"
+        species="Dog|Cat|Bird|Rabbit"
+        img="url รูปภาพ"
+        selected={true|false}
+        disabled={true|false}
+        onClick={() => {}}
+      />
+    */}
+    <div className="w-full space-y-6">
+      <h3 className="text-lg font-semibold text-ink/90">Pet Cards</h3>
+      <PetCardGrid />
+    </div>
 
-  {/* Large #2 (border ส้มบน desktop) */}
-                    <div>
-                        <div className="hidden md:block">
-                        <PetSitterCardLarge
-                            {...sitterCommon}
-                            rating={5}
-                            className="border-orange-200"
-                            tags={["Dog", "Cat", "Rabbit"]}
-                            variant="default"
-                        />
-                        </div>
-                        <div className="md:hidden">
-                        <PetSitterCard
-                            {...sitterCommon}
-                            size="sm"
-                            variant="chips"
-                            rating={5}
-                            tags={["Dog", "Cat", "Rabbit"]}
-                        />
-                        </div>
-                    </div>
+    {/* ===================== LARGE PET SITTER CARDS ===================== */}
+    {/* 
+      วิธีใช้ PetSitterCardLarge:
+      
+      แบบรูปซ้าย (default):
+      <PetSitterCardLarge 
+        {...sitterCommon}
+        rating={1-5}
+        tags={["Dog", "Cat", "etc"]}
+        className="เพิ่ม style ได้"
+      />
+      
+      แบบรูปบน (cover):
+      <PetSitterCardLarge 
+        {...sitterCommon}
+        lgLayout="cover"
+        rating={1-5}
+        tags={["Dog", "Cat", "etc"]}
+        className="min-h-[268px]"
+      />
+      
+    */}
+    <div className="space-y-3 rounded-2xl border border-dashed border-purple-300 p-5">
+      <h3 className="text-lg font-semibold text-ink/90">Pet Sitter – Large</h3>
+      <p className="text-gray-500 text-sm -mt-1">ขาดขนาดรูป large ต้องแก้</p>
 
-  {/* mini 335×268 ( Variant3, mb) */}
-                            <div className="w-[335px]">
-                                <PetSitterCard
-                                {...sitterCommon}
-                                size="sm"
-                                variant="default"
-                                rating={5}
-                                tags={["Dog", "Cat", "Rabbit"]}
-                                />
-                            </div>
-                            </div>
+      {/* Desktop: รูปซ้าย (ปกติ + มีกรอบส้ม) */}
+      <div className="hidden md:block w-[848px] mx-auto space-y-4">
+        <PetSitterCardLarge {...sitterCommon} rating={5} className="min-h-[216px] cursor-pointer" tags={["Dog","Cat","Rabbit"]} />
+        <PetSitterCardLarge {...sitterCommon} rating={5} className="min-h-[216px] cursor-pointer border-[1px] border-orange-5" tags={["Dog","Cat","Rabbit"]} />
+      </div>
 
-{/* ============ (C) PET SITTER CARD – SMALL ============ */}
-                                <div className="space-y-3 rounded-2xl border border-dashed border-purple-300 p-5">
-                                <h3 className="text-lg font-semibold text-ink/90">Pet Sitter Card – Small</h3>
-                                <div className="grid grid-cols-2 gap-4">
-                                    <PetSitterCardSmall
-                                    {...sitterCommon}
-                                    variant="default"
-                                    rating={5}
-                                    tags={["Dog", "Cat", "Bird", "Rabbit"]}
-                                    />
-                                    <PetSitterCardSmall
-                                    {...sitterCommon}
-                                    variant="default"
-                                    rating={5}
-                                    className="border-orange-200"
-                                    tags={["Dog", "Cat", "Bird", "Rabbit"]}
-                                    />
-                                    <PetSitterCardSmall
-                                    {...sitterCommon}
-                                    variant="default"
-                                    rating={5}
-                                    className="border-orange-200"
-                                    tags={["Dog", "Cat", "Rabbit"]}
-                                    />
-                                    <PetSitterCardSmall
-                                    {...sitterCommon}
-                                    variant="default"
-                                    rating={5}
-                                    className="border-green-200"
-                                    tags={["Dog", "Cat", "Rabbit"]}
-                                    />
-                                </div>
-                                </div>
+      {/* Desktop: รูปบน (cover layout) ขนาด 335×268 */}
+      <div className="hidden md:block w-[335px] mx-auto">
+        <PetSitterCardLarge {...sitterCommon} lgLayout="cover" rating={5} className="cursor-pointer min-h-[268px]" tags={["Dog","Cat","Rabbit"]} />
+      </div>
 
-{/* ============ (D) BOOKING CARD ============ */}
-                                            <div className="space-y-3 rounded-2xl border border-dashed border-purple-300 p-5">
-                                            <h3 className="text-lg font-semibold text-ink/90">Booking Card</h3>
+      {/* Mobile: ใช้ chips variant แทน */}
+      <div className="md:hidden">
+        <PetSitterCard {...sitterCommon} size="sm" variant="chips" rating={5} tags={["Dog","Cat","Rabbit"]} />
+      </div>
+    </div>
 
-                                            {/* wide */}
-                                            <div className="space-y-4">
-                                                <BookingCard
-                                                {...bookingBase}
-                                                status="waiting"
-                                                note="Waiting for Sitter to confirm booking"
-                                                layout="wide"
-                                                actions={[{ key: "message" }]}
-                                                />
-                                                <BookingCard
-                                                {...bookingBase}
-                                                status="in_service"
-                                                note="You are already in Sitter card"
-                                                layout="wide"
-                                                actions={[{ key: "message" }]}
-                                                />
-                                                <BookingCard
-                                                {...bookingBase}
-                                                status="success"
-                                                successDate="Tue, 25 Oct 2022 | 11:03 AM"
-                                                layout="wide"
-                                                actions={[{ key: "report" }, { key: "review" }]}
-                                                />
-                                            </div>
+    {/* ===================== SMALL PET SITTER CARDS ===================== */}
+    {/* 
+      วิธีใช้ PetSitterCardSmall:
+      
+      แบบ wide (471×138):
+      <PetSitterCardSmall 
+        {...sitterCommon}
+        smPreset="wide"
+        rating={1-5}
+        tags={["Dog", "Cat", "etc"]}
+      />
+      
+      แบบ compact (330×146):
+      <PetSitterCardSmall 
+        {...sitterCommon}
+        smPreset="compact"
+        rating={1-5}
+        tags={["Dog", "Cat", "etc"]}
+      />
+      
+      
+    */}
+    <div className="space-y-3 rounded-2xl border border-dashed border-purple-300 p-5">
+      <h3 className="text-lg font-semibold text-ink/90">Pet Sitter – Small</h3>
+      
+      <div className="w-full flex justify-center">
+        <div className="grid gap-8 justify-items-center grid-cols-1 md:[grid-template-columns:471px_330px]">
+          {/* แถวบน: ปกติ */}
+          <PetSitterCardSmall {...sitterCommon} rating={5} smPreset="wide" tags={["Dog","Cat","Bird","Rabbit"]} />
+          <PetSitterCardSmall {...sitterCommon} rating={5} smPreset="compact" tags={["Dog","Cat","Bird","Rabbit"]} />
+          
+          {/* แถวล่าง: มีกรอบส้ม highlight */}
+          <PetSitterCardSmall {...sitterCommon} rating={5} smPreset="wide" className="border-[1px] border-orange-6" tags={["Dog","Cat","Bird","Rabbit"]} />
+          <PetSitterCardSmall {...sitterCommon} rating={5} smPreset="compact" className="border-[1px] border-orange-6" tags={["Dog","Cat","Bird","Rabbit"]} />
+        </div>
+      </div>
+    </div>
 
-  {/* compact */}
-                                            <div className="mt-6 grid gap-4 md:grid-cols-3">
-                                                <BookingCard
-                                                {...bookingBase}
-                                                status="waiting"
-                                                layout="compact"
-                                                actions={[{ key: "message" }]}
-                                                />
-                                                <BookingCard
-                                                {...bookingBase}
-                                                status="in_service"
-                                                layout="compact"
-                                                actions={[{ key: "message" }]}
-                                                />
-                                                <BookingCard
-                                                {...bookingBase}
-                                                status="success"
-                                                successDate="Tue, 25 Oct 2022 | 11:03 AM"
-                                                layout="compact"
-                                                actions={[{ key: "report" }, { key: "review" }]}
-                                                />
-                                            </div>
-                                            </div>
+    {/* ===================== BOOKING CARDS ===================== */}
+    {/* 
+      วิธีใช้ BookingCard:
+      
+      <BookingCard 
+        {...bookingBase}
+        status="waiting|in_service|success"
+        layout="wide|compact"
+        note="ข้อความเพิ่มเติม (สำหรับ waiting)"
+        successDate="วันที่สำเร็จ (สำหรับ success)"
+        actions={[
+          { key: "message|call|change|review|report", 
+            label: "ชื่อปุ่ม (optional)", 
+            onClick: () => {}, 
+            disabled: false 
+          }
+        ]}
+      />
+      
+      Status แต่ละแบบ:
+      - waiting: แสดง note, ปุ่ม message/call
+      - in_service: ปุ่ม message/change  
+      - success: แสดง successDate, ปุ่ม review/report/call
+    */}
+    <div className="space-y-3 rounded-2xl border border-dashed border-purple-300 p-5">
+      <h3 className="text-lg font-semibold text-ink/90">Booking Cards</h3>
+      <p className="text-gray-500 text-sm -mt-1">ขาด demo 2 กับปรับ UI</p>
 
-                    </SubSection>
-                </Section>
+      {/* Wide Layout - ใช้สำหรับหน้าหลัก */}
+      <div className="space-y-4">
+        {/* Status: Waiting */}
+        <BookingCard 
+          {...bookingBase} 
+          status="waiting" 
+          note="Waiting for Sitter to confirm booking" 
+          layout="wide" 
+          actions={[
+            { key: "message", label: "Message", onClick: () => console.log("message") },
+            { key: "call", label: "Call", onClick: () => console.log("call") }
+          ]} 
+        />
+        
+        {/* Status: In Service */}
+        <BookingCard 
+          {...bookingBase} 
+          status="in_service" 
+          note="Service is currently in progress" 
+          layout="wide"
+          actions={[
+            { key: "message", onClick: () => console.log("message") },
+            { key: "change", onClick: () => console.log("change") }
+          ]} 
+        />
+        
+        {/* Status: Success */}
+        <BookingCard 
+          {...bookingBase} 
+          status="success" 
+          successDate="Tue, 25 Oct 2022 | 11:03 AM" 
+          layout="wide"
+          actions={[
+            { key: "report", label: "Report Issue", onClick: () => console.log("report") },
+            { key: "review", label: "Write Review", onClick: () => console.log("review") },
+            { key: "call", onClick: () => console.log("call") }
+          ]} 
+        />
+      </div>
+
+      {/* Compact Layout - ใช้สำหรับ grid/list view */}
+      <div className="mt-6 grid gap-4 md:grid-cols-3">
+        <BookingCard {...bookingBase} status="waiting" layout="compact" actions={[{ key: "message", onClick: () => console.log("message") }]} />
+        <BookingCard {...bookingBase} status="in_service" layout="compact" actions={[{ key: "message", onClick: () => console.log("message") }]} />
+        <BookingCard {...bookingBase} status="success" layout="compact" actions={[{ key: "report", onClick: () => console.log("report") }, { key: "review", onClick: () => console.log("review") }]} />
+      </div>
+    </div>
+    
+  </SubSection>
+</Section>
 
                 {/* Pagination */}
                 <Section title="Pagination">
