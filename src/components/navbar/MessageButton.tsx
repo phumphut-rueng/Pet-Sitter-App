@@ -1,24 +1,22 @@
-"use client"
-
 import React, { useState } from "react"
 import { MessageSquare } from "lucide-react"
+import { useRouter } from "next/navigation"
 
 interface MessageButtonProps {
   initialHasMessage?: boolean
-  onClick?: () => void
   variant?: "desktop" | "mobile"
 }
 
-const MessageButton: React.FC<MessageButtonProps> = ({
+const MessageButton = ({
   initialHasMessage = true,
-  onClick,
   variant = "desktop"
-}) => {
+}: MessageButtonProps) => {
   const [hasMessage, setHasMessage] = useState(initialHasMessage)
+  const router = useRouter()
 
   const handleClick = () => {
     setHasMessage(false)
-    onClick?.()
+    router.push('/messages')
   }
 
   const isMobile = variant === "mobile"

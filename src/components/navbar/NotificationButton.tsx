@@ -1,24 +1,22 @@
-"use client"
-
 import React, { useState } from "react"
 import { Bell } from "lucide-react"
+import { useRouter } from "next/navigation"
 
 interface NotificationButtonProps {
   initialHasNotification?: boolean
-  onClick?: () => void
   variant?: "desktop" | "mobile"
 }
 
-const NotificationButton: React.FC<NotificationButtonProps> = ({
+const NotificationButton = ({
   initialHasNotification = true,
-  onClick,
   variant = "desktop"
-}) => {
+}: NotificationButtonProps) => {
   const [hasNotification, setHasNotification] = useState(initialHasNotification)
+  const router = useRouter()
 
   const handleClick = () => {
     setHasNotification(false)
-    onClick?.()
+    router.push('/notifications')
   }
 
   const isMobile = variant === "mobile"

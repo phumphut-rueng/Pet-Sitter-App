@@ -1,22 +1,28 @@
-import React, { useState } from "react";
+import React from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
-import { Menu, X, UserRound } from "lucide-react";
-import PrimaryButton from "@/components/buttons/primaryButton";
 import AvatarDropdown from "./AvatarDropdown";
 import NotificationButton from "./NotificationButton";
 import MessageButton from "./MessageButton";
+import MobileMenu from "./MobileMenu";
+import { getMenuItems } from "./menuConfig";
+import { useRouter } from "next/navigation";
+import PrimaryButton from "@/components/buttons/primaryButton";
+// import { useAuth } from "@/contexts/AuthContext"; // Uncomment when AuthContext is implemented
 
 const Navbar = () => {
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const router = useRouter();
+  // TODO: Uncomment when AuthContext is implemented
+  // const { user, isLoggedIn, isLoading } = useAuth();
+  // const isSitter = user?.isSitter || false;
 
-  const toggleMobileMenu = () => {
-    setIsMobileMenuOpen(!isMobileMenuOpen);
-  };
-
-  const isSitter = false;
+  // Temporary hardcoded values - remove when auth context is ready
   const isLoggedIn = true;
+  const isSitter = true;
+  const isLoading = false;
+
+  const menuItems = getMenuItems(isLoggedIn, isSitter);
 
   return (
     <nav className="w-full bg-white">
@@ -33,160 +39,69 @@ const Navbar = () => {
             />
           </div>
           <div className="hidden md:flex items-center justify-end space-x-4">
-            {isLoggedIn ? (
+            {isLoading ? (
+              <div className="flex items-center space-x-4">
+                <div className="w-8 h-8 bg-gray-200 rounded-full animate-pulse"></div>
+                <div className="w-8 h-8 bg-gray-200 rounded-full animate-pulse"></div>
+                <div className="w-12 h-12 bg-gray-200 rounded-full animate-pulse"></div>
+              </div>
+            ) : isLoggedIn ? (
               <>
                 <NotificationButton
                   initialHasNotification={true}
-                  onClick={() => console.log("Notification clicked")}
                 />
                 <MessageButton
                   initialHasMessage={true}
-                  onClick={() => console.log("Message clicked")}
                 />
-                <AvatarDropdown isSitter={isSitter} />
+                <AvatarDropdown />
               </>
             ) : (
-              <>
+              menuItems.map((item, index) => (
                 <Link
-                  href="/register"
-                  className="text-black hover:text-gray-7 px-3 py-2 text-sm font-medium transition-colors"
+                  key={index}
+                  href={item.href}
+                  className="text-black hover:text-gray-7 px-6 py-2 text-sm font-medium transition-colors"
                 >
-                  Register
+                  {item.text}
                 </Link>
-
-                <Link
-                  href="/login"
-                  className="text-black hover:text-gray-7 px-3 py-2 text-sm font-medium transition-colors"
-                >
-                  Login
-                </Link>
-              </>
+              ))
             )}
 
-            <Button className="bg-orange-5 hover:bg-orange-6 text-white px-6 py-2 rounded-full">
-              Find a Pet Sitter
-            </Button>
+            
+            <Link href="/find-a-pet-sitter">
+            <PrimaryButton text="Find a Pet Sitter" textColor="white" bgColor="primary" className="w-full justify-center my-4"/>
+            </Link>
           </div>
 
           {/* Mobile Icons and Menu Button */}
           <div className="md:hidden flex items-center justify-end gap-6">
-            {/* Notification Icon */}
-            <NotificationButton
-              variant="mobile"
-              initialHasNotification={true}
-              onClick={() => console.log("Notification clicked")}
-            />
-
-            {/* Message Icon */}
-            <MessageButton
-              variant="mobile"
-              initialHasMessage={true}
-              onClick={() => console.log("Message clicked")}
-            />
-
-            {/* Hamburger Menu Button */}
-            <button
-              onClick={toggleMobileMenu}
-              className="rounded-md text-gray-6 hover:text-gray-9 hover:bg-gray-1"
-              aria-expanded={isMobileMenuOpen}
-            >
-              {isMobileMenuOpen ? <X /> : <Menu />}
-            </button>
-          </div>
-        </div>
-
-        {/* Mobile Menu */}
-        <nav
-          className={`${
-            isMobileMenuOpen ? "block" : "hidden"
-          } md:hidden fixed inset-0 top-12 md:top-20 z-50 bg-white`}
-        >
-          <div className="px-4 py-10 flex flex-col">
-            {isLoggedIn ? (
-              <>
-                <Link
-                  href="/profile"
-                  className="p-4 font-medium text-black text-[18px] gap-3 flex items-center"
-                  onClick={() => setIsMobileMenuOpen(false)}
-                >
-                  <UserRound className="w-5 h-5" /> Profile
-                </Link>
-                <Link
-                  href="/your-pet"
-                  className="p-4 font-medium text-black text-[18px] gap-3 flex items-center"
-                  onClick={() => setIsMobileMenuOpen(false)}
-                >
-                  <UserRound className="w-5 h-5" /> Profile Your Pet
-                </Link>
-                <Link
-                  href="/booking-history"
-                  className="p-4 font-medium text-black text-[18px] gap-3 flex items-center"
-                  onClick={() => setIsMobileMenuOpen(false)}
-                >
-                  <UserRound className="w-5 h-5" /> Profile Booking History
-                </Link>
-
-                {/* Sitter Profile */}
-                {/* show only if user is a sitter */}
-                {isSitter && (
-                <Link
-                  href="/sitter-profile"
-                  className="p-4 font-medium text-black text-[18px] gap-3 flex items-center"
-                  onClick={() => setIsMobileMenuOpen(false)}
-                >
-                  <UserRound className="w-5 h-5" />Sitter Profile
-                </Link>
-                )}
-                
-                <div className="border-b border-gray-2 my-4"></div>
-                <Link
-                  href="/logout"
-                  className="p-4 font-medium text-black text-[18px] gap-3 flex items-center"
-                  onClick={() => setIsMobileMenuOpen(false)}
-                >
-                  <UserRound className="w-5 h-5" />
-                  Logout
-                </Link>
-                <Link href="/find-a-pet-sitter">
-                  <PrimaryButton
-                    text="Find a Pet Sitter"
-                    textColor="white"
-                    bgColor="primary"
-                    className="w-full justify-center my-4"
-                    onClick={() => setIsMobileMenuOpen(false)}
-                  ></PrimaryButton>
-                </Link>
-              </>
+            {isLoading ? (
+              <div className="flex items-center gap-6">
+                <div className="w-6 h-6 bg-gray-200 rounded animate-pulse"></div>
+                <div className="w-6 h-6 bg-gray-200 rounded animate-pulse"></div>
+                <div className="w-6 h-6 bg-gray-200 rounded animate-pulse"></div>
+              </div>
             ) : (
               <>
-                <Link
-                  href="/register"
-                  className="p-4 font-medium text-black text-[18px]"
-                  onClick={() => setIsMobileMenuOpen(false)}
-                >
-                  Register
-                </Link>
-                <Link
-                  href="/login"
-                  className="p-4 font-medium text-black text-[18px]"
-                  onClick={() => setIsMobileMenuOpen(false)}
-                >
-                  Login
-                </Link>
+                {/* Notification Icon */}
+                <NotificationButton
+                  variant="mobile"
+                  initialHasNotification={true}
+                />
 
-                <Link href="/find-a-pet-sitter">
-                  <PrimaryButton
-                    text="Find a Pet Sitter"
-                    textColor="white"
-                    bgColor="primary"
-                    className="w-full justify-center my-4"
-                    onClick={() => setIsMobileMenuOpen(false)}
-                  ></PrimaryButton>
-                </Link>
+                {/* Message Icon */}
+                <MessageButton
+                  variant="mobile"
+                  initialHasMessage={true}
+                />
+
+                {/* Mobile Menu Component with Hamburger Button */}
+                <MobileMenu />
               </>
             )}
           </div>
-        </nav>
+        </div>
+
       </div>
     </nav>
   );

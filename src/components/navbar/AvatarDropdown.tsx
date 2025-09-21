@@ -1,5 +1,3 @@
-"use client"
-
 import React, { useState, useEffect } from "react"
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar"
 import {
@@ -9,11 +7,24 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import { UserRound, Bookmark, History, LogOut } from "lucide-react"
+import { UserRound } from "lucide-react"
 import Link from "next/link"
+import { getMenuItems } from "./menuConfig"
+// import { useAuth } from "@/contexts/AuthContext"; // Uncomment when AuthContext is implemented
 
-const AvatarDropdown = ({isSitter}: {isSitter: boolean}) => {
+const AvatarDropdown = () => {
+  // TODO: Uncomment when AuthContext is implemented
+  // const { user } = useAuth();
+  // const isSitter = user?.isSitter || false;
+  // const userAvatar = user?.avatar;
+  // const userName = user?.name;
+
+  // Temporary hardcoded values - remove when auth context is ready
+  const isSitter = true;
+  const userAvatar = undefined;
+  const userName = undefined;
   const [isOpen, setIsOpen] = useState(false)
+  const menuItems = getMenuItems(true, isSitter) // Always logged in for avatar dropdown
 
   useEffect(() => {
     const handleResize = () => {
@@ -33,7 +44,7 @@ const AvatarDropdown = ({isSitter}: {isSitter: boolean}) => {
     <DropdownMenu open={isOpen} onOpenChange={setIsOpen}>
       <DropdownMenuTrigger className="outline-hidden">
         <Avatar className="w-12 h-12 cursor-pointer">
-          <AvatarImage src="images/lovely-pet-portrait-isolated 1.svg" alt="Profile" />
+          <AvatarImage src={userAvatar || "icons/Ellipse-16.svg"} alt={userName || "Profile"} />
           <AvatarFallback className="bg-gray-200 text-gray-600">
             <UserRound className="size-6" />
           </AvatarFallback>
@@ -44,46 +55,23 @@ const AvatarDropdown = ({isSitter}: {isSitter: boolean}) => {
         align="end"
         sideOffset={8}
       >
-        <Link href="/profile">
-          <DropdownMenuItem className="flex items-center gap-3 px-6 py-2 cursor-pointer">
-            <UserRound className="size-5" />
-            <span className="text-[16px] font-medium font-weight-500">Profile</span>
-          </DropdownMenuItem>
-        </Link>
+        {menuItems.map((item, index) => (
+          <React.Fragment key={index}>
+            {/* Add separator before logout */}
+            {item.isLogout && (
+              <DropdownMenuSeparator className="my-2 bg-gray-2" />
+            )}
 
-        <Link href="/your-pet">
-          <DropdownMenuItem className="flex items-center gap-3 px-6 py-2 cursor-pointer">
-            <Bookmark className="size-5" />
-            <span className="text-[16px] font-medium font-weight-500">Your Pet</span>
-          </DropdownMenuItem>
-        </Link>
-
-        <Link href="/booking-history">
-          <DropdownMenuItem className="flex items-center gap-3 px-6 py-2 cursor-pointer">
-            <History className="size-5" />
-            <span className="text-[16px] font-medium font-weight-500">History</span>
-          </DropdownMenuItem>
-        </Link>
-
-        {/* Sitter Profile */}
-        {/* show only if user is a sitter */}
-        {isSitter && (
-        <Link href="/sitter-profile">
-          <DropdownMenuItem className="flex items-center gap-3 px-6 py-2 cursor-pointer">
-            <UserRound className="size-5" />
-            <span className="text-[16px] font-medium font-weight-500">Sitter Profile</span>
-          </DropdownMenuItem>
-        </Link>
-        )}
-
-        <DropdownMenuSeparator className="my-2 bg-gray-2" />
-
-        <Link href="/logout">
-          <DropdownMenuItem className="flex items-center gap-3 px-6 py-2 my-2 cursor-pointer">
-            <LogOut className="size-5" />
-            <span className="text-[16px] font-medium font-weight-500">Log out</span>
-          </DropdownMenuItem>
-        </Link>
+            <Link href={item.href}>
+              <DropdownMenuItem className="flex items-center gap-3 px-6 py-2 cursor-pointer">
+                {item.avatarIcon && <item.avatarIcon className="size-5" />}
+                <span className="text-[16px] font-medium font-weight-500">
+                  {item.avatarText || item.text}
+                </span>
+              </DropdownMenuItem>
+            </Link>
+          </React.Fragment>
+        ))}
       </DropdownMenuContent>
     </DropdownMenu>
   )
