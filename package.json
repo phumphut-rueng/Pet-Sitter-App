@@ -10,7 +10,10 @@
     "lint": "eslint"
   },
   "dependencies": {
+<<<<<<< HEAD
+=======
     "@hookform/resolvers": "^5.2.2",
+>>>>>>> 9052a70 (feat: Implement user profile management with form handling, API integration, and new components for account settings)
     "@prisma/client": "^6.16.2",
     "@radix-ui/react-alert-dialog": "^1.1.15",
     "@radix-ui/react-avatar": "^1.1.10",
@@ -34,12 +37,9 @@
     "next": "15.5.3",
     "react": "19.1.0",
     "react-dom": "19.1.0",
+    "react-hook-form": "^7.63.0",
     "tailwind-merge": "^3.3.1",
     "zod": "^4.1.11"
-<<<<<<< HEAD
-    "react-hook-form": "^7.63.0",
-=======
->>>>>>> 8945993 (chore: Add @hookform/resolvers and zod dependencies in package.json and package-lock.json)
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",

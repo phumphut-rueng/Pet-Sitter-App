@@ -394,15 +394,16 @@ export default function ComponentAll() {
     
     {/* ===================== CENTERING CONTAINER (ของเรา) =====================
         - ใช้ max-w เพื่อคุมความกว้างสูงสุด แล้ว mx-auto ให้กึ่งกลาง
-        - ทำเป็น 2 คอลัมน์: ซ้าย Sidebar 300px, ขวา Content 1fr
-    ------------------------------------------------------------------------ */}
-    <div className="w-full max-w-[1040px] mx-auto grid md:grid-cols-[300px,1fr] gap-6 minw-0">
-      
-      {/* ===================== SIDEBAR ===================== */}
-      {/* : <SidebarDemo /> */}
-      <div className="mx-auto w-full max-w-[300px]">
+        {/* 
+          - ทำเป็น 2 คอลัมน์: ซ้าย Sidebar 300px, ขวา Content 1fr
+        ------------------------------------------------------------------------ */}
+        <div className="w-full max-w-[1040px] mx-auto grid md:grid-cols-[300px,1fr] gap-6 min-w-0">
+          {/* ===================== SIDEBAR ===================== */}
+          {/* : <SidebarDemo /> */}
+          <div className="mx-auto w-full max-w-[300px]">
         <SidebarDemo />
-      </div>
+       <AccountSidebarMini />
+  </div>
 
       {/* ===================== RIGHT CONTENT (ของเรา) ===================== */}
       <div className="minw-0 space-y-6">
@@ -627,9 +628,15 @@ export default function ComponentAll() {
               <ChatList />
               <ChatContainer />
             </div>
+<<<<<<< HEAD
           </SubSection>
         </Section>
       </div>
     </div>
   );
+=======
+        </div>
+
+    );
+>>>>>>> 9052a70 (feat: Implement user profile management with form handling, API integration, and new components for account settings)
 }
