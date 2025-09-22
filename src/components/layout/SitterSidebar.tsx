@@ -62,7 +62,7 @@ export default function Sidebar({
   }
 
   return (
-    <aside className={cn("flex h-screen w-[240px] shrink-0 flex-col bg-bg text-text border-r border-border", className)}>
+    <aside className={cn("flex h-screen w-[284px] shrink-0 flex-col bg-bg text-text border-r border-border", className)}>
       <div className="px-5 pt-8 pb-6 border-b border-border">
         <img src={logoSrc} alt="Sitter" width={120} height={30} />
       </div>

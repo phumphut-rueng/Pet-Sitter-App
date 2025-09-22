@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 import type { NextApiRequest, NextApiResponse } from "next";
 import { prisma } from "@/lib/prisma";
 import bcrypt from "bcryptjs";
@@ -75,3 +76,7 @@ export default async function handler(
     //     });
     // }
 }
+=======
+export { default } from "./profile";
+//get-owner.ts (alias)
+>>>>>>> 9052a70 (feat: Implement user profile management with form handling, API integration, and new components for account settings)
