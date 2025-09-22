@@ -35,6 +35,7 @@ const ChatBubble: React.FC<ChatBubbleProps> = ({
         )}
 
         {/* Message Container */}
+        
         <div className={`flex flex-col ${isUser ? 'items-end' : 'items-start'}`}>
           {/* Message Bubble */}
           <div
