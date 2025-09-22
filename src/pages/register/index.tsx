@@ -3,20 +3,27 @@ import Link from "next/link"
 import PrimaryButton from "@/components/buttons/primaryButton"
 import InputText from "@/components/input/InputText"
 import Image from "next/image"
+import { validateRegister } from "@/utils/validate-register"
+import axios from "axios"
 
 interface RegisterForm {
+  name: string
   email: string
   phone: string
   password: string
 }
 
 export default function RegisterPage() {
+  const [isLoading, setIsLoading] = React.useState(false)
+
   const [form, setForm] = React.useState<RegisterForm>({
+    name: "",
     email: "",
     phone: "",
     password: "",
   })
   const [error, setError] = React.useState<RegisterForm>({
+    name: "",
     email: "",
     phone: "",
     password: "",
@@ -27,36 +34,55 @@ export default function RegisterPage() {
     setForm((prev) => ({ ...prev, [name]: value }))
   }
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    setIsLoading(true);
 
-    let err: RegisterForm = {
+    let newErrors: RegisterForm = {
+      name: "",
       email: "",
       phone: "",
       password: "",
     };
 
-    if (!form.email.trim()) {
-      err.email = "Please input your Email";
-    }
+    newErrors = await validateRegister(form);
 
-    if (!form.phone.trim()) {
-      err.phone = "Please input your Phone";
-    } else if (form.phone.trim().length !== 10) {
-      err.phone = "Phone number must be 10 digits";
-    }
+    // console.log("validateRegister", newErrors);
+    if (Object.values(newErrors).every((val) => val === "")) {
+      let result;
 
-    if (!form.password.trim()) {
-      err.password = "Please input your Password";
-    }
+      try {
+        result = await axios.post(
+          "/api/user/post-owner",
+          form
+        );
+      } catch (e) {
+        console.error("axios.post", e);
+      }
 
-    if (Object.values(err).every((val) => val === "")) {
-      // ✅ ไม่มี error → เรียก API ได้
-      console.log("Submit to backend", form)
+      if (result?.status === 201) {
+        clearData();
+      }
     }
     else {
-      setError(err);
+      setError(newErrors);
     }
+    setIsLoading(false)
+  }
+
+  const clearData = () => {
+    setError({
+      name: "",
+      email: "",
+      phone: "",
+      password: "",
+    });
+    setForm({
+      name: "",
+      email: "",
+      phone: "",
+      password: "",
+    });
   }
 
   return (
@@ -67,7 +93,8 @@ export default function RegisterPage() {
         width={255}
         height={371}
         alt="register"
-        className="absolute bottom-0 left-0 "
+        className="absolute bottom-0 left-0"
+        loading="lazy"
       />
 
       {/* ตำแหน่งบนขวา */}
@@ -77,10 +104,11 @@ export default function RegisterPage() {
         height={350}
         alt="register"
         className="absolute top-0 right-0"
+        priority
       />
 
       <div className="flex min-h-screen items-center justify-center bg-white text-[18px]">
-        <div className="relative w-[440] max-w-md rounded-lg">
+        <div className="relative w-[440px] max-w-md rounded-lg">
           <div className="text-center font-[700]">
             <h1 className="text-black text-[56px] pb-5">
               Join Us!
@@ -91,46 +119,65 @@ export default function RegisterPage() {
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-7 pt-15 ">
-            <InputText
-              label="Email"
-              placeholder="email@company.com"
-              type="email"
-              variant={!error.email ? "default" : "error"}
+            <div>
+              <InputText
+                label="Email"
+                id="email"
+                name="email"
+                value={form.email}
+                placeholder="email@company.com"
+                type="text"
+                variant={!error.email ? "default" : "error"}
+                onChange={handleChange}
+                errorText={error.email}
+              />
+            </div>
 
-            />
+            <div>
+              <InputText
+                label="Phone"
+                id="phone"
+                name="phone"
+                value={form.phone}
+                placeholder="Your phone number"
+                type="text"
+                variant={!error.phone ? "default" : "error"}
+                inputMode="numeric"
+                onChange={(e) => {
+                  const onlyNums = e.target.value.replace(/\D/g, "");
+                  if (onlyNums.length <= 10) {
+                    handleChange({
+                      ...e,
+                      target: { ...e.target, name: "phone", value: onlyNums },
+                    });
+                  }
+                }}
+                errorText={error.phone}
+              />
+            </div>
 
-            <InputText
-              label="Phone"
-              placeholder="Your phone number"
-              type="text"
-              variant={!error.phone ? "default" : "error"}
-              inputMode="numeric"
-              name="phone"
-              value={form.phone}
-              onChange={(e) => {
-                const onlyNums = e.target.value.replace(/\D/g, "");
-                if (onlyNums.length <= 10) {
-                  handleChange({
-                    ...e,
-                    target: { ...e.target, name: "phone", value: onlyNums },
-                  });
-                }
-              }}
-            />
+            <div>
+              <InputText
+                label="Password"
+                id="password"
+                name="password"
+                value={form.password}
+                placeholder="Create your password"
+                type="password"
+                variant={!error.password ? "default" : "error"}
+                onChange={handleChange}
+                errorText={error.password}
+              />
+            </div>
 
-            <InputText
-              label="Password"
-              placeholder="Create your password"
-              type="password"
-              variant={!error.password ? "default" : "error"}
-            />
 
             <PrimaryButton
-              text="Register"
+              text={isLoading ? "Registering..." : "Register"}
               bgColor="primary"
               textColor="white"
               type="submit"
-              className="w-full justify-center"
+              disabled={isLoading}
+              className="w-full"
             />
           </form>
 
@@ -142,7 +189,7 @@ export default function RegisterPage() {
             <div className="h-px flex-1 bg-gray-2" />
           </div>
 
-          <div className="flex justify-center gap-4">
+          <div className="flex gap-4">
             <PrimaryButton
               text="Facebook"
               srcImage="/icons/fbIcon.svg"
@@ -155,13 +202,16 @@ export default function RegisterPage() {
               srcImage="/icons/gmaiIicon.svg"
               bgColor="gray"
               textColor="black"
-              className="w-[210px] justify-center"
+              className="w-[210px] "
             />
           </div>
 
           <p className="mt-6 text-center text-[16px] text-ink">
             Already have an account?{" "}
-            <Link href="/login" className="text-orange-5 hover:underline">
+            <Link
+              href="/login"
+              className="text-orange-5 hover:underline"
+            >
               Login
             </Link>
           </p>
