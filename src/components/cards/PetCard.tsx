@@ -1,25 +1,29 @@
 import * as React from "react";
 
-type Props = {
+type PetSpecies = "Cat" | "Dog" | "Bird" | "Rabbit" | (string & {});
+
+type PetCardProps = {
   name: string;
-  species: "Cat" | "Dog" | "Bird" | "Rabbit" | string;
+  species: PetSpecies;
   img: string;
   selected?: boolean;
   disabled?: boolean;
   className?: string;
   onClick?: () => void;
+  size?: number;
 };
 
 function Chip({ label }: { label: string }) {
   let chipColor = "bg-muted text-muted-text ring-border";
-  
   if (label === "Dog") chipColor = "bg-green-bg text-success ring-success";
   if (label === "Cat") chipColor = "bg-pink-bg text-pink ring-pink";
   if (label === "Bird") chipColor = "bg-blue-bg text-blue ring-blue";
   if (label === "Rabbit") chipColor = "bg-orange-1 text-orange-6 ring-orange-2";
 
   return (
-    <span className={`inline-flex h-8 items-center justify-center rounded-full px-3 text-[13px] font-medium ring-1 ring-inset ${chipColor}`}>
+    <span
+      className={`inline-flex h-8 items-center justify-center rounded-full px-3 text-[13px] font-medium ring-1 ring-inset ${chipColor}`}
+    >
       {label}
     </span>
   );
@@ -33,25 +37,28 @@ export default function PetCard({
   disabled = false,
   className = "",
   onClick,
-}: Props) {
-  let buttonClass = "relative flex w-[240px] h-[240px] flex-col items-center gap-4 rounded-[16px] border bg-white p-6 transition ";
+  size = 240,
+}: PetCardProps) {
   
-  if (selected) {
-    buttonClass += "border-brand ";
-  } else {
-    buttonClass += "border-border ";
-  }
-  
-  if (disabled) {
-    buttonClass += "opacity-40 cursor-not-allowed";
-  } else {
-    buttonClass += "cursor-pointer hover:shadow-[0_6px_24px_rgba(50,54,64,0.08)] active:scale-[.99]";
-  }
+  const fixedBoxStyle: React.CSSProperties = {
+    width: size,
+    height: size,
+  };
+
+  let buttonClass =
+    "relative flex flex-col items-center gap-4 rounded-[16px] border bg-white p-6 transition ";
+  buttonClass += selected ? "border-brand " : "border-border ";
+  buttonClass += disabled
+    ? "opacity-40 cursor-not-allowed "
+    : "cursor-pointer hover:shadow-[0_6px_24px_rgba(50,54,64,0.08)] active:scale-[.99] ";
 
   return (
     <button
       type="button"
+      aria-pressed={selected}
+      aria-disabled={disabled}
       onClick={disabled ? undefined : onClick}
+      style={fixedBoxStyle}
       className={`${buttonClass} ${className}`}
     >
       {selected && (
@@ -65,7 +72,9 @@ export default function PetCard({
         </span>
       )}
 
+
       <div className="h-[104px] w-[104px] overflow-hidden rounded-full bg-muted">
+        {/* ถ้าใช้ next/image สามารถเปลี่ยนเป็น <Image fill className="object-cover" /> ได้ */}
         <img src={img} alt={name} className="h-full w-full object-cover" />
       </div>
 

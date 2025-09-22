@@ -98,6 +98,10 @@ function Tag({ label }: { label: string }) {
   );
 }
 
+
+const LG_IMG_W = 245;  // CHANGED
+const LG_IMG_H = 184;  // CHANGED
+
 export function PetSitterCard({
   size = "lg",
   variant = "default",
@@ -160,13 +164,19 @@ export function PetSitterCard({
       <article
         tabIndex={0}
         className={cn(
-          "group grid cursor-pointer grid-cols-[224px_1fr] gap-4 rounded-2xl border border-border bg-white p-4 hover:shadow-[0_6px_24px_rgba(50,54,64,0.08)] focus-visible:outline-none",
+          // CHANGED: คอลัมน์ซ้ายล็อกความกว้างภาพ 245px
+          "group grid cursor-pointer grid-cols-[245px_1fr] gap-4 rounded-2xl border border-border bg-white p-4 hover:shadow-[0_6px_24px_rgba(50,54,64,0.08)] focus-visible:outline-none", // CHANGED
           className
         )}
       >
-        <div className="h-36 w-56 overflow-hidden rounded-xl bg-muted">
+
+        <div
+          className="flex-none overflow-hidden rounded-lg bg-muted" // CHANGED (rounded-lg = 8px)
+          style={{ width: LG_IMG_W, height: LG_IMG_H }}            // CHANGED
+        >
           <img src={coverUrl} alt="" className="h-full w-full object-cover" />
         </div>
+
         <div className="min-w-0 self-center space-y-3">
           <div className="flex items-start justify-between gap-4">
             <div className="flex min-w-0 items-center gap-3">
