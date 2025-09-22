@@ -7,12 +7,13 @@
       textColor = "black"
       className="px-16"   
       //สามารถเพิ่มเขียน override className ได้ เช่น เเก้ความยาวปุ่มด้วย px
+      onClick={() => ("")}
       /> */}
 
 const bgColorMap = {
-  primary: "bg-orange-5",
-  secondary: "bg-orange-1",
-  gray: "bg-gray-1",
+  primary: "bg-orange-5 hover:bg-orange-6",
+  secondary: "bg-orange-1 hover:bg-orange-2",
+  gray: "bg-gray-1 hover:bg-gray-2",
   ghost: "bg-transparent",
 } as const;
 
@@ -20,6 +21,7 @@ const textColorMap = {
   white: "text-white",
   black: "text-black",
   orange: "text-orange-5",
+  gray: "text-gray-6",
 } as const;
 
 
@@ -29,6 +31,7 @@ type ButtonProps = {
   bgColor?: keyof typeof bgColorMap;
   textColor?: keyof typeof textColorMap;
   className?: string;
+  onClick?: () => void;
 } & React.ButtonHTMLAttributes<HTMLButtonElement>;
 
 export default function PrimaryButton({
@@ -37,6 +40,7 @@ export default function PrimaryButton({
   textColor = "white",
   srcImage,
   className = "",
+  onClick,
   ...props
 
 }: ButtonProps) {
@@ -50,6 +54,7 @@ export default function PrimaryButton({
       disabled:cursor-not-allowed 
       disabled:bg-gray-1 
       ${className}`}
+      onClick={onClick}
     >
       {srcImage && (
         <img
