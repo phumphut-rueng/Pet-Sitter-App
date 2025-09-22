@@ -21,13 +21,13 @@ export default async function handler(
         };
 
         if (!email) {
-            return res.status(400).json({ error: "Email is required." });
+            return res.status(400).json({ error: "Email is required" });
         }
         if (!phone) {
-            return res.status(400).json({ error: "Phone is required." });
+            return res.status(400).json({ error: "Phone is required" });
         }
         if (!password) {
-            return res.status(400).json({ error: "Password is required." });
+            return res.status(400).json({ error: "Password is required" });
         }
 
         // fallback ให้ name = email ถ้า user ไม่ส่งมา
@@ -71,12 +71,15 @@ export default async function handler(
 
         return res
             .status(201)
-            .json({ message: "Owner created successfully", data: newOwner });
+            .json({
+                message: "Owner created successfully",
+                data: newOwner
+            });
     } catch (error) {
         console.error(error);
 
         return res.status(500).json({
-            error: "Server error",
+            error: "Server could not create owner because database connection",
             details: String(error),
         });
     }

@@ -32,6 +32,9 @@ export default async function handler(
         }
     } catch (error) {
         console.error("check-phone error:", error);
-        return res.status(500).json({ error: "Server error", details: String(error) });
+        return res.status(500).json({
+            error: "Server could not get phone because database connection",
+            details: String(error)
+        });
     }
 }
