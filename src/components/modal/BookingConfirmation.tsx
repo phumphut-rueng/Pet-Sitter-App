@@ -31,14 +31,6 @@ export default function BookingConfirmation({
 
                     {/* Actions */}
                     <div className="flex justify-between gap-4 mt-4">
-                        {/* <AlertDialogCancel asChild>
-                            <PrimaryButton
-                                text="Cancel"
-                                bgColor="secondary"
-                                textColor="orange"
-                                type="submit"
-                            />
-                        </AlertDialogCancel> */}
                         <PrimaryButton
                             text="Cancel"
                             bgColor="secondary"
