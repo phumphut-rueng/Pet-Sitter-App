@@ -1,0 +1,115 @@
+import * as React from "react";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
+
+type Item = {
+  id: string;
+  label: string;
+  href?: string;
+  iconSrc: string;
+  notify?: boolean;
+};
+
+export type SidebarProps = {
+  className?: string;
+  activeId?: string;
+  onNavigate?: (id: string) => void;
+  logoSrc?: string;
+};
+
+function cn(...classes: (string | false | null | undefined)[]) {
+  return classes.filter(Boolean).join(" ");
+}
+
+const IconMask = ({ src, className = "w-5 h-5" }: { src: string; className?: string }) => (
+  <span
+    aria-hidden
+    className={cn("inline-block align-middle", className)}
+    style={{
+      backgroundColor: "currentColor",
+      WebkitMaskImage: `url(${src})`,
+      maskImage: `url(${src})`,
+      WebkitMaskRepeat: "no-repeat",
+      maskRepeat: "no-repeat",
+      WebkitMaskSize: "contain",
+      maskSize: "contain",
+      WebkitMaskPosition: "center",
+      maskPosition: "center",
+      display: "inline-block",
+    }}
+  />
+);
+
+export default function Sidebar({
+  className = "",
+  activeId,
+  onNavigate,
+  logoSrc = "/icons/sitter-logo-1.svg",
+}: SidebarProps) {
+  const pathname = usePathname();
+
+  const items: Item[] = [
+    { id: "profile", label: "Pet Sitter Profile", href: "/sitter/profile", iconSrc: "/icons/ic-user.svg" },
+    { id: "booking", label: "Booking List", href: "/sitter/booking", iconSrc: "/icons/ic-list.svg", notify: true },
+    { id: "calendar", label: "Calendar", href: "/sitter/calendar", iconSrc: "/icons/ic-calendar.svg" },
+    { id: "payout", label: "Payout Option", href: "/sitter/payout", iconSrc: "/icons/ic-creditcard.svg" },
+  ];
+
+  let currentActiveId = activeId;
+  if (!currentActiveId) {
+    const foundItem = items.find(item => item.href && pathname?.startsWith(item.href));
+    currentActiveId = foundItem ? foundItem.id : "profile";
+  }
+
+  return (
+    <aside className={cn("flex h-screen w-[240px] shrink-0 flex-col bg-bg text-text border-r border-border", className)}>
+      <div className="px-5 pt-8 pb-6 border-b border-border">
+        <img src={logoSrc} alt="Sitter" width={120} height={30} />
+      </div>
+
+      <nav className="flex-1 overflow-y-auto px-2 py-4">
+        <ul className="space-y-0.5">
+          {items.map(item => {
+            const isActive = currentActiveId === item.id;
+            let itemClass = "group flex w-full items-center gap-3 rounded-xl px-3 py-3 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2 focus-visible:ring-offset-bg ";
+
+            if (isActive) {
+              itemClass += "bg-orange-50 text-orange-6";
+            } else {
+              itemClass += "text-gray-7 hover:bg-orange-50 hover:text-orange-6";
+            }
+
+            return (
+              <li key={item.id}>
+                <Link href={item.href || "#"} className="block">
+                  <div
+                    className={itemClass}
+                    onClick={() => onNavigate?.(item.id)}
+                    role="button"
+                    tabIndex={0}
+                  >
+                    <IconMask src={item.iconSrc} />
+                    <span className="text-[15px] font-medium leading-5">{item.label}</span>
+                    {item.notify && (
+                      <span className="ml-auto mt-[1px] inline-block h-2 w-2 rounded-full bg-red" />
+                    )}
+                  </div>
+                </Link>
+              </li>
+            );
+          })}
+        </ul>
+      </nav>
+
+      <div className="mt-auto border-t border-border">
+        <button
+          className="flex w-full items-center gap-3 px-4 py-4 transition-colors text-gray-7 hover:bg-orange-50 hover:text-orange-6 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2 focus-visible:ring-offset-bg"
+          onClick={() => onNavigate?.("logout")}
+        >
+          <IconMask src="/icons/ic-logout.svg" />
+          <span className="text-[15px] font-medium">Log Out</span>
+        </button>
+      </div>
+    </aside>
+  );
+}
