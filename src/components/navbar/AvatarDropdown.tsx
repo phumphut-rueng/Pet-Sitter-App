@@ -9,22 +9,28 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { UserRound } from "lucide-react"
 import Link from "next/link"
-import { getMenuItems } from "./menuConfig"
-// import { useAuth } from "@/contexts/AuthContext"; // Uncomment when AuthContext is implemented
+import { User, MenuItem } from "@/types/navbar";
 
-const AvatarDropdown = () => {
-  // TODO: Uncomment when AuthContext is implemented
-  // const { user } = useAuth();
-  // const isSitter = user?.isSitter || false;
-  // const userAvatar = user?.avatar;
-  // const userName = user?.name;
+interface AvatarDropdownProps {
+  user: User | null
+  menuItems: MenuItem[]
+  onLogout: () => void
+  onNavigate: (path: string) => void
+}
 
-  // Temporary hardcoded values - remove when auth context is ready
-  const isSitter = true;
-  const userAvatar = undefined;
-  const userName = undefined;
+const AvatarDropdown = ({ user, menuItems, onLogout, onNavigate }: AvatarDropdownProps) => {
   const [isOpen, setIsOpen] = useState(false)
-  const menuItems = getMenuItems(true, isSitter) // Always logged in for avatar dropdown
+
+  // Don't render if no user
+  if (!user) {
+    return null
+  }
+
+  const userAvatar = user.profile_image
+  const userName = user.name
+  const userInitials = userName
+    ? userName.split(' ').map(name => name.charAt(0)).join('').toUpperCase()
+    : 'U'
 
   useEffect(() => {
     const handleResize = () => {
@@ -40,18 +46,30 @@ const AvatarDropdown = () => {
     }
   }, [isOpen])
 
+  const handleMenuItemClick = (item: MenuItem) => {
+    setIsOpen(false)
+
+    if (item.isLogout) {
+      onLogout()
+    } else {
+      onNavigate(item.href)
+    }
+  }
+
   return (
     <DropdownMenu open={isOpen} onOpenChange={setIsOpen}>
       <DropdownMenuTrigger className="outline-hidden">
         <Avatar className="w-12 h-12 cursor-pointer">
-          <AvatarImage src={userAvatar || "icons/Ellipse-16.svg"} alt={userName || "Profile"} />
+          {userAvatar ? (
+            <AvatarImage src={userAvatar} alt={userName || "Profile"} />
+          ) : null}
           <AvatarFallback className="bg-gray-200 text-gray-600">
             <UserRound className="size-6" />
           </AvatarFallback>
         </Avatar>
       </DropdownMenuTrigger>
       <DropdownMenuContent
-        className="w-[186px] bg-white border-none"
+        className="w-[186px] bg-white border-0 shadow-md pb-2"
         align="end"
         sideOffset={8}
       >
@@ -62,14 +80,15 @@ const AvatarDropdown = () => {
               <DropdownMenuSeparator className="my-2 bg-gray-2" />
             )}
 
-            <Link href={item.href}>
-              <DropdownMenuItem className="flex items-center gap-3 px-6 py-2 cursor-pointer">
-                {item.avatarIcon && <item.avatarIcon className="size-5" />}
-                <span className="text-[16px] font-medium font-weight-500">
-                  {item.avatarText || item.text}
-                </span>
-              </DropdownMenuItem>
-            </Link>
+            <DropdownMenuItem
+              className="flex items-center gap-3 px-6 py-3 cursor-pointer"
+              onClick={() => handleMenuItemClick(item)}
+            >
+              {item.avatarIcon && <item.avatarIcon className="size-5" />}
+              <span className="text-[16px] font-medium font-weight-500">
+                {item.avatarText || item.text}
+              </span>
+            </DropdownMenuItem>
           </React.Fragment>
         ))}
       </DropdownMenuContent>

@@ -4,11 +4,11 @@ import PrimaryButton from "@/components/buttons/primaryButton";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useState, useEffect } from "react";
 import Link from "next/link";
-// import { useAuth } from "@context/authentication"
+import { useAuth } from "@/contexts/AuthContext"
 
 export default function Login() {
 
-  // const {login} = useAuth;
+  const {login} = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [rememberMe, setRememberMe] = useState(false);
@@ -43,7 +43,7 @@ const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
 
   if (emailErr || passwordErr) return;
 
-  // login(email, password);
+  login({email, password});
 
   console.log(email, password, rememberMe);
 
