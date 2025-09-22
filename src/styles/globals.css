@@ -36,9 +36,12 @@
 @import "tailwindcss";
 @import "./token.css";
 
-@source "../**/*.{js,ts,jsx,tsx,mdx}";
+@source "./app/**/*.{ts,tsx,mdx}";
+@source "./components/**/*.{ts,tsx}";
+@source "./pages/**/*.{ts,tsx}";
+@source "./src/**/*.{ts,tsx}";
 
-/* ---------- TAILWIND THEME MAPPING ---------- */
+/* ---------- THEME MAPPING ---------- */
 @theme {
   /* Base Surfaces */
   --color-bg: var(--bg);
@@ -47,7 +50,7 @@
   --color-muted-text: var(--muted-text);
   --color-border: var(--border);
 
-    /* NEW: ink (Figma black) */
+  /* NEW: ink (Figma black) */
   --color-ink: var(--ink);  /* => text-ink / bg-ink / border-ink */
 
   /* Brand */
@@ -62,7 +65,7 @@
   --color-gray-7: var(--gray-7);
   --color-gray-6: var(--gray-6);
   --color-gray-4: var(--gray-4);
-  --color-gray-2: var(--gray-2); 
+  --color-gray-2: var(--gray-2);
   --color-gray-1: var(--gray-1);
   --color-white: var(--white);
 
@@ -75,7 +78,7 @@
   --color-brown-200: var(--brown-200);
   --color-brown-100: var(--brown-100);
 
-  /* Orange scale (เรียกแบบ gray-*) */
+  /* Orange scale */
   --color-orange-6: var(--orange-6); /* #E44A0C */
   --color-orange-5: var(--orange-5); /* #FF7037 */
   --color-orange-4: var(--orange-4); /* #FF986F */
@@ -84,7 +87,7 @@
   --color-orange-1: var(--orange-1); /* #FFF1EC */
   --color-orange-50: var(--orange-bg); /* พื้นส้มอ่อน */
 
-  /* Shortcuts (ถ้าชอบเรียกแบบสั้น) */
+  /* Shortcuts */
   --color-orange: var(--orange-5);
   --color-orange-light: var(--orange-3);
 
@@ -95,7 +98,7 @@
   --color-pink: var(--pink);
   --color-red: var(--red);
 
-  /* Green Scale */ 
+  /* Green Scale  */
   --color-green-light: var(--green-bg);
 
   /* Accent Backgrounds */
@@ -126,7 +129,7 @@
   --color-google-red: var(--google-red);
   --color-google-yellow: var(--google-yellow);
 
-  /* Legacy Compatibility */
+  /* Legacy Compatibility (shadcn mapping style) */
   --color-background: var(--bg);
   --color-foreground: var(--text);
   --color-primary: var(--brand);
@@ -139,10 +142,10 @@
   /* Focus Ring */
   --ring: var(--brand);
 
-  /* Typography */
+  /* Typography family */
   --font-sans: var(--font);
 
-  /* Text Sizes (for font-[var(--text-lg)] usage) */
+  /* Text Sizes (ใช้คู่กับ font-[var(--text-*)] ได้) */
   --text-display: var(--text-xl);
   --text-h1: var(--text-lg);
   --text-h2: var(--text-md);
@@ -152,24 +155,29 @@
   --text-body2: var(--text-sm2);
   --text-body3: var(--text-xs2);
 
-  /* Spacing */
+  /* Radius & Shadows */
   --radius-sm: var(--radius-sm);
   --radius-md: var(--radius);
   --radius-lg: var(--radius-lg);
-
-  /* Shadows */
   --shadow-sm: var(--shadow-sm);
   --shadow-md: var(--shadow);
   --shadow-lg: var(--shadow-lg);
 }
 
 /* ---------- BASE STYLES ---------- */
-*, *::before, *::after { 
-  box-sizing: border-box; 
+*, *::before, *::after { box-sizing: border-box; }
+
+html, body, #__next { height: 100%; }
+
+:root {
+  /* Global Layout Width */
+  --page-max: 1200px;
+  --page-pad-x: 16px;
 }
 
-html, body, #__next { 
-  height: 100%; 
+html, body {
+  max-width: 100%;
+  overflow-x: hidden; /* กันสกรอลล์นอนเมื่อรวมงานหลายคน */
 }
 
 body {
@@ -180,14 +188,65 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
-::selection { 
-  background: var(--color-brand); 
-  color: var(--color-brand-text); 
+/* กันสื่อทุกชนิดล้นกรอบแม้ลืมใส่คลาส */
+img, video, canvas, svg, iframe { max-width: 100%; height: auto; }
+
+::selection {
+  background: var(--color-brand);
+  color: var(--color-brand-text);
 }
 
-/* ---------- TYPOGRAPHY UTILITIES ---------- */
+/* ---------- DARK MODE ---------- */
+/* ให้สลับได้ด้วยการใส่ class="dark" บน <html> */
+:root.dark {
+  /* ถ้ามีโทเคนโหมดมืดใน token.css ให้ map เพิ่มที่นี่ */
+}
+
+/* ---------- UTILITIES ---------- */
 @layer utilities {
-  /* === Typography (single source of truth) === */
+  /* ===== Global container 1200px ===== */
+  .container-1200 {
+    max-width: var(--page-max);
+    margin-inline: auto;
+    padding-inline: var(--page-pad-x);
+  }
+
+  /* สำหรับ section ย่อยที่ต้องการคุมกรอบเหมือนกัน */
+  .section {
+    max-width: var(--page-max);
+    margin-inline: auto;
+    padding-inline: var(--page-pad-x);
+  }
+
+  /* Media ไม่ให้ล้นกรอบ (สำรองจาก base) */
+  .media-fluid { max-width: 100%; height: auto; }
+
+  /* ลูกของ flex/grid ที่มีเนื้อหายาว: ป้องกันดันล้น */
+  .minw-0 { min-width: 0; }
+
+  /* Focus ring tone (ใช้ง่าย: ring-2 ring-brand ring-offset-2 ring-offset-bg) */
+  .ring-brand { --tw-ring-color: var(--color-brand); }
+  .ring-offset-bg { --tw-ring-offset-color: var(--color-bg); }
+
+  /* Quick color helpers */
+  .text-brand   { color: var(--brand); }
+  .bg-brand     { background: var(--brand); }
+  .border-brand { border-color: var(--brand); }
+
+  .text-muted { color: var(--muted-text); }
+  .bg-muted   { background: var(--muted); }
+
+  .text-success { color: var(--success); }
+  .text-waiting { color: var(--waiting); }
+  .text-error   { color: var(--red); }
+  .text-pending { color: var(--pending); }
+
+  .bg-success { background: var(--success); }
+  .bg-waiting { background: var(--waiting); }
+  .bg-error   { background: var(--red); }
+  .bg-pending { background: var(--pending); }
+
+  /* ===== Typography scale (single source of truth) ===== */
   .display { font-size: 88px; line-height: 96px; font-family: var(--font-sans); font-weight: 900; }
   .h1      { font-size: 56px; line-height: 64px; font-family: var(--font-sans); font-weight: 700; }
   .h2      { font-size: 36px; line-height: 44px; font-family: var(--font-sans); font-weight: 700; }
@@ -197,28 +256,26 @@ body {
   .body-sm { font-size: 16px; line-height: 28px; font-family: var(--font-sans); font-weight: 500; }
   .caption { font-size: 14px; line-height: 24px; font-family: var(--font-sans); font-weight: 500; }
 
-  /* Responsive Typography */
   @media (max-width: 768px) {
     .display { font-size: 56px; line-height: 64px; }
     .h1      { font-size: 36px; line-height: 44px; }
     .h2      { font-size: 24px; line-height: 32px; }
   }
-
-  /* === Quick Color Utilities === */
-  .text-brand   { color: var(--brand); }
-  .bg-brand     { background: var(--brand); }
-  .border-brand { border-color: var(--brand); }
-
-  .text-muted   { color: var(--muted-text); }
-  .bg-muted     { background: var(--muted); }
-
-  .text-success { color: var(--success); }
-  .text-waiting { color: var(--waiting); }
-  .text-error   { color: var(--red); }
-  .text-pending { color: var(--pending); }
-
-  .bg-success   { background: var(--success); }
-  .bg-waiting   { background: var(--waiting); }
-  .bg-error     { background: var(--red); }
-  .bg-pending   { background: var(--pending); }
 }
+
+/* ---------- EXAMPLES ----------
+  RootLayout:
+    <main class="container-1200">{children}</main>
+
+  Section:
+    <section class="section py-10">...</section>
+
+  Media:
+    <img class="media-fluid" ... />
+
+  Flex/Grid:
+    <div class="grid md:grid-cols-[260px,1fr] gap-6 minw-0">
+      <aside class="minw-0">...</aside>
+      <section class="minw-0">...</section>
+    </div>
+------------------------------------------------*/
