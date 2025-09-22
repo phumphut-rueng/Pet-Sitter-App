@@ -16,6 +16,11 @@ export default function RegisterPage() {
     phone: "",
     password: "",
   })
+  const [error, setError] = React.useState<RegisterForm>({
+    email: "",
+    phone: "",
+    password: "",
+  })
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target
@@ -24,8 +29,34 @@ export default function RegisterPage() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
-    console.log("Register data:", form)
-    // TODO: ส่งข้อมูลไป backend
+
+    let err: RegisterForm = {
+      email: "",
+      phone: "",
+      password: "",
+    };
+
+    if (!form.email.trim()) {
+      err.email = "Please input your Email";
+    }
+
+    if (!form.phone.trim()) {
+      err.phone = "Please input your Phone";
+    } else if (form.phone.trim().length !== 10) {
+      err.phone = "Phone number must be 10 digits";
+    }
+
+    if (!form.password.trim()) {
+      err.password = "Please input your Password";
+    }
+
+    if (Object.values(err).every((val) => val === "")) {
+      // ✅ ไม่มี error → เรียก API ได้
+      console.log("Submit to backend", form)
+    }
+    else {
+      setError(err);
+    }
   }
 
   return (
@@ -64,14 +95,15 @@ export default function RegisterPage() {
               label="Email"
               placeholder="email@company.com"
               type="email"
-              variant="default"
+              variant={!error.email ? "default" : "error"}
+
             />
 
             <InputText
               label="Phone"
               placeholder="Your phone number"
               type="text"
-              variant="default"
+              variant={!error.phone ? "default" : "error"}
               inputMode="numeric"
               name="phone"
               value={form.phone}
@@ -90,7 +122,7 @@ export default function RegisterPage() {
               label="Password"
               placeholder="Create your password"
               type="password"
-              variant="default"
+              variant={!error.password ? "default" : "error"}
             />
 
             <PrimaryButton
@@ -116,14 +148,14 @@ export default function RegisterPage() {
               srcImage="/icons/fbIcon.svg"
               bgColor="gray"
               textColor="black"
-              className="px-16"
+              className="w-[210px]"
             />
             <PrimaryButton
               text="Gmail"
               srcImage="/icons/gmaiIicon.svg"
               bgColor="gray"
               textColor="black"
-              className="px-16"
+              className="w-[210px] justify-center"
             />
           </div>
 
