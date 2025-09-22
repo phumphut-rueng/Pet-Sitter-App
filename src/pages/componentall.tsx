@@ -102,6 +102,8 @@ function PetCardGrid() {
   return (
     <section className="mt-4 minw-0">
       <div className="grid gap-6 grid-cols-2 md:grid-cols-3 xl:grid-cols-4">
+    <section className="mt-4 minw-0">
+      <div className="grid gap-6 grid-cols-2 md:grid-cols-3 xl:grid-cols-4">
         {pets.map((p) => (
           <PetCard
             key={p.id}
@@ -392,16 +394,15 @@ export default function ComponentAll() {
     
     {/* ===================== CENTERING CONTAINER (ของเรา) =====================
         - ใช้ max-w เพื่อคุมความกว้างสูงสุด แล้ว mx-auto ให้กึ่งกลาง
-        {/* 
-          - ทำเป็น 2 คอลัมน์: ซ้าย Sidebar 300px, ขวา Content 1fr
-        ------------------------------------------------------------------------ */}
-        <div className="w-full max-w-[1040px] mx-auto grid md:grid-cols-[300px,1fr] gap-6 min-w-0">
-          {/* ===================== SIDEBAR ===================== */}
-          {/* : <SidebarDemo /> */}
-          <div className="mx-auto w-full max-w-[300px]">
+        - ทำเป็น 2 คอลัมน์: ซ้าย Sidebar 300px, ขวา Content 1fr
+    ------------------------------------------------------------------------ */}
+    <div className="w-full max-w-[1040px] mx-auto grid md:grid-cols-[300px,1fr] gap-6 minw-0">
+      
+      {/* ===================== SIDEBAR ===================== */}
+      {/* : <SidebarDemo /> */}
+      <div className="mx-auto w-full max-w-[300px]">
         <SidebarDemo />
-       <AccountSidebarMini />
-  </div>
+      </div>
 
       {/* ===================== RIGHT CONTENT (ของเรา) ===================== */}
       <div className="minw-0 space-y-6">
@@ -411,11 +412,24 @@ export default function ComponentAll() {
           <h3 className="text-lg font-semibold text-ink/90">Pet Cards</h3>
           <PetCardGrid />
         </div>
+        {/* ===================== PET CARDS ===================== */}
+        <div className="w-full max-w-[1200px] mx-auto space-y-6">
+          <h3 className="text-lg font-semibold text-ink/90">Pet Cards</h3>
+          <PetCardGrid />
+        </div>
 
         {/* ===================== LARGE PET SITTER CARDS ===================== */}
         <div className="w-full max-w-[848px] mx-auto space-y-3 rounded-2xl border border-dashed border-purple-300 p-5">
           <h3 className="text-lg font-semibold text-ink/90">Pet Sitter – Large</h3>
+        {/* ===================== LARGE PET SITTER CARDS ===================== */}
+        <div className="w-full max-w-[848px] mx-auto space-y-3 rounded-2xl border border-dashed border-purple-300 p-5">
+          <h3 className="text-lg font-semibold text-ink/90">Pet Sitter – Large</h3>
 
+          {/* Desktop: รูปซ้าย (ปกติ + มีกรอบส้ม) */}
+          <div className="hidden md:block space-y-4">
+            <PetSitterCardLarge {...sitterCommon} rating={5} className="min-h-[216px] cursor-pointer" tags={["Dog","Cat","Rabbit"]} />
+            <PetSitterCardLarge {...sitterCommon} rating={5} className="min-h-[216px] cursor-pointer border-[1px] border-orange-5" tags={["Dog","Cat","Rabbit"]} />
+          </div>
           {/* Desktop: รูปซ้าย (ปกติ + มีกรอบส้ม) */}
           <div className="hidden md:block space-y-4">
             <PetSitterCardLarge {...sitterCommon} rating={5} className="min-h-[216px] cursor-pointer" tags={["Dog","Cat","Rabbit"]} />
@@ -426,7 +440,16 @@ export default function ComponentAll() {
           <div className="hidden md:block w-[335px] mx-auto">
             <PetSitterCardLarge {...sitterCommon} lgLayout="cover" rating={5} className="cursor-pointer min-h-[268px]" tags={["Dog","Cat","Rabbit"]} />
           </div>
+          {/* Desktop: รูปบน (cover layout) ขนาด 335×268 */}
+          <div className="hidden md:block w-[335px] mx-auto">
+            <PetSitterCardLarge {...sitterCommon} lgLayout="cover" rating={5} className="cursor-pointer min-h-[268px]" tags={["Dog","Cat","Rabbit"]} />
+          </div>
 
+          {/* Mobile: ใช้ chips variant แทน */}
+          <div className="md:hidden">
+            <PetSitterCard {...sitterCommon} size="sm" variant="chips" rating={5} tags={["Dog","Cat","Rabbit"]} />
+          </div>
+        </div>
           {/* Mobile: ใช้ chips variant แทน */}
           <div className="md:hidden">
             <PetSitterCard {...sitterCommon} size="sm" variant="chips" rating={5} tags={["Dog","Cat","Rabbit"]} />
@@ -445,7 +468,23 @@ export default function ComponentAll() {
             </div>
           </div>
         </div>
+        {/* ===================== SMALL PET SITTER CARDS ===================== */}
+        <div className="w-full max-w-[848px] mx-auto space-y-3 rounded-2xl border border-dashed border-purple-300 p-5">
+          <h3 className="text-lg font-semibold text-ink/90">Pet Sitter – Small</h3>
+          <div className="w-full flex justify-center">
+            <div className="grid gap-8 justify-items-center grid-cols-1 md:[grid-template-columns:471px_330px]">
+              <PetSitterCardSmall {...sitterCommon} rating={5} smPreset="wide" tags={["Dog","Cat","Bird","Rabbit"]} />
+              <PetSitterCardSmall {...sitterCommon} rating={5} smPreset="compact" tags={["Dog","Cat","Bird","Rabbit"]} />
+              <PetSitterCardSmall {...sitterCommon} rating={5} smPreset="wide" className="border-[1px] border-orange-6" tags={["Dog","Cat","Bird","Rabbit"]} />
+              <PetSitterCardSmall {...sitterCommon} rating={5} smPreset="compact" className="border-[1px] border-orange-6" tags={["Dog","Cat","Bird","Rabbit"]} />
+            </div>
+          </div>
+        </div>
 
+        {/* ===================== BOOKING CARDS ===================== */}
+        <div className="w-full max-w-[848px] mx-auto space-y-3 rounded-2xl border border-dashed border-purple-300 p-5">
+          <h3 className="text-lg font-semibold text-ink/90">Booking Cards</h3>
+          <p className="text-gray-500 text-sm -mt-1">ขาด demo 2 กับปรับ UI</p>
         {/* ===================== BOOKING CARDS ===================== */}
         <div className="w-full max-w-[848px] mx-auto space-y-3 rounded-2xl border border-dashed border-purple-300 p-5">
           <h3 className="text-lg font-semibold text-ink/90">Booking Cards</h3>
@@ -472,7 +511,45 @@ export default function ComponentAll() {
               ]}
             />
           </div>
+          <div className="space-y-4">
+            <BookingCard {...bookingBase} status="waiting" note="Waiting for Sitter to confirm booking" layout="wide"
+              actions={[
+                { key: "message", label: "Message", onClick: () => console.log("message") },
+                { key: "call", label: "Call", onClick: () => console.log("call") },
+              ]}
+            />
+            <BookingCard {...bookingBase} status="in_service" note="Service is currently in progress" layout="wide"
+              actions={[
+                { key: "message", onClick: () => console.log("message") },
+                { key: "change", onClick: () => console.log("change") },
+              ]}
+            />
+            <BookingCard {...bookingBase} status="success" successDate="Tue, 25 Oct 2022 | 11:03 AM" layout="wide"
+              actions={[
+                { key: "report", label: "Report Issue", onClick: () => console.log("report") },
+                { key: "review", label: "Write Review", onClick: () => console.log("review") },
+                { key: "call", onClick: () => console.log("call") },
+              ]}
+            />
+          </div>
 
+          <div className="mt-6 grid gap-4 md:grid-cols-3">
+            <BookingCard {...bookingBase} status="waiting" layout="compact" actions={[{ key: "message", onClick: () => console.log("message") }]} />
+            <BookingCard {...bookingBase} status="in_service" layout="compact" actions={[{ key: "message", onClick: () => console.log("message") }]} />
+            <BookingCard {...bookingBase} status="success" layout="compact"
+              actions={[
+                { key: "report", onClick: () => console.log("report") },
+                { key: "review", onClick: () => console.log("review") },
+              ]}
+            />
+          </div>
+        </div>
+
+      </div>
+    </div>
+    
+  </SubSection>
+</Section>
           <div className="mt-6 grid gap-4 md:grid-cols-3">
             <BookingCard {...bookingBase} status="waiting" layout="compact" actions={[{ key: "message", onClick: () => console.log("message") }]} />
             <BookingCard {...bookingBase} status="in_service" layout="compact" actions={[{ key: "message", onClick: () => console.log("message") }]} />
