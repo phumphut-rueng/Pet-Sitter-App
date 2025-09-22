@@ -1,13 +1,13 @@
-import SearchSitter from "@/components/widgets/searchSitter";
-import Navbar from "@/components/navbar/Navbar";
-import ComponentAll from "./componentall";
+import HeroSection from "@/components/HeroSection";
+import PetCareHero from "@/components/PetCareHero";
+
 export default function Home() {
   return (
     <>
-    <Navbar />
-    <ComponentAll />
-    <SearchSitter />
-    
+      <div className="container-1200">
+        <HeroSection />
+        <PetCareHero />
+      </div>
     </>
   );
 }
