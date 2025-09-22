@@ -1,20 +1,70 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+generator client {
+  provider = "prisma-client-js"
+}
 
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 
-generator client {
-  provider = "prisma-client-js"
+model pet_type {
+  id            Int    @id @default(autoincrement())
+  pet_type_name String @db.VarChar(100)
 }
 
-model User {
-  id    Int     @id @default(autoincrement())
-  name  String
-  email String  @unique
+model role {
+  id        Int         @id @default(autoincrement())
+  role_name String      @db.VarChar(50)
+  user_role user_role[]
+}
+
+model sitter {
+  id                   Int            @id @default(autoincrement())
+  user_sitter_id       Int
+  name                 String         @db.VarChar(100)
+  location_description String?        @db.VarChar(255)
+  phone                String?        @db.VarChar(20)
+  experience           String?        @db.VarChar(255)
+  introduction         String?
+  address_detail       String?
+  address_province     String?        @db.VarChar(100)
+  address_district     String?        @db.VarChar(100)
+  address_sub_district String?        @db.VarChar(100)
+  address_post_code    String?        @db.VarChar(10)
+  base_price           Decimal?       @db.Decimal(10, 2)
+  created_at           DateTime       @default(now()) @db.Timestamp(6)
+  updated_at           DateTime?      @db.Timestamp(6)
+  user                 user           @relation(fields: [user_sitter_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  sitter_image         sitter_image[]
+}
+
+model sitter_image {
+  id        Int    @id @default(autoincrement())
+  sitter_id Int
+  image_url String @db.VarChar(255)
+  sitter    sitter @relation(fields: [sitter_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+}
+
+model user {
+  id            Int         @id @default(autoincrement())
+  name          String      @db.VarChar(100)
+  email         String      @unique @db.VarChar(100)
+  password      String      @db.VarChar(255)
+  phone         String?     @db.VarChar(20)
+  profile_image String?     @db.VarChar(255)
+  dob           DateTime?   @db.Date
+  bank_name     String?     @db.VarChar(100)
+  bank_number   String?     @db.VarChar(50)
+  created_at    DateTime    @default(now()) @db.Timestamp(6)
+  updated_at    DateTime?   @db.Timestamp(6)
+  sitter        sitter[]
+  user_role     user_role[]
+}
+
+model user_role {
+  id      Int  @id @default(autoincrement())
+  user_id Int
+  role_id Int
+  role    role @relation(fields: [role_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  user    user @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
 }
