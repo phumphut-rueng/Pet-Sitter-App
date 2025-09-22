@@ -1,13 +1,5 @@
 import { LucideIcon } from "lucide-react";
-
-export interface User {
-  id: number;
-  name: string;
-  email: string;
-  profile_image?: string;
-  roles?: string[];
-  isSitter?: boolean;
-}
+import { User } from "./user.types";
 
 export interface MenuItem {
   href: string;

@@ -43,12 +43,12 @@ const IconButton = ({
   return (
     <button
       onClick={handleClick}
-      className="relative w-6 h-6 md:w-12 md:h-12 md:bg-gray-100 md:hover:bg-gray-200 md:rounded-full transition-colors flex items-center justify-center"
+      className="relative w-6 h-6 md:w-12 md:h-12 md:bg-gray-1 md:hover:bg-gray-2 md:rounded-full transition-colors flex items-center justify-center"
       aria-label={ariaLabel}
       disabled={disabled}
       type="button"
     >
-      <Icon className="w-6 h-6 text-gray-600" />
+      <Icon className="w-6 h-6 text-gray-6" />
       {indicatorVisible && (
         <div className="absolute top-0 right-0 md:top-2 md:right-2 w-3 h-3 bg-orange-5 rounded-full"></div>
       )}

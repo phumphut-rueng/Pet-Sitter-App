@@ -15,24 +15,21 @@ export default function Login() {
   const [emailError, setEmailError] = useState("");
   const [passwordError, setPasswordError] = useState("");
 
-  
+
   const validateEmail = (email: string) => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!email) return "Email is required";
-    if (!emailRegex.test(email)) return "Please enter a valid email";
+    if (!emailRegex.test(email)) return "Invalid email format";
     return "";
   };
 
   const validatePassword = (password: string) => {
     if (!password) return "Password is required";
-    if (password.length < 8) return "Password must be at least 8 characters";
-    if (!/(?=.*[a-z])/.test(password)) return "Password must contain lowercase letter";
-    if (!/(?=.*[A-Z])/.test(password)) return "Password must contain uppercase letter";
-    if (!/(?=.*\d)/.test(password)) return "Password must contain a number";
+    if (password.length < 6) return "Invalid password format";
     return "";
   };
 
-const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
   e.preventDefault();
 
   const emailErr = validateEmail(email);
@@ -43,14 +40,15 @@ const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
 
   if (emailErr || passwordErr) return;
 
-  login({email, password});
+  try {
+    await login({email, password});
 
-  console.log(email, password, rememberMe);
-
-  if (rememberMe) {
-    localStorage.setItem('rememberedEmail', email);
-  } else {
-    localStorage.removeItem('rememberedEmail');
+    if (rememberMe) {
+      localStorage.setItem('rememberedEmail', email);
+    } else {
+      localStorage.removeItem('rememberedEmail');
+    }
+  } catch (error: any) {
   }
 }
 
@@ -72,7 +70,7 @@ useEffect(() => {
             <h1 className="font-bold text-[56px] text-black">
               Welcome back!
             </h1>
-            <h3 className="font-bold text-[24px] text-gray-400 tracking-tight">
+            <h3 className="font-bold text-[24px] text-gray-6 tracking-tight">
               Find your perfect pet sitter with us
             </h3>
           </div>

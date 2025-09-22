@@ -4,7 +4,7 @@ import Navigation from "./Navigation";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
 import { UserRound, History, LogOut, Heart, User } from "lucide-react";
-import { MenuItem } from "@/types/navbar";
+import { MenuItem } from "@/types/navigation.types";
 
 const Navbar = () => {
   const router = useRouter();

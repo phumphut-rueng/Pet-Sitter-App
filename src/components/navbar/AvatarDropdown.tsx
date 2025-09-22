@@ -9,7 +9,8 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { UserRound } from "lucide-react"
 import Link from "next/link"
-import { User, MenuItem } from "@/types/navbar";
+import { User } from "@/types/user.types";
+import { MenuItem } from "@/types/navigation.types";
 
 interface AvatarDropdownProps {
   user: User | null
@@ -57,13 +58,13 @@ const AvatarDropdown = ({ user, menuItems, onLogout, onNavigate }: AvatarDropdow
   }
 
   return (
-    <DropdownMenu open={isOpen} onOpenChange={setIsOpen}>
+    <DropdownMenu open={isOpen} onOpenChange={setIsOpen} modal={false}>
       <DropdownMenuTrigger className="outline-hidden">
         <Avatar className="w-12 h-12 cursor-pointer">
           {userAvatar ? (
             <AvatarImage src={userAvatar} alt={userName || "Profile"} />
           ) : null}
-          <AvatarFallback className="bg-gray-200 text-gray-600">
+          <AvatarFallback className="bg-gray-2 text-gray-6">
             <UserRound className="size-6" />
           </AvatarFallback>
         </Avatar>
@@ -77,7 +78,7 @@ const AvatarDropdown = ({ user, menuItems, onLogout, onNavigate }: AvatarDropdow
           <React.Fragment key={index}>
             {/* Add separator before logout */}
             {item.isLogout && (
-              <DropdownMenuSeparator className="my-2 bg-gray-2" />
+              <DropdownMenuSeparator className="my-3 bg-gray-2" />
             )}
 
             <DropdownMenuItem

@@ -4,7 +4,7 @@ import { Bell, MessageSquare } from "lucide-react";
 import IconButton from "./IconButton";
 import AvatarDropdown from "./AvatarDropdown";
 import PrimaryButton from "@/components/buttons/primaryButton";
-import { NavigationProps } from "@/types/navbar";
+import { NavigationProps } from "@/types/navigation.types";
 
 const DesktopNav: React.FC<NavigationProps> = ({
   isAuthenticated,

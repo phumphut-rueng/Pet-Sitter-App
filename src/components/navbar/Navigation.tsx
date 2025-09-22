@@ -1,7 +1,7 @@
 import React from "react";
 import DesktopNav from "./DesktopNav";
 import MobileNav from "./MobileNav";
-import { NavigationProps } from "@/types/navbar";
+import { NavigationProps } from "@/types/navigation.types";
 
 const Navigation: React.FC<NavigationProps> = ({
   isLoading,
