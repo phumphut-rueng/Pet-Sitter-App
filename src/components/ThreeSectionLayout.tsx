@@ -17,7 +17,7 @@ const ThreeSectionLayout = () => {
       imageSrc: "/images/landing_page/CuddleCat.svg", // Using existing image as placeholder
       imageAlt: "Woman holding a cat",
       title: "Connect With Sitters",
-      titleColor: "text-green-600",
+      titleColor: "text-green",
       description: "Find a verified and reviewed sitter who'll keep your pets company and give time."
     },
     {
@@ -25,7 +25,7 @@ const ThreeSectionLayout = () => {
       imageSrc: "/images/landing_page/DogCat.svg", // Using existing image as placeholder
       imageAlt: "Dog and cat together",
       title: "Better For Your Pets",
-      titleColor: "text-blue-500",
+      titleColor: "text-blue",
       description: "Pets stay happy at home with a sitter who gives them loving care and companionship."
     },
     {
@@ -33,18 +33,18 @@ const ThreeSectionLayout = () => {
       imageSrc: "/images/landing_page/DogCare.svg", // Using existing image as placeholder
       imageAlt: "Woman petting a dog",
       title: "Calling All Pets",
-      titleColor: "text-orange-500",
+      titleColor: "text-orange-5",
       description: "Stay for free with adorable animals in unique homes around the world."
     }
   ];
 
   return (
-    <div className="container mx-auto py-10 px-4 sm:px-6 lg:px-8 border-2 border-blue-500">
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-12 sm:gap-8 lg:gap-16">
+    <div className="container mx-auto py-10 px-4 sm:px-6 lg:px-8">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-12 sm:gap-8 lg:gap-10">
         {sections.map((section) => (
-          <div key={section.id} className="text-center border-2 border-red-500">
+          <div key={section.id} className="text-center">
             {/* Circular Image */}
-            <div className="w-40 h-40 sm:w-44 sm:h-44 lg:w-48 lg:h-48 mx-auto mb-8 sm:mb-10 rounded-full overflow-hidden bg-gray-100 flex items-center justify-center">
+            <div className="w-40 h-40 sm:w-44 sm:h-44 lg:w-48 lg:h-48 mx-auto mb-8 sm:mb-10 rounded-full overflow-hidden bg-gray-1 flex items-center justify-center">
               <Image
                 src={section.imageSrc}
                 alt={section.imageAlt}
@@ -65,7 +65,7 @@ const ThreeSectionLayout = () => {
             </h2>
             
             {/* Description */}
-            <p className="text-gray-600 leading-relaxed text-base sm:text-lg lg:text-xl max-w-sm mx-auto">
+            <p className="text-gray-6 leading-relaxed body-sm max-w-sm mx-auto">
               {section.description}
             </p>
           </div>

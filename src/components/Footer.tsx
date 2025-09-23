@@ -3,9 +3,9 @@ import Image from "next/image";
 
 const Footer = () => {
   return (
-    <div className="border-2 border-gray-200">
+    <footer>
       <div className="bg-black">
-        <div className="flex flex-col items-center justify-center py-12 sm:py-16 lg:py-20 border-2 border-red-500">
+        <div className="flex flex-col items-center justify-center py-12 sm:py-16 lg:py-20">
           {/* Logo */}
           <div className="flex items-center justify-center mb-4">
             <div className="flex-shrink-0">
@@ -26,7 +26,7 @@ const Footer = () => {
           </p>
         </div>
       </div>
-    </div>
+    </footer>
   );
 };
 

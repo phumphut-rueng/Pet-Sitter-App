@@ -5,8 +5,8 @@ import Link from "next/link";
 
 const PetSitterHero = () => {
   return (
-    <div className="border-2 border-green-500 py-20">
-      <div className="border-2 border-red-500 relative bg-gradient-to-br from-orange-50 to-yellow-50 rounded-xl p-8 sm:p-12 lg:p-16 overflow-hidden">
+    <div className="py-20">
+      <div className="relative bg-yellow-bg rounded-xl p-8 sm:p-12 lg:p-16 overflow-hidden">
          {/* Decorative Shapes */}
          {/* Bottom Left - Blue Arch Shape */}
          <div className="absolute bottom-0 left-0 w-32 h-32 sm:w-40 sm:h-40 md:w-48 md:h-48 lg:w-56 lg:h-56 xl:w-64 xl:h-64 translate-y-[50%]">
@@ -47,7 +47,7 @@ const PetSitterHero = () => {
             </button>
 
             {/* Find A Pet Sitter Button */}
-            <Link href="/find-a-pet-sitter">
+            <Link href="/find-a-pet-sitter" aria-label="Go to find a pet sitter page">
               <PrimaryButton
                 text="Find a Pet Sitter"
                 textColor="white"
