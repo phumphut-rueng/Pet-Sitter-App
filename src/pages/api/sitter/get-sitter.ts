@@ -1,5 +1,6 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 import { prisma } from "@/lib/prisma";
+import type { Prisma } from "@prisma/client";
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== "GET") {
@@ -16,32 +17,30 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       location,        // เช่น "Bangkok"
     } = req.query;
 
-    const filters: any = { AND: [] };
+    const andConditions: Prisma.sitterWhereInput[] = [];
 
     // 1) Query multiple pet type
     if (petTypeIds) {
-        const ids = Array.isArray(petTypeIds) ? petTypeIds.map(Number) : [Number(petTypeIds)];
-        ids.forEach((id) => {
-          filters.AND.push({
-            sitter_pet_type: {
-              some: {
-                pet_type_id: id,
-              },
-            },
-          });
+      const ids = Array.isArray(petTypeIds) ? petTypeIds.map(Number) : [Number(petTypeIds)];
+      ids.forEach((id) => {
+        andConditions.push({
+          sitter_pet_type: {
+            some: { pet_type_id: id },
+          },
         });
-      }
+      });
+    }
 
     // 2) Query experience
     if (experience) {
-      filters.AND.push({
+      andConditions.push({
         experience: { gte: Number(experience) },
       });
     }
 
-    // 3 + 4) Query trade name (partial match)
+    // 3) Query trade name (partial match)
     if (tradeName) {
-      filters.AND.push({
+      andConditions.push({
         name: {
           contains: String(tradeName),
           mode: "insensitive",
@@ -49,9 +48,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       });
     }
 
-    // 5) Query location
+    // 4) Query location
     if (location) {
-      filters.AND.push({
+      andConditions.push({
         OR: [
           { address_province: { contains: String(location), mode: "insensitive" } },
           { address_district: { contains: String(location), mode: "insensitive" } },
@@ -62,7 +61,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     // --- Query Sitters ---
     const sitters = await prisma.sitter.findMany({
-      where: filters.AND.length ? filters : undefined,
+      where: andConditions.length ? { AND: andConditions } : undefined,
       include: {
         sitter_image: true,
         sitter_pet_type: { include: { pet_type: true } },
@@ -82,11 +81,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     if (rating) {
       result = result.filter((s) => s.averageRating !== null && s.averageRating >= Number(rating));
     }
-    
+
     if (result.length === 0) {
-        return res.status(404).json({ message: "ไม่พบข้อมูล" });
-      }
-      
+      return res.status(404).json({ message: "ไม่พบข้อมูล" });
+    }
+
     return res.status(200).json(result);
   } catch (error) {
     console.error("❌ Error fetching sitters:", error);
