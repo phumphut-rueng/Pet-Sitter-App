@@ -8,6 +8,14 @@ type Props = {
   disabled?: boolean;
   className?: string;
   onClick?: () => void;
+
+  // ขนาดการ์ด
+  size?: number;         // จัตุรัส
+  width?: number;        // กว้าง
+  height?: number;       // สูง
+
+  // ขนาดรูปกลม (px) ถ้าไม่ส่งจะ auto ตามสัดส่วนการ์ด
+  avatarSize?: number;
 };
 
 function Chip({ label }: { label: string }) {
@@ -19,6 +27,7 @@ function Chip({ label }: { label: string }) {
   if (label === "Rabbit") chipColor = "bg-orange-1 text-orange-6 ring-orange-2";
 
   return (
+    <span className={`inline-flex h-8 items-center justify-center rounded-full px-3 text-[13px] font-medium ring-1 ring-inset ${chipColor}`}>
     <span className={`inline-flex h-8 items-center justify-center rounded-full px-3 text-[13px] font-medium ring-1 ring-inset ${chipColor}`}>
       {label}
     </span>
@@ -33,6 +42,28 @@ export default function PetCard({
   disabled = false,
   className = "",
   onClick,
+  size = 240,
+  width,
+  height,
+  avatarSize,
+}: PetCardProps) {
+  // ขนาดการ์ด
+  const boxW = width ?? size;
+  const boxH = height ?? size;
+
+  // ขนาดรูปกลม (ออโต้ ~50% ของด้านสั้น), clamp 64–128 และปัดเป็นเลขคู่
+  const autoAvatar = Math.round(Math.min(boxW, boxH) * 0.5);
+  const avatar = Math.max(64, Math.min(128, avatarSize ?? autoAvatar));
+  const evenAvatar = avatar % 2 === 0 ? avatar : avatar + 1;
+
+  const fixedBoxStyle: React.CSSProperties = { width: boxW, height: boxH };
+
+  let buttonClass =
+    "relative flex flex-col items-center gap-4 rounded-[16px] border bg-white p-6 transition ";
+  buttonClass += selected ? "border-brand " : "border-border ";
+  buttonClass += disabled
+    ? "opacity-40 cursor-not-allowed "
+    : "cursor-pointer hover:shadow-[0_6px_24px_rgba(50,54,64,0.08)] active:scale-[.99] ";
 }: Props) {
   let buttonClass = "relative flex w-[240px] h-[240px] flex-col items-center gap-4 rounded-[16px] border bg-white p-6 transition ";
   
@@ -57,14 +88,26 @@ export default function PetCard({
       {selected && (
         <span className="absolute right-6 top-6 inline-flex h-6 w-6 items-center justify-center rounded-md bg-brand text-brand-text shadow-sm">
           <svg viewBox="0 0 24 24" aria-hidden className="h-4 w-4">
-            <path
-              fill="currentColor"
-              d="M9.55 17.05 4.5 12l1.41-1.41 3.64 3.64 8.54-8.54L19.5 7.1z"
-            />
+            <path fill="currentColor" d="M9.55 17.05 4.5 12l1.41-1.41 3.64 3.64 8.54-8.54L19.5 7.1z" />
           </svg>
         </span>
       )}
 
+      <div
+        style={{
+          width: evenAvatar,
+          height: evenAvatar,
+          aspectRatio: "1 / 1",
+          clipPath: "circle(50% at 50% 50%)",
+        }}
+        className="shrink-0 overflow-hidden bg-muted"
+      >
+        <img
+          src={img}
+          alt={name}
+          className="h-full w-full object-cover"
+          style={{ aspectRatio: "1 / 1", display: "block" }}
+        />
       <div className="h-[104px] w-[104px] overflow-hidden rounded-full bg-muted">
         <img src={img} alt={name} className="h-full w-full object-cover" />
       </div>

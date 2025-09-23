@@ -11,6 +11,9 @@ model pet_type {
   id              Int               @id @default(autoincrement())
   pet_type_name   String            @db.VarChar(100)
   sitter_pet_type sitter_pet_type[]
+  id              Int               @id @default(autoincrement())
+  pet_type_name   String            @db.VarChar(100)
+  sitter_pet_type sitter_pet_type[]
 }
 
 model role {
@@ -21,7 +24,11 @@ model role {
 
 model sitter {
   id                   Int               @id @default(autoincrement())
+  id                   Int               @id @default(autoincrement())
   user_sitter_id       Int
+  name                 String            @db.VarChar(100)
+  location_description String?           @db.VarChar(255)
+  phone                String?           @db.VarChar(20)
   name                 String            @db.VarChar(100)
   location_description String?           @db.VarChar(255)
   phone                String?           @db.VarChar(20)
@@ -38,6 +45,7 @@ model sitter {
   reviews              review[]
   user                 user              @relation(fields: [user_sitter_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
   sitter_image         sitter_image[]
+  sitter_pet_type      sitter_pet_type[]
   sitter_pet_type      sitter_pet_type[]
 }
 
