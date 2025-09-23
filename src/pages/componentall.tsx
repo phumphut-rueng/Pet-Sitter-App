@@ -550,15 +550,9 @@ export default function ComponentAll() {
               <ChatList />
               <ChatContainer />
             </div>
-<<<<<<< HEAD
           </SubSection>
         </Section>
       </div>
     </div>
   );
-=======
-        </div>
-
-    );
->>>>>>> 9052a70 (feat: Implement user profile management with form handling, API integration, and new components for account settings)
 }
