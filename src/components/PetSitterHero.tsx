@@ -2,10 +2,11 @@ import React from "react";
 import Image from "next/image";
 import PrimaryButton from "@/components/buttons/primaryButton";
 import Link from "next/link";
+import { satoshi } from "@/fonts";
 
 const PetSitterHero = () => {
   return (
-    <div className="py-20">
+    <div className={`${satoshi.className} py-20`}>
       <div className="relative bg-yellow-bg rounded-xl p-8 sm:p-12 lg:p-16 overflow-hidden">
          {/* Decorative Shapes */}
          {/* Bottom Left - Blue Arch Shape */}

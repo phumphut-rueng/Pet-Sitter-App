@@ -1,10 +1,11 @@
 import React from "react";
 import Image from "next/image";
 import ServicesSection from "./ServicesSection";
+import { satoshi } from "@/fonts";
 
 const PetCareHero = () => {
   return (
-    <div className="container mx-auto py-16 px-4 sm:px-6 lg:px-8">
+    <div className={`${satoshi.className} container mx-auto py-16 px-4 sm:px-6 lg:px-8`}>
       {/* Main Heading */}
       <div className="text-center mb-16">
         <h1 className="text-2xl sm:text-3xl font-bold text-black leading-tight">
