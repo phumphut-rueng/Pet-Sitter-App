@@ -17,8 +17,71 @@ import {
 import React, { useState } from "react";
 import Image from "next/image";
 
+type ValidationErrors = {
+  fullName?: string;
+  experience?: string;
+  phone?: string;
+  email?: string;
+  tradeName?: string;
+  petTypes?: string;
+};
+
 export default function PetSitterProfilePage() {
   const [petTypes, setPetTypes] = useState<string[]>([]);
+
+  const [formValues, setFormValues] = useState({
+    fullName: "",
+    experience: "",
+    phone: "",
+    email: "",
+    tradeName: "",
+    petTypes: [] as string[],
+  });
+  const [validationErrors, setValidationErrors] = useState<ValidationErrors>(
+    {}
+  );
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const phonePattern = /^0\d{9}$/;
+  const emailPattern = /^[^\s@]+@[^\s@]+\.com$/i;
+
+  function handleFormSubmit(event: React.FormEvent) {
+    event.preventDefault();
+    const nextErrors: ValidationErrors = {};
+
+    const fullNameLength = formValues.fullName.length;
+    if (!fullNameLength) nextErrors.fullName = "Please enter your full name.";
+    else if (fullNameLength < 6 || fullNameLength > 20)
+      nextErrors.fullName = "Full name must be 6–20 characters.";
+
+    if (!formValues.experience)
+      nextErrors.experience = "Please select your experience.";
+
+    if (!formValues.phone) nextErrors.phone = "Please enter your phone number.";
+    else if (!phonePattern.test(formValues.phone))
+      nextErrors.phone = "Phone number must start with 0 and be 10 digits.";
+
+    if (!formValues.email)
+      nextErrors.email = "Please enter your email address.";
+    else if (!emailPattern.test(formValues.email))
+      nextErrors.email = "Email address must include '@' and end with '.com'.";
+
+    if (!formValues.tradeName.trim())
+      nextErrors.tradeName = "Please enter your trade name.";
+
+    if (!Array.isArray(formValues.petTypes) || formValues.petTypes.length === 0)
+      nextErrors.petTypes = "Please select at least one pet type.";
+
+    setValidationErrors(nextErrors);
+
+    if (Object.keys(nextErrors).length === 0) {
+      setIsSubmitting(true);
+      setTimeout(() => {
+        alert("✅ All inputs are valid (demo, no API call).");
+        setIsSubmitting(false);
+      }, 200);
+    }
+  }
 
   return (
     <main className="flex container-1200 !px-0 bg-gray-1">
@@ -30,7 +93,7 @@ export default function PetSitterProfilePage() {
           avatarUrl="/images/cards/jane-maison.svg"
           name="Jane Maison"
         />
-        <div className="mr-auto px-6 py-8">
+        <form onSubmit={handleFormSubmit} className="mr-auto px-6 py-8">
           <div className="flex justify-between">
             <div className="flex items-center gap-3">
               <h3 className="text-gray-9 font-semibold text-2xl">
@@ -40,7 +103,7 @@ export default function PetSitterProfilePage() {
             </div>
             <div>
               <PrimaryButton
-                text="Update"
+                text={isSubmitting ? "Checking..." : "Update"}
                 type="submit"
                 bgColor="primary"
                 textColor="white"
@@ -60,23 +123,48 @@ export default function PetSitterProfilePage() {
               </div>
               <div className="md:col-span-2">
                 <div className="grid gap-4 md:grid-cols-2">
-                  <InputText
-                    label="Your full name*"
-                    type="text"
-                    variant="default"
-                    className="w-full"
-                  />
+                  <div>
+                    <InputText
+                      label="Your full name*"
+                      type="text"
+                      value={formValues.fullName}
+                      onChange={(event) =>
+                        setFormValues((prev) => ({
+                          ...prev,
+                          fullName: event.target.value,
+                        }))
+                      }
+                      variant={validationErrors.fullName ? "error" : "default"}
+                      className="w-full"
+                    />
+                    {validationErrors.fullName && (
+                      <p className="mt-1 text-sm text-red">
+                        {validationErrors.fullName}
+                      </p>
+                    )}
+                  </div>
 
                   {/* Experience เป็น dropdown */}
                   <div className="flex flex-col gap-1">
-                    <label
-                      htmlFor="experience"
-                      className="text-[16px] font-medium text-black"
-                    >
+                    <label className="text-[16px] font-medium text-black">
                       Experience*
                     </label>
-                    <Select>
-                      <SelectTrigger className="w-full rounded-xl !h-12 px-4 py-2 border border-gray-2">
+                    <Select
+                      value={formValues.experience}
+                      onValueChange={(value) =>
+                        setFormValues((prev) => ({
+                          ...prev,
+                          experience: value,
+                        }))
+                      }
+                    >
+                      <SelectTrigger
+                        className={` w-full rounded-xl !h-12 px-4 py-2 border border-gray-2 ${
+                          validationErrors.experience
+                            ? "border-red focus:ring-red"
+                            : "border-gray-3"
+                        }`}
+                      >
                         <SelectValue placeholder="" />
                       </SelectTrigger>
                       <SelectContent className="bg-white border border-gray-2">
@@ -85,19 +173,46 @@ export default function PetSitterProfilePage() {
                         <SelectItem value="5+ Years">5+ Years</SelectItem>
                       </SelectContent>
                     </Select>
+                    {validationErrors.experience && (
+                      <p className="mt-1 text-sm text-red">
+                        {validationErrors.experience}
+                      </p>
+                    )}
                   </div>
-                  <InputText
-                    label="Phone Number*"
-                    type="tel"
-                    variant="default"
-                    className="w-full"
-                  />
+                  <div>
+                    <InputText
+                      label="Phone Number*"
+                      type="tel"
+                      inputMode="numeric"
+                      value={formValues.phone}
+                      onChange={(event) =>
+                        setFormValues((prev) => ({
+                          ...prev,
+                          phone: event.target.value.trim(),
+                        }))
+                      }
+                      variant={validationErrors.phone ? "error" : "default"}
+                      className="w-full"
+                    />
+                    {validationErrors.phone && (
+                      <p className="mt-1 text-sm text-red">
+                        {validationErrors.phone}
+                      </p>
+                    )}
+                  </div>
+                  <div>
                   <InputText
                     label="Email*"
                     type="email"
-                    variant="default"
+                    value={formValues.email}
+                    onChange={(event) => setFormValues((prev) => ({ ...prev, email: event.target.value}))}
+                    variant={validationErrors.email ? "error" : "default"}
                     className="w-full"
                   />
+                  {validationErrors.email && (
+                  <p className="mt-1 text-sm text-red">{validationErrors.email}</p>
+                )}
+                  </div>
                   <div className="md:col-span-2">
                     <InputTextArea
                       label="Introduction (Describe about yourself as pet sitter)"
@@ -117,14 +232,22 @@ export default function PetSitterProfilePage() {
                 <InputText
                   label="Pet sitter name (Trade Name)*"
                   type="text"
-                  variant="default"
+                  value={formValues.tradeName}
+                  onChange={(event) => setFormValues((prev) => ({ ...prev, tradeName: event.target.value}))}
+                  variant={validationErrors.tradeName ? "error" : "default"}
                 />
+                {validationErrors.tradeName && (
+                  <p className="mt-1 text-sm text-red-600">{validationErrors.tradeName}</p>
+                )}
               </div>
               <div className="col-span-2">
                 <label className="block text-[16px] font-medium text-black mb-2">
                   Pet type
                 </label>
-                <PetTypeSelect value={petTypes} onChange={setPetTypes} />
+                <PetTypeSelect value={formValues.petTypes} onChange={(newValues) => setFormValues((prev) => ({ ...prev, petTypes: newValues}))} />
+                {validationErrors.petTypes && (
+                  <p className="mt-2 text-sm text-red">{validationErrors.petTypes}</p>
+                )}
               </div>
               <div className="col-span-2">
                 <InputTextArea label="Services (Describe all of your service for pet sitting)" />
@@ -156,15 +279,11 @@ export default function PetSitterProfilePage() {
 
               {/* District */}
               <div>
-                <label
-                  htmlFor="district"
-                  className="font-medium text-black"
-                >
+                <label htmlFor="district" className="font-medium text-black">
                   District*
                 </label>
                 <Select>
-                  <SelectTrigger className="!h-12 w-full rounded-xl border border-gray-2 px-4 text-left"
-                  >
+                  <SelectTrigger className="!h-12 w-full rounded-xl border border-gray-2 px-4 text-left">
                     <SelectValue placeholder="" />
                   </SelectTrigger>
                   <SelectContent className="bg-white border border-gray-2">
@@ -177,15 +296,11 @@ export default function PetSitterProfilePage() {
 
               {/* Sub-district */}
               <div>
-                <label
-                  htmlFor="subdistrict"
-                  className="font-medium text-black"
-                >
+                <label htmlFor="subdistrict" className="font-medium text-black">
                   Sub-district*
                 </label>
                 <Select>
-                  <SelectTrigger className="!h-12 w-full rounded-xl border border-gray-2 px-4 text-left"
-                  >
+                  <SelectTrigger className="!h-12 w-full rounded-xl border border-gray-2 px-4 text-left">
                     <SelectValue placeholder="" />
                   </SelectTrigger>
                   <SelectContent className="bg-white border border-gray-2">
@@ -198,15 +313,11 @@ export default function PetSitterProfilePage() {
 
               {/* Province */}
               <div>
-                <label
-                  htmlFor="province"
-                  className="font-medium text-black"
-                >
+                <label htmlFor="province" className="font-medium text-black">
                   Province*
                 </label>
                 <Select>
-                  <SelectTrigger className="!h-12 w-full rounded-xl border border-gray-2 px-4 text-left"
-                  >
+                  <SelectTrigger className="!h-12 w-full rounded-xl border border-gray-2 px-4 text-left">
                     <SelectValue placeholder="" />
                   </SelectTrigger>
                   <SelectContent className="bg-white border border-gray-2">
@@ -239,7 +350,7 @@ export default function PetSitterProfilePage() {
               </div>
             </div>
           </section>
-        </div>
+        </form>
       </section>
     </main>
   );
