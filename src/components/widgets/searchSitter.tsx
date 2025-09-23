@@ -16,12 +16,12 @@ export default function SearchSitter() {
     setRating(newRating);
   };
   return (
-    <div className="container mx-auto px-4 sm:px-6 lg:px-0">
-      <div className="bg-white rounded-xl shadow-lg border border-gray-200 overflow-hidden">
+    <div className="container mx-auto px-4 sm:px-6 lg:px-0 mb-10">
+      <div className="bg-white rounded-xl shadow-md border-1 border-gray-2 overflow-hidden">
         {/* Pet Type Section */}
-        <div className="bg-gray-50 px-5 sm:px-10 py-4 sm:py-5">
+        <div className="bg-gray-1 px-5 sm:px-10 py-4 sm:py-5">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center gap-3 sm:gap-4">
-            <label className="text-sm font-semibold text-gray-700">
+            <label className="text-sm font-semibold text-gray-7">
               Pet Type:
             </label>
             <div className="flex flex-wrap gap-3 sm:gap-4">
@@ -38,7 +38,7 @@ export default function SearchSitter() {
           <div className="flex flex-col lg:flex-row lg:items-center gap-4 lg:gap-6">
             {/* Rating Section */}
             <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3">
-              <label className="text-sm font-semibold text-gray-700 whitespace-nowrap">
+              <label className="text-sm font-semibold text-gray-7 whitespace-nowrap">
                 Rating:
               </label>
               <div className="flex flex-wrap gap-1 sm:gap-2">
@@ -72,19 +72,19 @@ export default function SearchSitter() {
             
             {/* Experience Section */}
             <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3">
-              <label className="text-sm font-semibold text-gray-700 whitespace-nowrap">
+              <label className="text-sm font-semibold text-gray-7 whitespace-nowrap">
                 Experience:
               </label>
-              <Select>
-                <SelectTrigger className="w-full sm:w-[140px] hover:cursor-pointer bg-gray-50 border-gray-300 focus:border-orange-500 focus:ring-orange-500">
-                  <SelectValue placeholder="0-2 Years" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="0-2" className="bg-white hover:bg-gray-50">0-2 Years</SelectItem>
-                  <SelectItem value="3-5" className="bg-white hover:bg-gray-50">3-5 Years</SelectItem>
-                  <SelectItem value="5+" className="bg-white hover:bg-gray-50">5+ Years</SelectItem>
-                </SelectContent>
-              </Select>
+                <Select>
+                  <SelectTrigger className="w-full sm:w-[140px] hover:cursor-pointer bg-white border-gray-2 focus:border-orange-5 focus:ring-orange-5">
+                    <SelectValue placeholder="0-2 Years" />
+                  </SelectTrigger>
+                  <SelectContent className="bg-white border border-gray-2">
+                    <SelectItem value="0-2" className="bg-white hover:bg-gray-1">0-2 Years</SelectItem>
+                    <SelectItem value="3-5" className="bg-white hover:bg-gray-1">3-5 Years</SelectItem>
+                    <SelectItem value="5+" className="bg-white hover:bg-gray-1">5+ Years</SelectItem>
+                  </SelectContent>
+                </Select>
             </div>
             
             {/* Search Button */}
