@@ -1,5 +1,6 @@
 import React from "react";
 import Image from "next/image";
+import { satoshi } from "@/fonts";
 
 interface SectionData {
   id: number;
@@ -39,7 +40,7 @@ const ThreeSectionLayout = () => {
   ];
 
   return (
-    <div className="container mx-auto py-10 px-4 sm:px-6 lg:px-8">
+    <div className={`${satoshi.className} container mx-auto py-10 px-4 sm:px-6 lg:px-8`}>
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-12 sm:gap-8 lg:gap-10">
         {sections.map((section) => (
           <div key={section.id} className="text-center">

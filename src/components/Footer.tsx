@@ -1,10 +1,11 @@
 import React from "react";
 import Image from "next/image";
+import { satoshi } from "@/fonts";
 
 const Footer = () => {
   return (
     <footer>
-      <div className="bg-black">
+      <div className={`${satoshi.className} bg-black`}>
         <div className="flex flex-col items-center justify-center py-12 sm:py-16 lg:py-20">
           {/* Logo */}
           <div className="flex items-center justify-center mb-4">
