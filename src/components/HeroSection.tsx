@@ -14,7 +14,7 @@ const HeroSection = () => {
             alt="Three cats" 
             width={300} 
             height={300} 
-            className="pointer-events-none select-none object-contain"
+            className="pointer-events-none select-none object-contain media-fluid"
           />
         </div>
 
@@ -37,7 +37,7 @@ const HeroSection = () => {
             alt="Dog" 
             width={300} 
             height={300} 
-            className="pointer-events-none select-none object-contain"
+            className="pointer-events-none select-none object-contain media-fluid"
           />
         </div>
       </section>

@@ -41,7 +41,7 @@ const ThreeSectionLayout = () => {
 
   return (
     <div className={`${satoshi.className} container mx-auto py-10 px-4 sm:px-6 lg:px-8`}>
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-12 sm:gap-8 lg:gap-10">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-12 sm:gap-8 lg:gap-10 minw-0">
         {sections.map((section) => (
           <div key={section.id} className="text-center">
             {/* Circular Image */}
