@@ -82,7 +82,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     if (rating) {
       result = result.filter((s) => s.averageRating !== null && s.averageRating >= Number(rating));
     }
-
+    
+    if (result.length === 0) {
+        return res.status(404).json({ message: "ไม่พบข้อมูล" });
+      }
+      
     return res.status(200).json(result);
   } catch (error) {
     console.error("❌ Error fetching sitters:", error);
