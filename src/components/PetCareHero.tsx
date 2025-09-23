@@ -7,7 +7,7 @@ const PetCareHero = () => {
     <div className="container mx-auto py-16 px-4 sm:px-6 lg:px-8 border-2 border-red-500">
       {/* Main Heading */}
       <div className="text-center mb-16 border-2 border-green-500">
-        <h1 className="text-[var(--text-display)] font-[var(--font)] font-bold text-black leading-tight">
+        <h1 className="text-2xl sm:text-3xl font-bold text-black leading-tight">
           Your Pets, Our Priority: Perfect Care, Anytime, Anywhere.
         </h1>
       </div>
