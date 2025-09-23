@@ -13,7 +13,7 @@ export interface AuthenticatedRequest extends NextApiRequest {
   };
 }
 
-export function verifyToken(req: AuthenticatedRequest): { user: any } | { error: string } {
+export function verifyToken(req: AuthenticatedRequest): { user: AuthenticatedRequest['user'] } | { error: string } {
   try {
     const authHeader = req.headers.authorization;
 
@@ -32,13 +32,19 @@ export function verifyToken(req: AuthenticatedRequest): { user: any } | { error:
     }
 
     const decoded = jwt.verify(token, JWT_SECRET);
-    return { user: decoded };
 
-  } catch (error: any) {
-    if (error.name === "TokenExpiredError") {
+    // Ensure decoded is an object, not a string
+    if (typeof decoded === 'string') {
+      return { error: "Invalid token format" };
+    }
+
+    return { user: decoded as AuthenticatedRequest['user'] };
+
+  } catch (error: unknown) {
+    if (error instanceof jwt.TokenExpiredError) {
       return { error: "Token expired" };
     }
-    if (error.name === "JsonWebTokenError") {
+    if (error instanceof jwt.JsonWebTokenError) {
       return { error: "Invalid token" };
     }
     return { error: "Token verification failed" };

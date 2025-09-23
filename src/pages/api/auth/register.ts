@@ -95,11 +95,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       message: "User has been created successfully"
     });
 
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Registration error:", error);
 
     // Handle Prisma unique constraint error
-    if (error.code === "P2002") {
+    if (error && typeof error === 'object' && 'code' in error && error.code === "P2002") {
       return res.status(409).json({
         error: "User with this email already exists"
       });

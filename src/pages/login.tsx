@@ -51,7 +51,7 @@ const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     } else {
       localStorage.removeItem('rememberedEmail');
     }
-  } catch (error: any) {
+  } catch (error: unknown) {
     setLoginError("Login failed. Please check your credentials.");
   }
 }

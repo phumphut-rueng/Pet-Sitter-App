@@ -58,7 +58,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           const userDataFromToken = jwtDecode(token) as User
           setState(prev => ({ ...prev, user: userDataFromToken }))
           setIsAuthenticated(true)
-        } catch (error) {
+        } catch {
           // Invalid token, remove it
           localStorage.removeItem('token')
           setIsAuthenticated(false)
@@ -94,9 +94,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       const response = await axios.get('/api/user/profile')
       setState(prev => ({ ...prev, user: response.data, error: null }))
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Failed to fetch user:', error)
-      setState(prev => ({ ...prev, error: error.response?.data?.message || 'Failed to fetch user data' }))
+      const message = error instanceof Error ? error.message : 'Failed to fetch user data'
+      setState(prev => ({ ...prev, error: message }))
     }
   }
 

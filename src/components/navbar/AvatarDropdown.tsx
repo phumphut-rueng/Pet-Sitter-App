@@ -8,7 +8,6 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { UserRound } from "lucide-react"
-import Link from "next/link"
 import { User } from "@/types/user.types";
 import { MenuItem } from "@/types/navigation.types";
 
@@ -22,16 +21,8 @@ interface AvatarDropdownProps {
 const AvatarDropdown = ({ user, menuItems, onLogout, onNavigate }: AvatarDropdownProps) => {
   const [isOpen, setIsOpen] = useState(false)
 
-  // Don't render if no user
-  if (!user) {
-    return null
-  }
-
-  const userAvatar = user.profile_image
-  const userName = user.name
-  const userInitials = userName
-    ? userName.split(' ').map(name => name.charAt(0)).join('').toUpperCase()
-    : 'U'
+  const userAvatar = user?.profile_image
+  const userName = user?.name
 
   useEffect(() => {
     const handleResize = () => {
@@ -55,6 +46,11 @@ const AvatarDropdown = ({ user, menuItems, onLogout, onNavigate }: AvatarDropdow
     } else {
       onNavigate(item.href)
     }
+  }
+
+  // Don't render if no user
+  if (!user) {
+    return null
   }
 
   return (
