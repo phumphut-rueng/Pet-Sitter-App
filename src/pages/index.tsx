@@ -1,11 +1,13 @@
-import LandingPage from "./landingpage";
-
+import SearchSitter from "@/components/widgets/searchSitter";
+import Navbar from "@/components/navbar/Navbar";
+import ComponentAll from "./componentall";
 export default function Home() {
   return (
     <>
-      <div className="container-1200">
-        <LandingPage />
-      </div>
+    <Navbar />
+    <ComponentAll />
+    <SearchSitter />
+    
     </>
   );
 }
