@@ -4,7 +4,8 @@ import PrimaryButton from "@/components/buttons/primaryButton";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { useAuth } from "@/contexts/AuthContext"
+import { useAuth } from "@/contexts/AuthContext";
+import AuthenticatedRoute from "@/components/auth/AuthenticatedRoute";
 
 export default function Login() {
 
@@ -14,6 +15,7 @@ export default function Login() {
   const [rememberMe, setRememberMe] = useState(false);
   const [emailError, setEmailError] = useState("");
   const [passwordError, setPasswordError] = useState("");
+  const [loginError, setLoginError] = useState("");
 
 
   const validateEmail = (email: string) => {
@@ -37,6 +39,7 @@ const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
 
   setEmailError(emailErr);
   setPasswordError(passwordErr);
+  setLoginError("");
 
   if (emailErr || passwordErr) return;
 
@@ -49,6 +52,7 @@ const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
       localStorage.removeItem('rememberedEmail');
     }
   } catch (error: any) {
+    setLoginError("Login failed. Please check your credentials.");
   }
 }
 
@@ -62,6 +66,7 @@ useEffect(() => {
 
 
   return (
+    <AuthenticatedRoute>
       <div className="flex items-center justify-center h-screen overflow-hidden relative">
         {/* login container */}
         <div className="w-full p-4 max-w-[440px] gap-14 flex flex-col">
@@ -78,6 +83,12 @@ useEffect(() => {
           {/* login form */}
           <form onSubmit={handleSubmit} className="gap-8 flex flex-col">
               {/* email input */}
+              {loginError && (
+                <div className="p-3 bg-red-50 border border-red-200 rounded-md">
+                  <p className="text-red-600 text-sm">{loginError}</p>
+                </div>
+              )}
+
               <div>
                 <InputText
                   label="Email"
@@ -181,5 +192,6 @@ useEffect(() => {
           </div>
         </div>
       </div>
+    </AuthenticatedRoute>
   );
 }

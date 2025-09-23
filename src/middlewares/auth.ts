@@ -10,7 +10,6 @@ export interface AuthenticatedRequest extends NextApiRequest {
     email: string;
     profile_image?: string;
     roles: string[];
-    isSitter: boolean;
   };
 }
 

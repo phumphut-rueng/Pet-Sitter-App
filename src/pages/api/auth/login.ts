@@ -49,7 +49,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     // Extract roles
     const roles = user.user_role.map(ur => ur.role.role_name);
-    const isSitter = user.sitter.length > 0;
 
     // Create JWT payload
     const payload = {
@@ -57,8 +56,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       name: user.name,
       email: user.email,
       profile_image: user.profile_image,
-      roles,
-      isSitter
+      roles
     };
 
     // Generate JWT token (matching your Express expiration time)

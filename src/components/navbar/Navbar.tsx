@@ -8,9 +8,12 @@ import { MenuItem } from "@/types/navigation.types";
 
 const Navbar = () => {
   const router = useRouter();
-  const { state, logout, isAuthenticated, isLoading: authLoading } = useAuth();
+  const { state, logout, isAuthenticated } = useAuth();
   const { user, loading = false } = state || {};
-  const isLoading = Boolean(loading) || authLoading;
+  const isLoading = Boolean(loading);
+
+  // Compute roles locally
+  const isSitter = user?.roles?.includes('pet_sitter') || false;
 
   const getMenuItems = (): MenuItem[] => {
     if (!user) {
@@ -44,7 +47,7 @@ const Navbar = () => {
       }
     ];
 
-    if (user?.isSitter === true || user?.roles?.includes('pet_sitter') === true) {
+    if (isSitter) {
       menuItems.push({
         href: "/sitter-profile",
         icon: User,

@@ -4,5 +4,4 @@ export interface User {
   email: string;
   profile_image?: string;
   roles?: string[];
-  isSitter?: boolean;
 }

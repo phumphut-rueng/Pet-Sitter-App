@@ -9,7 +9,6 @@ interface User {
   email: string
   profile_image?: string
   roles?: string[]
-  isSitter?: boolean
 }
 
 interface AuthState {
@@ -34,8 +33,8 @@ interface AuthContextType {
   login: (data: LoginData) => Promise<void>
   register: (data: RegisterData) => Promise<void>
   logout: () => void
+  fetchUser: () => Promise<void>
   isAuthenticated: boolean
-  isLoading: boolean
 }
 
 const AuthContext = React.createContext<AuthContextType | null>(null)
@@ -47,7 +46,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     user: null,
   })
   const [isAuthenticated, setIsAuthenticated] = useState(false)
-  const [isLoading, setIsLoading] = useState(true)
 
   const router = useRouter()
 
@@ -68,7 +66,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       } else {
         setIsAuthenticated(false)
       }
-      setIsLoading(false)
+      setState(prev => ({ ...prev, loading: false }))
     }
   }, [])
 
@@ -79,7 +77,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (typeof window !== 'undefined') {
       localStorage.setItem("token", token)
       setIsAuthenticated(true)
-      setIsLoading(false)
     }
     const userDataFromToken = jwtDecode(token) as User
     setState({ ...state, user: userDataFromToken })
@@ -90,6 +87,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const register = async (data: RegisterData) => {
     await axios.post("/api/auth/register", data)
     router.push("/login")
+  }
+
+  // fetch fresh user data from server
+  const fetchUser = async () => {
+    try {
+      const response = await axios.get('/api/user/profile')
+      setState(prev => ({ ...prev, user: response.data, error: null }))
+    } catch (error: any) {
+      console.error('Failed to fetch user:', error)
+      setState(prev => ({ ...prev, error: error.response?.data?.message || 'Failed to fetch user data' }))
+    }
   }
 
   // clear the token in localStorage and the user data
@@ -104,7 +112,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   return (
     <AuthContext.Provider
-      value={{ state, login, logout, register, isAuthenticated, isLoading }}
+      value={{
+        state,
+        login,
+        logout,
+        register,
+        fetchUser,
+        isAuthenticated
+      }}
     >
       {children}
     </AuthContext.Provider>
