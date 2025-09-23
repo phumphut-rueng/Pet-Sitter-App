@@ -1,32 +1,32 @@
 import * as React from "react"
+import axios from "axios"
 import Link from "next/link"
+import Image from "next/image"
+import { useRouter } from "next/router";
+import { useState } from "react";
 import PrimaryButton from "@/components/buttons/primaryButton"
 import InputText from "@/components/input/InputText"
-import Image from "next/image"
-import { validateRegister } from "@/utils/validate-register"
-import axios from "axios"
-
-interface RegisterForm {
-  name: string
-  email: string
-  phone: string
-  password: string
-}
+import { validateEmail, validatePhone, validatePassword } from "@/utils/validate-register"
+import { RegisterForm } from "@/types/register.type"
+import RegisterConfirmation from "@/components/modal/RegisterConfirmation";
 
 export default function RegisterPage() {
+  const router = useRouter();
   const [isLoading, setIsLoading] = React.useState(false)
+  const [role, setRole] = useState<number>(2); //2="owner" | 3="sitter"
+  const [isOpen, setIsOpen] = useState<boolean>(false);
 
   const [form, setForm] = React.useState<RegisterForm>({
     name: "",
     email: "",
     phone: "",
-    password: "",
+    password: ""
   })
   const [error, setError] = React.useState<RegisterForm>({
     name: "",
     email: "",
     phone: "",
-    password: "",
+    password: ""
   })
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -38,36 +38,109 @@ export default function RegisterPage() {
     e.preventDefault()
     setIsLoading(true);
 
-    let newErrors: RegisterForm = {
+    const checkMail = await validateEmail(form.email, role)
+    const checkPhone = await validatePhone(form.phone)
+    const checkPassword = await validatePassword(form.password)
+
+    console.log("checkMail", checkMail);
+
+    const newErrors: RegisterForm = {
+      name: "",
+      email: checkMail.message,
+      phone: checkPhone.message,
+      password: checkPassword.message,
+    }
+    console.log("email", form.email.trim(), !form.email.trim(), role === 3);
+
+    if (form.email.trim() && role === 3) {
+      console.log("if (form.email.trim() && role === 3)");
+      console.log("data", checkMail.data);
+      if (!checkMail.data) {
+        console.log(" if (!checkMail.data)");
+        // ถ้ายังไม่มี user
+        saveOwnerData(newErrors, [2, 3]);
+      } else if (checkMail.error !== "Conflict") {
+        console.log("!== Conflict");
+        // ถ้ายังมี user แล้ว และยังไม่เป็น sitter
+        setIsOpen(true);
+      } else {
+        console.log("else (Object.values(newErrors)");
+        setError(newErrors);
+      }
+    } else {
+      saveOwnerData(newErrors, [2])
+    }
+
+    setIsLoading(false)
+  }
+
+  const saveOwnerData = (
+    newErrors: RegisterForm,
+    role_ids: number[]
+  ) => {
+    console.log("else");
+    if (Object.values(newErrors).every((val) => val === "")) {
+      console.log("if (Object.values(newErrors)");
+      //owner
+      saveData(role_ids);
+    } else {
+      console.log("else newErrors");
+      setError(newErrors);
+    }
+  }
+
+  const handleOnConfirm = async () => {
+    await addRole();
+    setIsOpen(false);
+  }
+
+  const handleChangeRole = (roleId: number) => {
+    setRole(roleId)
+    setError({
       name: "",
       email: "",
       phone: "",
       password: "",
-    };
-
-    newErrors = await validateRegister(form);
-
-    // console.log("validateRegister", newErrors);
-    if (Object.values(newErrors).every((val) => val === "")) {
-      let result;
-
-      try {
-        result = await axios.post(
-          "/api/user/post-owner",
-          form
-        );
-      } catch (e) {
-        console.error("axios.post", e);
-      }
-
-      if (result?.status === 201) {
-        clearData();
-      }
+    });
+  }
+  const saveData = async (role_ids: number[]) => {
+    let result;
+    try {
+      result = await axios.post(
+        "/api/auth/register",
+        {
+          ...form,
+          role_ids
+        }
+      );
+    } catch (e) {
+      console.error("axios.register", e);
     }
-    else {
-      setError(newErrors);
+
+    if (result?.status === 201) {
+      clearData();
     }
-    setIsLoading(false)
+  }
+
+  const addRole = async () => {
+    console.log("addRole", form);
+
+    let result;
+    try {
+      result = await axios.post(
+        "/api/user/post-role",
+        {
+          ...form,
+          role_ids: 3
+        }
+      );
+    } catch (e) {
+      console.error("axios.post-role", e);
+    }
+
+    if (result?.status === 201) {
+      clearData();
+    }
   }
 
   const clearData = () => {
@@ -81,8 +154,9 @@ export default function RegisterPage() {
       name: "",
       email: "",
       phone: "",
-      password: "",
+      password: ""
     });
+    router.push("/auth/login");
   }
 
   return (
@@ -118,7 +192,29 @@ export default function RegisterPage() {
             </p>
           </div>
 
-          <form onSubmit={handleSubmit} className="space-y-7 pt-15 ">
+          {/* Tabs */}
+          <div className="flex justify-center gap-2 pt-7">
+            <button
+              className={`px-4 py-2 font-medium ${role === 2
+                ? "border-b-2 border-orange-5 text-orange-5"
+                : "text-gray-5 cursor-pointer"
+                }`}
+              onClick={() => handleChangeRole(2)}
+            >
+              Owner
+            </button>
+            <button
+              className={`px-4 py-2 font-medium ${role === 3
+                ? "border-b-2 border-orange-5 text-orange-5"
+                : "text-gray-5 cursor-pointer"
+                }`}
+              onClick={() => handleChangeRole(3)}
+            >
+              Sitter
+            </button>
+          </div>
+
+          <form onSubmit={handleSubmit} className="space-y-7 pt-7 ">
             <div>
               <InputText
                 label="Email"
@@ -170,7 +266,6 @@ export default function RegisterPage() {
               />
             </div>
 
-
             <PrimaryButton
               text={isLoading ? "Registering..." : "Register"}
               bgColor="primary"
@@ -217,6 +312,12 @@ export default function RegisterPage() {
           </p>
         </div>
       </div>
+
+      <RegisterConfirmation
+        open={isOpen}
+        onOpenChange={setIsOpen}
+        onConfirm={handleOnConfirm}
+      />
     </div>
   )
 }

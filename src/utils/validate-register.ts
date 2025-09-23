@@ -1,43 +1,77 @@
 import axios from "axios";
+import { FieldValidation, UserRole, errorType } from "@/types/register.type";
 
-export interface RegisterForm {
-    name: string;
-    email: string;
-    phone: string;
-    password: string;
+const result = (
+    message = "",
+    error?: errorType,
+    data?: object
+): FieldValidation => ({
+    message,
+    ...(error && { error }),
+    ...(data && { data }),
+});
+
+async function safePost<T>(url: string, body: unknown): Promise<T | null> {
+    try {
+        const { data } = await axios.post<T>(url, body);
+        return data;
+    } catch (e) {
+        console.error(`${url} request failed:`, e);
+        return null;
+    }
 }
 
 // 🔎 Email Validator
-export async function validateEmail(value: string): Promise<string> {
+export async function validateEmail(
+    value: string,
+    role_ids: number,
+): Promise<FieldValidation> {
     if (!value.trim())
-        return "Please input your Email";
+        return { message: "Please input your Email" };
 
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(value))
-        return "Invalid email format";
+        return { message: "Invalid email format" };
 
     try {
         const { data } = await axios.post(
-            "/api/user/check-email",
+            "/api/user/get-email",
             { email: value },
         );
-        if (data.exists)
-            return "This email is already registered";
+        console.log("validateEmail", data);
+
+        if (data.exists) {
+            if (data.data.user_role.some((ur: UserRole) => ur.role_id === role_ids)) {
+                console.log("includes", data.data.user_role, role_ids,);
+                return {
+                    error: "Conflict",
+                    message: "This email is already registered",
+                    data: data
+                };
+            } else {
+                return {
+                    message: "This email is already registered",
+                    data: data
+                };
+            }
+        }
     } catch (e) {
         console.error("Email check failed:", e);
     }
 
-    return "";
+    return { message: "" };
 }
 
 // 🔎 Phone Validator
-export async function validatePhone(value: string): Promise<string> {
+export async function validatePhone(
+    value: string
+): Promise<FieldValidation> {
     if (!value.trim())
-        return "Please input your Phone";
+        return { message: "Please input your Phone" };
 
     const phoneRegex = /^0\d{9}$/;
     if (!phoneRegex.test(value))
-        return "Phone must start with 0 and be 10 digits";
+        return { message: "Phone must start with 0 and be 10 digits" };
 
     try {
         const { data } = await axios.post(
@@ -45,29 +79,21 @@ export async function validatePhone(value: string): Promise<string> {
             { phone: value },
         );
         if (data.exists)
-            return "This phone number is already registered";
+            return { message: "This phone number is already registered" };
     } catch (e) {
         console.error("Phone check failed:", e);
     }
 
-    return "";
+    return { message: "" };
 }
 
 // 🔎 Password Validator
-export async function validatePassword(value: string): Promise<string> {
+export async function validatePassword(
+    value: string
+): Promise<FieldValidation> {
     if (!value.trim())
-        return "Please input your Password";
+        return { message: "Please input your Password" };
     if (value.length < 8)
-        return "Password must be more than 8 characters";
-    return "";
-}
-
-// ✅ ฟังก์ชันรวม
-export async function validateRegister(form: RegisterForm): Promise<RegisterForm> {
-    return {
-        name: "",
-        email: await validateEmail(form.email),
-        phone: await validatePhone(form.phone),
-        password: await validatePassword(form.password),
-    };
+        return { message: "Password must be more than 8 characters" };
+    return { message: "" };
 }

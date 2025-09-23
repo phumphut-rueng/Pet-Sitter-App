@@ -23,12 +23,19 @@ export default async function handler(
         // ค้นหา email ใน DB
         const existingUser = await prisma.user.findUnique({
             where: { email },
+            include: { user_role: true },
         });
 
         if (existingUser) {
-            return res.status(200).json({ exists: true });
+            return res.status(200).json({
+                exists: true,
+                data: existingUser
+            });
         } else {
-            return res.status(200).json({ exists: false });
+            return res.status(200).json({
+                exists: false,
+                data: existingUser
+            });
         }
     } catch (error) {
         console.error("check-email error:", error);

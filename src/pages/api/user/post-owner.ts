@@ -18,6 +18,7 @@ export default async function handler(
             email?: string;
             phone?: string;
             password?: string;
+            userType?: number;
         };
 
         if (!email) {
