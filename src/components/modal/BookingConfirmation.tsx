@@ -4,6 +4,7 @@ import {
 } from "@/components/ui/alert-dialog"
 import { Button } from "@/components/ui/button"
 import AlertConfirm from "./AlertConfirm"
+import PrimaryButton from "../buttons/primaryButton"
 
 interface ConfirmationProps {
     open: boolean
@@ -30,20 +31,20 @@ export default function BookingConfirmation({
 
                     {/* Actions */}
                     <div className="flex justify-between gap-4 mt-4">
-                        <AlertDialogCancel asChild>
-                            <Button
-                                variant="outline"
-                                className="bg-orange-1 text-orange-5 hover:bg-orange-2 border-0"
-                            >
-                                Cancel
-                            </Button>
-                        </AlertDialogCancel>
-                        <Button
-                            className="bg-orange-5 hover:bg-orange-6 text-white"
+                        <PrimaryButton
+                            text="Cancel"
+                            bgColor="secondary"
+                            textColor="orange"
+                            type="submit"
+                            onClick={() => onOpenChange(false)}
+                        />
+                        <PrimaryButton
+                            text="Yes, I’m sure"
+                            bgColor="primary"
+                            textColor="white"
+                            type="submit"
                             onClick={onConfirm}
-                        >
-                            Yes, I’m sure
-                        </Button>
+                        />
                     </div>
                 </>
             }
