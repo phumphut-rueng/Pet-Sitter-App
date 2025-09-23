@@ -37,7 +37,7 @@ const ServicesSection = () => {
   ];
 
   return (
-    <div className="flex flex-col justify-evenly h-full">
+    <div className="flex flex-col justify-evenly gap-4 h-full">
         {services.map((service) => (
           <div key={service.id} className="flex items-start space-x-4">
             {/* Star Icon */}
@@ -53,10 +53,10 @@ const ServicesSection = () => {
             
             {/* Content */}
             <div className="flex-1">
-              <h3 className="text-[var(--text-h3)] font-bold text-black mb-2">
+              <h3 className="h3 font-bold text-black mb-2">
                 {service.title}
               </h3>
-              <p className="text-[var(--text-body2)] text-gray-600 leading-relaxed">
+              <p className="body-sm text-gray-6 leading-relaxed">
                 {service.description}
               </p>
             </div>
