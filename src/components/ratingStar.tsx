@@ -10,11 +10,15 @@ type RatingSelectProps = {
     value?: number;
     selectRating?: number;
     onChange?: (value: number) => void;
+    className?: string;
+    classNameStar?: string;
   };
 export default function RatingSelect({ 
   value = 0,
   selectRating,
   onChange,
+  className,
+  classNameStar,
 }: RatingSelectProps) {
   const handleClick = () => {
     if(!onChange) return;
@@ -25,7 +29,7 @@ export default function RatingSelect({
       <button 
         type="button"
         onClick={handleClick}
-        className={`group flex items-center h-9 gap-2 bg-background px-3 py-2 rounded-sm border ${
+        className={`group flex items-center h-9 gap-2 bg-background px-3 py-2 rounded-sm border ${className} ${
           isSelected ? "border-orange-5" : "border-border"
         } hover:border-orange-5 hover:cursor-pointer`}>
         <span
@@ -42,6 +46,7 @@ export default function RatingSelect({
             alt="Star"
             width={16}
             height={16}
+            className={classNameStar}
           />
         ))}
       </button>
