@@ -1,6 +1,6 @@
 import Image from "next/image";
 import InputText from "@/components/input/InputText";
-import PrimaryButton from "@/components/buttons/primaryButton";
+import PrimaryButton from "@/components/buttons/PrimaryButton";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useState, useEffect } from "react";
 import Link from "next/link";
