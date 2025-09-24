@@ -2,7 +2,7 @@ import React from "react";
 import { Control, Controller } from "react-hook-form";
 import InputText from "@/components/input/InputText";
 import AvatarUploader from "@/components/form/AvatarUpload";
-import PrimaryButton from "@/components/buttons/primaryButton";
+import PrimaryButton from "@/components/buttons/PrimaryButton";
 import { cn } from "@/lib/utils";
 
 export type OwnerProfileValues = {

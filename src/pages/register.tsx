@@ -4,7 +4,7 @@ import Link from "next/link"
 import Image from "next/image"
 import { useRouter } from "next/router";
 import { useState } from "react";
-import PrimaryButton from "@/components/buttons/primaryButton"
+import PrimaryButton from "@/components/buttons/PrimaryButton"
 import InputText from "@/components/input/InputText"
 import { validateEmail, validatePhone, validatePassword } from "@/utils/validate-register"
 import { RegisterForm } from "@/types/register.type"

@@ -1,6 +1,6 @@
 import React from "react";
 import Image from "next/image";
-import PrimaryButton from "@/components/buttons/primaryButton";
+import PrimaryButton from "@/components/buttons/PrimaryButton";
 import Link from "next/link";
 import { satoshi } from "@/fonts";
 

@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { Bell, MessageSquare, Menu, X } from "lucide-react";
 import IconButton from "./IconButton";
-import PrimaryButton from "@/components/buttons/primaryButton";
+import PrimaryButton from "@/components/buttons/PrimaryButton";
 import { NavigationProps, MenuItem } from "@/types/navigation.types";
 
 const MobileNav: React.FC<NavigationProps> = ({

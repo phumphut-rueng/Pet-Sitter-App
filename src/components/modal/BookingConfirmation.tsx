@@ -2,7 +2,7 @@ import {
     AlertDialogDescription,
 } from "@/components/ui/alert-dialog"
 import AlertConfirm from "./AlertConfirm"
-import PrimaryButton from "../buttons/primaryButton"
+import PrimaryButton from "../buttons/PrimaryButton"
 
 interface ConfirmationProps {
     title?: string

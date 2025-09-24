@@ -1,7 +1,7 @@
 import Sidebar from "@/components/layout/SitterSidebar";
 import PetSitterNavbar from "@/components/PetSitterNavbar";
 import { StatusBadge } from "@/components/badges/StatusBadge";
-import PrimaryButton from "@/components/buttons/primaryButton";
+import PrimaryButton from "@/components/buttons/PrimaryButton";
 import AvatarUploader from "@/components/form/AvatarUpload";
 import InputText from "@/components/input/InputText";
 import InputTextArea from "@/components/input/InputTextArea";
