@@ -140,7 +140,7 @@ useEffect(() => {
               {/* forget password */}
               <div>
                 <span className="text-[16px] font-bold text-orange-5 cursor-pointer">
-                  <Link href="/forget-password">Forget Password</Link>
+                  <Link href="/auth/reset-password">Forget Password</Link>
                 </span>
               </div>
             </div>
