@@ -32,11 +32,11 @@ export default function PetTypeCheckBox({layout = "row", onChange }: PetTypeChec
             id={petType}
             checked={selected.includes(petType)}
             onCheckedChange={() => handleCheckboxChange(petType)}
-            className="border border-gray-300 hover:cursor-pointer hover:border-orange-500 focus:ring-orange-500 focus:ring-2"
+            className="border border-gray-3 hover:cursor-pointer hover:border-orange-5 focus:ring-orange-5 focus:ring-2"
           />
           <Label 
             htmlFor={petType} 
-            className="hover:cursor-pointer text-gray-700 text-sm font-medium whitespace-nowrap"
+            className="hover:cursor-pointer text-gray-7 text-sm font-medium whitespace-nowrap"
           >
             {petType}
           </Label>
