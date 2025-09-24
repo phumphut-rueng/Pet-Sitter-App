@@ -1,4 +1,5 @@
 import React from 'react';
+import Image from 'next/image';
 
 interface ChatBubbleProps {
   message: string;
@@ -26,11 +27,15 @@ const ChatBubble: React.FC<ChatBubbleProps> = ({
         {/* Avatar */}
         {avatar && isUser === false && (
           <div className={`ml-3 flex-shrink-0`}>
-            <img
-              src={avatar}
-              alt="Avatar"
-              className="w-8 h-8 rounded-full object-cover sm"
-            />
+            <div className="w-8 h-8 rounded-full overflow-hidden">
+              <Image
+                src={avatar}
+                alt="Avatar"
+                className="w-full h-full object-cover"
+                width={32}
+                height={32}
+              />
+            </div>
           </div>
         )}
 
@@ -47,10 +52,12 @@ const ChatBubble: React.FC<ChatBubbleProps> = ({
           >
             {isImage && imageUrl ? (
               <div className="bg-gray-2 rounded-lg flex items-center justify-center">
-                <img
+                <Image
                   src={imageUrl}
                   alt="Message image"
                   className="max-w-full max-h-96 object-contain rounded-lg"
+                  width={260}
+                  height={260}
                 />
               </div>
             ) : (

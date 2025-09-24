@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import sampleChats from '../../utils/mockChatListData';
+import Image from 'next/image';
 
 const ChatList: React.FC = () => {
   const [selectedChatId, setSelectedChatId] = useState<string>('1');
@@ -26,14 +27,18 @@ const ChatList: React.FC = () => {
             <div className="flex items-center space-x-3">
               {/* Avatar */}
               <div className="relative flex-shrink-0">
-                <img
-                  src={chat.avatar || '/images/landing_page/lovely-pet-portrait-isolated.svg'}
-                  alt={chat.name}
-                  className="w-12 h-12 rounded-full object-cover"
-                />
+                <div className="w-12 h-12 rounded-full overflow-hidden">
+                  <Image
+                    src={chat.avatar || '/images/landing_page/lovely-pet-portrait-isolated.svg'}
+                    alt={chat.name}
+                    className="w-full h-full object-cover"
+                    width={48}
+                    height={48}
+                  />
+                </div>
                 {/* Online indicator */}
                 {chat.isOnline && (
-                  <div className="absolute bottom-0 right-0 w-3 h-3 bg-green border-2 border-white rounded-full"></div>
+                  <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 border-2 border-white rounded-full"></div>
                 )}
               </div>
 

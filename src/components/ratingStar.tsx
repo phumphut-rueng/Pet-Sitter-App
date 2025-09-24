@@ -1,4 +1,4 @@
-
+import Image from "next/image";
 {/*   ตัวอย่างใช้ rating
       const [rating, setRating] = useState(0);
       <RatingSelect value={5} selectRating={rating} onChange={setRating} />
@@ -36,10 +36,12 @@ export default function RatingSelect({
           {value}
         </span>
         {Array.from({ length: value }).map((_, i) => (
-          <img
+          <Image
             key={i}
             src="/icons/Rating-Star.svg"
             alt="Star"
+            width={16}
+            height={16}
           />
         ))}
       </button>
