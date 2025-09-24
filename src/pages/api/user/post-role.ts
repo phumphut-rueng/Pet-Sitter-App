@@ -6,7 +6,7 @@ export default async function handler(
     res: NextApiResponse
 ) {
     if (req.method !== "POST") {
-        return res.status(405).json({ error: "Method not allowed" });
+        return res.status(405).end(`Method ${req.method} not allowed`);
     }
 
     try {
@@ -16,10 +16,10 @@ export default async function handler(
         };
 
         if (!email) {
-            return res.status(400).json({ error: "email is required" });
+            return res.status(400).json({ message: "email is required" });
         }
         if (!role_ids) {
-            return res.status(400).json({ error: "role_id is required" });
+            return res.status(400).json({ message: "role_id is required" });
         }
 
         //check user by email
@@ -30,14 +30,12 @@ export default async function handler(
 
         if (!user) {
             return res.status(404).json({
-                error: "User not found",
                 message: "The provided email does not match any registered user",
             });
         }
 
         if (user.user_role.some((ur) => ur.role_id === role_ids)) {
             return res.status(409).json({
-                error: "Conflict",
                 message: "User already has this role",
             });
         }
@@ -63,7 +61,7 @@ export default async function handler(
     } catch (error) {
         console.error(error);
         return res.status(500).json({
-            error: "Server could not create role sitter because database connection",
+            message: "Server could not create role sitter because database connection",
             details: String(error),
         });
     }

@@ -20,13 +20,13 @@ export default async function handler(
     };
 
     if (!email) {
-      return res.status(400).json({ error: "Email is required" });
+      return res.status(400).json({ message: "Email is required" });
     }
     if (!phone) {
-      return res.status(400).json({ error: "Phone is required" });
+      return res.status(400).json({ message: "Phone is required" });
     }
     if (!password) {
-      return res.status(400).json({ error: "Password is required" });
+      return res.status(400).json({ message: "Password is required" });
     }
 
     // fallback ให้ name = email ถ้า user ไม่ส่งมา
@@ -44,7 +44,7 @@ export default async function handler(
     if (existingOwner && roles.includes(2)) {
       return res
         .status(409)
-        .json({ error: "Email or Phone already exists" });
+        .json({ message: "Email or Phone already exists" });
     }
 
     // hash password
@@ -76,7 +76,7 @@ export default async function handler(
     console.error(error);
 
     return res.status(500).json({
-      error: "Server could not create owner because database connection",
+      message: "Server could not create owner because database connection",
       details: String(error),
     });
   }
