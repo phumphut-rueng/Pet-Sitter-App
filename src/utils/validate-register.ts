@@ -21,39 +21,34 @@ async function safePost<T>(url: string, body: unknown): Promise<T | null> {
     }
 }
 
-// 🔎 Email Validator
+// Email Validator
 export async function validateEmail(
     value: string,
     role_ids: number,
 ): Promise<FieldValidation> {
     if (!value.trim())
-        return { message: "Please input your Email" };
+        return result("Please input your Email");
 
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(value))
-        return { message: "Invalid email format" };
+        return result("Invalid email format");
 
     try {
-        const { data } = await axios.post(
+        const data = await safePost<{
+            exists: boolean;
+            data: { user_role: UserRole[] }
+        }>(
             "/api/user/get-email",
-            { email: value },
+            { email: value }
         );
         console.log("validateEmail", data);
 
-        if (data.exists) {
-            if (data.data.user_role.some((ur: UserRole) => ur.role_id === role_ids)) {
-                console.log("includes", data.data.user_role, role_ids,);
-                return {
-                    error: "Conflict",
-                    message: "This email is already registered",
-                    data: data
-                };
-            } else {
-                return {
-                    message: "This email is already registered",
-                    data: data
-                };
-            }
+        if (data?.exists) {
+            const hasRole = data.data.user_role.some((ur: UserRole) => ur.role_id === role_ids)
+            const msg = "This email is already registered";
+            return hasRole
+                ? result(msg, "Conflict", data)
+                : result(msg, undefined, data);
         }
     } catch (e) {
         console.error("Email check failed:", e);
@@ -62,24 +57,24 @@ export async function validateEmail(
     return { message: "" };
 }
 
-// 🔎 Phone Validator
+// Phone Validator
 export async function validatePhone(
     value: string
 ): Promise<FieldValidation> {
     if (!value.trim())
-        return { message: "Please input your Phone" };
+        return result("Please input your Phone");
 
     const phoneRegex = /^0\d{9}$/;
     if (!phoneRegex.test(value))
-        return { message: "Phone must start with 0 and be 10 digits" };
+        return result("Phone must start with 0 and be 10 digits");
 
     try {
-        const { data } = await axios.post(
-            `/api/user/check-phone`,
-            { phone: value },
-        );
-        if (data.exists)
-            return { message: "This phone number is already registered" };
+        const data = await safePost<{
+            exists: boolean
+        }>(`/api/user/check-phone`,
+            { phone: value });
+        if (data?.exists)
+            return result("This phone number is already registered");
     } catch (e) {
         console.error("Phone check failed:", e);
     }
@@ -87,13 +82,15 @@ export async function validatePhone(
     return { message: "" };
 }
 
-// 🔎 Password Validator
+// Password Validator
 export async function validatePassword(
     value: string
 ): Promise<FieldValidation> {
     if (!value.trim())
-        return { message: "Please input your Password" };
+        return result("Please input your Password");
+
     if (value.length < 8)
-        return { message: "Password must be more than 8 characters" };
-    return { message: "" };
+        return result("Password must be more than 8 characters");
+
+    return result();
 }

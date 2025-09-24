@@ -12,6 +12,7 @@ import RegisterConfirmation from "@/components/modal/RegisterConfirmation";
 
 export default function RegisterPage() {
   const router = useRouter();
+
   const [isLoading, setIsLoading] = React.useState(false)
   const [role, setRole] = useState<number>(2); //2="owner" | 3="sitter"
   const [isOpen, setIsOpen] = useState<boolean>(false);
@@ -29,9 +30,70 @@ export default function RegisterPage() {
     password: ""
   })
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target
-    setForm((prev) => ({ ...prev, [name]: value }))
+  const handleChange = React.useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      const { name, value } = e.target
+      setForm((prev) => ({ ...prev, [name]: value }))
+    },
+    []
+  )
+
+  const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const onlyNums = e.target.value.replace(/\D/g, "")
+    if (onlyNums.length <= 10) {
+      handleChange({
+        ...e,
+        target: { ...e.target, name: "phone", value: onlyNums },
+      })
+    }
+  }
+  const clearData = React.useCallback(() => {
+    setError({ name: "", email: "", phone: "", password: "" })
+    setForm({ name: "", email: "", phone: "", password: "" })
+    router.push("/auth/login")
+  }, [router])
+
+  const saveData = async (role_ids: number[]) => {
+    let result;
+    try {
+      result = await axios.post(
+        "/api/auth/register",
+        {
+          ...form,
+          role_ids
+        }
+      );
+
+      if (result?.status === 201) {
+        clearData();
+      }
+    } catch (e) {
+      console.error("axios.register", e);
+    }
+  }
+
+  const addRole = async () => {
+    let result;
+    try {
+      result = await axios.post(
+        "/api/user/post-role",
+        {
+          ...form,
+          role_ids: 3
+        }
+      );
+      if (result?.status === 201) {
+        clearData();
+      }
+    } catch (e) {
+      console.error("axios.post-role", e);
+    }
+
+  }
+
+  const handleOnConfirm = async () => {
+    await addRole();
+    setIsOpen(false);
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -42,29 +104,23 @@ export default function RegisterPage() {
     const checkPhone = await validatePhone(form.phone)
     const checkPassword = await validatePassword(form.password)
 
-    console.log("checkMail", checkMail);
+    // console.log("checkMail", checkMail);
 
     const newErrors: RegisterForm = {
       name: "",
-      email: checkMail.message,
-      phone: checkPhone.message,
-      password: checkPassword.message,
+      email: checkMail.message || "",
+      phone: checkPhone.message || "",
+      password: checkPassword.message || "",
     }
-    console.log("email", form.email.trim(), !form.email.trim(), role === 3);
 
     if (form.email.trim() && role === 3) {
-      console.log("if (form.email.trim() && role === 3)");
-      console.log("data", checkMail.data);
       if (!checkMail.data) {
-        console.log(" if (!checkMail.data)");
-        // ถ้ายังไม่มี user
+        // user ที่ยังไม่เคย register owner
         saveOwnerData(newErrors, [2, 3]);
       } else if (checkMail.error !== "Conflict") {
-        console.log("!== Conflict");
-        // ถ้ายังมี user แล้ว และยังไม่เป็น sitter
+        // user ที่ register owner แล้ว และยังไม่เป็น sitter
         setIsOpen(true);
       } else {
-        console.log("else (Object.values(newErrors)");
         setError(newErrors);
       }
     } else {
@@ -78,20 +134,11 @@ export default function RegisterPage() {
     newErrors: RegisterForm,
     role_ids: number[]
   ) => {
-    console.log("else");
     if (Object.values(newErrors).every((val) => val === "")) {
-      console.log("if (Object.values(newErrors)");
-      //owner
       saveData(role_ids);
     } else {
-      console.log("else newErrors");
       setError(newErrors);
     }
-  }
-
-  const handleOnConfirm = async () => {
-    await addRole();
-    setIsOpen(false);
   }
 
   const handleChangeRole = (roleId: number) => {
@@ -102,61 +149,6 @@ export default function RegisterPage() {
       phone: "",
       password: "",
     });
-  }
-  const saveData = async (role_ids: number[]) => {
-    let result;
-    try {
-      result = await axios.post(
-        "/api/auth/register",
-        {
-          ...form,
-          role_ids
-        }
-      );
-    } catch (e) {
-      console.error("axios.register", e);
-    }
-
-    if (result?.status === 201) {
-      clearData();
-    }
-  }
-
-  const addRole = async () => {
-    console.log("addRole", form);
-
-    let result;
-    try {
-      result = await axios.post(
-        "/api/user/post-role",
-        {
-          ...form,
-          role_ids: 3
-        }
-      );
-    } catch (e) {
-      console.error("axios.post-role", e);
-    }
-
-    if (result?.status === 201) {
-      clearData();
-    }
-  }
-
-  const clearData = () => {
-    setError({
-      name: "",
-      email: "",
-      phone: "",
-      password: "",
-    });
-    setForm({
-      name: "",
-      email: "",
-      phone: "",
-      password: ""
-    });
-    router.push("/auth/login");
   }
 
   return (
@@ -194,24 +186,19 @@ export default function RegisterPage() {
 
           {/* Tabs */}
           <div className="flex justify-center gap-2 pt-7">
-            <button
-              className={`px-4 py-2 font-medium ${role === 2
-                ? "border-b-2 border-orange-5 text-orange-5"
-                : "text-gray-5 cursor-pointer"
-                }`}
-              onClick={() => handleChangeRole(2)}
-            >
-              Owner
-            </button>
-            <button
-              className={`px-4 py-2 font-medium ${role === 3
-                ? "border-b-2 border-orange-5 text-orange-5"
-                : "text-gray-5 cursor-pointer"
-                }`}
-              onClick={() => handleChangeRole(3)}
-            >
-              Sitter
-            </button>
+            {["Owner", "Sitter"].map((label, i) => {
+              const roleId = i + 2
+              return (
+                <button
+                  key={roleId}
+                  className={`px-4 py-2 font-medium ${role === roleId ? "border-b-2 border-orange-5 text-orange-5" : "text-gray-5 cursor-pointer"
+                    }`}
+                  onClick={() => handleChangeRole(roleId)}
+                >
+                  {label}
+                </button>
+              )
+            })}
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-7 pt-7 ">
@@ -239,15 +226,7 @@ export default function RegisterPage() {
                 type="text"
                 variant={!error.phone ? "default" : "error"}
                 inputMode="numeric"
-                onChange={(e) => {
-                  const onlyNums = e.target.value.replace(/\D/g, "");
-                  if (onlyNums.length <= 10) {
-                    handleChange({
-                      ...e,
-                      target: { ...e.target, name: "phone", value: onlyNums },
-                    });
-                  }
-                }}
+                onChange={handlePhoneChange}
                 errorText={error.phone}
               />
             </div>
