@@ -1,7 +1,7 @@
 import React from "react";
 import { Control, Controller } from "react-hook-form";
 import InputText from "@/components/input/InputText";
-import AvatarUploader from "@/components/form/avatarupload";
+import AvatarUploader from "@/components/form/AvatarUpload";
 import PrimaryButton from "@/components/buttons/primaryButton";
 import { cn } from "@/lib/utils";
 
