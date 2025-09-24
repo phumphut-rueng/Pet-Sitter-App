@@ -44,7 +44,7 @@ const PetSitterHero = () => {
           <div className="flex flex-col sm:flex-row gap-4 sm:gap-1 justify-center items-center">
             {/* Become A Pet Sitter Button */}
             <Link
-              href="/become-a-pet-sitter"
+              href="/register"
               aria-label="Go to become a pet sitter page"
             >
               <button className="text-orange-5 font-semibold hover:text-orange-6 transition-colors duration-200 min-w-[200px] sm:min-w-[220px]">
