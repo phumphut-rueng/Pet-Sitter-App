@@ -42,7 +42,7 @@ const MobileNav: React.FC<NavigationProps> = ({
 
   const handleFindPetSitterClick = () => {
     closeMobileMenu();
-    onNavigate('/find-a-pet-sitter');
+    onNavigate('/findpetsitter');
   };
 
   return (
