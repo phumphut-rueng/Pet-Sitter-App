@@ -12,6 +12,7 @@ interface InputTextProps extends React.ComponentProps<typeof Input> {
   className?: string;
   disabled?: boolean;
   value?: string;
+  errorText?: string;
   onChange?: (e: React.ChangeEvent<HTMLInputElement>) => void;
 }
 
@@ -23,6 +24,7 @@ const InputText = ({
   className,
   disabled,
   value,
+  errorText = "",
   onChange,
   ...props
 }: InputTextProps) => {
@@ -60,6 +62,11 @@ const InputText = ({
           </div>
         )}
       </div>
+      {
+        errorText && (
+          <p className="text-[14px] text-error">{errorText}</p>
+        )
+      }
     </div>
   );
 };

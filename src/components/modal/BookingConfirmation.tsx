@@ -1,17 +1,22 @@
 import {
-    AlertDialogCancel,
     AlertDialogDescription,
 } from "@/components/ui/alert-dialog"
-import { Button } from "@/components/ui/button"
 import AlertConfirm from "./AlertConfirm"
+import PrimaryButton from "../buttons/primaryButton"
 
 interface ConfirmationProps {
+    title?: string
+    description?: string
+    textButton?: string
     open: boolean
     onOpenChange: (open: boolean) => void
     onConfirm: () => void
 }
 
 export default function BookingConfirmation({
+    title = "Booking Confirmation",
+    description = "Are you sure to booking this pet sitter?",
+    textButton = "Yes, I’m sure",
     open,
     onOpenChange,
     onConfirm,
@@ -20,30 +25,30 @@ export default function BookingConfirmation({
         <AlertConfirm
             open={open}
             onOpenChange={onOpenChange}
-            title="Booking Confirmation"
+            title={title}
             description={
                 <>
                     {/* Description */}
-                    <AlertDialogDescription className="pb-3 text-gray-6">
-                        Are you sure to booking this pet sitter?
+                    <AlertDialogDescription className="pb-3 text-gray-6 whitespace-pre-line">
+                        {description}
                     </AlertDialogDescription>
 
                     {/* Actions */}
                     <div className="flex justify-between gap-4 mt-4">
-                        <AlertDialogCancel asChild>
-                            <Button
-                                variant="outline"
-                                className="bg-orange-1 text-orange-5 hover:bg-orange-2 border-0"
-                            >
-                                Cancel
-                            </Button>
-                        </AlertDialogCancel>
-                        <Button
-                            className="bg-orange-5 hover:bg-orange-6 text-white"
+                        <PrimaryButton
+                            text="Cancel"
+                            bgColor="secondary"
+                            textColor="orange"
+                            type="submit"
+                            onClick={() => onOpenChange(false)}
+                        />
+                        <PrimaryButton
+                            text={textButton}
+                            bgColor="primary"
+                            textColor="white"
+                            type="submit"
                             onClick={onConfirm}
-                        >
-                            Yes, I’m sure
-                        </Button>
+                        />
                     </div>
                 </>
             }

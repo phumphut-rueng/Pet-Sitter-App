@@ -1,5 +1,6 @@
 import * as React from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname } from "next/navigation";
 
 type Item = {
@@ -49,10 +50,10 @@ export default function Sidebar({
   const pathname = usePathname();
 
   const items: Item[] = [
-    { id: "profile", label: "Pet Sitter Profile", href: "/sitter/profile", iconSrc: "/icons/ic-user.svg" },
-    { id: "booking", label: "Booking List", href: "/sitter/booking", iconSrc: "/icons/ic-list.svg", notify: true },
-    { id: "calendar", label: "Calendar", href: "/sitter/calendar", iconSrc: "/icons/ic-calendar.svg" },
-    { id: "payout", label: "Payout Option", href: "/sitter/payout", iconSrc: "/icons/ic-creditcard.svg" },
+    { id: "profile",  label: "Pet Sitter Profile", href: "/sitter/profile",  iconSrc: "/icons/ic-user.svg" },
+    { id: "booking",  label: "Booking List",       href: "/sitter/booking",  iconSrc: "/icons/ic-list.svg", notify: true },
+    { id: "calendar", label: "Calendar",           href: "/sitter/calendar", iconSrc: "/icons/ic-calendar.svg" },
+    { id: "payout",   label: "Payout Option",      href: "/sitter/payout",   iconSrc: "/icons/ic-creditcard.svg" },
   ];
 
   let currentActiveId = activeId;
@@ -64,14 +65,22 @@ export default function Sidebar({
   return (
     <aside className={cn("flex h-screen w-[240px] shrink-0 flex-col bg-bg text-text border-r border-border", className)}>
       <div className="px-5 pt-8 pb-6 border-b border-border">
-        <img src={logoSrc} alt="Sitter" width={120} height={30} />
+        <Image
+          src={logoSrc}
+          alt="Sitter"
+          width={120}
+          height={30}
+          priority
+          className="h-auto w-[120px]"
+        />
       </div>
 
       <nav className="flex-1 overflow-y-auto px-2 py-4">
         <ul className="space-y-0.5">
           {items.map(item => {
             const isActive = currentActiveId === item.id;
-            let itemClass = "group flex w-full items-center gap-3 rounded-xl px-3 py-3 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2 focus-visible:ring-offset-bg ";
+            let itemClass =
+              "group flex w-full items-center gap-3 rounded-xl px-3 py-3 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2 focus-visible:ring-offset-bg ";
 
             if (isActive) {
               itemClass += "bg-orange-50 text-orange-6";
@@ -90,9 +99,7 @@ export default function Sidebar({
                   >
                     <IconMask src={item.iconSrc} />
                     <span className="text-[15px] font-medium leading-5">{item.label}</span>
-                    {item.notify && (
-                      <span className="ml-auto mt-[1px] inline-block h-2 w-2 rounded-full bg-red" />
-                    )}
+                    {item.notify && <span className="ml-auto mt-[1px] inline-block h-2 w-2 rounded-full bg-red" />}
                   </div>
                 </Link>
               </li>

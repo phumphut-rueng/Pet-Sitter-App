@@ -1,6 +1,5 @@
-// เดะมีแก้ต่อ รูป lrg //
-
 import * as React from "react";
+import Image from "next/image";
 
 type Size = "lg" | "sm";
 type Variant = "default" | "chips" | "compact";
@@ -100,7 +99,6 @@ function Tag({ label }: { label: string }) {
 
 export function PetSitterCard({
   size = "lg",
-  variant = "default",
   title,
   hostName,
   location,
@@ -126,13 +124,13 @@ export function PetSitterCard({
         )}
       >
         <div className="h-[100px] w-full overflow-hidden rounded-xl bg-muted">
-          <img src={coverUrl} alt="" className="h-full w-full object-cover" />
+          <Image src={coverUrl} alt="" className="h-full w-full object-cover" width={303} height={100} />
         </div>
         <div className="mt-3 space-y-3">
           <div className="flex items-start justify-between gap-4">
             <div className="flex min-w-0 items-center gap-3">
               {showAv && (
-                <img src={avatarUrl || coverUrl} alt="" className="h-9 w-9 rounded-full object-cover" />
+                <Image src={avatarUrl || coverUrl} alt="" className="h-9 w-9 rounded-full object-cover" width={36} height={36} />
               )}
               <div className="min-w-0">
                 <h3 className="truncate text-[20px] leading-7 font-semibold text-ink">{title}</h3>
@@ -165,13 +163,13 @@ export function PetSitterCard({
         )}
       >
         <div className="h-36 w-56 overflow-hidden rounded-xl bg-muted">
-          <img src={coverUrl} alt="" className="h-full w-full object-cover" />
+          <Image src={coverUrl} alt="" className="h-full w-full object-cover" width={224} height={144} />
         </div>
         <div className="min-w-0 self-center space-y-3">
           <div className="flex items-start justify-between gap-4">
             <div className="flex min-w-0 items-center gap-3">
               {showAv && (
-                <img src={avatarUrl || coverUrl} alt="" className="h-10 w-10 rounded-full object-cover" />
+                <Image src={avatarUrl || coverUrl} alt="" className="h-10 w-10 rounded-full object-cover" width={40} height={40} />
               )}
               <div className="min-w-0">
                 <h3 className="truncate text-[24px] leading-8 font-semibold text-ink">{title}</h3>
@@ -204,7 +202,7 @@ export function PetSitterCard({
         )}
       >
         <div className="h-[108px] w-[144px] overflow-hidden rounded-xl bg-muted">
-          <img src={coverUrl} alt="" className="h-full w-full object-cover" />
+          <Image src={coverUrl} alt="" className="h-full w-full object-cover" width={144} height={108} />
         </div>
         <div className="min-w-0 grid grid-rows-[auto_auto_1fr] items-start">
           <div className="min-w-0">
@@ -231,7 +229,7 @@ export function PetSitterCard({
       )}
     >
       <div className="h-[73px] w-[97px] overflow-hidden rounded-xl bg-muted">
-        <img src={coverUrl} alt="" className="h-full w-full object-cover" />
+        <Image src={coverUrl} alt="" className="h-full w-full object-cover" width={97} height={73} />
       </div>
       <div className="min-w-0 self-start">
         <h3 className="truncate text-[20px] leading-7 font-semibold text-ink">{title}</h3>

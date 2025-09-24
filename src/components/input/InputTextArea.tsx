@@ -4,7 +4,7 @@ import { cn } from "@/lib/utils";
 
 interface InputTextAreaProps extends Omit<React.ComponentProps<typeof Textarea>, 'variant'> {
   label: string;
-  placeholder: string;
+  placeholder?: string;
   className?: string;
   disabled?: boolean;
   value?: string;

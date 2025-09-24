@@ -7,7 +7,6 @@
       textColor = "black"
       className="px-16"   
       //สามารถเพิ่มเขียน override className ได้ เช่น เเก้ความยาวปุ่มด้วย px
-      type?: "button" | "submit" | "reset" เลือก type ของปุ่มะเอาไว้ใช้งานได้
       onClick={() => ("")}
       /> */}
 
@@ -32,9 +31,8 @@ type ButtonProps = {
   bgColor?: keyof typeof bgColorMap;
   textColor?: keyof typeof textColorMap;
   className?: string;
-  type?: "button" | "submit" | "reset";
   onClick?: () => void;
-};
+} & React.ButtonHTMLAttributes<HTMLButtonElement>;
 
 export default function PrimaryButton({
   bgColor = "gray",
@@ -42,15 +40,21 @@ export default function PrimaryButton({
   textColor = "white",
   srcImage,
   className = "",
-  type = "button",
   onClick,
+  ...props
 
 }: ButtonProps) {
   return (
     <button
-      className={`${bgColorMap[bgColor]} ${textColorMap[textColor]} h-12 px-10 rounded-full flex items-center text-base font-bold hover:cursor-pointer active:scale-95 transition ${className}`}
+      {...props}
+      className={`${bgColorMap[bgColor]} ${textColorMap[textColor]} h-12 px-10 rounded-full flex items-center text-base font-bold justify-center
+      hover:cursor-pointer 
+      active:scale-95 transition 
+      disabled:opacity-50 
+      disabled:cursor-not-allowed 
+      disabled:bg-gray-1 
+      ${className}`}
       onClick={onClick}
-      type={type}
     >
       {srcImage && (
         <img

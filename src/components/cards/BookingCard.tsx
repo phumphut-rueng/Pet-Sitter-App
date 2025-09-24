@@ -1,17 +1,19 @@
-//ยังไม่เสร็จ
-import { FC, ReactNode } from "react";
+import * as React from "react";
+import Image from "next/image";
 
-type Status = "waiting" | "in_service" | "success";
-type Layout = "wide" | "compact";
+export type Status = "waiting" | "in_service" | "success";
+export type Layout = "wide" | "compact";
+type ActionKey = "message" | "call" | "change" | "review" | "report";
 
-interface Action {
-  key: "message" | "call" | "change" | "review" | "report";
+export interface Action {
+  key: ActionKey;
   label?: string;
   onClick: () => void;
   disabled?: boolean;
 }
 
-interface BookingCardProps {
+export interface BookingCardProps {
+  /** wide = Desktop, compact = Mobile */
   layout?: Layout;
   status: Status;
   title: string;
@@ -21,149 +23,117 @@ interface BookingCardProps {
   dateTime: string;
   duration: string;
   pet: string;
+  /** ใช้กับ waiting / in_service */
   note?: string;
+  /** ใช้กับ success */
   successDate?: string;
   actions?: Action[];
   className?: string;
 }
 
-// Icons
-const CalendarIcon: FC<{ className?: string }> = ({ className = "h-4 w-4" }) => (
-  <svg viewBox="0 0 24 24" className={className} fill="currentColor">
-    <path d="M7 2h2v3H7V2Zm8 0h2v3h-2V2ZM3 8h18v12a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8Zm2-3h14a2 2 0 0 1 2 2v1H3V7a2 2 0 0 1 2-2Z" />
+const Icon = ({ d, className = "h-4 w-4" }: { d: string; className?: string }) => (
+  <svg viewBox="0 0 24 24" className={className} fill="currentColor" aria-hidden="true">
+    <path d={d} />
   </svg>
 );
 
-const ClockIcon: FC<{ className?: string }> = ({ className = "h-4 w-4" }) => (
-  <svg viewBox="0 0 24 24" className={className} fill="currentColor">
-    <path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20Zm1 10V7h-2v7h6v-2h-4Z" />
-  </svg>
-);
+const icons = {
+  calendar:
+    "M7 2h2v3H7V2Zm8 0h2v3h-2V2ZM3 8h18v12a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8Zm2-3h14a2 2 0 0 1 2 2v1H3V7a2 2 0 0 1 2-2Z",
+  clock: "M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20Zm1 10V7h-2v7h6v-2h-4Z",
+  paw: "M12 13c3 0 6 1.7 6 4v2H6v-2c0-2.3 3-4 6-4Zm-5.2-6.6a1.8 1.8 0 1 1 0 3.6 1.8 1.8 0 0 1 0-3.6Zm10.4 0a1.8 1.8 0 1 1 0 3.6 1.8 1.8 0 0 1 0-3.6ZM9.5 3.5A2 2 0 1 1 7.5 6a2 2 0 0 1 2-2.5Zm5 0A2 2 0 1 1 12.5 6a2 2 0 0 1 2-2.5Z",
+  phone:
+    "M6.62 10.79a15 15 0 0 0 6.59 6.59l2.20-2.20a1 1 0 0 1 1.01-.24c1.12.37 2.33.57 3.58.57a1 1 0 0 1 1 1V21a1 1 0 0 1-1 1C10.07 22 2 13.93 2 3a1 1 0 0 1 1-1h3.5a1 1 0 0 1 1 1c0 1.25.2 2.46.57 3.58a1 1 0 0 1-.24 1.01l-2.21 2.2Z",
+  edit:
+    "M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25ZM20.71 7.04a1 1 0 0 0 0-1.41l-2.34-2.34a1 1 0 0 0-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83Z",
+};
 
-const PawIcon: FC<{ className?: string }> = ({ className = "h-4 w-4" }) => (
-  <svg viewBox="0 0 24 24" className={className} fill="currentColor">
-    <path d="M12 13c3 0 6 1.7 6 4v2H6v-2c0-2.3 3-4 6-4Zm-5.2-6.6a1.8 1.8 0 1 1 0 3.6 1.8 1.8 0 0 1 0-3.6Zm10.4 0a1.8 1.8 0 1 1 0 3.6 1.8 1.8 0 0 1 0-3.6ZM9.5 3.5A2 2 0 1 1 7.5 6a2 2 0 0 1 2-2.5Zm5 0A2 2 0 1 1 12.5 6a2 2 0 0 1 2-2.5Z" />
-  </svg>
-);
-
-const PhoneIcon: FC<{ className?: string }> = ({ className = "h-4 w-4" }) => (
-  <svg viewBox="0 0 24 24" className={className} fill="currentColor">
-    <path d="M6.62 10.79a15 15 0 0 0 6.59 6.59l2.2-2.2a1 1 0 0 1 1.01-.24c1.12.37 2.33.57 3.58.57a1 1 0 0 1 1 1V21a1 1 0 0 1-1 1C10.07 22 2 13.93 2 3a1 1 0 0 1 1-1h3.5a1 1 0 0 1 1 1c0 1.25.2 2.46.57 3.58a1 1 0 0 1-.24 1.01l-2.21 2.2Z" />
-  </svg>
-);
-
-// Util
-const statusConfig = {
-  waiting: {
-    dot: "bg-pink",
-    text: "text-pink", 
-    border: "border-orange-2",
-    label: "Waiting for confirm",
-    successBox: undefined
-  },
-  in_service: {
-    dot: "bg-blue",
-    text: "text-blue",
-    border: undefined,
-    label: "In service",
-    successBox: undefined
-  },
-  success: {
-    dot: "bg-green",
-    text: "text-green",
-    border: undefined,
-    successBox: "bg-green-bg ring-green text-green",
-    label: "Success"
-  }
+const statusTokens = {
+  waiting: { dot: "bg-pink", text: "text-pink", label: "Waiting for confirm" },
+  in_service: { dot: "bg-blue", text: "text-blue", label: "In service" },
+  success: { dot: "bg-green", text: "text-green", label: "Success" },
 } as const;
 
-const actionLabels = {
-  message: "Send Message",
-  call: "Call", 
-  change: "Change",
-  review: "Your Review",
-  report: "Report"
-} as const;
-
-// Components
-const InfoField: FC<{ icon: ReactNode; label: string; value: string }> = ({ icon, label, value }) => (
-  <div className="flex items-center justify-between gap-2 rounded-lg bg-white px-3 py-2 ring-1 ring-border">
-    <div className="flex items-center gap-2 text-[12px] text-muted-text">
-      {icon}
-      {label}
-    </div>
-    <div className="text-[12px] text-ink">{value}</div>
+const Field: React.FC<{ label: string; children: React.ReactNode }> = ({ label, children }) => (
+  <div>
+    <div className="text-[14px] font-medium leading-[22px] text-muted-text">{label}</div>
+    <div className="mt-1 text-[16px] font-medium leading-[24px] text-ink">{children}</div>
   </div>
 );
 
-const Button: FC<{ 
-  children: ReactNode; 
-  onClick: () => void; 
-  disabled?: boolean;
-  variant?: "primary" | "secondary";
-}> = ({ children, onClick, disabled = false, variant = "primary" }) => {
-  const baseClasses = "inline-flex h-10 items-center rounded-full px-4 text-[12px] font-medium select-none transition focus:outline-none focus-visible:ring-2 focus-visible:ring-orange-4";
-  
-  const variantClasses = variant === "primary" 
-    ? "bg-brand text-brand-text hover:brightness-95"
-    : "bg-white ring-1 ring-border text-ink hover:bg-muted/40";
-    
-  const disabledClasses = disabled 
-    ? "opacity-50 cursor-not-allowed pointer-events-none"
-    : "cursor-pointer active:scale-[.98]";
+const CallButton: React.FC<{ onClick: () => void; disabled?: boolean; strong?: boolean }> = ({
+  onClick,
+  disabled,
+  strong,
+}) => (
+  <button
+    type="button"
+    onClick={onClick}
+    disabled={disabled}
+    aria-label="Call"
+    className={`grid h-12 w-12 place-items-center rounded-full ${
+      strong ? "bg-orange-1 text-orange-6" : "bg-orange-1/60 text-orange-6"
+    } disabled:opacity-50 hover:ring-2 hover:ring-orange-3 transition cursor-pointer`}
+  >
+    <Icon d={icons.phone} className="h-5 w-5" />
+  </button>
+);
 
+const GhostChangeBtn: React.FC<{ onClick: () => void; label?: string; disabled?: boolean }> = ({
+  onClick,
+  label = "Change",
+  disabled,
+}) => (
+  <button
+    type="button"
+    onClick={onClick}
+    disabled={disabled}
+    className="inline-flex h-8 items-center gap-1 rounded-full px-3 text-[14px] font-medium text-orange-6 bg-white/0 hover:bg-orange-1/20 hover:shadow-sm transition disabled:opacity-50 cursor-pointer"
+  >
+    <Icon d={icons.edit} className="h-4 w-4" />
+    {label}
+  </button>
+);
+
+const OrangeBtn: React.FC<React.ButtonHTMLAttributes<HTMLButtonElement>> = ({ className, children, ...rest }) => (
+  <button
+    {...rest}
+    className={`h-12 rounded-full bg-brand px-8 text-[16px] font-bold text-white hover:brightness-95 hover:shadow-md transition disabled:opacity-50 cursor-pointer ${className || ""}`}
+  >
+    {children}
+  </button>
+);
+
+
+const Avatar: React.FC<{ src: string; alt: string; size: number; ring?: boolean }> = ({ src, alt, size, ring }) => (
+  <div
+    className={`relative overflow-hidden rounded-full ${ring ? "ring-1 ring-border" : ""}`}
+    style={{ width: size, height: size }}
+    aria-hidden
+  >
+    <Image src={src} alt={alt} fill sizes={`${size}px`} className="object-cover" />
+  </div>
+);
+
+const splitDateTime = (s: string) => {
+  const [left, right] = s.split("|").map((v) => v.trim());
+  return { left, right };
+};
+
+const renderDateTime = (s: string) => {
+  const { left, right } = splitDateTime(s);
   return (
-    <button
-      type="button"
-      onClick={onClick}
-      disabled={disabled}
-      className={`${baseClasses} ${variantClasses} ${disabledClasses}`}
-    >
-      {children}
-    </button>
+    <span className="text-ink">
+      {left}
+      {right && <span className="px-2 text-muted-text">|</span>}
+      {right}
+    </span>
   );
 };
 
-const ChipButton: FC<{ children: ReactNode; onClick: () => void; disabled?: boolean }> = ({ 
-  children, 
-  onClick, 
-  disabled = false 
-}) => (
-  <button
-    type="button"
-    onClick={onClick}
-    disabled={disabled}
-    className={`rounded-full px-5 h-10 text-[12px] font-medium transition ${
-      disabled 
-        ? "opacity-50 cursor-not-allowed pointer-events-none" 
-        : "bg-orange-1 text-orange-6 hover:brightness-95 cursor-pointer"
-    }`}
-  >
-    {children}
-  </button>
-);
+const pick = (actions: Action[] | undefined, key: ActionKey) => actions?.find((a) => a.key === key);
 
-const IconButton: FC<{ children: ReactNode; onClick: () => void; disabled?: boolean }> = ({ 
-  children, 
-  onClick, 
-  disabled = false 
-}) => (
-  <button
-    type="button"
-    onClick={onClick}
-    disabled={disabled}
-    className={`grid h-9 w-9 place-items-center rounded-full transition ${
-      disabled 
-        ? "bg-orange-1/60 text-orange-6/60 cursor-not-allowed pointer-events-none" 
-        : "bg-orange-1 text-orange-6 hover:brightness-95 cursor-pointer"
-    }`}
-  >
-    {children}
-  </button>
-);
-
-// Main Compo
-export const BookingCard: FC<BookingCardProps> = ({
+export const BookingCard: React.FC<BookingCardProps> = ({
   layout = "wide",
   status,
   title,
@@ -176,106 +146,211 @@ export const BookingCard: FC<BookingCardProps> = ({
   note,
   successDate,
   actions = [],
-  className = ""
+  className = "",
 }) => {
-  const config = statusConfig[status];
-  const isWide = layout === "wide";
-  
-  const reviewAction = actions.find(a => a.key === "review");
-  const reportAction = actions.find(a => a.key === "report");
-  const callAction = actions.find(a => a.key === "call");
-  
-  const otherActions = actions.filter(a => !["review", "report"].includes(a.key));
+  const isDesktop = layout === "wide";
+  const tok = statusTokens[status];
 
-  return (
-    <div className={`rounded-2xl border bg-white p-5 shadow-sm ${config.border || "border-border"} ${className}`}>
-      <div className="flex items-start gap-3">
-        {avatarUrl && (
-          <img 
-            src={avatarUrl} 
-            alt={`${sitterName} avatar`} 
-            className="h-10 w-10 rounded-full object-cover ring-1 ring-border" 
-          />
+  const actMessage = pick(actions, "message");
+  const actChange = pick(actions, "change");
+  const actReport = pick(actions, "report");
+  const actReview = pick(actions, "review");
+  const actCall = pick(actions, "call");
+
+  /* ------------- DESKTOP ------------- */
+  if (isDesktop) {
+    return (
+      <div
+        className={`group w-full rounded-2xl border border-border bg-white p-6 shadow-sm transition hover:shadow-md hover:ring-1 hover:ring-blue-300 ${className}`}
+      >
+
+        <div className="flex items-start gap-3">
+          {avatarUrl && <Avatar src={avatarUrl} alt={sitterName} size={64} ring />}
+          <div className="min-w-0 flex-1">
+            <div className="flex items-start justify-between gap-3">
+              <div className="min-w-0">
+                <h3 className="truncate text-[16px] font-bold text-ink">{title}</h3>
+                <p className="truncate text-[12px] text-muted-text">By {sitterName}</p>
+              </div>
+              <div className="text-right">
+                <div className="text-[12px] text-muted-text">Transaction date: {transactionDate}</div>
+                <div className={`mt-1 inline-flex items-center gap-2 text-[12px] ${tok.text}`}>
+                  <span className={`h-2 w-2 rounded-full ${tok.dot}`} />
+                  {tok.label}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Divider */}
+        <div className="my-5 h-px bg-border" />
+
+        <div className="flex items-start">
+          <div className="flex-1 pr-6">
+            <div className="flex items-center justify-between">
+              <div className="text-[14px] font-medium text-muted-text">Date &amp; Time:</div>
+              {status === "waiting" && actChange && (
+                <GhostChangeBtn
+                  onClick={actChange.onClick}
+                  label={actChange.label || "Change"}
+                  disabled={actChange.disabled}
+                />
+              )}
+            </div>
+            <div className="mt-1 text-[16px] leading-[24px] text-ink">{renderDateTime(dateTime)}</div>
+          </div>
+
+          <div className="mx-6 h-10 w-px bg-border/60" />
+
+          <div className="flex-1 pr-6">
+            <Field label="Duration:">{duration}</Field>
+          </div>
+
+          <div className="mx-6 h-10 w-px bg-border/60" />
+
+          <div className="flex-1">
+            <Field label="Pet:">{pet}</Field>
+          </div>
+        </div>
+
+        {(status === "waiting" || status === "in_service") && (
+          <div className="mt-6 rounded-xl bg-[#F6F6F9] p-4 ring-1 ring-border">
+            <div className="flex items-center">
+              <div className="grow text-[14px] font-medium leading-[22px] text-muted-text">{note}</div>
+              <div className="flex items-center gap-3">
+                {actMessage && (
+                  <OrangeBtn onClick={actMessage.onClick} disabled={actMessage.disabled}>
+                    {actMessage.label || "Send Message"}
+                  </OrangeBtn>
+                )}
+                {actCall && <CallButton onClick={actCall.onClick} disabled={actCall.disabled} strong />}
+              </div>
+            </div>
+          </div>
         )}
 
-        <div className="min-w-0 flex-1">
-
-          <div className="flex items-start justify-between gap-3">
-            <div className="min-w-0">
-              <h3 className="truncate text-[16px] font-semibold text-ink">{title}</h3>
-              <p className="text-[12px] text-muted-text">By {sitterName}</p>
-            </div>
-
-            <div className="text-right">
-              <div className={`inline-flex items-center gap-2 rounded-full px-3 py-1 text-[11px] ${config.text}`}>
-                <span className={`h-2 w-2 rounded-full ${config.dot}`} />
-                {config.label}
+        {status === "success" && successDate && (
+          <div className="mt-6 rounded-xl bg-[#E9FFF6] p-4 ring-1 ring-green/60">
+            <div className="flex items-center">
+              <div className="grow">
+                <div className="text-[14px] font-medium leading-[24px] text-green">Success date:</div>
+                <div className="text-[14px] font-medium leading-[24px] text-green">{successDate}</div>
               </div>
-              <p className="mt-1 text-[11px] text-muted-text">Transaction date: {transactionDate}</p>
-            </div>
-          </div>
-
-
-          <div className={`mt-3 grid gap-2 ${isWide ? "grid-cols-3" : "grid-cols-1"}`}>
-            <InfoField icon={<CalendarIcon />} label="Date & Time:" value={dateTime} />
-            <InfoField icon={<ClockIcon />} label="Duration:" value={duration} />
-            <InfoField icon={<PawIcon />} label="Pet:" value={pet} />
-          </div>
-
-
-          {status === "waiting" && note && (
-            <div className="mt-3 rounded-lg bg-muted px-3 py-2 text-[12px] text-muted-text ring-1 ring-border">
-              {note}
-            </div>
-          )}
-
-
-          {status === "success" && successDate && (
-            <div className={`mt-3 flex items-center justify-between rounded-lg px-3 py-2 text-[12px] ring-1 ${config.successBox || ""}`}>
-              <span>Success date: {successDate}</span>
-              <div className="flex items-center gap-3">
-                {reportAction && (
+              <div className="flex items-center gap-6">
+                {actReport && (
                   <button
-                    type="button"
-                    onClick={reportAction.onClick}
-                    className="text-[12px] font-medium text-orange-6 hover:underline cursor-pointer"
+                    onClick={actReport.onClick}
+                    disabled={actReport.disabled}
+                    className="text-[16px] font-bold leading-[24px] text-orange-6 hover:opacity-80 transition cursor-pointer"
                   >
-                    {reportAction.label || actionLabels.report}
+                    {actReport.label || "Report"}
                   </button>
                 )}
-                
-                {reviewAction && (
-                  <ChipButton onClick={reviewAction.onClick} disabled={reviewAction.disabled}>
-                    {reviewAction.label || actionLabels.review}
-                  </ChipButton>
+                {actReview && (
+                  <OrangeBtn onClick={actReview.onClick} disabled={actReview.disabled}>
+                    {actReview.label || "Review"}
+                  </OrangeBtn>
                 )}
-                
-                {callAction && (
-                  <IconButton onClick={callAction.onClick} disabled={callAction.disabled}>
-                    <PhoneIcon />
-                  </IconButton>
-                )}
+                {actCall && <CallButton onClick={actCall.onClick} disabled={actCall.disabled} strong />}
               </div>
             </div>
-          )}
+          </div>
+        )}
+      </div>
+    );
+  }
 
+  /* ------------- MOBILE ------------- */
+  return (
+    <div
+      className={`group w-[375px] rounded-2xl border border-border bg-white p-5 shadow-sm transition hover:shadow-md hover:ring-1 hover:ring-blue-300 ${className}`}
+    >
+      <div className="flex flex-col gap-3">
+        {/* Avatar + Title */}
+        <div className="flex gap-3">
+          {avatarUrl && <Avatar src={avatarUrl} alt={sitterName} size={36} ring />}
+          <div className="flex flex-col">
+            <div className="truncate text-[18px] leading-[24px] font-bold text-ink">{title}</div>
+            <div className="truncate text-[14px] leading-[22px] font-medium text-ink">By {sitterName}</div>
+          </div>
+        </div>
 
-          {otherActions.length > 0 && status !== "success" && (
-            <div className="mt-3 flex flex-wrap items-center gap-2">
-              {otherActions.map(action => (
-                <Button
-                  key={action.key}
-                  onClick={action.onClick}
-                  disabled={action.disabled}
-                  variant={action.key === "message" ? "primary" : "secondary"}
-                >
-                  {action.label || actionLabels[action.key]}
-                </Button>
-              ))}
+        <div>
+          <div className="text-[14px] font-medium text-muted-text">Transaction date: {transactionDate}</div>
+          <div className={`mt-1 inline-flex items-center gap-2 text-[16px] leading-[24px] font-medium ${tok.text}`}>
+            <span className={`h-2 w-2 rounded-full ${tok.dot}`} />
+            {tok.label}
+          </div>
+
+          <div className="mt-3 h-px bg-border" />
+
+          <div className="mt-4 space-y-5">
+            <div>
+              <div className="flex items-center justify-between">
+                <div className="inline-flex items-center gap-2 text-[14px] font-medium leading-[22px] text-muted-text">
+                  <Icon d={icons.calendar} className="h-4 w-4 text-muted-text" />
+                  Date &amp; Time:
+                </div>
+                {status === "waiting" && actChange && (
+                  <GhostChangeBtn
+                    onClick={actChange.onClick}
+                    label={actChange.label || "Change"}
+                    disabled={actChange.disabled}
+                  />
+                )}
+              </div>
+              <div className="mt-1 text-[16px] font-medium leading-[28px] text-ink">{renderDateTime(dateTime)}</div>
             </div>
-          )}
+
+            <Field label="Duration:">{duration}</Field>
+            <Field label="Pet:">{pet}</Field>
+          </div>
         </div>
       </div>
+
+      {(status === "waiting" || status === "in_service") && (
+        <div className="mx-auto mt-4 w-full rounded-xl bg-[#F6F6F9] p-4 ring-1 ring-border">
+          <div className="text-[14px] font-medium leading-[22px] text-muted-text">{note}</div>
+          <div className="mt-3 flex items-center">
+            <div className="flex items-center gap-2">
+              {actMessage && (
+                <OrangeBtn onClick={actMessage.onClick} disabled={actMessage.disabled} className="px-6 text-[14px]">
+                  {actMessage.label || "Send Message"}
+                </OrangeBtn>
+              )}
+            </div>
+            {actCall && <CallButton onClick={actCall.onClick} disabled={actCall.disabled} strong />}
+          </div>
+        </div>
+      )}
+
+      {status === "success" && successDate && (
+        <div className="mx-auto mt-4 w-full rounded-xl bg-[#E9FFF6] p-4 ring-1 ring-green/60">
+          <div className="text-[14px] font-medium leading-[24px] text-green">Success date:</div>
+          <div className="text-[14px] font-medium leading-[24px] text-green">{successDate}</div>
+
+          <div className="mt-3 flex items-center">
+            <div className="flex items-center gap-6">
+              {actReport && (
+                <button
+                  onClick={actReport.onClick}
+                  disabled={actReport.disabled}
+                  className="text-[16px] font-bold leading-[24px] text-orange-6 hover:opacity-80 transition cursor-pointer"
+                >
+                  {actReport.label || "Report"}
+                </button>
+              )}
+              {actReview && (
+                <OrangeBtn onClick={actReview.onClick} disabled={actReview.disabled}>
+                  {actReview.label || "Review"}
+                </OrangeBtn>
+              )}
+            </div>
+            {actCall && <CallButton onClick={actCall.onClick} disabled={actCall.disabled} strong />}
+          </div>
+        </div>
+      )}
     </div>
   );
 };
