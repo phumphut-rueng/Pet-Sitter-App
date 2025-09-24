@@ -4,6 +4,7 @@ export interface User {
   id: string;
   name: string;
   email: string;
+  phone?: string;
   profile_image?: string; // ชื่อให้ตรงกับ DB/Prisma
   roles?: string[];       
 }
