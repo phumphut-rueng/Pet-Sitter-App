@@ -59,7 +59,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       });
     }
 
-    // --- Query Sitters ---
+    // --- Query Sitters --- 
     const sitters = await prisma.sitter.findMany({
       where: andConditions.length ? { AND: andConditions } : undefined,
       include: {
