@@ -10,6 +10,7 @@ export default async function handler(
     }
 
     try {
+
         const { phone } = req.body as { phone?: string };
 
         if (!phone) {
