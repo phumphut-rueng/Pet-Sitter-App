@@ -4,91 +4,91 @@ generator client {
 
 datasource db {
   provider = "postgresql"
-  url      = env("DATABASE_URL")
+  url = env("DATABASE_URL")
 }
 
 model pet_type {
-  id              Int               @id @default(autoincrement())
-  pet_type_name   String            @db.VarChar(100)
+  id Int @id @default(autoincrement())
+  pet_type_name String @db.VarChar(100)
   sitter_pet_type sitter_pet_type[]
 }
 
 model role {
-  id        Int         @id @default(autoincrement())
-  role_name String      @db.VarChar(50)
+  id Int @id @default(autoincrement())
+  role_name String @db.VarChar(50)
   user_role user_role[]
 }
 
 model sitter {
-  id                   Int               @id @default(autoincrement())
-  user_sitter_id       Int
-  name                 String            @db.VarChar(100)
-  location_description String?           @db.VarChar(255)
-  phone                String?           @db.VarChar(20)
-  introduction         String?
-  address_detail       String?
-  address_province     String?           @db.VarChar(100)
-  address_district     String?           @db.VarChar(100)
-  address_sub_district String?           @db.VarChar(100)
-  address_post_code    String?           @db.VarChar(10)
-  base_price           Decimal?          @db.Decimal(10, 2)
-  created_at           DateTime          @default(now()) @db.Timestamp(6)
-  updated_at           DateTime?         @db.Timestamp(6)
-  experience           Int?
-  reviews              review[]
-  user                 user              @relation(fields: [user_sitter_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
-  sitter_image         sitter_image[]
-  sitter_pet_type      sitter_pet_type[]
+  id Int @id @default(autoincrement())
+  user_sitter_id Int
+  name String @db.VarChar(100)
+  location_description String? @db.VarChar(255)
+  phone String? @db.VarChar(20)
+  introduction String?
+  address_detail String?
+  address_province String? @db.VarChar(100)
+  address_district String? @db.VarChar(100)
+  address_sub_district String? @db.VarChar(100)
+  address_post_code String? @db.VarChar(10)
+  base_price Decimal? @db.Decimal(10, 2)
+  created_at DateTime @default(now()) @db.Timestamp(6)
+  updated_at DateTime? @db.Timestamp(6)
+  experience Int?
+  reviews review[]
+  user user @relation(fields: [user_sitter_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  sitter_image sitter_image[]
+  sitter_pet_type sitter_pet_type[]
 }
 
 model sitter_image {
-  id        Int    @id @default(autoincrement())
+  id Int @id @default(autoincrement())
   sitter_id Int
   image_url String @db.VarChar(255)
-  sitter    sitter @relation(fields: [sitter_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  sitter sitter @relation(fields: [sitter_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
 }
 
 model user {
-  id            Int         @id @default(autoincrement())
-  name          String      @db.VarChar(100)
-  email         String      @unique @db.VarChar(100)
-  password      String      @db.VarChar(255)
-  phone         String?     @db.VarChar(20)
-  profile_image String?     @db.VarChar(255)
-  dob           DateTime?   @db.Date
-  bank_name     String?     @db.VarChar(100)
-  bank_number   String?     @db.VarChar(50)
-  created_at    DateTime    @default(now()) @db.Timestamp(6)
-  updated_at    DateTime?   @db.Timestamp(6)
-  reviews       review[]
-  sitter        sitter[]
-  user_role     user_role[]
+  id Int @id @default(autoincrement())
+  name String @db.VarChar(100)
+  email String @unique @db.VarChar(100)
+  password String @db.VarChar(255)
+  phone String? @db.VarChar(20)
+  profile_image String? @db.VarChar(255)
+  dob DateTime? @db.Date
+  bank_name String? @db.VarChar(100)
+  bank_number String? @db.VarChar(50)
+  created_at DateTime @default(now()) @db.Timestamp(6)
+  updated_at DateTime? @db.Timestamp(6)
+  reviews review[]
+  sitter sitter[]
+  user_role user_role[]
 }
 
 model user_role {
-  id      Int  @id @default(autoincrement())
+  id Int @id @default(autoincrement())
   user_id Int
   role_id Int
-  role    role @relation(fields: [role_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
-  user    user @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  role role @relation(fields: [role_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  user user @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
 }
 
 model sitter_pet_type {
-  sitter_id   Int
+  sitter_id Int
   pet_type_id Int
-  pet_type    pet_type @relation(fields: [pet_type_id], references: [id], onDelete: Cascade)
-  sitter      sitter   @relation(fields: [sitter_id], references: [id], onDelete: Cascade)
+  pet_type pet_type @relation(fields: [pet_type_id], references: [id], onDelete: Cascade)
+  sitter sitter @relation(fields: [sitter_id], references: [id], onDelete: Cascade)
 
   @@id([sitter_id, pet_type_id])
 }
 
 model review {
-  id         Int      @id @default(autoincrement())
-  sitter_id  Int
-  user_id    Int
-  rating     Int
-  comment    String?  @db.VarChar(500)
+  id Int @id @default(autoincrement())
+  sitter_id Int
+  user_id Int
+  rating Int
+  comment String? @db.VarChar(500)
   created_at DateTime @default(now())
-  sitter     sitter   @relation(fields: [sitter_id], references: [id], onDelete: Cascade)
-  user       user     @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  sitter sitter @relation(fields: [sitter_id], references: [id], onDelete: Cascade)
+  user user @relation(fields: [user_id], references: [id], onDelete: Cascade)
 }
