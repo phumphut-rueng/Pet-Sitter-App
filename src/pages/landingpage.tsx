@@ -1,6 +1,6 @@
 import Navbar from "@/components/navbar/Navbar";
 import HeroSection from "@/components/landingpage/HeroSection";
-import SearchSitter from "@/components/widgets/searchSitter";
+import SearchSitter from "@/components/widgets/SearchSitter";
 import PetCareHero from "@/components/landingpage/PetCareHero";
 import ThreeSectionLayout from "@/components/landingpage/ThreeSectionLayout";
 import PetSitterHero from "@/components/landingpage/PetSitterHero";
