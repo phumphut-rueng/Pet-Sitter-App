@@ -8,7 +8,7 @@ import PrimaryButton from "@/components/buttons/primaryButton"
 import InputText from "@/components/input/InputText"
 import { validateEmail, validatePhone, validatePassword } from "@/utils/validate-register"
 import { RegisterForm } from "@/types/register.type"
-import RegisterConfirmation from "@/components/modal/RegisterConfirmation";
+import BookingConfirmation from "@/components/modal/BookingConfirmation";
 
 export default function RegisterPage() {
   const router = useRouter();
@@ -290,7 +290,9 @@ export default function RegisterPage() {
         </div>
       </div>
 
-      <RegisterConfirmation
+      <BookingConfirmation
+        title="Register as a Sitter"
+        description={`This email is already registered.\nDo you want to sign up as a sitter too?`}
         open={isOpen}
         onOpenChange={setIsOpen}
         onConfirm={handleOnConfirm}

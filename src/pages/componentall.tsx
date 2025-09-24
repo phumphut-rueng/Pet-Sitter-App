@@ -155,6 +155,7 @@ const on = (k: string) => () => console.log(k);
 export default function ComponentAll() {
   const [isOpenBooking, setIsOpenBooking] = useState(false);
   const [isOpenReject, setIsOpenReject] = useState(false);
+  const [isOpenPopup, setIsOpenPopup] = useState(false);
 
   return (
     <div className="min-h-screen text-white p-6">
@@ -608,9 +609,9 @@ export default function ComponentAll() {
         <Section title="Pagination">
           <SubSection title="">
             {/* 
-                        currentPage = หน้าที่เลือกอยู่
-                        totalPages = หน้าทั้งหมด
-                        */}
+            currentPage = หน้าที่เลือกอยู่
+            totalPages = หน้าทั้งหมด
+            */}
             <Pagination
               currentPage={5}
               totalPages={45}
@@ -621,9 +622,9 @@ export default function ComponentAll() {
         {/* Modal */}
         <Section title="Modal">
           {/* 
-                    สร้าง button เอามาไว้กดเรียกใช้ popup เฉยๆ
-                    component นี้ต้องใช้กับ useState
-                    */}
+           สร้าง button เอามาไว้กดเรียกใช้ popup เฉยๆ
+           component นี้ต้องใช้กับ useState
+           */}
           <SubSection title="Confirmation">
             <PrimaryButton
               text="Booking Click!!"
@@ -637,13 +638,22 @@ export default function ComponentAll() {
               textColor="white"
               onClick={() => setIsOpenBooking(true)}
             />
+            <PrimaryButton
+              text="Popup Click!!"
+              bgColor="secondary"
+              textColor="orange"
+              onClick={() => setIsOpenPopup(true)}
+            />
           </SubSection>
 
           {/* 
-                    open = ค่าที่เอาไว้สั่ง เปิด/ปิด
-                    onOpenChange = เอาไว้ใช้กับ X
-                    onConfirm = กด Confirm แล้วให้ทำอะไร
-                    */}
+          title
+          description  
+          textButton = ข้อความใน button ที่ confirm
+          open = ค่าที่เอาไว้สั่ง เปิด/ปิด
+          onOpenChange = เอาไว้ใช้กับ X
+          onConfirm = กด Confirm แล้วให้ทำอะไร
+          */}
           <BookingConfirmation
             open={isOpenBooking}
             onOpenChange={setIsOpenBooking}
@@ -653,6 +663,14 @@ export default function ComponentAll() {
             open={isOpenReject}
             onOpenChange={setIsOpenReject}
             onConfirm={() => console.log("Rejected")}
+          />
+          <BookingConfirmation
+            title="title"
+            description="description"
+            textButton="textButton"
+            open={isOpenPopup}
+            onOpenChange={setIsOpenPopup}
+            onConfirm={() => console.log("Popup confirmed")}
           />
         </Section>
 
