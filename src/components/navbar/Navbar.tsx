@@ -1,5 +1,6 @@
 import React from "react";
 import Image from "next/image";
+import Link from "next/link";
 import Navigation from "./Navigation";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
@@ -19,7 +20,7 @@ const Navbar = () => {
     if (!user) {
       return [
         { href: "/register", text: "Register" },
-        { href: "/login", text: "Login" }
+        { href: "/auth/login", text: "Login" }
       ];
     }
 
@@ -85,14 +86,16 @@ const Navbar = () => {
         <div className="flex justify-between items-center h-12 py-3 md:h-20">
           {/* Logo */}
           <div className="flex-shrink-0">
-            <Image
-              src="/icons/logo.svg"
-              alt="Logo"
-              width={131}
-              height={100}
-              className="h-6 md:h-10 w-auto object-contain"
-              priority
-            />
+            <Link href="/" aria-label="Go to homepage">
+              <Image
+                src="/icons/logo.svg"
+                alt="Logo"
+                width={131}
+                height={100}
+                className="h-6 md:h-10 w-auto object-contain cursor-pointer"
+                priority
+              />
+            </Link>
           </div>
 
           {/* Navigation */}
