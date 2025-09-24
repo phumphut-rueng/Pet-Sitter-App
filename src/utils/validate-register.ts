@@ -41,7 +41,6 @@ export async function validateEmail(
             "/api/user/get-email",
             { email: value }
         );
-        console.log("validateEmail", data);
 
         if (data?.exists) {
             const hasRole = data.data.user_role.some((ur: UserRole) => ur.role_id === role_ids)

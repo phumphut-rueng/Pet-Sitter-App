@@ -104,8 +104,6 @@ export default function RegisterPage() {
     const checkPhone = await validatePhone(form.phone)
     const checkPassword = await validatePassword(form.password)
 
-    // console.log("checkMail", checkMail);
-
     const newErrors: RegisterForm = {
       name: "",
       email: checkMail.message || "",

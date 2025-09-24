@@ -5,9 +5,6 @@ export default async function handler(
     req: NextApiRequest,
     res: NextApiResponse
 ) {
-    console.log("headers", req.headers["content-type"]);
-    console.log("req.body", req.body);
-
     if (req.method !== "POST") {
         return res.status(405).json({ error: "Method not allowed" });
     }
@@ -18,8 +15,6 @@ export default async function handler(
             role_ids?: number;
         };
 
-        console.log(email, role_ids);
-        console.log(!email, !role_ids);
         if (!email) {
             return res.status(400).json({ error: "email is required" });
         }
@@ -27,12 +22,11 @@ export default async function handler(
             return res.status(400).json({ error: "role_id is required" });
         }
 
+        //check user by email
         const user = await prisma.user.findUnique({
             where: { email },
             include: { user_role: true },
         });
-
-        console.log("user", user);
 
         if (!user) {
             return res.status(404).json({
@@ -47,8 +41,6 @@ export default async function handler(
                 message: "User already has this role",
             });
         }
-
-        console.log("id", user.id, "role_id", role_ids);
 
         await prisma.$transaction([
             prisma.user_role.create({
