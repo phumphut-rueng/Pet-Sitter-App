@@ -1,5 +1,5 @@
 import React, { useEffect, useRef } from 'react';
-import ChatBubble from './ChatBubble';
+import ChatBubble from '@/components/chat/ChatBubble';
 import sampleMessagesData from '../../utils/mockChatData';
 
 interface Message {
