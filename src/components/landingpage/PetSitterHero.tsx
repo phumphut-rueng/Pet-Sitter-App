@@ -53,10 +53,7 @@ const PetSitterHero = () => {
             </Link>
 
             {/* Find A Pet Sitter Button */}
-            <Link
-              href="/find-a-pet-sitter"
-              aria-label="Go to find a pet sitter page"
-            >
+            <Link href="/findpetsitter" aria-label="Go to find a pet sitter page">
               <PrimaryButton
                 text="Find a Pet Sitter"
                 textColor="white"
