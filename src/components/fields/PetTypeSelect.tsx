@@ -1,12 +1,12 @@
 import * as React from "react";
 import { X } from "lucide-react";
 
-type PetType = "Dog" | "Cat" | "Bird" | "Rabbit";
+type PetType = "Dog" | "Cat" | "Bird" | "Rabbit" ;
 
 const options: PetType[] = ["Dog", "Cat", "Bird", "Rabbit"];
 
 interface PetTypeSelectProps {
-  value: PetType[];
+  value: PetType[] ;
   onChange: (value: PetType[]) => void;
 }
 
