@@ -23,7 +23,6 @@ interface ChatContainerProps {
 const ChatContainer: React.FC<ChatContainerProps> = ({ 
   className = '' 
 }) => {
-  const messagesEndRef = useRef<HTMLDivElement>(null);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
 
   // Auto scroll to bottom when component mounts
