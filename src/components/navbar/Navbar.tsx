@@ -3,21 +3,18 @@ import Image from "next/image";
 import Link from "next/link";
 import Navigation from "./Navigation";
 import { useRouter } from "next/navigation";
-import { useAuth } from "@/contexts/AuthContext";
+import { useSession, signOut } from "next-auth/react";
 import { UserRound, History, LogOut, Heart, User } from "lucide-react";
 import { MenuItem } from "@/types/navigation.types";
 
 const Navbar = () => {
   const router = useRouter();
-  const { state, logout, isAuthenticated } = useAuth();
-  const { user, loading = false } = state || {};
-  const isLoading = Boolean(loading);
-
-  // Compute roles locally
-  const isSitter = user?.roles?.includes('pet_sitter') || false;
+  const { data: session, status } = useSession();
+  const isLoading = status === 'loading';
+  const isAuthenticated = status === 'authenticated';
 
   const getMenuItems = (): MenuItem[] => {
-    if (!user) {
+    if (!session?.user) {
       return [
         { href: "/register", text: "Register" },
         { href: "/auth/login", text: "Login" }
@@ -48,7 +45,8 @@ const Navbar = () => {
       }
     ];
 
-    if (isSitter) {
+    // Check roles directly from session
+    if (session.user.roles?.includes('pet_sitter')) {
       menuItems.push({
         href: "/sitter-profile",
         icon: User,
@@ -76,8 +74,25 @@ const Navbar = () => {
     router.push(path);
   };
 
-  const handleLogout = () => {
-    logout();
+  const handleLogout = async () => {
+    try {
+      // Clear any local storage items if needed
+      localStorage.removeItem('rememberedEmail');
+
+      // Use a more direct approach - force full page redirect
+      await signOut({
+        callbackUrl: '/'
+      });
+
+      // Force a hard reload to ensure clean state
+      setTimeout(() => {
+        window.location.href = '/';
+      }, 100);
+    } catch (error) {
+      console.error('Logout error:', error);
+      // Force redirect even if signOut fails
+      window.location.href = '/';
+    }
   };
 
   return (
@@ -102,7 +117,7 @@ const Navbar = () => {
           <Navigation
             isLoading={isLoading}
             isAuthenticated={isAuthenticated}
-            user={user}
+            user={session?.user || null}
             menuItems={menuItems}
             onNavigate={handleNavigate}
             onLogout={handleLogout}

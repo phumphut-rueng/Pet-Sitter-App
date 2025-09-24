@@ -45,10 +45,10 @@ const MobileNav: React.FC<NavigationProps> = ({
     };
   }, []);
 
-  const handleMobileMenuItemClick = (item: MenuItem) => {
+  const handleMobileMenuItemClick = async (item: MenuItem) => {
     closeMobileMenu();
     if (item.isLogout) {
-      onLogout();
+      await onLogout();
     } else {
       onNavigate(item.href);
     }
