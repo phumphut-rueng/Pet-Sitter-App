@@ -1,83 +1,147 @@
 import * as React from "react"
+import axios from "axios"
 import Link from "next/link"
+import Image from "next/image"
+import { useRouter } from "next/router";
+import { useState } from "react";
 import PrimaryButton from "@/components/buttons/primaryButton"
 import InputText from "@/components/input/InputText"
-import Image from "next/image"
-import { validateRegister } from "@/utils/validate-register"
-import axios from "axios"
-
-interface RegisterForm {
-  name: string
-  email: string
-  phone: string
-  password: string
-}
+import { validateEmail, validatePhone, validatePassword } from "@/utils/validate-register"
+import { RegisterForm } from "@/types/register.type"
+import BookingConfirmation from "@/components/modal/BookingConfirmation";
 
 export default function RegisterPage() {
+  const router = useRouter();
+
   const [isLoading, setIsLoading] = React.useState(false)
+  const [role, setRole] = useState<number>(2); //2="owner" | 3="sitter"
+  const [isOpen, setIsOpen] = useState<boolean>(false);
 
   const [form, setForm] = React.useState<RegisterForm>({
     name: "",
     email: "",
     phone: "",
-    password: "",
+    password: ""
   })
   const [error, setError] = React.useState<RegisterForm>({
     name: "",
     email: "",
     phone: "",
-    password: "",
+    password: ""
   })
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target
-    setForm((prev) => ({ ...prev, [name]: value }))
+  const handleChange = React.useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      const { name, value } = e.target
+      setForm((prev) => ({ ...prev, [name]: value }))
+    },
+    []
+  )
+
+  const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const onlyNums = e.target.value.replace(/\D/g, "")
+    if (onlyNums.length <= 10) {
+      handleChange({
+        ...e,
+        target: { ...e.target, name: "phone", value: onlyNums },
+      })
+    }
+  }
+  const clearData = React.useCallback(() => {
+    setError({ name: "", email: "", phone: "", password: "" })
+    setForm({ name: "", email: "", phone: "", password: "" })
+    router.push("/auth/login")
+  }, [router])
+
+  const saveData = async (role_ids: number[]) => {
+    let result;
+    try {
+      result = await axios.post(
+        "/api/auth/register",
+        {
+          ...form,
+          role_ids
+        }
+      );
+
+      if (result?.status === 201) {
+        clearData();
+      }
+    } catch (e) {
+      console.error("axios.register", e);
+    }
+  }
+
+  const addRole = async () => {
+    let result;
+    try {
+      result = await axios.post(
+        "/api/user/post-role",
+        {
+          ...form,
+          role_ids: 3
+        }
+      );
+      if (result?.status === 201) {
+        clearData();
+      }
+    } catch (e) {
+      console.error("axios.post-role", e);
+    }
+
+  }
+
+  const handleOnConfirm = async () => {
+    await addRole();
+    setIsOpen(false);
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setIsLoading(true);
 
-    let newErrors: RegisterForm = {
+    const checkMail = await validateEmail(form.email, role)
+    const checkPhone = await validatePhone(form.phone)
+    const checkPassword = await validatePassword(form.password)
+
+    const newErrors: RegisterForm = {
       name: "",
-      email: "",
-      phone: "",
-      password: "",
-    };
-
-    newErrors = await validateRegister(form);
-
-    // console.log("validateRegister", newErrors);
-    if (Object.values(newErrors).every((val) => val === "")) {
-      let result;
-
-      try {
-        result = await axios.post(
-          "/api/user/post-owner",
-          form
-        );
-      } catch (e) {
-        console.error("axios.post", e);
-      }
-
-      if (result?.status === 201) {
-        clearData();
-      }
+      email: checkMail.message || "",
+      phone: checkPhone.message || "",
+      password: checkPassword.message || "",
     }
-    else {
-      setError(newErrors);
+
+    if (form.email.trim() && role === 3) {
+      if (!checkMail.data) {
+        // user ที่ยังไม่เคย register owner
+        saveOwnerData(newErrors, [2, 3]);
+      } else if (checkMail.error !== "Conflict") {
+        // user ที่ register owner แล้ว และยังไม่เป็น sitter
+        setIsOpen(true);
+      } else {
+        setError(newErrors);
+      }
+    } else {
+      saveOwnerData(newErrors, [2])
     }
+
     setIsLoading(false)
   }
 
-  const clearData = () => {
+  const saveOwnerData = (
+    newErrors: RegisterForm,
+    role_ids: number[]
+  ) => {
+    if (Object.values(newErrors).every((val) => val === "")) {
+      saveData(role_ids);
+    } else {
+      setError(newErrors);
+    }
+  }
+
+  const handleChangeRole = (roleId: number) => {
+    setRole(roleId)
     setError({
-      name: "",
-      email: "",
-      phone: "",
-      password: "",
-    });
-    setForm({
       name: "",
       email: "",
       phone: "",
@@ -118,7 +182,24 @@ export default function RegisterPage() {
             </p>
           </div>
 
-          <form onSubmit={handleSubmit} className="space-y-7 pt-15 ">
+          {/* Tabs */}
+          <div className="flex justify-center gap-2 pt-7">
+            {["Owner", "Sitter"].map((label, i) => {
+              const roleId = i + 2
+              return (
+                <button
+                  key={roleId}
+                  className={`px-4 py-2 font-medium ${role === roleId ? "border-b-2 border-orange-5 text-orange-5" : "text-gray-5 cursor-pointer"
+                    }`}
+                  onClick={() => handleChangeRole(roleId)}
+                >
+                  {label}
+                </button>
+              )
+            })}
+          </div>
+
+          <form onSubmit={handleSubmit} className="space-y-7 pt-7 ">
             <div>
               <InputText
                 label="Email"
@@ -143,15 +224,7 @@ export default function RegisterPage() {
                 type="text"
                 variant={!error.phone ? "default" : "error"}
                 inputMode="numeric"
-                onChange={(e) => {
-                  const onlyNums = e.target.value.replace(/\D/g, "");
-                  if (onlyNums.length <= 10) {
-                    handleChange({
-                      ...e,
-                      target: { ...e.target, name: "phone", value: onlyNums },
-                    });
-                  }
-                }}
+                onChange={handlePhoneChange}
                 errorText={error.phone}
               />
             </div>
@@ -169,7 +242,6 @@ export default function RegisterPage() {
                 errorText={error.password}
               />
             </div>
-
 
             <PrimaryButton
               text={isLoading ? "Registering..." : "Register"}
@@ -209,7 +281,7 @@ export default function RegisterPage() {
           <p className="mt-6 text-center text-[16px] text-ink">
             Already have an account?{" "}
             <Link
-              href="/login"
+              href="auth/login"
               className="text-orange-5 hover:underline"
             >
               Login
@@ -217,6 +289,14 @@ export default function RegisterPage() {
           </p>
         </div>
       </div>
+
+      <BookingConfirmation
+        title="Register as a Sitter"
+        description={`This email is already registered.\nDo you want to sign up as a sitter too?`}
+        open={isOpen}
+        onOpenChange={setIsOpen}
+        onConfirm={handleOnConfirm}
+      />
     </div>
   )
 }

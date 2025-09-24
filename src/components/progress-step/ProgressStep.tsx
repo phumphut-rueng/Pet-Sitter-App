@@ -6,7 +6,10 @@ interface ProgressStepProps {
 }
 
 
-export default function ProgressStep({ activeNumner = 1, size = 28 }) {
+export default function ProgressStep({
+    activeNumner = 1,
+    size = 28
+}: ProgressStepProps) {
     return (
         <div className="flex gap-6 p-6">
             <ProgressBar

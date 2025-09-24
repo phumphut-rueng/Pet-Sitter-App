@@ -1,18 +1,22 @@
 import {
-    AlertDialogCancel,
     AlertDialogDescription,
 } from "@/components/ui/alert-dialog"
-import { Button } from "@/components/ui/button"
 import AlertConfirm from "./AlertConfirm"
 import PrimaryButton from "../buttons/primaryButton"
 
 interface ConfirmationProps {
+    title?: string
+    description?: string
+    textButton?: string
     open: boolean
     onOpenChange: (open: boolean) => void
     onConfirm: () => void
 }
 
 export default function BookingConfirmation({
+    title = "Booking Confirmation",
+    description = "Are you sure to booking this pet sitter?",
+    textButton = "Yes, I’m sure",
     open,
     onOpenChange,
     onConfirm,
@@ -21,12 +25,12 @@ export default function BookingConfirmation({
         <AlertConfirm
             open={open}
             onOpenChange={onOpenChange}
-            title="Booking Confirmation"
+            title={title}
             description={
                 <>
                     {/* Description */}
-                    <AlertDialogDescription className="pb-3 text-gray-6">
-                        Are you sure to booking this pet sitter?
+                    <AlertDialogDescription className="pb-3 text-gray-6 whitespace-pre-line">
+                        {description}
                     </AlertDialogDescription>
 
                     {/* Actions */}
@@ -39,7 +43,7 @@ export default function BookingConfirmation({
                             onClick={() => onOpenChange(false)}
                         />
                         <PrimaryButton
-                            text="Yes, I’m sure"
+                            text={textButton}
                             bgColor="primary"
                             textColor="white"
                             type="submit"

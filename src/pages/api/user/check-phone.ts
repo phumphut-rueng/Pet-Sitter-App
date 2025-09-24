@@ -6,17 +6,16 @@ export default async function handler(
     res: NextApiResponse
 ) {
     if (req.method !== "POST") {
-        return res.status(405).json({
-            error: "Method not allowed"
-        });
+        return res.status(405).end(`Method ${req.method} not allowed`);
     }
 
     try {
+
         const { phone } = req.body as { phone?: string };
 
         if (!phone) {
             return res.status(400).json({
-                error: "Phone is required"
+                message: "Phone is required"
             });
         }
 
@@ -33,7 +32,7 @@ export default async function handler(
     } catch (error) {
         console.error("check-phone error:", error);
         return res.status(500).json({
-            error: "Server could not get phone because database connection",
+            message: "Server could not get phone because database connection",
             details: String(error)
         });
     }
