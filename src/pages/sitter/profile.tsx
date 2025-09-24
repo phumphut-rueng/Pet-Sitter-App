@@ -7,6 +7,7 @@ import InputText from "@/components/input/InputText";
 import InputTextArea from "@/components/input/InputTextArea";
 import ImageGallery from "@/components/form/ImageGalleryUpload";
 import PetTypeSelect from "@/components/fields/PetTypeSelect";
+import type { PetType } from "@/components/fields/PetTypeSelect";
 import {
   Select,
   SelectContent,
@@ -27,7 +28,6 @@ type ValidationErrors = {
 };
 
 export default function PetSitterProfilePage() {
-  const [petTypes, setPetTypes] = useState<string[]>([]);
 
   const [formValues, setFormValues] = useState({
     fullName: "",
@@ -35,7 +35,7 @@ export default function PetSitterProfilePage() {
     phone: "",
     email: "",
     tradeName: "",
-    petTypes: [] as string[],
+    petTypes: [] as PetType[],
   });
   const [validationErrors, setValidationErrors] = useState<ValidationErrors>(
     {}
@@ -125,7 +125,7 @@ export default function PetSitterProfilePage() {
                 <div className="grid gap-4 md:grid-cols-2">
                   <div>
                     <InputText
-                    placeholder="n'punch มาแก้ด้วยจ้า"
+                    placeholder=""
                       label="Your full name*"
                       type="text"
                       value={formValues.fullName}
@@ -182,7 +182,7 @@ export default function PetSitterProfilePage() {
                   </div>
                   <div>
                     <InputText
-                    placeholder="n'punch มาแก้ด้วยจ้า"
+                    placeholder=""
                       label="Phone Number*"
                       type="tel"
                       inputMode="numeric"
@@ -204,7 +204,7 @@ export default function PetSitterProfilePage() {
                   </div>
                   <div>
                   <InputText
-                  placeholder="n'punch มาแก้ด้วยจ้า"
+                  placeholder=""
                     label="Email*"
                     type="email"
                     value={formValues.email}
@@ -218,7 +218,7 @@ export default function PetSitterProfilePage() {
                   </div>
                   <div className="md:col-span-2">
                     <InputTextArea
-                    placeholder="n'punch มาแก้ด้วยจ้า"
+                    placeholder=""
                       label="Introduction (Describe about yourself as pet sitter)"
                       className="w-full"
                     />
@@ -234,7 +234,7 @@ export default function PetSitterProfilePage() {
             <div className="grid grid-cols-2 gap-4">
               <div className="col-span-1">
                 <InputText
-                placeholder="n'punch มาแก้ด้วยจ้า"
+                placeholder=""
                   label="Pet sitter name (Trade Name)*"
                   type="text"
                   value={formValues.tradeName}
@@ -249,8 +249,7 @@ export default function PetSitterProfilePage() {
                 <label className="block text-[16px] font-medium text-black mb-2">
                   Pet type
                 </label>
-                {/* แก้อันนี้ด้วยนะคะน้องพั้น */}
-               {/* <PetTypeSelect value={formValues.petTypes} onChange={(newValues) => setFormValues((prev) => ({ ...prev, petTypes: newValues}))} /> */}
+               <PetTypeSelect value={formValues.petTypes} onChange={(newValues) => setFormValues((prev) => ({ ...prev, petTypes: newValues}))} />
                 {validationErrors.petTypes && (
                   <p className="mt-2 text-sm text-red">{validationErrors.petTypes}</p>
                 )}
@@ -277,7 +276,7 @@ export default function PetSitterProfilePage() {
               {/* Address detail เต็มแถว */}
               <div className="md:col-span-2">
                 <InputText
-                placeholder="n'punch มาแก้ด้วยจ้า"
+                placeholder=""
                   label="Address detail*"
                   type="text"
                   variant="default"
@@ -336,7 +335,7 @@ export default function PetSitterProfilePage() {
               </div>
               <div>
                 <InputText
-                placeholder="n'punch มาแก้ด้วยจ้า"
+                placeholder=""
                   label="Post code*"
                   type="text"
                   inputMode="numeric"

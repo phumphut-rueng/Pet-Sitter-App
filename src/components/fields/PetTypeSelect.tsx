@@ -1,7 +1,7 @@
 import * as React from "react";
 import { X } from "lucide-react";
 
-type PetType = "Dog" | "Cat" | "Bird" | "Rabbit" ;
+export type PetType = "Dog" | "Cat" | "Bird" | "Rabbit" ;
 
 const options: PetType[] = ["Dog", "Cat", "Bird", "Rabbit"];
 
