@@ -160,9 +160,9 @@ export default function PetSitterProfilePage() {
                       }
                     >
                       <SelectTrigger
-                        className={` w-full rounded-xl !h-12 px-4 py-2 border border-gray-2 ${
+                        className={` w-full rounded-xl !h-12 px-4 py-2 border !border-gray-2 ${
                           validationErrors.experience
-                            ? "border-red focus:ring-red"
+                            ? "!border-red focus:ring-red"
                             : "border-gray-3"
                         }`}
                       >
@@ -249,7 +249,8 @@ export default function PetSitterProfilePage() {
                 <label className="block text-[16px] font-medium text-black mb-2">
                   Pet type
                 </label>
-               <PetTypeSelect value={formValues.petTypes} onChange={(newValues) => setFormValues((prev) => ({ ...prev, petTypes: newValues}))} />
+               <PetTypeSelect value={formValues.petTypes} onChange={(newValues) => setFormValues((prev) => ({ ...prev, petTypes: newValues}))}
+               error={!!validationErrors.petTypes} />
                 {validationErrors.petTypes && (
                   <p className="mt-2 text-sm text-red">{validationErrors.petTypes}</p>
                 )}

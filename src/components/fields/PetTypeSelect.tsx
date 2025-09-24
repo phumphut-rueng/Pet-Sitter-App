@@ -8,9 +8,10 @@ const options: PetType[] = ["Dog", "Cat", "Bird", "Rabbit"];
 interface PetTypeSelectProps {
   value: PetType[] ;
   onChange: (value: PetType[]) => void;
+  error?: boolean;
 }
 
-export default function PetTypeSelect({ value, onChange }: PetTypeSelectProps) {
+export default function PetTypeSelect({ value, onChange, error = false, }: PetTypeSelectProps) {
   const [open, setOpen] = React.useState(false);
 
   const toggleOption = (pet: PetType) => {
@@ -29,7 +30,9 @@ export default function PetTypeSelect({ value, onChange }: PetTypeSelectProps) {
     <div className="relative">
       {/* Input area showing selected tags */}
       <div
-        className="w-full min-h-[48px] border border-gray-2 rounded-xl px-3 py-2 flex items-center flex-wrap gap-2 cursor-pointer"
+        className={`w-full min-h-[48px] rounded-xl px-3 py-2 flex items-center flex-wrap gap-2 cursor-pointer
+          border ${error ? "border-red" : "border-gray-2"}`}
+
         onClick={() => setOpen(!open)}
       >
         {value.length > 0 ? (

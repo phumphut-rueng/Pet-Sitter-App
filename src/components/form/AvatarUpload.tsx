@@ -45,11 +45,6 @@ export default function AvatarUploader({
     onChange?.(file);
   };
 
-  const removeAvatar = () => {
-    setSelectedFile(null);
-    onChange?.(null);
-  };
-
   return (
     <div className="relative inline-block">
       <div
