@@ -237,7 +237,7 @@ export default function PetSitterProfilePage() {
                   variant={validationErrors.tradeName ? "error" : "default"}
                 />
                 {validationErrors.tradeName && (
-                  <p className="mt-1 text-sm text-red-600">{validationErrors.tradeName}</p>
+                  <p className="mt-1 text-sm text-red">{validationErrors.tradeName}</p>
                 )}
               </div>
               <div className="col-span-2">
