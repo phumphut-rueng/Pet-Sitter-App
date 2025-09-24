@@ -65,30 +65,8 @@ const COVER = "/images/cards/pet-sitter-cover.svg";
 const AVATAR = "/images/cards/jane-maison.svg";
 const PETIMG = "/images/cards/pet-cat-mr-hem-card.svg";
 
-// star (ใช้ในรีวิวตัวอย่าง)
-const Star = ({ className = "" }: { className?: string }) => (
-  <svg viewBox="0 0 24 24" className={`h-3.5 w-3.5 fill-current ${className}`}>
-    <path d="M12 3.75l2.72 5.51 6.08.88-4.4 4.29 1.04 6.07L12 17.77l-5.44 2.85 1.04-6.07-4.4-4.29 6.08-.88L12 3.75z" />
-  </svg>
-);
 
-// chip สำหรับแสดง tags
-function Chip({ label }: { label: string }) {
-  const palette: Record<string, string> = {
-    Dog: "bg-emerald-50 text-emerald-600 ring-emerald-200",
-    Cat: "bg-pink-50 text-pink-600 ring-pink-200",
-    Bird: "bg-sky-50 text-sky-600 ring-sky-200",
-    Rabbit: "bg-orange-50 text-orange-600 ring-orange-200",
-  };
-  return (
-    <span
-      className={`inline-flex h-6 items-center rounded-full px-2.5 text-[11px] font-medium ring-1 ring-inset ${palette[label] || "bg-gray-50 text-gray-600 ring-gray-200"
-        }`}
-    >
-      {label}
-    </span>
-  );
-}
+
 
 // mock สำหรับ PetCard grid
 const pets = [
@@ -426,6 +404,7 @@ export default function ComponentAll() {
             {/* ===================== SIDEBAR ===================== */}
             {/* : <SidebarDemo /> */}
             <SidebarDemo />
+            <AccountSidebarMini />
 
             {/* ===================== PET CARDS ===================== */}
             {/* 
@@ -618,8 +597,7 @@ export default function ComponentAll() {
             />
           </div>
         </div>
-      </div>
-    </div>
+  
   
   </div>
   </SubSection>
