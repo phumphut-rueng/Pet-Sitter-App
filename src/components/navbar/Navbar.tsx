@@ -20,7 +20,7 @@ const Navbar = () => {
     if (!user) {
       return [
         { href: "/register", text: "Register" },
-        { href: "/login", text: "Login" }
+        { href: "/auth/login", text: "Login" }
       ];
     }
 
