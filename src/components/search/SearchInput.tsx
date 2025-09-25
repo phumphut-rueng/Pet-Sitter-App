@@ -100,7 +100,7 @@ export function SearchInput({
           onChange={handleInputChange}
           onFocus={handleInputFocus}
           onBlur={handleInputBlur}
-          className={`w-full bg-white border border-gray-2 rounded-lg placeholder:text-gray-6 focus:outline-none focus:border-orange-5 focus:ring-1 focus:ring-orange-5 ${sizeClasses[size]}`}
+          className={`w-full bg-white border border-gray-2 rounded-lg placeholder:text-gray-6 focus:outline-none focus:border-orange-5 focus:ring-2 focus:ring-orange-5 focus:ring-offset-bg ${sizeClasses[size]}`}
         />
         
         {/* Autocomplete Suggestions */}

@@ -13,8 +13,8 @@ export function ViewToggle({ viewMode, onViewModeChange, className = '' }: ViewT
         onClick={() => onViewModeChange('list')}
         className={`flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-all duration-200 border-2 cursor-pointer ${
           viewMode === 'list'
-            ? 'bg-orange-50 border-orange-500 text-orange-600 shadow-sm'
-            : 'bg-white border-gray-200 text-gray-500 hover:border-gray-300 hover:text-gray-600 hover:bg-gray-50'
+            ? 'bg-orange-1 border-orange-5 text-orange-6 shadow-sm'
+            : 'bg-white border-gray-2 text-gray-6 hover:border-gray-4 hover:text-gray-7 hover:bg-gray-1'
         }`}
       >
         <List className="w-4 h-4" />
@@ -24,8 +24,8 @@ export function ViewToggle({ viewMode, onViewModeChange, className = '' }: ViewT
         onClick={() => onViewModeChange('map')}
         className={`flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-all duration-200 border-2 cursor-pointer ${
           viewMode === 'map'
-            ? 'bg-orange-50 border-orange-500 text-orange-600 shadow-sm'
-            : 'bg-white border-gray-200 text-gray-500 hover:border-gray-300 hover:text-gray-600 hover:bg-gray-50'
+            ? 'bg-orange-1 border-orange-5 text-orange-6 shadow-sm'
+            : 'bg-white border-gray-2 text-gray-6 hover:border-gray-4 hover:text-gray-7 hover:bg-gray-1'
         }`}
       >
         <Map className="w-4 h-4" />

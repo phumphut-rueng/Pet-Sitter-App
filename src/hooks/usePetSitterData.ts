@@ -104,7 +104,19 @@ export function usePetSitterData() {
     } catch (error: any) {
       console.error("Error fetching sitters:", error);
       
+      // Handle different error types gracefully
       if (error.response?.status === 404) {
+        // No results found - this is normal, not an error
+        setSitters([]);
+        setPagination({
+          page: 1,
+          limit: cardsPerPage,
+          totalCount: 0,
+          totalPages: 0
+        });
+      } else if (error.response?.status === 500) {
+        // Server error
+        console.error("Server error:", error.response.data);
         setSitters([]);
         setPagination({
           page: 1,
@@ -113,6 +125,8 @@ export function usePetSitterData() {
           totalPages: 0
         });
       } else {
+        // Network or other errors
+        console.error("Network error:", error.message);
         setSitters([]);
         setPagination({
           page: 1,
