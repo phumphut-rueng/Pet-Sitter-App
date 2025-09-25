@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 
 export interface SearchFilters {
   searchTerm: string;
@@ -28,6 +28,24 @@ export function useSearchFilter(options: UseSearchFilterOptions = {}) {
   const [selectedPetTypes, setSelectedPetTypes] = useState<string[]>(filters.petTypes);
   const [rating, setRating] = useState(filters.rating);
   const [selectedExperience, setSelectedExperience] = useState(filters.experience);
+
+  // Update individual state variables when initialFilters change
+  useEffect(() => {
+    if (initialFilters) {
+      if (initialFilters.searchTerm !== undefined) {
+        setSearchTerm(initialFilters.searchTerm);
+      }
+      if (initialFilters.petTypes !== undefined) {
+        setSelectedPetTypes(initialFilters.petTypes);
+      }
+      if (initialFilters.rating !== undefined) {
+        setRating(initialFilters.rating);
+      }
+      if (initialFilters.experience !== undefined) {
+        setSelectedExperience(initialFilters.experience);
+      }
+    }
+  }, [initialFilters]);
 
   const handleSearch = useCallback(() => {
     const newFilters: SearchFilters = {

@@ -8,6 +8,7 @@ import { useEffect, useState } from "react";
 import { Pagination } from "@/components/pagination/Pagination";
 import Footer from "@/components/Footer";
 import { List, Map } from "lucide-react";
+import { useRouter } from "next/router";
 
 interface SearchFilters {
   searchTerm: string;
@@ -24,16 +25,33 @@ interface PaginationData {
 }
 
 function FindPetsitter() {
+  const router = useRouter();
   const [sitter, setSitter] = useState<Sitter[]>([]);
   const [loading, setLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
   const [viewMode, setViewMode] = useState<'list' | 'map'>('list');
-  const [filters, setFilters] = useState<SearchFilters>({
-    searchTerm: "",
-    petTypes: [],
-    rating: 0,
-    experience: "all"
-  });
+  
+  // Parse initial filters from URL parameters
+  const getInitialFilters = (): SearchFilters => {
+    if (!router.isReady) {
+      return {
+        searchTerm: "",
+        petTypes: [],
+        rating: 0,
+        experience: "all"
+      };
+    }
+
+    const { query } = router;
+    return {
+      searchTerm: (query.searchTerm as string) || "",
+      petTypes: query.petTypes ? (query.petTypes as string).split(',') : [],
+      rating: query.rating ? parseInt(query.rating as string, 10) : 0,
+      experience: (query.experience as string) || "all"
+    };
+  };
+
+  const [filters, setFilters] = useState<SearchFilters>(getInitialFilters());
   const [pagination, setPagination] = useState<PaginationData>({
     page: 1,
     limit: 5,
@@ -41,6 +59,14 @@ function FindPetsitter() {
     totalPages: 0
   });
   const cardsPerPage = 5;
+
+  // Update filters when router is ready and URL parameters change
+  useEffect(() => {
+    if (router.isReady) {
+      const newFilters = getInitialFilters();
+      setFilters(newFilters);
+    }
+  }, [router.isReady, router.query]);
 
   useEffect(() => {
     getSitter();
@@ -183,13 +209,13 @@ function FindPetsitter() {
 
         {/* Mobile Layout - SearchFilter on top */}
         <div className="block lg:hidden mb-6">
-          <SearchFilter onSearch={handleSearch} onClear={handleClear} />
+          <SearchFilter onSearch={handleSearch} onClear={handleClear} initialFilters={filters} />
         </div>
         
         {/* Desktop Layout - Side by side */}
         <div className="hidden lg:flex gap-8">
           <div className="w-90 flex-shrink-0 sticky top-4 h-fit">
-            <SearchFilter onSearch={handleSearch} onClear={handleClear} />
+            <SearchFilter onSearch={handleSearch} onClear={handleClear} initialFilters={filters} />
           </div>
           <div className="flex-1 space-y-4">
             {viewMode === 'list' ? (
