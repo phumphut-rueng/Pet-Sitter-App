@@ -1,4 +1,3 @@
-import Navbar from "@/components/navbar/Navbar";
 import SearchFilter from "@/components/findpetsitter/SearchFilter";
 import { PetSitterList } from "@/components/pet-sitter-list/PetSitterList";
 import { PageHeader } from "@/components/page-header/PageHeader";
