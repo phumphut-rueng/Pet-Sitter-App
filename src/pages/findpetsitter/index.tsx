@@ -27,7 +27,6 @@ function FindPetsitter() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <Navbar />
       <div className="container-1200 py-4 md:py-8">
         <PageHeader 
           title="Search For Pet Sitter"

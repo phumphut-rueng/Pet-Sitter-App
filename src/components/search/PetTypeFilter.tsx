@@ -1,3 +1,6 @@
+import { Checkbox } from "@/components/ui/checkbox";
+import { Label } from "@/components/ui/label";
+
 interface PetTypeFilterProps {
   selectedPetTypes: string[];
   onPetTypeChange: (petType: string, checked: boolean) => void;
@@ -21,6 +24,10 @@ export function PetTypeFilter({
     grid: 'grid grid-cols-2 gap-2'
   };
 
+  const handleCheckboxChange = (petType: string, checked: boolean) => {
+    onPetTypeChange(petType, checked);
+  };
+
   return (
     <div className={className}>
       {label && (
@@ -31,19 +38,22 @@ export function PetTypeFilter({
       <div className={layoutClasses[layout]}>
         {petTypes.map((petType) => (
           <div key={petType} className="flex items-center gap-2">
-            <input
-              type="checkbox"
+            <Checkbox
               id={petType}
               checked={selectedPetTypes.includes(petType)}
-              onChange={(e) => onPetTypeChange(petType, e.target.checked)}
-              className="w-4 h-4 text-orange-5 border-gray-3 rounded focus:ring-orange-5 focus:ring-1"
+              onCheckedChange={(checked) => handleCheckboxChange(petType, checked as boolean)}
+              className="border border-gray-2 hover:cursor-pointer hover:border-orange-5 focus:ring-orange-5 focus:ring-2 data-[state=checked]:bg-orange-5 data-[state=checked]:border-orange-5"
             />
-            <label
+            <Label
               htmlFor={petType}
-              className="text-sm font-medium text-gray-7 cursor-pointer"
+              className={`hover:cursor-pointer text-sm font-medium whitespace-nowrap transition-colors ${
+                selectedPetTypes.includes(petType) 
+                  ? 'text-orange-5' 
+                  : 'text-gray-7'
+              }`}
             >
               {petType}
-            </label>
+            </Label>
           </div>
         ))}
       </div>

@@ -38,7 +38,7 @@ export function ExperienceFilter({
         value={selectedExperience}
         onValueChange={onExperienceChange}
       >
-        <SelectTrigger className={`w-full hover:cursor-pointer bg-white border-gray-2 focus:border-orange-5 focus:ring-orange-5 ${sizeClasses[size]}`}>
+        <SelectTrigger className={`w-full hover:cursor-pointer bg-white border-gray-2 focus:border-orange-5 focus:ring-2 focus:ring-orange-5 ${sizeClasses[size]}`}>
           <SelectValue placeholder="All Experience" />
         </SelectTrigger>
         <SelectContent className="bg-white border border-gray-2">

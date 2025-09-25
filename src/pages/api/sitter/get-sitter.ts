@@ -150,7 +150,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     }));
 
     if (formattedResults.length === 0) {
-      return res.status(404).json({ 
+      return res.status(200).json({ 
         message: "ไม่พบข้อมูล",
         data: [],
         pagination: {

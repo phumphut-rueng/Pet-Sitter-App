@@ -14,7 +14,7 @@ export function PaginationInfo({
   className = '' 
 }: PaginationInfoProps) {
   return (
-    <div className={`text-sm text-gray-600 ${className}`}>
+    <div className={`text-sm text-gray-6 ${className}`}>
       Showing {currentCount} of {totalCount} sitters (Page {currentPage} of {totalPages})
     </div>
   );

@@ -117,7 +117,7 @@ export default function SearchSitter() {
                 Experience:
               </label>
                 <Select value={selectedExperience} onValueChange={setSelectedExperience}>
-                  <SelectTrigger className="w-full sm:w-[140px] hover:cursor-pointer bg-white border-gray-2 focus:border-orange-5 focus:ring-orange-5">
+                  <SelectTrigger className="w-full sm:w-[180px] hover:cursor-pointer bg-white border-gray-2 focus:border-orange-5 focus:ring-orange-5">
                     <SelectValue placeholder="All Experience" />
                   </SelectTrigger>
                   <SelectContent className="bg-white border border-gray-2">

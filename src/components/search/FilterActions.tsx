@@ -28,7 +28,7 @@ export function FilterActions({
     <div className={`${layoutClasses[layout]} ${className}`}>
       <button
         onClick={onClear}
-        className={`${sizeClasses[size]} bg-orange-100 text-orange-600 rounded-lg font-medium hover:bg-orange-200 transition-colors ${
+        className={`${sizeClasses[size]} cursor-pointer bg-orange-1 text-orange-6 rounded-lg font-medium hover:bg-orange-2 transition-colors ${
           layout === 'vertical' ? 'w-full' : ''
         }`}
       >
@@ -36,7 +36,7 @@ export function FilterActions({
       </button>
       <button
         onClick={onSearch}
-        className={`${sizeClasses[size]} bg-orange-500 text-white rounded-lg font-medium hover:bg-orange-600 transition-colors ${
+        className={`${sizeClasses[size]} cursor-pointer bg-orange-5 text-white rounded-lg font-medium hover:bg-orange-6 transition-colors ${
           layout === 'vertical' ? 'w-full' : ''
         }`}
       >
