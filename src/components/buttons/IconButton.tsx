@@ -1,4 +1,4 @@
-
+import Image from "next/image"
 type IconButtonProps = {
     icon: string
     type?: "button" | "submit" | "reset";
@@ -9,9 +9,11 @@ export default function IconButton({ icon, type = "button", onClick }: IconButto
             onClick={onClick}
             type={type}
             >
-            <img
+            <Image
               src={icon}
               alt="icon"
+              width={24}
+              height={24}
               className=" w-6 h-6"
             />
          </button>
