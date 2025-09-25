@@ -113,8 +113,10 @@ export const authOptions: AuthOptions = {
   },
   pages: {
     signIn: '/auth/login',
-    signOut: '/' // Redirect to homepage after logout
-  }
+    signOut: '/', // Redirect to homepage after logout
+    error: '/auth/login' // Redirect errors back to login page
+  },
+  debug: process.env.NODE_ENV === 'development'
 }
 
 export default NextAuth(authOptions)
