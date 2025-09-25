@@ -1,3 +1,8 @@
 {
-    "rewrites": [{ "source": "/(.*)", "destination": "/" }]
-  }
+  "rewrites": [
+    { "source": "/profile", "destination": "/account/profile" },
+    { "source": "/your-pet", "destination": "/account/pet" },
+    { "source": "/booking-history", "destination": "/account/bookings" },
+    { "source": "/sitter-profile", "destination": "/account/sitter" }
+  ]
+}
