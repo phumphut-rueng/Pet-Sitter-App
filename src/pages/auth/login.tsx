@@ -4,12 +4,12 @@ import PrimaryButton from "@/components/buttons/PrimaryButton";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { useAuth } from "@/contexts/AuthContext";
-import AuthenticatedRoute from "@/components/auth/AuthenticatedRoute";
+import { signIn, useSession } from "next-auth/react";
+import { useRouter } from "next/router";
 
 export default function Login() {
-
-  const {login} = useAuth();
+  const { data: session, status } = useSession();
+  const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [rememberMe, setRememberMe] = useState(false);
@@ -44,12 +44,22 @@ const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
   if (emailErr || passwordErr) return;
 
   try {
-    await login({email, password});
+    const result = await signIn('credentials', {
+      email,
+      password,
+      redirect: false
+    });
 
-    if (rememberMe) {
-      localStorage.setItem('rememberedEmail', email);
-    } else {
-      localStorage.removeItem('rememberedEmail');
+    if (result?.error) {
+      setLoginError("Login failed. Please check your credentials.");
+    } else if (result?.ok) {
+      if (rememberMe) {
+        localStorage.setItem('rememberedEmail', email);
+      } else {
+        localStorage.removeItem('rememberedEmail');
+      }
+      // Redirect to home page after successful login
+      router.push('/');
     }
   } catch (error: unknown) {
     setLoginError("Login failed. Please check your credentials.");
@@ -64,10 +74,25 @@ useEffect(() => {
   }
 }, []);
 
+// Redirect authenticated users to homepage
+useEffect(() => {
+  if (status === 'authenticated' && session?.user) {
+    router.push('/');
+  }
+}, [status, session, router]);
+
+
+  // Show loading while checking authentication
+  if (status === 'loading') {
+    return (
+      <div className="flex items-center justify-center h-screen">
+        <div>Loading...</div>
+      </div>
+    );
+  }
 
   return (
-    <AuthenticatedRoute>
-      <div className="flex items-center justify-center h-screen overflow-hidden relative">
+    <div className="flex items-center justify-center h-screen overflow-hidden relative">
         {/* login container */}
         <div className="w-full p-4 max-w-[440px] gap-14 flex flex-col">
           {/* login header */}
@@ -140,7 +165,7 @@ useEffect(() => {
               {/* forget password */}
               <div>
                 <span className="text-[16px] font-bold text-orange-5 cursor-pointer">
-                  <Link href="/forget-password">Forget Password</Link>
+                  <Link href="/auth/reset-password">Forget Password</Link>
                 </span>
               </div>
             </div>
@@ -153,7 +178,7 @@ useEffect(() => {
               <p className="text-[18px] font-medium text-ink">
                 Don&apos;t have any account?
                 <span className="text-orange-5 hover:text-orange-6 cursor-pointer ml-2">
-                  <Link href="/register">Register</Link>
+                  <Link href="/auth/register">Register</Link>
                   
                 </span>
               </p>
@@ -192,6 +217,5 @@ useEffect(() => {
           </div>
         </div>
       </div>
-    </AuthenticatedRoute>
   );
 }

@@ -3,44 +3,41 @@ import Image from "next/image";
 import Link from "next/link";
 import Navigation from "./Navigation";
 import { useRouter } from "next/navigation";
-import { useAuth } from "@/contexts/AuthContext";
+import { useSession, signOut } from "next-auth/react";
 import { UserRound, History, LogOut, Heart, User } from "lucide-react";
 import { MenuItem } from "@/types/navigation.types";
 
 const Navbar = () => {
   const router = useRouter();
-  const { state, logout, isAuthenticated } = useAuth();
-  const { user, loading = false } = state || {};
-  const isLoading = Boolean(loading);
-
-  // Compute roles locally
-  const isSitter = user?.roles?.includes('pet_sitter') || false;
+  const { data: session, status } = useSession();
+  const isLoading = status === 'loading';
+  const isAuthenticated = status === 'authenticated';
 
   const getMenuItems = (): MenuItem[] => {
-    if (!user) {
+    if (!session?.user) {
       return [
-        { href: "/register", text: "Register" },
-        { href: "/login", text: "Login" }
+        { href: "/auth/register", text: "Register" },
+        { href: "/auth/login", text: "Login" }
       ];
     }
 
     const menuItems: MenuItem[] = [
       {
-        href: "/profile",
+        href: "/account/profile",
         icon: UserRound,
         avatarIcon: UserRound,
         text: "Profile",
         avatarText: "Profile"
       },
       {
-        href: "/your-pet",
+        href: "/account/pet",
         icon: Heart,
         avatarIcon: Heart,
         text: "Your Pet",
         avatarText: "Your Pet"
       },
       {
-        href: "/booking-history",
+        href: "/account/bookings",
         icon: History,
         avatarIcon: History,
         text: "Booking History",
@@ -48,9 +45,10 @@ const Navbar = () => {
       }
     ];
 
-    if (isSitter) {
+    // Check roles directly from session
+    if (session.user.roles?.includes('Sitter')) {
       menuItems.push({
-        href: "/sitter-profile",
+        href: "/sitter/profile",
         icon: User,
         avatarIcon: User,
         text: "Sitter Profile",
@@ -59,7 +57,7 @@ const Navbar = () => {
     }
 
     menuItems.push({
-      href: "/logout",
+      href: "#",
       icon: LogOut,
       avatarIcon: LogOut,
       text: "Logout",
@@ -76,8 +74,21 @@ const Navbar = () => {
     router.push(path);
   };
 
-  const handleLogout = () => {
-    logout();
+  const handleLogout = async () => {
+    try {
+      // Clear any local storage items if needed
+      localStorage.removeItem('rememberedEmail');
+
+      // Use NextAuth's signOut method properly
+      await signOut({
+        callbackUrl: '/',
+        redirect: true
+      });
+    } catch (error) {
+      console.error('Logout error:', error);
+      // Fallback redirect if signOut fails
+      window.location.href = '/';
+    }
   };
 
   return (
@@ -102,7 +113,7 @@ const Navbar = () => {
           <Navigation
             isLoading={isLoading}
             isAuthenticated={isAuthenticated}
-            user={user}
+            user={session?.user || null}
             menuItems={menuItems}
             onNavigate={handleNavigate}
             onLogout={handleLogout}

@@ -1,16 +1,15 @@
 import "@/styles/globals.css";
 import type { AppProps } from "next/app";
-import { AuthProvider } from "@/contexts/AuthContext";
-import jwtInterceptor from "@/utils/jwtInterceptor";
+import { SessionProvider } from "next-auth/react";
 
-// Initialize JWT interceptor
-jwtInterceptor();
-
-export default function App({ Component, pageProps }: AppProps) {
+export default function App({
+  Component,
+  pageProps: { session, ...pageProps }
+}: AppProps) {
   return (
-    <AuthProvider>
+    <SessionProvider session={session}>
       <Component {...pageProps} />
-    </AuthProvider>
+    </SessionProvider>
   );
 }
 

@@ -38,11 +38,12 @@ const AvatarDropdown = ({ user, menuItems, onLogout, onNavigate }: AvatarDropdow
     }
   }, [isOpen])
 
-  const handleMenuItemClick = (item: MenuItem) => {
+  const handleMenuItemClick = async (item: MenuItem) => {
     setIsOpen(false)
 
     if (item.isLogout) {
-      onLogout()
+      // Call logout handler
+      await onLogout()
     } else {
       onNavigate(item.href)
     }

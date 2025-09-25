@@ -7,18 +7,18 @@ async function main() {
 
   // Check if roles already exist
   const existingPetOwner = await prisma.role.findFirst({
-    where: { role_name: 'pet_owner' }
+    where: { role_name: 'Owner' }
   })
 
   const existingSitter = await prisma.role.findFirst({
-    where: { role_name: 'pet_sitter' }
+    where: { role_name: 'Sitter' }
   })
 
   // Create roles if they don't exist
   let petOwnerRole = existingPetOwner
   if (!existingPetOwner) {
     petOwnerRole = await prisma.role.create({
-      data: { role_name: 'pet_owner' }
+      data: { role_name: 'Owner' }
     })
     console.log('Created Pet Owner role')
   } else {
@@ -28,7 +28,7 @@ async function main() {
   let sitterRole = existingSitter
   if (!existingSitter) {
     sitterRole = await prisma.role.create({
-      data: { role_name: 'pet_sitter' }
+      data: { role_name: 'Sitter' }
     })
     console.log('Created Pet Sitter role')
   } else {
