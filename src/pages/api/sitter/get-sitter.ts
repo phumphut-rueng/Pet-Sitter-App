@@ -31,6 +31,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     if (searchTerm) {
       whereConditions.push(`(
         s.name ILIKE $${paramIndex} OR 
+        s.location_description ILIKE $${paramIndex} OR 
         s.address_province ILIKE $${paramIndex} OR 
         s.address_district ILIKE $${paramIndex} OR 
         s.address_sub_district ILIKE $${paramIndex}
