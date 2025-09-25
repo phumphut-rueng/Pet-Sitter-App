@@ -1,5 +1,5 @@
 import { useState } from "react"
-
+import Image from "next/image"
 type CashButtonProps = {
     onClick?: () => void
     type ?: "button" | "submit" 
@@ -14,9 +14,11 @@ export default function CashButton({onClick, type}: CashButtonProps) {
         onClick={onClick}
         type = {type}
         >
-        <img
+        <Image
           src={isHovered ? "/icons/orangeCash.svg" : "/icons/cash.svg" }
           alt="icon"
+          width={24}
+          height={24}
           className="inline-block mr-2 w-6 h-6"
         />
             Cash

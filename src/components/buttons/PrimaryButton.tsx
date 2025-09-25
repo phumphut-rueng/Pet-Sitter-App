@@ -1,3 +1,4 @@
+import Image from "next/image";
 //วิธีใช้ เลือกสี bg ปุ่มได้เฉพาะใน bgColorMap และ textColor ได้เฉพาะใน textColorMap ถ้าอยากใช้สีอื่นต้อมาเพิ่มในนี้ก่อน
 {/*   ตัวอย่างใช้ button
       <PrimaryButton 
@@ -57,9 +58,11 @@ export default function PrimaryButton({
       onClick={onClick}
     >
       {srcImage && (
-        <img
+        <Image
           src={srcImage}
           alt="icon"
+          width={24}
+          height={24}
           className="inline-block mr-2 w-6 h-6"
         />
       )}
