@@ -3,21 +3,26 @@ import { useOwnerProfileForm } from "@/hooks/useOwnerProfileForm";
 import AccountPageShell from "@/components/layout/AccountPageShell";
 import ProfileForm from "@/components/features/account/ProfileForm";
 import Navbar from "@/components/navbar/Navbar";
-import toast, { Toaster } from "react-hot-toast"; 
+import toast, { Toaster } from "react-hot-toast";
+import { useSession } from "next-auth/react"; // NextAuth session hook
+import { useRouter } from "next/router"; 
 
 function getErrorMessage(e: unknown, fallback: string): string {
   return e instanceof Error ? e.message : fallback;
 }
 
 export default function AccountProfilePage() {
+  const { data: session, status } = useSession(); // NextAuth session
+  const router = useRouter();
   const { form, load, save } = useOwnerProfileForm();
   const [loading, setLoading] = useState(true);
   const [serverError, setServerError] = useState<string | null>(null);
 
   useEffect(() => {
-    const token = typeof window !== "undefined" ? localStorage.getItem("token") : null;
-    if (!token) {
-      window.location.replace("/login");
+    // Replace localStorage token check with NextAuth session check
+    if (status === 'loading') return; // Wait for session to load
+    if (!session?.user) {
+      router.push("/auth/login");
       return;
     }
     (async () => {
@@ -31,7 +36,7 @@ export default function AccountProfilePage() {
         setLoading(false);
       }
     })();
-  }, [load]);
+  }, [session, status, router, load]); // Add NextAuth dependencies
 
   const onSubmit = form.handleSubmit(async (values) => {
     setServerError(null);

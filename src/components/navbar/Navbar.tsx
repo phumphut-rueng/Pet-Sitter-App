@@ -16,28 +16,28 @@ const Navbar = () => {
   const getMenuItems = (): MenuItem[] => {
     if (!session?.user) {
       return [
-        { href: "/register", text: "Register" },
+        { href: "/auth/register", text: "Register" },
         { href: "/auth/login", text: "Login" }
       ];
     }
 
     const menuItems: MenuItem[] = [
       {
-        href: "/profile",
+        href: "/account/profile",
         icon: UserRound,
         avatarIcon: UserRound,
         text: "Profile",
         avatarText: "Profile"
       },
       {
-        href: "/your-pet",
+        href: "/account/pet",
         icon: Heart,
         avatarIcon: Heart,
         text: "Your Pet",
         avatarText: "Your Pet"
       },
       {
-        href: "/booking-history",
+        href: "/account/bookings",
         icon: History,
         avatarIcon: History,
         text: "Booking History",
@@ -46,9 +46,9 @@ const Navbar = () => {
     ];
 
     // Check roles directly from session
-    if (session.user.roles?.includes('pet_sitter')) {
+    if (session.user.roles?.includes('Sitter')) {
       menuItems.push({
-        href: "/sitter-profile",
+        href: "/sitter/profile",
         icon: User,
         avatarIcon: User,
         text: "Sitter Profile",
@@ -57,7 +57,7 @@ const Navbar = () => {
     }
 
     menuItems.push({
-      href: "/logout",
+      href: "#",
       icon: LogOut,
       avatarIcon: LogOut,
       text: "Logout",
@@ -79,18 +79,14 @@ const Navbar = () => {
       // Clear any local storage items if needed
       localStorage.removeItem('rememberedEmail');
 
-      // Use a more direct approach - force full page redirect
+      // Use NextAuth's signOut method properly
       await signOut({
-        callbackUrl: '/'
+        callbackUrl: '/',
+        redirect: true
       });
-
-      // Force a hard reload to ensure clean state
-      setTimeout(() => {
-        window.location.href = '/';
-      }, 100);
     } catch (error) {
       console.error('Logout error:', error);
-      // Force redirect even if signOut fails
+      // Fallback redirect if signOut fails
       window.location.href = '/';
     }
   };

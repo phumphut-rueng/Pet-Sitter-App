@@ -178,7 +178,7 @@ useEffect(() => {
               <p className="text-[18px] font-medium text-ink">
                 Don&apos;t have any account?
                 <span className="text-orange-5 hover:text-orange-6 cursor-pointer ml-2">
-                  <Link href="/register">Register</Link>
+                  <Link href="/auth/register">Register</Link>
                   
                 </span>
               </p>

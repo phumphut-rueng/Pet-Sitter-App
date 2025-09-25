@@ -12,7 +12,7 @@ export default withAuth(
 
     // ตรวจสอบการเข้าถึงเส้นทาง /sitter
     if (path.startsWith("/sitter")) {
-      if (!token?.roles?.includes("pet_sitter")) {
+      if (!token?.roles?.includes("Sitter")) {
         console.log("Blocked access to sitter path for non-sitter");
         return NextResponse.redirect(new URL("/", req.url));
       }
@@ -20,7 +20,7 @@ export default withAuth(
 
     // ตรวจสอบการเข้าถึงเส้นทาง /user
     if (path.startsWith("/user")) {
-      if (!token?.roles?.includes("pet_owner")) {
+      if (!token?.roles?.includes("Owner")) {
         console.log("Blocked access to user path for non-owner");
         return NextResponse.redirect(new URL("/", req.url));
       }
