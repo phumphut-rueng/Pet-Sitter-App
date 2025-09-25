@@ -7,6 +7,7 @@ import axios from "axios";
 import { useEffect, useState } from "react";
 import { Pagination } from "@/components/pagination/Pagination";
 import Footer from "@/components/Footer";
+import { List, Map } from "lucide-react";
 
 interface SearchFilters {
   searchTerm: string;
@@ -26,6 +27,7 @@ function FindPetsitter() {
   const [sitter, setSitter] = useState<Sitter[]>([]);
   const [loading, setLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
+  const [viewMode, setViewMode] = useState<'list' | 'map'>('list');
   const [filters, setFilters] = useState<SearchFilters>({
     searchTerm: "",
     petTypes: [],
@@ -142,114 +144,189 @@ function FindPetsitter() {
   };
 
   return (
-    <div className="min-h-screen bg-white">
-      
+    <div className="min-h-screen bg-gray-50">
+      <Navbar />
 
-      <div className="container-1200 py-4 md:py-8 border-1 border-red-500">
+      <div className="container-1200 py-4 md:py-8">
+        {/* Page Header */}
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-12 mt-6">
+          <h1 className="text-2xl md:text-3xl font-bold text-gray-6 mb-4 sm:mb-0">
+            Search For Pet Sitter
+          </h1>
+          
+          {/* View Toggle Buttons */}
+          <div className="flex gap-2 w-fit">
+            <button
+              onClick={() => setViewMode('list')}
+              className={`flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-all duration-200 border-2 cursor-pointer ${
+                viewMode === 'list'
+                  ? 'bg-orange-50 border-orange-500 text-orange-600 shadow-sm'
+                  : 'bg-white border-gray-200 text-gray-500 hover:border-gray-300 hover:text-gray-600 hover:bg-gray-50'
+              }`}
+            >
+              <List className="w-4 h-4" />
+              List
+            </button>
+            <button
+              onClick={() => setViewMode('map')}
+              className={`flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-all duration-200 border-2 cursor-pointer ${
+                viewMode === 'map'
+                  ? 'bg-orange-50 border-orange-500 text-orange-600 shadow-sm'
+                  : 'bg-white border-gray-200 text-gray-500 hover:border-gray-300 hover:text-gray-600 hover:bg-gray-50'
+              }`}
+            >
+              <Map className="w-4 h-4" />
+              Map
+            </button>
+          </div>
+        </div>
+
         {/* Mobile Layout - SearchFilter on top */}
         <div className="block lg:hidden mb-6">
           <SearchFilter onSearch={handleSearch} onClear={handleClear} />
         </div>
         
         {/* Desktop Layout - Side by side */}
-        <div className="hidden lg:flex gap-8 border-1 border-blue-500">
+        <div className="hidden lg:flex gap-8">
           <div className="w-90 flex-shrink-0 sticky top-4 h-fit">
             <SearchFilter onSearch={handleSearch} onClear={handleClear} />
           </div>
           <div className="flex-1 space-y-4">
-            {loading
-              ? // Show skeleton loading
-                [...Array(5)].map((_, index) => (
-                  <PetSitterCardSkeletonLarge
-                    key={index}
-                    className="min-h-[216px]"
-                  />
-                ))
-              : sitter.length > 0
-              ? // Show actual data (paginated)
-                sitter.map((sitterData) => (
-                  <PetSitterCardLarge
-                    key={sitterData.id}
-                    title={sitterData.location_description}
-                    hostName={sitterData.name}
-                    location={`${sitterData.address_district}, ${sitterData.address_province}`}
-                    coverUrl={
-                      sitterData.sitter_image[0]?.image_url ||
-                      "https://via.placeholder.com/150"
-                    }
-                    rating={sitterData.averageRating || 0}
-                    className="min-h-[216px] cursor-pointer"
-                    tags={sitterData.sitter_pet_type.map(
-                      (petType) => petType.pet_type.pet_type_name
-                    )}
-                  />
-                ))
-              : // No results found
-                <div className="flex flex-col items-center justify-center py-16 text-center">
-                  <div className="w-32 h-32 bg-gray-100 rounded-full flex items-center justify-center mb-6">
-                    <svg className="w-16 h-16 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                    </svg>
-                  </div>
-                  <h3 className="text-xl font-semibold text-gray-900 mb-3">No Results Found</h3>
-                  <p className="text-gray-600 mb-6 max-w-md">Try adjusting your search filters or search with different keywords</p>
-                  <button
-                    onClick={handleClear}
-                    className="px-8 py-3 bg-orange-500 text-white rounded-lg font-medium hover:bg-orange-600 transition-colors"
-                  >
-                    Clear Filters
-                  </button>
-                </div>}
+            {viewMode === 'list' ? (
+              <>
+                {loading
+                  ? // Show skeleton loading
+                    [...Array(5)].map((_, index) => (
+                      <PetSitterCardSkeletonLarge
+                        key={index}
+                        className="min-h-[216px]"
+                      />
+                    ))
+                  : sitter.length > 0
+                  ? // Show actual data (paginated)
+                    sitter.map((sitterData) => (
+                      <PetSitterCardLarge
+                        key={sitterData.id}
+                        title={sitterData.location_description}
+                        hostName={sitterData.name}
+                        location={`${sitterData.address_district}, ${sitterData.address_province}`}
+                        coverUrl={
+                          sitterData.sitter_image[0]?.image_url ||
+                          "https://via.placeholder.com/150"
+                        }
+                        rating={sitterData.averageRating || 0}
+                        className="min-h-[216px] cursor-pointer"
+                        tags={sitterData.sitter_pet_type.map(
+                          (petType) => petType.pet_type.pet_type_name
+                        )}
+                      />
+                    ))
+                  : // No results found
+                    <div className="flex flex-col items-center justify-center py-16 text-center">
+                      <div className="w-32 h-32 bg-gray-100 rounded-full flex items-center justify-center mb-6">
+                        <svg className="w-16 h-16 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                        </svg>
+                      </div>
+                      <h3 className="text-xl font-semibold text-gray-900 mb-3">No Results Found</h3>
+                      <p className="text-gray-600 mb-6 max-w-md">Try adjusting your search filters or search with different keywords</p>
+                      <button
+                        onClick={handleClear}
+                        className="px-8 py-3 bg-orange-500 text-white rounded-lg font-medium hover:bg-orange-600 transition-colors"
+                      >
+                        Clear Filters
+                      </button>
+                    </div>}
+              </>
+            ) : (
+              // Map View
+              <div className="flex flex-col items-center justify-center py-16 text-center">
+                <div className="w-32 h-32 bg-gray-100 rounded-full flex items-center justify-center mb-6">
+                  <svg className="w-16 h-16 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
+                  </svg>
+                </div>
+                <h3 className="text-xl font-semibold text-gray-900 mb-3">Map View</h3>
+                <p className="text-gray-600 mb-6 max-w-md">Map view is coming soon. Switch to List view to see pet sitters.</p>
+                <button
+                  onClick={() => setViewMode('list')}
+                  className="px-8 py-3 bg-orange-500 text-white rounded-lg font-medium hover:bg-orange-600 transition-colors"
+                >
+                  Switch to List
+                </button>
+              </div>
+            )}
           </div>
         </div>
         
         {/* Mobile Cards - Full width */}
         <div className="block lg:hidden space-y-4">
-          {loading
-            ? // Show skeleton loading
-              [...Array(5)].map((_, index) => (
-                <PetSitterCardSkeletonLarge
-                  key={index}
-                  className="min-h-[216px]"
-                />
-              ))
-            : sitter.length > 0
-            ? // Show actual data (paginated)
-              sitter.map((sitterData) => (
-                <PetSitterCardLarge
-                  key={sitterData.id}
-                  title={sitterData.location_description}
-                  hostName={sitterData.name}
-                  location={`${sitterData.address_district}, ${sitterData.address_province}`}
-                  coverUrl={
-                    sitterData.sitter_image[0]?.image_url ||
-                    "https://via.placeholder.com/150"
-                  }
-                  rating={sitterData.averageRating || 0}
-                  className="min-h-[216px] cursor-pointer"
-                  tags={sitterData.sitter_pet_type.map(
-                    (petType) => petType.pet_type.pet_type_name
-                  )}
-                />
-              ))
-            : // No results found
-              <div className="flex flex-col items-center justify-center py-12 text-center">
-                <div className="w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mb-4">
-                  <svg className="w-12 h-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                  </svg>
-                </div>
-                <h3 className="text-lg font-semibold text-gray-900 mb-2">No Results Found</h3>
-                <p className="text-gray-600 mb-4">Try adjusting your search filters or search with different keywords</p>
-                <button
-                  onClick={handleClear}
-                  className="px-6 py-2 bg-orange-500 text-white rounded-lg font-medium hover:bg-orange-600 transition-colors"
-                >
-                  Clear Filters
-                </button>
-              </div>}
+          {viewMode === 'list' ? (
+            <>
+              {loading
+                ? // Show skeleton loading
+                  [...Array(5)].map((_, index) => (
+                    <PetSitterCardSkeletonLarge
+                      key={index}
+                      className="min-h-[216px]"
+                    />
+                  ))
+                : sitter.length > 0
+                ? // Show actual data (paginated)
+                  sitter.map((sitterData) => (
+                    <PetSitterCardLarge
+                      key={sitterData.id}
+                      title={sitterData.location_description}
+                      hostName={sitterData.name}
+                      location={`${sitterData.address_district}, ${sitterData.address_province}`}
+                      coverUrl={
+                        sitterData.sitter_image[0]?.image_url ||
+                        "https://via.placeholder.com/150"
+                      }
+                      rating={sitterData.averageRating || 0}
+                      className="min-h-[216px] cursor-pointer"
+                      tags={sitterData.sitter_pet_type.map(
+                        (petType) => petType.pet_type.pet_type_name
+                      )}
+                    />
+                  ))
+                : // No results found
+                  <div className="flex flex-col items-center justify-center py-12 text-center">
+                    <div className="w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mb-4">
+                      <svg className="w-12 h-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                      </svg>
+                    </div>
+                    <h3 className="text-lg font-semibold text-gray-900 mb-2">No Results Found</h3>
+                    <p className="text-gray-600 mb-4">Try adjusting your search filters or search with different keywords</p>
+                    <button
+                      onClick={handleClear}
+                      className="px-6 py-2 bg-orange-500 text-white rounded-lg font-medium hover:bg-orange-600 transition-colors"
+                    >
+                      Clear Filters
+                    </button>
+                  </div>}
+            </>
+          ) : (
+            // Map View
+            <div className="flex flex-col items-center justify-center py-12 text-center">
+              <div className="w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mb-4">
+                <svg className="w-12 h-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
+                </svg>
+              </div>
+              <h3 className="text-lg font-semibold text-gray-900 mb-2">Map View</h3>
+              <p className="text-gray-600 mb-4">Map view is coming soon. Switch to List view to see pet sitters.</p>
+              <button
+                onClick={() => setViewMode('list')}
+                className="px-6 py-2 bg-orange-500 text-white rounded-lg font-medium hover:bg-orange-600 transition-colors"
+              >
+                Switch to List
+              </button>
+            </div>
+          )}
         </div>
-        {!loading && sitter.length > 0 && (
+        {!loading && sitter.length > 0 && viewMode === 'list' && (
           <div className="flex flex-col items-center mt-8 space-y-4">
             <div className="text-sm text-gray-600">
               Showing {sitter.length} of {pagination.totalCount} sitters (Page {pagination.page} of {pagination.totalPages})
