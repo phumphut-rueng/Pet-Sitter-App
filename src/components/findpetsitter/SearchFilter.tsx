@@ -24,8 +24,7 @@ interface SearchFilters {
 export default function SearchFilter({ onSearch, onClear }: SearchFilterProps) {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedPetTypes, setSelectedPetTypes] = useState<string[]>([]);
-  const [selectedRating, setSelectedRating] = useState<number>(0);
-  const [selectedExperience, setSelectedExperience] = useState<string>("0-2");
+  const [selectedExperience, setSelectedExperience] = useState<string>("all");
 
   const [rating, setRating] = useState(0);
   const handleChange = (newRating: number) => {
@@ -37,7 +36,7 @@ export default function SearchFilter({ onSearch, onClear }: SearchFilterProps) {
     onSearch({
       searchTerm,
       petTypes: selectedPetTypes,
-      rating: selectedRating,
+      rating: rating,
       experience: selectedExperience,
     });
   };
@@ -46,7 +45,7 @@ export default function SearchFilter({ onSearch, onClear }: SearchFilterProps) {
     setSearchTerm("");
     setSelectedPetTypes([]);
     setRating(0);
-    setSelectedExperience("0-2");
+    setSelectedExperience("all");
     onClear();
   };
 
@@ -157,9 +156,12 @@ export default function SearchFilter({ onSearch, onClear }: SearchFilterProps) {
           onValueChange={setSelectedExperience}
         >
           <SelectTrigger className="w-full hover:cursor-pointer bg-white border-gray-2 focus:border-orange-5 focus:ring-orange-5">
-            <SelectValue placeholder="0-2 Years" />
+            <SelectValue placeholder="Select Experience" />
           </SelectTrigger>
           <SelectContent className="bg-white border border-gray-2">
+            <SelectItem value="all" className="bg-white hover:bg-gray-1">
+              All Experience
+            </SelectItem>
             <SelectItem value="0-2" className="bg-white hover:bg-gray-1">
               0-2 Years
             </SelectItem>
