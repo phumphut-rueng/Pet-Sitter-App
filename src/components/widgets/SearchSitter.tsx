@@ -41,7 +41,14 @@ export default function SearchSitter() {
       }
       
       const queryString = queryParams.toString();
-      router.push(`/findpetsitter${queryString ? `?${queryString}` : ''}`);
+      const targetUrl = `/findpetsitter${queryString ? `?${queryString}` : ''}`;
+      console.log('SearchSitter: Navigating to:', targetUrl);
+      
+      // Store filters in sessionStorage to pass to SearchFilter
+      sessionStorage.setItem('searchFilters', JSON.stringify(filters));
+      
+      // Use window.location.href to navigate to targetUrl (equivalent to <a> tag)
+      window.location.href = targetUrl;
     }
   });
   return (
