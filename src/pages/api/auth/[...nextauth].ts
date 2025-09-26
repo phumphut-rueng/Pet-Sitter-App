@@ -4,6 +4,7 @@ import bcrypt from 'bcryptjs'
 import { prisma } from '@/lib/prisma'
 
 export const authOptions: AuthOptions = {
+  secret: process.env.NEXTAUTH_SECRET,
   providers: [
     CredentialsProvider({
       name: "credentials",
@@ -63,8 +64,13 @@ export const authOptions: AuthOptions = {
       // Handle session updates (when update() is called)
       if (trigger === 'update' && token.sub) {
         try {
+          const userId = parseInt(token.sub)
+          if (isNaN(userId)) {
+            return token
+          }
+
           const updatedUser = await prisma.user.findUnique({
-            where: { id: parseInt(token.sub) },
+            where: { id: userId },
             include: {
               user_role: {
                 include: { role: true }
@@ -79,6 +85,8 @@ export const authOptions: AuthOptions = {
             token.roles = updatedUser.user_role.map(ur => ur.role.role_name)
           }
         } catch (error) {
+          // Handle token update error - token remains unchanged
+          return token
         }
       }
 
