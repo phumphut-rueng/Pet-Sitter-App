@@ -27,8 +27,8 @@ export default withAuth(
   {
     callbacks: {
       authorized: ({ token, req }) => {
-        // อนุญาตการเข้าถึงเสมอ - จัดการการเปลี่ยนเส้นทางในฟังก์ชัน middleware
-        return true;
+        // Require authentication - return false if no token
+        return !!token;
       },
     },
   }
