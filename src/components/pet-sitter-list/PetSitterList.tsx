@@ -44,23 +44,29 @@ export function PetSitterList({
 
   return (
     <>
-      {sitters.map((sitterData) => (
-          <PetSitterCardLarge
-            key={sitterData.id}
-            title={sitterData.location_description}
-            hostName={sitterData.name}
-            location={`${sitterData.address_district}, ${sitterData.address_province}`}
-            coverUrl={
-              sitterData.sitter_image[0]?.image_url ||
-              "https://via.placeholder.com/150"
-            }
-            rating={sitterData.averageRating || 0}
-            className="min-h-[216px] cursor-pointer"
-            tags={sitterData.sitter_pet_type.map(
-              (petType) => petType.pet_type.pet_type_name
-            )}
-          />
-      ))}
+      {sitters.map((sitterData) => {
+        console.log(`Sitter ${sitterData.id} images:`, sitterData.sitter_image);
+        const coverUrl = sitterData.sitter_image[0]?.image_url || "https://placehold.co/400x192";
+        console.log(`Sitter ${sitterData.id} coverUrl:`, coverUrl);
+        
+        return (
+          <div key={sitterData.id} className="mb-4">
+            <Link href={`/findpetsitter/${sitterData.id}`}>
+              <PetSitterCardLarge
+                title={sitterData.location_description}
+                hostName={sitterData.name}
+                location={`${sitterData.address_district}, ${sitterData.address_province}`}
+                coverUrl={coverUrl}
+                rating={sitterData.averageRating || 0}
+                className="min-h-[216px] cursor-pointer"
+                tags={sitterData.sitter_pet_type.map(
+                  (petType) => petType.pet_type.pet_type_name
+                )}
+              />
+            </Link>
+          </div>
+        );
+      })}
     </>
   );
 }
