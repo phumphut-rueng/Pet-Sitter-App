@@ -19,6 +19,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import Image from "next/image";
+import toast, { Toaster } from "react-hot-toast";
 
 type SitterFormValues = {
   fullName: string;
@@ -170,23 +171,25 @@ export default function PetSitterProfilePage() {
   }, [status, reset]);
 
   const onSubmit = handleSubmit(async (values) => {
-    try {
-      const res = await fetch("/api/sitter/put-sitter", {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(values),
-      });
-      if (res.ok) {
-        await update();
-        alert("✅ Profile updated successfully");
-      } else {
-        const msg = await res.json().catch(() => ({}));
-        alert("Failed to update sitter");
+    await toast.promise(
+      (async () => {
+        const res = await fetch("/api/sitter/put-sitter", {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(values),
+        });
+        if (!res.ok) {
+          const data = await res.json().catch(() => ({}));
+          throw new Error(data?.message || "Failed to update sitter");
+        }
+        await update(); // refresh session ถ้ามีการเปลี่ยนอีเมล/ชื่อ ฯลฯ
+      })(),
+      {
+        loading: "Saving profile...",
+        success: "Profile updated successfully",
+        error: (e) => e.message || "Failed to update sitter",
       }
-    } catch (error) {
-      console.error("submit error:", error);
-      alert(" Unexpected error while updating profile");
-    }
+    );
   });
 
   return (
@@ -447,6 +450,7 @@ export default function PetSitterProfilePage() {
           </section>
         </form>
       </section>
+      <Toaster position="top-right" />
     </main>
   );
 }
