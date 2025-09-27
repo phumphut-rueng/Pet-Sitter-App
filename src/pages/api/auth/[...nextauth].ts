@@ -1,11 +1,10 @@
 import NextAuth, { AuthOptions } from 'next-auth'
 import CredentialsProvider from 'next-auth/providers/credentials'
 import bcrypt from 'bcryptjs'
-import { PrismaClient } from '@prisma/client'
-
-const prisma = new PrismaClient()
+import { prisma } from '@/lib/prisma'
 
 export const authOptions: AuthOptions = {
+  secret: process.env.NEXTAUTH_SECRET,
   providers: [
     CredentialsProvider({
       name: "credentials",
@@ -39,12 +38,6 @@ export const authOptions: AuthOptions = {
 
           const roles = user.user_role.map(ur => ur.role.role_name)
 
-          console.log('🔍 User found during login:', {
-            id: user.id,
-            email: user.email,
-            roles: roles
-          })
-
           return {
             id: user.id.toString(),
             email: user.email,
@@ -53,7 +46,6 @@ export const authOptions: AuthOptions = {
             roles: roles
           }
         } catch (error) {
-          console.error('Authentication error:', error)
           return null
         }
       }
@@ -67,19 +59,18 @@ export const authOptions: AuthOptions = {
     async jwt({ token, user, trigger, session }) {
       if (user) {
         token.roles = user.roles
-        console.log('🔍 JWT callback - storing roles in token:', {
-          userId: user.id,
-          roles: user.roles
-        })
-        
       }
-      console.log("JWT Token", token);
 
       // Handle session updates (when update() is called)
       if (trigger === 'update' && token.sub) {
         try {
+          const userId = parseInt(token.sub)
+          if (isNaN(userId)) {
+            return token
+          }
+
           const updatedUser = await prisma.user.findUnique({
-            where: { id: parseInt(token.sub) },
+            where: { id: userId },
             include: {
               user_role: {
                 include: { role: true }
@@ -94,7 +85,8 @@ export const authOptions: AuthOptions = {
             token.roles = updatedUser.user_role.map(ur => ur.role.role_name)
           }
         } catch (error) {
-          console.error('Error updating token:', error)
+          // Handle token update error - token remains unchanged
+          return token
         }
       }
 
@@ -113,8 +105,10 @@ export const authOptions: AuthOptions = {
   },
   pages: {
     signIn: '/auth/login',
-    signOut: '/' // Redirect to homepage after logout
-  }
+    signOut: '/', // Redirect to homepage after logout
+    error: '/auth/login' // Redirect errors back to login page
+  },
+  debug: process.env.NODE_ENV === 'development'
 }
 
 export default NextAuth(authOptions)
