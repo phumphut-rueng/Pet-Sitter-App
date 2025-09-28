@@ -42,7 +42,13 @@ type SitterFormValues = {
 
 type GetSitterResponse = {
   exists: boolean;
-  user: { id: number; email: string; phone: string | null; name: string; profile_image: string | null };
+  user: {
+    id: number;
+    email: string;
+    phone: string | null;
+    name: string;
+    profile_image: string | null;
+  };
   sitter: null | {
     id: number;
     name: string | null;
@@ -64,7 +70,10 @@ type GetSitterResponse = {
 const phonePattern = /^0\d{9}$/;
 const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-async function checkPhoneDuplicate(phone: string, excludeUserId?: number): Promise<boolean> {
+async function checkPhoneDuplicate(
+  phone: string,
+  excludeUserId?: number
+): Promise<boolean> {
   try {
     const res = await fetch("/api/sitter/check-phone", {
       method: "POST",
@@ -81,7 +90,10 @@ async function checkPhoneDuplicate(phone: string, excludeUserId?: number): Promi
   }
 }
 
-async function checkEmailDuplicate(email: string, excludeUserId?: number): Promise<boolean> {
+async function checkEmailDuplicate(
+  email: string,
+  excludeUserId?: number
+): Promise<boolean> {
   try {
     const res = await fetch("/api/sitter/check-email", {
       method: "POST",
@@ -103,12 +115,29 @@ export default function PetSitterProfilePage() {
   const { status, update } = useSession();
   const [initialGallery, setInitialGallery] = useState<string[]>([]);
 
+  type Province = { code: string; name: string };
+  type District = { code: string; name: string };
+  type Subdistrict = { code: string; name: string; postalCode: string };
+  type AddressData = {
+    provinces: Province[];
+    districtsByProvince: Record<string, District[]>;
+    subdistrictsByDistrict: Record<string, Subdistrict[]>;
+  };
+
+  const [addr, setAddr] = useState<AddressData | null>(null);
+  const [provinceOpts, setProvinceOpts] = useState<Province[]>([]);
+  const [districtOpts, setDistrictOpts] = useState<District[]>([]);
+  const [subdistrictOpts, setSubdistrictOpts] = useState<Subdistrict[]>([]);
+  const [profileLoaded, setProfileLoaded] = useState(false);
+
   const {
     register,
     handleSubmit,
     control,
     reset,
     setValue,
+    watch,
+    getValues,
     formState: { errors, isSubmitting },
   } = useForm<SitterFormValues>({
     defaultValues: {
@@ -132,6 +161,91 @@ export default function PetSitterProfilePage() {
     mode: "onBlur",
   });
 
+  const watchProvince = watch("address_province");
+  const watchDistrict = watch("address_district");
+  const watchSubdistrict = watch("address_sub_district");
+
+  useEffect(() => {
+    register("address_province");
+    register("address_district");
+    register("address_sub_district");
+  }, [register]);
+
+  useEffect(() => {
+    fetch("/th-address.json")
+      .then((r) => r.json())
+      .then((json: AddressData) => {
+        setAddr(json);
+        setProvinceOpts(json.provinces || []);
+      })
+      .catch((e) => console.error("load th-address.json failed:", e));
+  }, []);
+
+  // เมื่อเลือก province → สร้างลิสต์อำเภอ
+  useEffect(() => {
+    if (!addr || !watchProvince) {
+      setDistrictOpts([]);
+      setSubdistrictOpts([]);
+      return;
+    }
+    const p = addr.provinces.find((x) => x.name === watchProvince);
+    const districts = p ? addr.districtsByProvince[p.code] ?? [] : [];
+    setDistrictOpts(districts);
+  }, [addr, watchProvince]);
+
+  // เมื่อเลือก district → สร้างลิสต์ตำบล + เติมรหัสไปรษณีย์ตามตำบลที่เลือก
+  useEffect(() => {
+    if (!addr || !watchProvince) {
+      setSubdistrictOpts([]);
+      return;
+    }
+    const p = addr.provinces.find((x) => x.name === watchProvince);
+    const dList = p ? addr.districtsByProvince[p.code] ?? [] : [];
+    const d = dList.find((x) => x.name === watchDistrict);
+    const subs = d ? addr.subdistrictsByDistrict[d.code] ?? [] : [];
+    setSubdistrictOpts(subs);
+
+    // auto postcode เมื่อมีการเลือก subdistrict
+    const s = subs.find((x) => x.name === watchSubdistrict);
+    setValue("address_post_code", s?.postalCode ?? "", { shouldDirty: true });
+  }, [addr, watchProvince, watchDistrict, watchSubdistrict, setValue]);
+
+  const onProvinceChange = (provName: string) => {
+    setValue("address_province", provName, { shouldDirty: true });
+    setValue("address_district", "", { shouldDirty: true });
+    setValue("address_sub_district", "", { shouldDirty: true });
+    setValue("address_post_code", "", { shouldDirty: true });
+  };
+  
+  const onDistrictChange = (distName: string) => {
+    setValue("address_district", distName, { shouldDirty: true });
+    setValue("address_sub_district", "", { shouldDirty: true });
+    setValue("address_post_code", "", { shouldDirty: true });
+  };
+  
+  const onSubdistrictChange = (subName: string) => {
+    setValue("address_sub_district", subName, { shouldDirty: true });
+  };
+
+  useEffect(() => {
+    if (!addr || !profileLoaded) return;
+  
+    const pName = getValues("address_province");
+    const dName = getValues("address_district");
+    const sName = getValues("address_sub_district");
+  
+    const p = addr.provinces.find(x => x.name === pName);
+    const dList = p ? addr.districtsByProvince[p.code] ?? [] : [];
+    setDistrictOpts(dList);
+  
+    const d = dList.find(x => x.name === dName);
+    const subs = d ? addr.subdistrictsByDistrict[d.code] ?? [] : [];
+    setSubdistrictOpts(subs);
+  
+    const s = subs.find(x => x.name === sName);
+    setValue("address_post_code", s?.postalCode ?? "", { shouldDirty: false });
+  }, [addr, profileLoaded, getValues, setValue]);
+
   useEffect(() => {
     if (status === "loading") return;
     (async () => {
@@ -151,7 +265,9 @@ export default function PetSitterProfilePage() {
           phone: data.sitter?.phone || data.user.phone || "",
           email: data.user.email || "",
           tradeName: data.sitter?.name || "",
-          petTypes: (data.sitter?.petTypes || []).map((p) => p.name) as PetType[],
+          petTypes: (data.sitter?.petTypes || []).map(
+            (p) => p.name
+          ) as PetType[],
           introduction: data.sitter?.introduction || "",
           location_description: data.sitter?.location_description || "",
           service_description: data.sitter?.service_description || "",
@@ -164,6 +280,7 @@ export default function PetSitterProfilePage() {
           images: data.sitter?.images || [],
         });
         setInitialGallery(data.sitter?.images || []);
+        setProfileLoaded(true);
       } catch (error) {
         console.error("load profile error:", error);
       }
@@ -199,19 +316,31 @@ export default function PetSitterProfilePage() {
       </aside>
 
       <section className="flex-1 min-w-0">
-        <PetSitterNavbar avatarUrl="/images/cards/jane-maison.svg" name="Jane Maison" />
+        <PetSitterNavbar
+          avatarUrl="/images/cards/jane-maison.svg"
+          name="Jane Maison"
+        />
         <form onSubmit={onSubmit} className="mr-auto px-6 py-8">
           <div className="flex justify-between">
             <div className="flex items-center gap-3">
-              <h3 className="text-gray-9 font-semibold text-2xl">Pet Sitter Profile</h3>
+              <h3 className="text-gray-9 font-semibold text-2xl">
+                Pet Sitter Profile
+              </h3>
               <StatusBadge status="approved" className="font-medium" />
             </div>
-            <PrimaryButton text={isSubmitting ? "Saving..." : "Update"} type="submit" bgColor="primary" textColor="white" />
+            <PrimaryButton
+              text={isSubmitting ? "Saving..." : "Update"}
+              type="submit"
+              bgColor="primary"
+              textColor="white"
+            />
           </div>
 
           {/* Basic Information */}
           <section className="bg-white rounded-xl pt-4 pb-7 px-12 mt-4">
-            <h4 className="text-gray-4 font-bold text-xl py-4">Basic Information</h4>
+            <h4 className="text-gray-4 font-bold text-xl py-4">
+              Basic Information
+            </h4>
             <div className="grid grid-cols-1">
               <div className="pb-4 col-span-1">
                 <p className="pb-4 font-medium text-black">Profile Image</p>
@@ -234,25 +363,42 @@ export default function PetSitterProfilePage() {
                       className="w-full"
                       {...register("fullName", {
                         required: "Please enter your full name.",
-                        minLength: { value: 6, message: "Full name must be 6–20 characters." },
-                        maxLength: { value: 20, message: "Full name must be 6–20 characters." },
+                        minLength: {
+                          value: 6,
+                          message: "Full name must be 6–20 characters.",
+                        },
+                        maxLength: {
+                          value: 20,
+                          message: "Full name must be 6–20 characters.",
+                        },
                       })}
                     />
-                    {errors.fullName && <p className="mt-1 text-sm text-red">{errors.fullName.message}</p>}
+                    {errors.fullName && (
+                      <p className="mt-1 text-sm text-red">
+                        {errors.fullName.message}
+                      </p>
+                    )}
                   </div>
 
                   {/* Experience */}
                   <div className="flex flex-col gap-1">
-                    <label className="font-medium text-black">Experience*</label>
+                    <label className="font-medium text-black">
+                      Experience*
+                    </label>
                     <Controller
                       name="experience"
                       control={control}
                       rules={{ required: "Please select your experience." }}
                       render={({ field }) => (
-                        <Select value={field.value} onValueChange={field.onChange}>
+                        <Select
+                          value={field.value}
+                          onValueChange={field.onChange}
+                        >
                           <SelectTrigger
                             className={` w-full rounded-xl !h-12 px-4 py-2 border !border-gray-2 ${
-                              errors.experience ? "!border-red focus:ring-red" : "border-gray-3"
+                              errors.experience
+                                ? "!border-red focus:ring-red"
+                                : "border-gray-3"
                             }`}
                           >
                             <SelectValue placeholder="" />
@@ -265,7 +411,11 @@ export default function PetSitterProfilePage() {
                         </Select>
                       )}
                     />
-                    {errors.experience && <p className="mt-1 text-sm text-red">{errors.experience.message}</p>}
+                    {errors.experience && (
+                      <p className="mt-1 text-sm text-red">
+                        {errors.experience.message}
+                      </p>
+                    )}
                   </div>
 
                   {/* Phone */}
@@ -280,12 +430,17 @@ export default function PetSitterProfilePage() {
                       {...register("phone", {
                         required: "Please enter your phone number.",
                         validate: {
-                          format: (v) => (phonePattern.test(v) ? true : "Phone number must start with 0 and be 10 digits."),
+                          format: (v) =>
+                            phonePattern.test(v)
+                              ? true
+                              : "Phone number must start with 0 and be 10 digits.",
                           unique: async (v) => {
                             if (!v || !userId) return true;
                             try {
                               const dup = await checkPhoneDuplicate(v, userId);
-                              return dup ? "Phone number already exists." : true;
+                              return dup
+                                ? "Phone number already exists."
+                                : true;
                             } catch {
                               return true;
                             }
@@ -293,7 +448,11 @@ export default function PetSitterProfilePage() {
                         },
                       })}
                     />
-                    {errors.phone && <p className="mt-1 text-sm text-red">{errors.phone.message}</p>}
+                    {errors.phone && (
+                      <p className="mt-1 text-sm text-red">
+                        {errors.phone.message}
+                      </p>
+                    )}
                   </div>
 
                   {/* Email */}
@@ -307,7 +466,10 @@ export default function PetSitterProfilePage() {
                       {...register("email", {
                         required: "Please enter your email address.",
                         validate: {
-                          format: (v) => (emailPattern.test(v) ? true : "Invalid email format."),
+                          format: (v) =>
+                            emailPattern.test(v)
+                              ? true
+                              : "Invalid email format.",
                           unique: async (v) => {
                             if (!v || !userId) return true;
                             try {
@@ -320,7 +482,11 @@ export default function PetSitterProfilePage() {
                         },
                       })}
                     />
-                    {errors.email && <p className="mt-1 text-sm text-red">{errors.email.message}</p>}
+                    {errors.email && (
+                      <p className="mt-1 text-sm text-red">
+                        {errors.email.message}
+                      </p>
+                    )}
                   </div>
 
                   {/* Introduction */}
@@ -348,38 +514,68 @@ export default function PetSitterProfilePage() {
                   label="Pet sitter name (Trade Name)*"
                   type="text"
                   variant={errors.tradeName ? "error" : "default"}
-                  {...register("tradeName", { required: "Please enter your trade name." })}
+                  {...register("tradeName", {
+                    required: "Please enter your trade name.",
+                  })}
                 />
-                {errors.tradeName && <p className="mt-1 text-sm text-red">{errors.tradeName.message}</p>}
+                {errors.tradeName && (
+                  <p className="mt-1 text-sm text-red">
+                    {errors.tradeName.message}
+                  </p>
+                )}
               </div>
 
               <div className="col-span-2">
-                <label className="block text-[16px] font-medium text-black mb-2">Pet type</label>
+                <label className="block text-[16px] font-medium text-black mb-2">
+                  Pet type
+                </label>
                 <Controller
                   name="petTypes"
                   control={control}
-                  rules={{ validate: (arr) => (Array.isArray(arr) && arr.length > 0) || "Please select at least one pet type." }}
+                  rules={{
+                    validate: (arr) =>
+                      (Array.isArray(arr) && arr.length > 0) ||
+                      "Please select at least one pet type.",
+                  }}
                   render={({ field }) => (
-                    <PetTypeSelect value={field.value} onChange={(vals) => field.onChange(vals)} error={!!errors.petTypes} />
+                    <PetTypeSelect
+                      value={field.value}
+                      onChange={(vals) => field.onChange(vals)}
+                      error={!!errors.petTypes}
+                    />
                   )}
                 />
-                {errors.petTypes && <p className="mt-2 text-sm text-red">{String(errors.petTypes.message)}</p>}
+                {errors.petTypes && (
+                  <p className="mt-2 text-sm text-red">
+                    {String(errors.petTypes.message)}
+                  </p>
+                )}
               </div>
 
               <div className="col-span-2">
-                <InputTextArea label="Services (Describe all of your service for pet sitting)" {...register("service_description")} />
+                <InputTextArea
+                  label="Services (Describe all of your service for pet sitting)"
+                  {...register("service_description")}
+                />
               </div>
 
               <div className="col-span-2">
-                <InputTextArea label="My Place (Describe you place)" {...register("location_description")} />
+                <InputTextArea
+                  label="My Place (Describe you place)"
+                  {...register("location_description")}
+                />
               </div>
 
               <div className="col-span-2">
-                <p className="font-medium text-black pb-4">Image Gellery (Maximum 10 images)</p>
+                <p className="font-medium text-black pb-4">
+                  Image Gellery (Maximum 10 images)
+                </p>
                 <ImageGallery
                   initialImageUrls={initialGallery}
                   onChange={(state) => {
-                    setValue("images", state.existingImageUrls, { shouldDirty: true });
+                    setValue("images", state.existingImageUrls, {
+                      shouldDirty: true,
+                    });
                   }}
                 />
               </div>
@@ -392,58 +588,97 @@ export default function PetSitterProfilePage() {
 
             <div className="mt-4 grid gap-4 md:grid-cols-2">
               <div className="md:col-span-2">
-                <InputText placeholder="" label="Address detail*" type="text" variant="default" {...register("address_detail")} />
+                <InputText
+                  placeholder=""
+                  label="Address detail*"
+                  type="text"
+                  variant="default"
+                  {...register("address_detail")}
+                />
               </div>
 
+              {/* Province */}
               <div className="flex flex-col gap-1">
-                <label htmlFor="province" className="font-medium text-black">Province*</label>
-                <Select onValueChange={(v) => setValue("address_province", v, { shouldDirty: true })}>
+                <label className="font-medium text-black">Province*</label>
+                <Select
+                  onValueChange={onProvinceChange}
+                  value={watchProvince || undefined}
+                >
                   <SelectTrigger className="!h-12 w-full rounded-xl border border-gray-2 px-4 text-left">
-                    <SelectValue placeholder="" />
+                    <SelectValue />
                   </SelectTrigger>
-                  <SelectContent className="bg-white border border-gray-2">
-                    <SelectItem value="1">1</SelectItem>
-                    <SelectItem value="2">2</SelectItem>
-                    <SelectItem value="3">3</SelectItem>
+                  <SelectContent className="bg-white border border-gray-2 max-h-72 overflow-auto">
+                    {provinceOpts.map((p) => (
+                      <SelectItem key={p.code} value={p.name}>
+                        {p.name}
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
               </div>
 
+              {/* District */}
               <div className="flex flex-col gap-1">
-                <label htmlFor="district" className="font-medium text-black">District*</label>
-                <Select onValueChange={(v) => setValue("address_district", v, { shouldDirty: true })}>
+                <label className="font-medium text-black">District*</label>
+                <Select
+                  onValueChange={onDistrictChange}
+                  value={watchDistrict || undefined}
+                >
                   <SelectTrigger className="!h-12 w-full rounded-xl border border-gray-2 px-4 text-left">
-                    <SelectValue placeholder="" />
+                    <SelectValue />
                   </SelectTrigger>
-                  <SelectContent className="bg-white border border-gray-2">
-                    <SelectItem value="1">1</SelectItem>
-                    <SelectItem value="2">2</SelectItem>
-                    <SelectItem value="3">3</SelectItem>
+                  <SelectContent className="bg-white border border-gray-2 max-h-72 overflow-auto">
+                    {districtOpts.map((d) => (
+                      <SelectItem key={d.code} value={d.name}>
+                        {d.name}
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
               </div>
 
+              {/* Sub-district */}
               <div className="flex flex-col gap-1">
-                <label htmlFor="subdistrict" className="font-medium text-black">Sub-district*</label>
-                <Select onValueChange={(v) => setValue("address_sub_district", v, { shouldDirty: true })}>
-                  <SelectTrigger className="!h-12 w-full rounded-xl border border-gray-2 px-4 py-2 text-left">
-                    <SelectValue placeholder="" />
+                <label className="font-medium text-black">Sub-district*</label>
+                <Select
+                  onValueChange={onSubdistrictChange}
+                  value={watchSubdistrict || undefined}
+                >
+                  <SelectTrigger className="!h-12 w-full rounded-xl border border-gray-2 px-4 text-left">
+                    <SelectValue/>
                   </SelectTrigger>
-                  <SelectContent className="bg-white border border-gray-2">
-                    <SelectItem value="1">1</SelectItem>
-                    <SelectItem value="2">2</SelectItem>
-                    <SelectItem value="3">3</SelectItem>
+                  <SelectContent className="bg-white border border-gray-2 max-h-72 overflow-auto">
+                    {subdistrictOpts.map((s) => (
+                      <SelectItem key={s.code} value={s.name}>
+                        {s.name}
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
               </div>
 
               <div>
-                <InputText placeholder="" label="Post code*" type="text" inputMode="numeric" pattern="[0-9]*" variant="default" {...register("address_post_code")} />
+                <InputText
+                  placeholder=""
+                  label="Post code*"
+                  type="text"
+                  inputMode="numeric"
+                  pattern="[0-9]*"
+                  variant="default"
+                  readOnly
+                  {...register("address_post_code")}
+                />
               </div>
 
               <div className="md:col-span-2">
                 <div className="relative aspect-video w-full overflow-hidden rounded-xl border border-gray-2 bg-gray-1">
-                  <Image src="/images/map.svg" alt="Map preview" fill className="object-cover" priority={false} />
+                  <Image
+                    src="/images/map.svg"
+                    alt="Map preview"
+                    fill
+                    className="object-cover"
+                    priority={false}
+                  />
                 </div>
               </div>
             </div>
