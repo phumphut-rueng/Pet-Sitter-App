@@ -10,7 +10,7 @@ import { validateEmail, validatePhone, validatePassword } from "@/utils/validate
 import { RegisterForm } from "@/types/register.type"
 import BookingConfirmation from "@/components/modal/BookingConfirmation";
 import SocialLogin from "@/components/login-register/SocialLogin";
-import { useRegister } from "@/hooks/useRegister"
+import { useRegister } from "@/hooks/register/useRegister"
 
 export default function RegisterPage() {
   const {

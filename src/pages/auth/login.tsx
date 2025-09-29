@@ -8,67 +8,22 @@ import { signIn, useSession } from "next-auth/react";
 import { useRouter } from "next/router";
 import SocialLogin from "@/components/login-register/SocialLogin";
 import { validateEmail, validatePassword } from "@/utils/validate-register";
+import { useLogin } from "@/hooks/login/useLogin";
 
 export default function Login() {
-  const { data: session, status } = useSession();
-  const router = useRouter();
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [rememberMe, setRememberMe] = useState(false);
-  const [emailError, setEmailError] = useState("");
-  const [passwordError, setPasswordError] = useState("");
-  const [loginError, setLoginError] = useState("");
-
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-
-    const emailErr = await validateEmail(email);
-    const passwordErr = await validatePassword(password);
-
-    setEmailError(emailErr.message);
-    setPasswordError(passwordErr.message);
-    setLoginError("");
-
-    if (emailErr.message || passwordErr.message) return;
-
-    try {
-      const result = await signIn('credentials', {
-        email,
-        password,
-        redirect: false
-      });
-
-      if (result?.error) {
-        setLoginError("Login failed. Please check your credentials.");
-      } else if (result?.ok) {
-        if (rememberMe) {
-          localStorage.setItem('rememberedEmail', email);
-        } else {
-          localStorage.removeItem('rememberedEmail');
-        }
-        // Redirect to home page after successful login
-        router.push('/');
-      }
-    } catch {
-      setLoginError("Login failed. Please check your credentials.");
-    }
-  }
-
-  useEffect(() => {
-    const rememberedEmail = localStorage.getItem('rememberedEmail');
-    if (rememberedEmail) {
-      setEmail(rememberedEmail);
-      setRememberMe(true);
-    }
-  }, []);
-
-  // Redirect authenticated users to homepage
-  useEffect(() => {
-    if (status === 'authenticated' && session?.user) {
-      router.push('/');
-    }
-  }, [status, session, router]);
-
+  const {
+    email,
+    setEmail,
+    password,
+    setPassword,
+    rememberMe,
+    setRememberMe,
+    emailError,
+    passwordError,
+    loginError,
+    status,
+    handleSubmit,
+  } = useLogin();
 
   // Show loading while checking authentication
   if (status === 'loading') {
