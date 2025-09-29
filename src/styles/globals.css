@@ -1,10 +1,7 @@
 @import "tailwindcss";
 @import "./token.css";
 
-@source "./app/**/*.{ts,tsx,mdx}";
-@source "./components/**/*.{ts,tsx}";
-@source "./pages/**/*.{ts,tsx}";
-@source "./src/**/*.{ts,tsx}";
+@source "./app/**/*.{ts,tsx,mdx}" "./components/**/*.{ts,tsx}" "./pages/**/*.{ts,tsx}" "./src/**/*.{ts,tsx}";
 
 /* ---------- THEME MAPPING ---------- */
 @theme {
