@@ -2,6 +2,7 @@ import type { NextApiRequest, NextApiResponse } from "next";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/pages/api/auth/[...nextauth]";
 import { prisma } from "@/lib/prisma";
+import { petSchema } from "@/lib/validators/pet";
 
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
@@ -15,12 +16,13 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   try {
     if (req.method === "GET") {
       const pets = await prisma.pet.findMany({
-        where: { owner_id: ownerId },
+        where: { owner_id: ownerId },          
         orderBy: { id: "asc" },
-        include: { pet_type: true },
+        include: { pet_type: true },          
       });
+
       return res.status(200).json(
-        pets.map(p => ({
+        pets.map((p) => ({
           id: p.id,
           name: p.name,
           petTypeId: p.pet_type_id,
@@ -36,46 +38,14 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       );
     }
 
-
     if (req.method === "POST") {
-      const {
-        petTypeId,
-        name,
-        breed,
-        sex,
-        ageMonth,
-        color,
-        weightKg,
-        about,
-        imageUrl,
-      } = req.body || {};
-
-      const errors: Record<string, string[]> = {};
-
-      if (typeof petTypeId !== "number") errors.petTypeId = ["petTypeId must be a number"];
-      if (typeof name !== "string" || !name.trim()) errors.name = ["Name is required"];
-      if (typeof breed !== "string" || !breed.trim()) errors.breed = ["Breed is required"];
-      if (sex !== "Male" && sex !== "Female") errors.sex = ["Sex must be 'Male' or 'Female'"];
-      if (typeof ageMonth !== "number" || ageMonth < 0) errors.ageMonth = ["ageMonth must be a non-negative number"];
-      if (typeof color !== "string" || !color.trim()) errors.color = ["Color is required"];
-      if (typeof weightKg !== "number" || weightKg < 0) errors.weightKg = ["weightKg must be a non-negative number"];
-
-
-      if (Object.keys(errors).length > 0) {
-        return res.status(400).json({ error: "Validation", details: errors });
+      const parsed = petSchema.safeParse(req.body);
+      if (!parsed.success) {
+        return res
+          .status(400)
+          .json({ error: "Validation", details: parsed.error.flatten() });
       }
-
-      const data = {
-        petTypeId,
-        name,
-        breed,
-        sex,
-        ageMonth,
-        color,
-        weightKg,
-        about,
-        imageUrl,
-      };
+      const data = parsed.data;
 
       const created = await prisma.pet.create({
         data: {

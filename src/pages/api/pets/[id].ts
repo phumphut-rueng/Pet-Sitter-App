@@ -1,7 +1,7 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 import { prisma } from "@/lib/prisma";
 import { getServerSession } from "next-auth";
-import { authOptions } from "../auth/[...nextauth]";
+import { authOptions } from "@/pages/api/auth/[...nextauth]";
 import { petSchema } from "@/lib/validators/pet";
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
@@ -18,7 +18,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   try {
     if (req.method === "GET") {
       const pet = await prisma.pet.findFirst({
-        where: { id, owner_id: userId },
+        where: { id, owner_id: userId },   
         include: { pet_type: true },
       });
       if (!pet) return res.status(404).json({ error: "Pet not found" });
@@ -41,12 +41,14 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     if (req.method === "PUT") {
       const parsed = petSchema.safeParse(req.body);
       if (!parsed.success) {
-        return res.status(400).json({ error: "Validation error", details: parsed.error.flatten() });
+        return res
+          .status(400)
+          .json({ error: "Validation error", details: parsed.error.flatten() });
       }
       const data = parsed.data;
 
       const updated = await prisma.pet.updateMany({
-        where: { id, owner_id: userId },
+        where: { id, owner_id: userId },   
         data: {
           pet_type_id: data.petTypeId,
           name: data.name,
@@ -55,8 +57,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           age_month: data.ageMonth,
           color: data.color,
           weight_kg: data.weightKg,
-          about: data.about,
-          image_url: data.imageUrl,
+          about: data.about || null,
+          image_url: data.imageUrl || null,
           updated_at: new Date(),
         },
       });
@@ -66,7 +68,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     }
 
     if (req.method === "DELETE") {
-      const result = await prisma.pet.deleteMany({ where: { id, owner_id: userId } });
+      const result = await prisma.pet.deleteMany({
+        where: { id, owner_id: userId },
+      });
       if (result.count === 0) return res.status(404).json({ error: "Pet not found" });
       return res.status(200).json({ message: "Deleted" });
     }
