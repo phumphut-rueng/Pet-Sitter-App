@@ -114,19 +114,19 @@ export default function Login() {
         priority
       />
 
-      <div className="w-full p-4 max-w-[440px] gap-6 flex flex-col relative">
+      <div className="w-full p-4 max-w-[440px] flex flex-col relative">
         {/* login header */}
         <div className="text-center font-[700]">
-          <h1 className="text-black text-[56px] pb-5">
+          <h1 className="text-black text-[56px]">
             Welcome back!
           </h1>
-          <h3 className="text-[24px] text-gray-6">
+          <h3 className="text-gray-6 text-[24px]">
             Find your perfect pet sitter with us
           </h3>
         </div>
 
         {/* login form */}
-        <form onSubmit={handleSubmit} className="space-y-8">
+        <form onSubmit={handleSubmit} className="space-y-8 pt-10">
           {/* email input */}
           {loginError && (
             <div className="p-3 bg-red-50 border border-red-200 rounded-md">
@@ -161,7 +161,7 @@ export default function Login() {
         </form>
 
         {/* remember me and forget password */}
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between py-6">
           <div className="flex items-center gap-2">
             <Checkbox
               id="remember-me"
