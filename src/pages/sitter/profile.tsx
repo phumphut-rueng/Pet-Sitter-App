@@ -323,8 +323,7 @@ export default function PetSitterProfilePage() {
   const onSubdistrictChange = (subName: string) => {
     setValue("address_sub_district", subName, { shouldDirty: true });
     const s = subdistrictOpts.find((x) => x.name === subName);
-  setValue("address_post_code", s?.postalCode ?? "", { shouldDirty: true });
-
+    setValue("address_post_code", s?.postalCode ?? "", { shouldDirty: true });
   };
 
   const onSubmit = handleSubmit(async (values) => {
@@ -385,7 +384,7 @@ export default function PetSitterProfilePage() {
               <div className="pb-4 col-span-1">
                 <p className="pb-4 font-medium text-black">Profile Image</p>
                 <AvatarUploader
-                  onChange={(file) => {
+                  onChange={() => {
                     // preview เท่านั้น;
                   }}
                 />
