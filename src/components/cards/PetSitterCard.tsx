@@ -358,15 +358,15 @@ const PetSitterCardBase: React.FC<PetSitterCardProps> = ({
               <h3 className="text-lg font-semibold text-ink break-words mb-1">{title}</h3>
               <p className="text-sm text-muted-text mb-2">By {hostName}</p>
               <div className="flex items-center gap-1 text-muted-text mb-2">
-                <IconLocation className="h-4 w-4" />
+                <LocationIcon className="h-4 w-4" />
                 <span className="text-sm">{location}</span>
               </div>
               <div className="flex items-center justify-between">
                 <div className="flex flex-wrap items-center gap-2">
-                  {tags.map((tag) => <Tag key={tag} label={tag} />)}
+                  {tags.map((tag) => <TagChip key={tag} label={tag} />)}
                 </div>
                 <div className="flex-shrink-0">
-                  <Rating value={rating} size="sm" />
+                  <StarRating value={rating} size="sm" />
                 </div>
               </div>
             </div>
@@ -381,7 +381,7 @@ const PetSitterCardBase: React.FC<PetSitterCardProps> = ({
           <div className="min-w-0 self-center space-y-3">
             <div className="flex items-start justify-between gap-4">
               <div className="flex min-w-0 items-center gap-3">
-                {showAv && (
+                {shouldShowAvatar && (
                   <Image src={avatarUrl || coverUrl} alt="" className="h-10 w-10 rounded-full object-cover" width={40} height={40} />
                 )}
                 <div className="min-w-0">
@@ -390,15 +390,15 @@ const PetSitterCardBase: React.FC<PetSitterCardProps> = ({
                 </div>
               </div>
               <div className="shrink-0 translate-y-[2px]">
-                <Rating value={rating} size="md" />
+                <StarRating value={rating} size="md" />
               </div>
             </div>
             <div className="flex items-center gap-1 text-muted-text">
-              <IconLocation />
+              <LocationIcon />
               <span className="truncate text-[14px] leading-5">{location}</span>
             </div>
             <div className="flex flex-row flex-wrap items-center gap-2">
-              {tags.map((tag) => <Tag key={tag} label={tag} />)}
+              {tags.map((tag) => <TagChip key={tag} label={tag} />)}
             </div>
           </div>
         </div>
