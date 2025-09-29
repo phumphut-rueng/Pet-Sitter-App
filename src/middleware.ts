@@ -1,40 +1,35 @@
-// middleware.ts - จัดการการเข้าถึงเส้นทางตามบทบาทของผู้ใช้
-import { withAuth } from "next-auth/middleware";
+import { withAuth, type NextRequestWithAuth } from "next-auth/middleware";
 import { NextResponse } from "next/server";
+import type { JWT } from "next-auth/jwt";
+
+function hasRole(token: JWT | null | undefined, role: string): boolean {
+  const roles: string[] = Array.isArray(token?.roles) ? (token!.roles as string[]) : [];
+  return roles.includes(role);
+}
 
 export default withAuth(
-  function middleware(req) {
-    const token = req.nextauth.token;
+  function middleware(req: NextRequestWithAuth) {
+    const token = req.nextauth?.token as JWT | null;
     const path = req.nextUrl.pathname;
 
-
-    // ตรวจสอบการเข้าถึงเส้นทาง /sitter
-    if (path.startsWith("/sitter")) {
-      if (!token?.roles?.includes("Sitter")) {
-        return NextResponse.redirect(new URL("/", req.url));
-      }
+    if (path.startsWith("/sitter") && !hasRole(token, "Sitter")) {
+      return NextResponse.redirect(new URL("/", req.url));
     }
 
-    // ตรวจสอบการเข้าถึงเส้นทาง /user
-    if (path.startsWith("/user")) {
-      if (!token?.roles?.includes("Owner")) {
-        return NextResponse.redirect(new URL("/", req.url));
-      }
+    if (path.startsWith("/user") && !hasRole(token, "Owner")) {
+      return NextResponse.redirect(new URL("/", req.url));
     }
 
-    return NextResponse.next(); // อนุญาตให้ผ่านไปยังขั้นตอนถัดไป
+    return NextResponse.next();
   },
   {
     callbacks: {
-      authorized: ({ token, req }) => {
-        // Require authentication - return false if no token
-        return !!token;
-      },
+      authorized: ({ token }) => !!token,
     },
   }
 );
 
-// จำกัด middleware ให้ทำงานเฉพาะเส้นทางที่กำหนด
+
 export const config = {
   matcher: ["/sitter/:path*", "/account/:path*"],
 };
