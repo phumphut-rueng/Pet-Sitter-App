@@ -7,6 +7,7 @@ import Link from "next/link";
 import { signIn, useSession } from "next-auth/react";
 import { useRouter } from "next/router";
 import SocialLogin from "@/components/login-register/SocialLogin";
+import { validateEmail, validatePassword } from "@/utils/validate-register";
 
 export default function Login() {
   const { data: session, status } = useSession();
@@ -18,28 +19,18 @@ export default function Login() {
   const [passwordError, setPasswordError] = useState("");
   const [loginError, setLoginError] = useState("");
 
-
-  const validateEmail = (email: string) => {
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!email) return "Email is required";
-    if (!emailRegex.test(email)) return "Invalid email format";
-    return "";
-  };
-
-  const validatePassword = (password: string) => {
-    if (!password) return "Password is required";
-    if (password.length < 6) return "Invalid password format";
-    return "";
-  };
-
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    console.log("handleSubmit");
+    console.log(email, password);
 
     const emailErr = await validateEmail(email);
     const passwordErr = await validatePassword(password);
 
-    setEmailError(emailErr);
-    setPasswordError(passwordErr);
+    console.log(emailErr, passwordErr);
+
+    setEmailError(emailErr.message);
+    setPasswordError(passwordErr.message);
     setLoginError("");
 
     if (emailErr || passwordErr) return;
@@ -62,7 +53,7 @@ export default function Login() {
         // Redirect to home page after successful login
         router.push('/');
       }
-    } catch (error: unknown) {
+    } catch {
       setLoginError("Login failed. Please check your credentials.");
     }
   }
@@ -101,7 +92,7 @@ export default function Login() {
         height={371}
         alt="register"
         className="absolute bottom-0 left-0"
-        loading="lazy"
+        priority
       />
 
       {/* ตำแหน่งบนขวา */}
@@ -111,7 +102,8 @@ export default function Login() {
         height={350}
         alt="register"
         className="absolute top-0 right-0"
-        priority
+        loading="lazy"
+
       />
 
       <div className="w-full p-4 max-w-[440px] flex flex-col relative">
@@ -137,7 +129,9 @@ export default function Login() {
           <div>
             <InputText
               label="Email"
-              type="email"
+              id="email"
+              name="email"
+              type="text"
               placeholder="email@company.com"
               variant={emailError ? "error" : "default"}
               value={email}
@@ -158,36 +152,44 @@ export default function Login() {
               errorText={passwordError}
             />
           </div>
+
+          {/* remember me and forget password */}
+          <div className="flex items-center justify-between py-6">
+            <div className="flex items-center gap-2">
+              <Checkbox
+                id="remember-me"
+                name="remember-me"
+                checked={rememberMe}
+                onCheckedChange={(checked) => setRememberMe(checked === "indeterminate" ? false : checked)}
+                className="h-6 w-6 border border-border hover:cursor-pointer hover:border-orange-5"
+              />
+              <label
+                htmlFor="remember-me"
+                className="text-[16px] font-medium text-gray-9"
+              >
+                Remember?
+              </label>
+            </div>
+
+            {/* forget password */}
+            <div>
+              <span className="text-[16px] font-bold text-orange-5 cursor-pointer">
+                <Link href="/auth/reset-password">Forget Password</Link>
+              </span>
+            </div>
+          </div>
+
+          {/* login button */}
+          <PrimaryButton
+            text="Login"
+            bgColor="primary"
+            textColor="white"
+            className="w-full justify-center"
+            type="submit"
+          />
         </form>
 
-        {/* remember me and forget password */}
-        <div className="flex items-center justify-between py-6">
-          <div className="flex items-center gap-2">
-            <Checkbox
-              id="remember-me"
-              name="remember-me"
-              checked={rememberMe}
-              onCheckedChange={(checked) => setRememberMe(checked === "indeterminate" ? false : checked)}
-              className="h-6 w-6 border border-border hover:cursor-pointer hover:border-orange-5"
-            />
-            <label
-              htmlFor="remember-me"
-              className="text-[16px] font-medium text-gray-9"
-            >
-              Remember?
-            </label>
-          </div>
 
-          {/* forget password */}
-          <div>
-            <span className="text-[16px] font-bold text-orange-5 cursor-pointer">
-              <Link href="/auth/reset-password">Forget Password</Link>
-            </span>
-          </div>
-        </div>
-
-        {/* login button */}
-        <PrimaryButton text="Login" bgColor="primary" textColor="white" className="w-full justify-center" type="submit" />
 
         <SocialLogin />
 
