@@ -21,19 +21,15 @@ export default function Login() {
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    console.log("handleSubmit");
-    console.log(email, password);
 
     const emailErr = await validateEmail(email);
     const passwordErr = await validatePassword(password);
-
-    console.log(emailErr, passwordErr);
 
     setEmailError(emailErr.message);
     setPasswordError(passwordErr.message);
     setLoginError("");
 
-    if (emailErr || passwordErr) return;
+    if (emailErr.message || passwordErr.message) return;
 
     try {
       const result = await signIn('credentials', {
