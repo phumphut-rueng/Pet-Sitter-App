@@ -20,7 +20,7 @@ export type PetType = {
   name: string; 
 };
 
-/* ---- Form Types ---- */
+
 export type PetFormValues = {
   name: string;
   type: string;

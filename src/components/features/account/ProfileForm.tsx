@@ -12,7 +12,7 @@ import AvatarUploader from "@/components/form/AvatarUpload";
 import PrimaryButton from "@/components/buttons/PrimaryButton";
 import { cn } from "@/lib/utils";
 
-/* ---- Types ---- */
+
 export interface ProfileFormProps {
   control: Control<OwnerProfileInput>;
   onSubmit: () => void;
@@ -48,7 +48,7 @@ type FieldConfig = {
   maxLength?: number;
 };
 
-/* ---- Constants ---- */
+
 const FORM_CONFIG = {
   fields: {
     name: {
@@ -102,14 +102,14 @@ const FORM_CONFIG = {
   },
 };
 
-/* ---- Helpers ---- */
+
 const getTodayString = (): string => new Date().toISOString().slice(0, 10);
 const formatIdNumber = (v: string): string => v.replace(/\D/g, "").slice(0, 13);
 type InputVariant = "default" | "error" | "success";
 const getInputVariant = (hasError: boolean): InputVariant =>
   hasError ? "error" : "default";
 
-/* ---- Reusable ---- */
+
 function FormField<Name extends Path<OwnerProfileInput>>(
   props: FormFieldProps<Name>
 ) {
@@ -127,7 +127,7 @@ const ErrorMessage: React.FC<{ message: string }> = ({ message }) => (
   <div className={FORM_CONFIG.styles.error}>{message}</div>
 );
 
-/* ---- Fields ---- */
+
 const AvatarField: React.FC<{ control: Control<OwnerProfileInput> }> = ({
   control,
 }) => (
@@ -215,7 +215,7 @@ const DateField: React.FC<{ control: Control<OwnerProfileInput> }> = ({
   );
 };
 
-/* ---- Main ---- */
+
 export default function ProfileForm({
   control,
   onSubmit,

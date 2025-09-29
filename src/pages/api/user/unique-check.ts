@@ -154,7 +154,7 @@ const uniqueCheckRepository = {
   },
 };
 
-/* ---- Main Handler ---- */
+
 export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse<UniqueResponse | ErrorResponse>

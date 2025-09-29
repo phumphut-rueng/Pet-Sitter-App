@@ -5,7 +5,7 @@ import { useMemo, useCallback } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
-/* ---- Types ---- */
+
 type IconProps = { active?: boolean };
 
 type TabConfig = { 
@@ -19,7 +19,7 @@ type Props = {
   className?: string;
 };
 
-/* ---- Constants ---- */
+
 const OPACITY = {
   ACTIVE: 1,
   INACTIVE: 0.45,
@@ -32,7 +32,7 @@ const ICON_SIZE = {
 
 const SVG_STYLES = { display: "block" } as const;
 
-/* ---- Icon Components ---- */
+
 const ProfileIcon: React.FC<IconProps> = React.memo(({ active }) => {
   const opacity = active ? OPACITY.ACTIVE : OPACITY.INACTIVE;
   
@@ -94,7 +94,7 @@ const ListIcon: React.FC<IconProps> = React.memo(({ active }) => {
 });
 ListIcon.displayName = "ListIcon";
 
-/* ---- Tab Configuration ---- */
+
 const TAB_CONFIGS: readonly TabConfig[] = [
   { 
     href: "/account/profile", 
@@ -116,7 +116,7 @@ const TAB_CONFIGS: readonly TabConfig[] = [
   },
 ] as const;
 
-/* ---- Styles ---- */
+
 const STYLES = {
   container: "w-full md:hidden",
   tabsList: `
@@ -160,7 +160,7 @@ const combineTabStyles = (index: number): string => {
   ].join(' ');
 };
 
-/* ---- Main Component ---- */
+
 export default function AccountTabsShadcn({ className = "" }: Props) {
   const pathname = usePathname();
   const router = useRouter();

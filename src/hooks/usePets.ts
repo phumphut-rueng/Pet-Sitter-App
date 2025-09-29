@@ -1,7 +1,7 @@
 import { useCallback } from "react";
 import type { PetInput } from "@/lib/validators/pet";
 
-/* ---- Types ---- */
+
 type Pet = {
   id: number;
   name: string;
@@ -23,11 +23,11 @@ type PetType = {
 
 type ApiResponse<T> = Promise<T>;
 
-/** JSON-safe type สำหรับ request body (เลี่ยง any) */
+
 type JsonPrimitive = string | number | boolean | null;
 type JsonValue = JsonPrimitive | { [k: string]: JsonValue } | JsonValue[];
 
-/* ---- Constants ---- */
+
 const API_ENDPOINTS = {
   pets: "/api/pets",
   petTypes: "/api/pet-types",
@@ -43,7 +43,7 @@ const HTTP_METHODS = {
 
 type HttpMethod = (typeof HTTP_METHODS)[keyof typeof HTTP_METHODS];
 
-/* ---- API Utilities ---- */
+
 const createRequestConfig = (
   method: HttpMethod,
   body?: JsonValue
@@ -72,7 +72,7 @@ const apiRequest = async <T>(url: string, config?: RequestInit): Promise<T> => {
   return handleApiResponse<T>(response);
 };
 
-/* ---- API Functions ---- */
+
 const petApi = {
   list: (): ApiResponse<Pet[]> => {
     return apiRequest<Pet[]>(API_ENDPOINTS.pets);
@@ -100,7 +100,7 @@ const petTypeApi = {
   },
 };
 
-/* ---- Hook Implementation ---- */
+
 export function usePetsApi() {
   const listPets = useCallback(async (): Promise<Pet[]> => {
     return petApi.list();

@@ -6,7 +6,7 @@ import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { authOptions } from "../auth/[...nextauth]";
 
-/* ---- Validation Schema ---- */
+
 const updateProfileSchema = z.object({
   name: z.string().trim().min(1).max(100).optional(),
   email: z.string().trim().email().optional(),
