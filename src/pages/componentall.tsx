@@ -26,7 +26,6 @@ import PetCard from "@/components/cards/PetCard";
 import AccountSidebarMini from "@/components/layout/AccountSidebarMini";
 import BookingSelect from "@/components/modal/BookingSelect";
 
-
 // Section Wrapper
 const Section = ({ title, cols = 1, children }: {
   title: string;
@@ -66,9 +65,6 @@ const COVER = "/images/cards/pet-sitter-cover.svg";
 const AVATAR = "/images/cards/jane-maison.svg";
 const PETIMG = "/images/cards/pet-cat-mr-hem-card.svg";
 
-
-
-
 // mock สำหรับ PetCard grid
 const pets = [
   { id: 1, name: "Mr. Ham", selected: false },
@@ -78,7 +74,6 @@ const pets = [
 ];
 
 // grid แสดง PetCard
-
 function PetCardGrid() {
   return (
     <div className="space-y-10">
@@ -153,6 +148,12 @@ const bookingBase = {
 const on = (k: string) => () => console.log(k);
 //===================================================================
 
+//ข้อมูลสำหรับ modal BookingSelect
+const disabledDates = [
+  new Date(2025, 9, 10),  // 10 ตุลาคม 2025 (เดือนเริ่มที่ 0)
+  new Date(2025, 9, 16),  // 16 ตุลาคม 2025
+  new Date(2025, 9, 20),  // 20 ตุลาคม 2025
+]
 export default function ComponentAll() {
   //ใช้สำหรับ modal
   const [isOpenBooking, setIsOpenBooking] = useState(false);
@@ -162,6 +163,13 @@ export default function ComponentAll() {
 
   return (
     <div className="min-h-screen text-white p-6">
+      <PrimaryButton
+        text="Booking Select  Click!!"
+        bgColor="primary"
+        textColor="white"
+        onClick={() => setIsOpenBookingSelect(true)}
+      />
+
       <div className=" mx-auto space-y-10">
         {/* Rating */}
         <Section title="Selection">
@@ -684,6 +692,7 @@ export default function ComponentAll() {
             open={isOpenBookingSelect}
             onOpenChange={setIsOpenBookingSelect}
             onConfirm={() => console.log("Booking Select")}
+            disabledDates={disabledDates}
           />
         </Section>
 

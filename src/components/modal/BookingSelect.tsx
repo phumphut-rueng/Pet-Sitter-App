@@ -13,12 +13,16 @@ import { Calendar } from "@/components/ui/calendar"
 import InputText from "../input/InputText";
 import Image from "next/image";
 import { format } from "date-fns"
+import { DayButton, DayPicker } from "react-day-picker"
+import BookingCalendar from "./BookingCalendar"
+import { useBookingDate } from "@/hooks/useBookingDate"
 
 interface ConfirmationProps {
     title?: string
     description?: string
     textButton?: string
     open: boolean
+    disabledDates: Date[],
     onOpenChange: (open: boolean) => void
     onConfirm: () => void
 }
@@ -30,29 +34,9 @@ export default function BookingSelect({
     open,
     onOpenChange,
     onConfirm,
+    disabledDates = [],
 }: ConfirmationProps) {
-    const [selected, setSelected] = useState<Date>();
-    const [isOpen, setOpen] = useState(false)
-    const [date, setDate] = useState<Date | undefined>(undefined)
-    const [month, setMonth] = useState<Date | undefined>(date)
-    const [value, setValue] = useState(formatDate(date))
-
-    function formatDate(date: Date | undefined) {
-        if (!date) {
-            return ""
-        }
-        return date.toLocaleDateString("en-US", {
-            day: "2-digit",
-            month: "long",
-            year: "numeric",
-        })
-    }
-    function isValidDate(date: Date | undefined) {
-        if (!date) {
-            return false
-        }
-        return !isNaN(date.getTime())
-    }
+    const { isOpen, setOpen, date, month, setMonth, handleSelect } = useBookingDate()
 
     return (
         <div>
@@ -89,25 +73,17 @@ export default function BookingSelect({
                                     className="w-auto overflow-hidden p-0 bg-white border border-gray-2 shadow"
                                     align="start"
                                 >
-                                    <Calendar
-                                        className="w-[355px]"
-                                        mode="single"
-                                        selected={date}
-                                        captionLayout="label"
+                                    <BookingCalendar
+                                        date={date}
                                         month={month}
                                         onMonthChange={setMonth}
-                                        onSelect={(date) => {
-                                            setDate(date)
-                                            setValue(formatDate(date))
-                                            setOpen(false)
-                                        }}
-                                        disabled={(date) =>
-                                            date < new Date()
-                                        }
+                                        onSelect={handleSelect}
+                                        disabledDates={disabledDates}
                                     />
                                 </PopoverContent>
                             </Popover>
                         </div>
+
                         <div className="flex justify-start gap-3">
                             {/* <Image
                                 src="/icons/ic-clock.svg"
