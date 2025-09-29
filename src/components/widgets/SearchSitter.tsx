@@ -1,4 +1,3 @@
-import { useRouter } from "next/router";
 import PrimaryButton from "../buttons/PrimaryButton";
 import RatingSelect from "../ratingStar";
 import PetTypeCheckBox from "../petTypeCheckBox";
@@ -12,7 +11,6 @@ import {
 } from "@/components/ui/select";
 
 export default function SearchSitter() {
-  const router = useRouter();
   
   const {
     selectedPetTypes,

@@ -1,8 +1,9 @@
 import { useRouter } from 'next/router';
 import { useEffect, useState } from 'react';
-import { Sitter } from '@/types/sitter.types';
+import { Sitter, Review } from '@/types/sitter.types';
 import Footer from '@/components/Footer';
 import axios from 'axios';
+import Navbar from '@/components/navbar/Navbar';
 
 export default function PetsitterSlug() {
   const router = useRouter();
@@ -29,13 +30,14 @@ export default function PetsitterSlug() {
         } else {
           setError(response.data.message || 'เกิดข้อผิดพลาดในการดึงข้อมูล');
         }
-      } catch (err: any) {
+      } catch (err: unknown) {
         console.error('Axios error:', err);
         
-        if (err.response) {
+        if (err && typeof err === 'object' && 'response' in err) {
           // Server responded with error status
-          setError(err.response.data.message || 'เกิดข้อผิดพลาดในการดึงข้อมูล');
-        } else if (err.request) {
+          const axiosError = err as { response?: { data?: { message?: string } } };
+          setError(axiosError.response?.data?.message || 'เกิดข้อผิดพลาดในการดึงข้อมูล');
+        } else if (err && typeof err === 'object' && 'request' in err) {
           // Request was made but no response received
           setError('เกิดข้อผิดพลาดในการเชื่อมต่อ');
         } else {
@@ -53,6 +55,7 @@ export default function PetsitterSlug() {
   if (loading) {
     return (
       <div className="min-h-screen bg-muted flex flex-col">
+        <Navbar />
         <div className="flex-1">
           <div className="container-1200 py-8">
             <div className="animate-pulse">
@@ -74,6 +77,7 @@ export default function PetsitterSlug() {
   if (error) {
     return (
       <div className="min-h-screen bg-muted flex flex-col">
+        <Navbar />
         <div className="flex-1">
           <div className="container-1200 py-8">
             <div className="text-center">
@@ -96,6 +100,7 @@ export default function PetsitterSlug() {
   if (!sitter) {
     return (
       <div className="min-h-screen bg-muted flex flex-col">
+        <Navbar />
         <div className="flex-1">
           <div className="container-1200 py-8">
             <div className="text-center">
@@ -117,6 +122,7 @@ export default function PetsitterSlug() {
 
   return (
     <div className="min-h-screen bg-muted flex flex-col">
+      <Navbar />
       <div className="flex-1">
         <div className="container-1200 py-8">
         {/* Header */}
@@ -218,7 +224,7 @@ export default function PetsitterSlug() {
               <div className="bg-card rounded-xl shadow-lg p-6">
                 <h2 className="text-xl font-semibold text-ink mb-4">Reviews</h2>
                 <div className="space-y-4">
-                  {sitter.reviews.slice(0, 3).map((review: any) => (
+                  {sitter.reviews.slice(0, 3).map((review: Review) => (
                     <div key={review.id} className="border-l-4 border-brand pl-4 py-2">
                       <div className="flex items-center gap-2 mb-2">
                         <div className="flex">

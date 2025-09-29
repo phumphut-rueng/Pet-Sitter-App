@@ -1,4 +1,5 @@
 import SearchFilter from "@/components/findpetsitter/SearchFilter";
+import Navbar from "@/components/navbar/Navbar";
 import { PetSitterList } from "@/components/pet-sitter-list/PetSitterList";
 import { PageHeader } from "@/components/page-header/PageHeader";
 import { PaginationInfo } from "@/components/pagination/PaginationInfo";
@@ -47,6 +48,7 @@ function FindPetsitter() {
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col">
+      <Navbar />
       <div className="flex-1">
         <div className="container-1200 py-4 md:py-8">
           <PageHeader 

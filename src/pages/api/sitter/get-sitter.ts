@@ -1,6 +1,6 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 import { prisma } from "@/lib/prisma";
-import type { Prisma } from "@prisma/client";
+
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== "GET") {
@@ -23,8 +23,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const offset = (pageNumber - 1) * limitNumber;
 
     // สร้าง WHERE conditions
-    let whereConditions: string[] = [];
-    let queryParams: any[] = [];
+    const whereConditions: string[] = [];
+    const queryParams: (string | number)[] = [];
     let paramIndex = 1;
 
     // 1) Search term (ชื่อ sitter หรือที่อยู่)
@@ -76,11 +76,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     // 4) Rating (ขั้นต่ำ)
     if (rating) {
       const minRating = Number(rating);
-      whereConditions.push(`(
-        SELECT AVG(r.rating)::numeric(3,2)
-        FROM review r 
-        WHERE r.sitter_id = s.id
-      ) >= $${paramIndex}`);
+      whereConditions.push(`s.id IN (
+        SELECT sitter_id 
+        FROM review 
+        GROUP BY sitter_id 
+        HAVING AVG(rating) >= $${paramIndex}
+      )`);
       queryParams.push(minRating);
       paramIndex++;
     }
@@ -136,14 +137,14 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       prisma.$queryRawUnsafe(mainQuery, ...queryParams, limitNumber, offset)
     ]);
 
-    const totalCount = Number((countResult as any)[0].total_count);
+    const totalCount = Number((countResult as { total_count: string }[])[0].total_count);
     const totalPages = Math.ceil(totalCount / limitNumber);
 
     // Format results
-    const formattedResults = (sittersResult as any[]).map((sitter: any) => ({
+    const formattedResults = (sittersResult as Record<string, unknown>[]).map((sitter: Record<string, unknown>) => ({
       ...sitter,
       sitter_image: sitter.sitter_images || [],
-      sitter_pet_type: (sitter.pet_types || []).map((pt: any) => ({
+      sitter_pet_type: ((sitter.pet_types as Record<string, unknown>[]) || []).map((pt: Record<string, unknown>) => ({
         pet_type: { pet_type_name: pt.pet_type_name }
       })),
       averageRating: Number(sitter.average_rating) || 0
