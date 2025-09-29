@@ -1,31 +1,34 @@
 import React from "react";
 import AccountSidebarMini from "@/components/layout/AccountSidebarMini";
+import AccountTabs from "@/components/features/account/AccountTabs";
 
+/**
+ * AccountPageShell
+ * เดสก์ท็อป: Sidebar
+ * มือถือ: Tabs (AccountTabs)
+ */
 export default function AccountPageShell({
   title,
   children,
+  showMobileTabs = true,
 }: {
   title: string;
   children: React.ReactNode;
+  showMobileTabs?: boolean;
 }) {
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen bg-gray-50">
       <div className="container mx-auto max-w-[1200px] px-4 lg:px-6 py-6">
-        <div className="flex flex-col md:flex-row gap-10 lg:gap-8">
-          <aside className="md:w-[292px] flex-shrink-0">
+        <div className="flex flex-col md:flex-row gap-6 md:gap-10 lg:gap-8">
+          <aside className="hidden md:block md:w-[292px] flex-shrink-0">
             <AccountSidebarMini />
           </aside>
 
-          <main className="flex-1 min-w-0">
-            <div className="bg-white rounded-xl ring-1 ring-slate-200 shadow-sm p-8 pb-10">
-              <h1 className="text-h3 font-semibold mb-6 text-slate-900">
-                {title}
-              </h1>
-              <div className="mx-auto w-full max-w-[764px] min-w-0">
-                {children}
-              </div>
-            </div>
-          </main>
+          <section className="flex-1 min-w-0">
+            {showMobileTabs && <AccountTabs className="-mx-4 lg:-mx-1 mb-4" />}
+            <h1 className="hidden md:block text-2xl font-bold mb-4">{title}</h1>
+            {children}
+          </section>
         </div>
       </div>
     </div>

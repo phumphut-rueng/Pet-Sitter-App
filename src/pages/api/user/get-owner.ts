@@ -1,4 +1,4 @@
-export { default } from "./profile";
+//export { default } from "./profile";
 
 // import type { NextApiRequest, NextApiResponse } from "next";
 // import { prisma } from "@/lib/prisma";

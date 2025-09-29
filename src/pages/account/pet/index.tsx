@@ -1,53 +1,112 @@
 import * as React from "react";
-import Link from "next/link";
 import { useRouter } from "next/router";
+import toast from "react-hot-toast";
 import AccountPageShell from "@/components/layout/AccountPageShell";
 import PetCard from "@/components/cards/PetCard";
-import type { Pet } from "@/types/pet.types";
+import CreateNewPetCard from "@/components/cards/CreateNewPetCard";
+import { usePetsApi } from "@/hooks/usePets";
+import {
+  Pet,
+  ROUTES,
+  getErrorMessage,
+  validateImageUrl,
+} from "@/lib/pet-utils";
 
-type Species = "Dog" | "Cat" | "Bird" | "Rabbit" | (string & {});
-
-
-const toSpecies = (t: string): Species => {
-  const known = ["Dog", "Cat", "Bird", "Rabbit"] as const;
-  return (known as readonly string[]).includes(t) ? (t as Species) : (t as Species);
-};
-
-const pets: Pet[] = [
-  { id: 1, name: "Bubba", type: "Dog", image: "/images/demo/bubba.svg" } as Pet,
-  { id: 2, name: "Daisy", type: "Dog", image: "/images/demo/daisy.svg" } as Pet,
-  { id: 3, name: "I Som", type: "Cat", image: "/images/demo/isom.svg" } as Pet,
-  { id: 4, name: "Noodle Birb", type: "Bird", image: "/images/demo/bird.svg" } as Pet,
-];
 
 export default function PetListPage() {
   const router = useRouter();
+  const { listPets } = usePetsApi();
+
+  const [pets, setPets] = React.useState<Pet[]>([]);
+  const [loading, setLoading] = React.useState(false);
+
+  // Load pets on mount
+  React.useEffect(() => {
+    const loadPets = async () => {
+      try {
+        setLoading(true);
+        const data = await listPets();
+        setPets(data);
+      } catch (error) {
+        const errorMessage = getErrorMessage(error);
+        toast.error(errorMessage);
+        console.error("Failed to load pets:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadPets();
+  }, [listPets]);
+
+  // Handlers: ทำให้เสถียรด้วย useCallback
+  const handleCreatePet = React.useCallback(() => {
+    router.push(ROUTES.createPet);
+  }, [router]);
+
+  const handleEditPet = React.useCallback(
+    (petId: number) => {
+      router.push(ROUTES.editPet(petId));
+    },
+    [router]
+  );
+
+  // เตรียมพร็อพที่ผ่านเข้า Card ให้ “คงตัว” ด้วย useMemo
+  // - แปลงรูปให้เรียบร้อย
+  // - เก็บ id ไว้สำหรับ onClickId เพื่อลดการสร้างฟังก์ชัน inline
+  const viewPets = React.useMemo(
+    () =>
+      pets.map((p) => ({
+        id: p.id,
+        name: p.name,
+        species: p.petTypeName ?? "",
+        img: validateImageUrl(p.imageUrl),
+      })),
+    [pets]
+  );
+
+
+  if (loading) {
+    return (
+      <AccountPageShell title="Your Pet">
+        <div className="text-slate-600">Loading...</div>
+      </AccountPageShell>
+    );
+  }
 
   return (
     <AccountPageShell title="Your Pet">
-      <div className="mb-6 flex items-center justify-end">
-        <Link
-          href="/account/pet/create"
-          className="rounded-full bg-brand px-5 py-2.5 text-white text-sm font-semibold hover:brightness-95 hover:shadow cursor-pointer"
+
+      <div className="mb-6 flex items-center justify-between">
+        <h2 className="text-xl font-semibold text-gray-900">All Pets</h2>
+        <button
+          onClick={handleCreatePet}
+          className="rounded-full bg-[var(--brand-orange-500,#FF7037)] px-4 py-2 font-semibold text-white hover:opacity-90"
         >
           Create Pet
-        </Link>
+        </button>
       </div>
 
-      <div className="grid min-w-0 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-        {pets.map((p) => (
-          <div key={p.id} className="min-w-0 flex justify-center">
-            <PetCard
-              name={p.name}
-              species={toSpecies((p as { type?: string }).type ?? "")}
-              img={(p as { image?: string }).image ?? ""}
-              width={180}
-              height={209}
-              avatarSize={96}
-              onClick={() => router.push(`/account/pet/${p.id}`)}
-            />
-          </div>
+
+      <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-4">
+
+        {viewPets.length === 0 && <CreateNewPetCard onClick={handleCreatePet} />}
+
+
+        {viewPets.map((p) => (
+          <PetCard
+            key={p.id}
+            id={p.id}              
+            name={p.name}
+            species={p.species}
+            img={p.img}
+            onClickId={handleEditPet}
+            size={260}
+          />
         ))}
+
+
+        {viewPets.length > 0 && <CreateNewPetCard onClick={handleCreatePet} />}
       </div>
     </AccountPageShell>
   );
