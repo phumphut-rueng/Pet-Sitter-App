@@ -24,6 +24,7 @@ import { PetSitterCard, PetSitterCardLarge, PetSitterCardSmall } from "@/compone
 import BookingCard from "@/components/cards/BookingCard";
 import PetCard from "@/components/cards/PetCard";
 import AccountSidebarMini from "@/components/layout/AccountSidebarMini";
+import BookingSelect from "@/components/modal/BookingSelect";
 
 
 // Section Wrapper
@@ -78,7 +79,7 @@ const pets = [
 
 // grid แสดง PetCard
 
-function PetCardGrid () {
+function PetCardGrid() {
   return (
     <div className="space-y-10">
       {/* ---------- ชุดที่ 1: ไซส์ใหญ่ 207×240 (4×2 ใบ) ---------- */}
@@ -153,9 +154,11 @@ const on = (k: string) => () => console.log(k);
 //===================================================================
 
 export default function ComponentAll() {
+  //ใช้สำหรับ modal
   const [isOpenBooking, setIsOpenBooking] = useState(false);
   const [isOpenReject, setIsOpenReject] = useState(false);
   const [isOpenPopup, setIsOpenPopup] = useState(false);
+  const [isOpenBookingSelect, setIsOpenBookingSelect] = useState(false);
 
   return (
     <div className="min-h-screen text-white p-6">
@@ -466,143 +469,143 @@ export default function ComponentAll() {
               </div>
             </div>
 
-        {/* ===================== SMALL PET SITTER CARDS ===================== */}
-        <div className="w-full max-w-[848px] mx-auto space-y-3 rounded-2xl border border-dashed border-purple-300 p-5">
-          <h3 className="text-lg font-semibold text-ink/90">Pet Sitter – Small</h3>
-          <div className="w-full flex justify-center">
-            <div className="grid gap-8 justify-items-center grid-cols-1 md:[grid-template-columns:471px_330px]">
-              <PetSitterCardSmall {...sitterCommon} rating={5} smPreset="wide" tags={["Dog","Cat","Bird","Rabbit"]} />
-              <PetSitterCardSmall {...sitterCommon} rating={5} smPreset="compact" tags={["Dog","Cat","Bird","Rabbit"]} />
-              <PetSitterCardSmall {...sitterCommon} rating={5} smPreset="wide" className="border-[1px] border-orange-6" tags={["Dog","Cat","Bird","Rabbit"]} />
-              <PetSitterCardSmall {...sitterCommon} rating={5} smPreset="compact" className="border-[1px] border-orange-6" tags={["Dog","Cat","Bird","Rabbit"]} />
+            {/* ===================== SMALL PET SITTER CARDS ===================== */}
+            <div className="w-full max-w-[848px] mx-auto space-y-3 rounded-2xl border border-dashed border-purple-300 p-5">
+              <h3 className="text-lg font-semibold text-ink/90">Pet Sitter – Small</h3>
+              <div className="w-full flex justify-center">
+                <div className="grid gap-8 justify-items-center grid-cols-1 md:[grid-template-columns:471px_330px]">
+                  <PetSitterCardSmall {...sitterCommon} rating={5} smPreset="wide" tags={["Dog", "Cat", "Bird", "Rabbit"]} />
+                  <PetSitterCardSmall {...sitterCommon} rating={5} smPreset="compact" tags={["Dog", "Cat", "Bird", "Rabbit"]} />
+                  <PetSitterCardSmall {...sitterCommon} rating={5} smPreset="wide" className="border-[1px] border-orange-6" tags={["Dog", "Cat", "Bird", "Rabbit"]} />
+                  <PetSitterCardSmall {...sitterCommon} rating={5} smPreset="compact" className="border-[1px] border-orange-6" tags={["Dog", "Cat", "Bird", "Rabbit"]} />
+                </div>
+              </div>
             </div>
-          </div>
-        </div>
-{/* =========================================================
+            {/* =========================================================
           BOOKING CARDS (Desktop 4 + Mobile 4)
       ========================================================= */}
-      <div className="mx-auto space-y-3 rounded-2xl border border-dashed border-purple-300 p-5">
-        <h3 className="text-lg font-semibold text-ink/90">Booking Cards</h3>
-        <p className="text-gray-500 text-sm -mt-1">
-        </p>
+            <div className="mx-auto space-y-3 rounded-2xl border border-dashed border-purple-300 p-5">
+              <h3 className="text-lg font-semibold text-ink/90">Booking Cards</h3>
+              <p className="text-gray-500 text-sm -mt-1">
+              </p>
 
-        {/* ---------- Desktop (WIDE) : 4 แบบ ---------- */}
-        <div className="space-y-4">
-          <BookingCard
-            {...bookingBase}
-            status="waiting"
-            layout="wide"
-            note="Waiting Pet Sitter for confirm booking"
-            actions={[
-              { key: "message", label: "Send Message", onClick: on("message") },
-              { key: "change", label: "Change", onClick: on("change") },
-              { key: "call", label: "Call", onClick: on("call") },
-            ]}
-          />
+              {/* ---------- Desktop (WIDE) : 4 แบบ ---------- */}
+              <div className="space-y-4">
+                <BookingCard
+                  {...bookingBase}
+                  status="waiting"
+                  layout="wide"
+                  note="Waiting Pet Sitter for confirm booking"
+                  actions={[
+                    { key: "message", label: "Send Message", onClick: on("message") },
+                    { key: "change", label: "Change", onClick: on("change") },
+                    { key: "call", label: "Call", onClick: on("call") },
+                  ]}
+                />
 
-            
-          <BookingCard
-            {...bookingBase}
-            status="in_service"
-            layout="wide"
-            note="Your pet is already in Pet Sitter care!"
-            actions={[
-              { key: "message", onClick: on("message") },
-              { key: "call", onClick: on("call") },
-            ]}
-          />
 
-          <BookingCard
-            {...bookingBase}
-            status="success"
-            layout="wide"
-            successDate="Tue, 25 Oct 2022  |  11:03 AM"
-            actions={[
-              { key: "report", label: "Report", onClick: on("report") },
-              { key: "review", label: "Review", onClick: on("review") },
-              { key: "call", onClick: on("call") },
-            ]}
-          />
+                <BookingCard
+                  {...bookingBase}
+                  status="in_service"
+                  layout="wide"
+                  note="Your pet is already in Pet Sitter care!"
+                  actions={[
+                    { key: "message", onClick: on("message") },
+                    { key: "call", onClick: on("call") },
+                  ]}
+                />
 
-          <BookingCard
-            {...bookingBase}
-            status="success"
-            layout="wide"
-            successDate="Tue, 25 Oct 2022  |  11:03 AM"
-            actions={[
-              { key: "report", label: "Report", onClick: on("report") },
-              { key: "review", label: "Your Review", onClick: on("review") },
-              { key: "call", onClick: on("call") },
-            ]}
-          />
-        </div>
+                <BookingCard
+                  {...bookingBase}
+                  status="success"
+                  layout="wide"
+                  successDate="Tue, 25 Oct 2022  |  11:03 AM"
+                  actions={[
+                    { key: "report", label: "Report", onClick: on("report") },
+                    { key: "review", label: "Review", onClick: on("review") },
+                    { key: "call", onClick: on("call") },
+                  ]}
+                />
 
-        {/* ---------- Mobile (COMPACT) : 4 แบบ ---------- */}
-        {/* TIP: ตั้งกรอบ 375px เพื่อให้การ์ด mobile ตรงตาม Figma */}
-        <div className="mt-6 flex flex-wrap gap-4">
-          <div className="w-[375px]">
-            <BookingCard
-              {...bookingBase}
-              layout="compact"
-              status="waiting"
-              note="Waiting Pet Sitter for confirm booking"
-              actions={[
-                { key: "message", label: "Send Message", onClick: on("message") },
-                { key: "change", label: "Change", onClick: on("change") },
-                { key: "call", label: "Call", onClick: on("call") },
-              ]}
-            />
-          </div>
+                <BookingCard
+                  {...bookingBase}
+                  status="success"
+                  layout="wide"
+                  successDate="Tue, 25 Oct 2022  |  11:03 AM"
+                  actions={[
+                    { key: "report", label: "Report", onClick: on("report") },
+                    { key: "review", label: "Your Review", onClick: on("review") },
+                    { key: "call", onClick: on("call") },
+                  ]}
+                />
+              </div>
 
-          <div className="w-[375px]">
-            <BookingCard
-              {...bookingBase}
-              layout="compact"
-              status="in_service"
-              note="Your pet is already in Pet Sitter care!"
-              actions={[
-                { key: "message", onClick: on("message") },
-                { key: "call", onClick: on("call") },
-              ]}
-            />
-          </div>
+              {/* ---------- Mobile (COMPACT) : 4 แบบ ---------- */}
+              {/* TIP: ตั้งกรอบ 375px เพื่อให้การ์ด mobile ตรงตาม Figma */}
+              <div className="mt-6 flex flex-wrap gap-4">
+                <div className="w-[375px]">
+                  <BookingCard
+                    {...bookingBase}
+                    layout="compact"
+                    status="waiting"
+                    note="Waiting Pet Sitter for confirm booking"
+                    actions={[
+                      { key: "message", label: "Send Message", onClick: on("message") },
+                      { key: "change", label: "Change", onClick: on("change") },
+                      { key: "call", label: "Call", onClick: on("call") },
+                    ]}
+                  />
+                </div>
 
-          <div className="w-[375px]">
-            <BookingCard
-              {...bookingBase}
-              layout="compact"
-              status="success"
-              successDate="Tue, 25 Oct 2022  |  11:03 AM"
-              actions={[
-                { key: "report", label: "Report", onClick: on("report") },
-                { key: "review", label: "Review", onClick: on("review") },
-                { key: "call", onClick: on("call") },
-              ]}
-            />
-          </div>
+                <div className="w-[375px]">
+                  <BookingCard
+                    {...bookingBase}
+                    layout="compact"
+                    status="in_service"
+                    note="Your pet is already in Pet Sitter care!"
+                    actions={[
+                      { key: "message", onClick: on("message") },
+                      { key: "call", onClick: on("call") },
+                    ]}
+                  />
+                </div>
 
-          
+                <div className="w-[375px]">
+                  <BookingCard
+                    {...bookingBase}
+                    layout="compact"
+                    status="success"
+                    successDate="Tue, 25 Oct 2022  |  11:03 AM"
+                    actions={[
+                      { key: "report", label: "Report", onClick: on("report") },
+                      { key: "review", label: "Review", onClick: on("review") },
+                      { key: "call", onClick: on("call") },
+                    ]}
+                  />
+                </div>
 
-          <div className="w-[375px]">
-            <BookingCard
-              {...bookingBase}
-              layout="compact"
-              status="success"
-              successDate="Tue, 25 Oct 2022  |  11:03 AM"
-              actions={[
-                { key: "report", label: "Report", onClick: on("report") },
-                { key: "review", label: "Your Review", onClick: on("review") },
-                { key: "call", onClick: on("call") },
-              ]}
-            />
-          </div>
-        </div>
-  
-  
-  </div>
-  </SubSection>
-  </Section>
-  
+
+
+                <div className="w-[375px]">
+                  <BookingCard
+                    {...bookingBase}
+                    layout="compact"
+                    status="success"
+                    successDate="Tue, 25 Oct 2022  |  11:03 AM"
+                    actions={[
+                      { key: "report", label: "Report", onClick: on("report") },
+                      { key: "review", label: "Your Review", onClick: on("review") },
+                      { key: "call", onClick: on("call") },
+                    ]}
+                  />
+                </div>
+              </div>
+
+
+            </div>
+          </SubSection>
+        </Section>
+
 
         {/* Pagination */}
         <Section title="Pagination">
@@ -643,6 +646,12 @@ export default function ComponentAll() {
               textColor="orange"
               onClick={() => setIsOpenPopup(true)}
             />
+            <PrimaryButton
+              text="Booking Select  Click!!"
+              bgColor="primary"
+              textColor="white"
+              onClick={() => setIsOpenBookingSelect(true)}
+            />
           </SubSection>
 
           {/* 
@@ -671,6 +680,11 @@ export default function ComponentAll() {
             onOpenChange={setIsOpenPopup}
             onConfirm={() => console.log("Popup confirmed")}
           />
+          <BookingSelect
+            open={isOpenBookingSelect}
+            onOpenChange={setIsOpenBookingSelect}
+            onConfirm={() => console.log("Booking Select")}
+          />
         </Section>
 
         {/* Chat */}
@@ -684,6 +698,6 @@ export default function ComponentAll() {
         </Section>
       </div>
     </div>
-    
+
   );
 }
