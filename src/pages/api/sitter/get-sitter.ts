@@ -1,6 +1,6 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 import { prisma } from "@/lib/prisma";
-import type { Prisma } from "@prisma/client";
+
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== "GET") {
@@ -10,83 +10,168 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
   try {
     const {
-      petTypeIds,      // array ของ id [1,2,3]
+      searchTerm,      // คำค้นหาทั่วไป
+      petTypes,        // array ของ pet type names ["Dog", "Cat"]
       rating,          // ขั้นต่ำ rating เช่น 4
-      experience,      // ขั้นต่ำปีประสบการณ์ เช่น 2
-      tradeName,       // keyword ชื่อ sitter
-      location,        // เช่น "Bangkok"
+      experience,      // ช่วงประสบการณ์ เช่น "0-2", "3-5", "5+"
+      page = 1,        // หน้าปัจจุบัน
+      limit = 5,       // จำนวนรายการต่อหน้า
     } = req.query;
 
-    const andConditions: Prisma.sitterWhereInput[] = [];
+    const pageNumber = Number(page);
+    const limitNumber = Number(limit);
+    const offset = (pageNumber - 1) * limitNumber;
 
-    // 1) Query multiple pet type
-    if (petTypeIds) {
-      const ids = Array.isArray(petTypeIds) ? petTypeIds.map(Number) : [Number(petTypeIds)];
-      ids.forEach((id) => {
-        andConditions.push({
-          sitter_pet_type: {
-            some: { pet_type_id: id },
-          },
-        });
-      });
+    // สร้าง WHERE conditions
+    const whereConditions: string[] = [];
+    const queryParams: (string | number)[] = [];
+    let paramIndex = 1;
+
+    // 1) Search term (ชื่อ sitter หรือที่อยู่)
+    if (searchTerm) {
+      whereConditions.push(`(
+        s.name ILIKE $${paramIndex} OR 
+        s.location_description ILIKE $${paramIndex} OR 
+        s.address_province ILIKE $${paramIndex} OR 
+        s.address_district ILIKE $${paramIndex} OR 
+        s.address_sub_district ILIKE $${paramIndex}
+      )`);
+      queryParams.push(`%${searchTerm}%`);
+      paramIndex++;
     }
 
-    // 2) Query experience
-    if (experience) {
-      andConditions.push({
-        experience: { gte: Number(experience) },
-      });
+    // 2) Pet Types (ต้องมีทุกประเภทที่เลือก)
+    if (petTypes && petTypes.length > 0) {
+      const petTypeArray = Array.isArray(petTypes) ? petTypes : [petTypes];
+      
+      // สร้าง subquery ที่ตรวจสอบว่า sitter มี pet types ทั้งหมดที่เลือก
+      const petTypeConditions = petTypeArray.map((petType) => {
+        const placeholder = `$${paramIndex++}`;
+        queryParams.push(petType);
+        return `EXISTS (
+          SELECT 1 FROM sitter_pet_type spt 
+          JOIN pet_type pt ON spt.pet_type_id = pt.id 
+          WHERE spt.sitter_id = s.id AND pt.pet_type_name = ${placeholder}
+        )`;
+      }).join(' AND ');
+      
+      whereConditions.push(`(${petTypeConditions})`);
     }
 
-    // 3) Query trade name (partial match)
-    if (tradeName) {
-      andConditions.push({
-        name: {
-          contains: String(tradeName),
-          mode: "insensitive",
-        },
-      });
+    // 3) Experience
+    if (experience && experience !== "all") {
+      switch (experience) {
+        case "0-2":
+          whereConditions.push(`(s.experience >= 0 AND s.experience <= 2)`);
+          break;
+        case "3-5":
+          whereConditions.push(`(s.experience >= 3 AND s.experience <= 5)`);
+          break;
+        case "5+":
+          whereConditions.push(`(s.experience >= 5)`);
+          break;
+      }
     }
 
-    // 4) Query location
-    if (location) {
-      andConditions.push({
-        OR: [
-          { address_province: { contains: String(location), mode: "insensitive" } },
-          { address_district: { contains: String(location), mode: "insensitive" } },
-          { address_sub_district: { contains: String(location), mode: "insensitive" } },
-        ],
-      });
-    }
-
-    // --- Query Sitters ---
-    const sitters = await prisma.sitter.findMany({
-      where: andConditions.length ? { AND: andConditions } : undefined,
-      include: {
-        sitter_image: true,
-        sitter_pet_type: { include: { pet_type: true } },
-        reviews: true,
-      },
-    });
-
-    // ✅ คำนวณ averageRating
-    let result = sitters.map((sitter) => {
-      const ratings = sitter.reviews.map((r) => r.rating);
-      const averageRating =
-        ratings.length > 0 ? ratings.reduce((a, b) => a + b, 0) / ratings.length : null;
-      return { ...sitter, averageRating };
-    });
-
-    // ✅ filter เฉพาะ averageRating >= rating (ถ้ามีส่งเข้ามา)
+    // 4) Rating (ขั้นต่ำ)
     if (rating) {
-      result = result.filter((s) => s.averageRating !== null && s.averageRating >= Number(rating));
+      const minRating = Number(rating);
+      whereConditions.push(`s.id IN (
+        SELECT sitter_id 
+        FROM review 
+        GROUP BY sitter_id 
+        HAVING AVG(rating) >= $${paramIndex}
+      )`);
+      queryParams.push(minRating);
+      paramIndex++;
     }
 
-    if (result.length === 0) {
-      return res.status(404).json({ message: "ไม่พบข้อมูล" });
+    // สร้าง WHERE clause
+    const whereClause = whereConditions.length > 0 ? `WHERE ${whereConditions.join(' AND ')}` : '';
+
+    // Query สำหรับนับจำนวนทั้งหมด
+    const countQuery = `
+      SELECT COUNT(*) as total_count
+      FROM sitter s
+      ${whereClause}
+    `;
+
+    // Query หลักสำหรับดึงข้อมูล
+    const mainQuery = `
+      SELECT 
+        s.*,
+        COALESCE((
+          SELECT AVG(r.rating)::numeric(3,2)
+          FROM review r 
+          WHERE r.sitter_id = s.id
+        ), 0) as average_rating,
+        (
+          SELECT json_agg(
+            json_build_object(
+              'id', si.id,
+              'image_url', si.image_url
+            )
+          )
+          FROM sitter_image si 
+          WHERE si.sitter_id = s.id
+        ) as sitter_images,
+        (
+          SELECT json_agg(
+            json_build_object(
+              'pet_type_name', pt.pet_type_name
+            )
+          )
+          FROM sitter_pet_type spt
+          JOIN pet_type pt ON spt.pet_type_id = pt.id
+          WHERE spt.sitter_id = s.id
+        ) as pet_types
+      FROM sitter s
+      ${whereClause}
+      ORDER BY s.id ASC
+      LIMIT $${paramIndex} OFFSET $${paramIndex + 1}
+    `;
+
+    // Execute queries
+    const [countResult, sittersResult] = await Promise.all([
+      prisma.$queryRawUnsafe(countQuery, ...queryParams),
+      prisma.$queryRawUnsafe(mainQuery, ...queryParams, limitNumber, offset)
+    ]);
+
+    const totalCount = Number((countResult as { total_count: string }[])[0].total_count);
+    const totalPages = Math.ceil(totalCount / limitNumber);
+
+    // Format results
+    const formattedResults = (sittersResult as Record<string, unknown>[]).map((sitter: Record<string, unknown>) => ({
+      ...sitter,
+      sitter_image: sitter.sitter_images || [],
+      sitter_pet_type: ((sitter.pet_types as Record<string, unknown>[]) || []).map((pt: Record<string, unknown>) => ({
+        pet_type: { pet_type_name: pt.pet_type_name }
+      })),
+      averageRating: Number(sitter.average_rating) || 0
+    }));
+
+    if (formattedResults.length === 0) {
+      return res.status(200).json({ 
+        message: "ไม่พบข้อมูล",
+        data: [],
+        pagination: {
+          page: pageNumber,
+          limit: limitNumber,
+          totalCount: 0,
+          totalPages: 0
+        }
+      });
     }
 
-    return res.status(200).json(result);
+    return res.status(200).json({
+      data: formattedResults,
+      pagination: {
+        page: pageNumber,
+        limit: limitNumber,
+        totalCount,
+        totalPages
+      }
+    });
   } catch (error) {
     console.error("❌ Error fetching sitters:", error);
     return res.status(500).json({ message: "Error fetching sitters" });

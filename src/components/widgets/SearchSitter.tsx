@@ -1,7 +1,7 @@
-import { useState } from "react";
 import PrimaryButton from "../buttons/PrimaryButton";
 import RatingSelect from "../ratingStar";
 import PetTypeCheckBox from "../petTypeCheckBox";
+import { useSearchFilter, type SearchFilters } from "@/hooks/useSearchFilter";
 import {
   Select,
   SelectContent,
@@ -9,12 +9,46 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+
 export default function SearchSitter() {
-  const [rating, setRating] = useState(0);
-  const handleChange = (newRating: number) => {
-    console.log("คุณเลือก:", newRating);
-    setRating(newRating);
-  };
+  
+  const {
+    selectedPetTypes,
+    rating,
+    selectedExperience,
+    handleSearch,
+    handlePetTypeChange,
+    handleRatingChange,
+    setSelectedExperience,
+  } = useSearchFilter({
+    onSearch: (filters: SearchFilters) => {
+      // Navigate to findpetsitter page with filters as query parameters
+      const queryParams = new URLSearchParams();
+      
+      if (filters.searchTerm) {
+        queryParams.append('searchTerm', filters.searchTerm);
+      }
+      if (filters.petTypes.length > 0) {
+        queryParams.append('petTypes', filters.petTypes.join(','));
+      }
+      if (filters.rating > 0) {
+        queryParams.append('rating', filters.rating.toString());
+      }
+      if (filters.experience !== 'all') {
+        queryParams.append('experience', filters.experience);
+      }
+      
+      const queryString = queryParams.toString();
+      const targetUrl = `/findpetsitter${queryString ? `?${queryString}` : ''}`;
+      console.log('SearchSitter: Navigating to:', targetUrl);
+      
+      // Store filters in sessionStorage to pass to SearchFilter
+      sessionStorage.setItem('searchFilters', JSON.stringify(filters));
+      
+      // Use window.location.href to navigate to targetUrl (equivalent to <a> tag)
+      window.location.href = targetUrl;
+    }
+  });
   return (
     <div className="container mx-auto px-4 sm:px-6 lg:px-0 mb-10">
       <div className="bg-white rounded-xl shadow-md border-1 border-gray-2 overflow-hidden">
@@ -27,7 +61,19 @@ export default function SearchSitter() {
             <div className="flex flex-wrap gap-3 sm:gap-4">
               <PetTypeCheckBox
                 layout="row"
-                onChange={(selected) => console.log("Selected pets:", selected)}
+                onChange={(selected) => {
+                  // Update selected pet types
+                  selectedPetTypes.forEach(petType => {
+                    if (!selected.includes(petType)) {
+                      handlePetTypeChange(petType, false);
+                    }
+                  });
+                  selected.forEach(petType => {
+                    if (!selectedPetTypes.includes(petType)) {
+                      handlePetTypeChange(petType, true);
+                    }
+                  });
+                }}
               />
             </div>
           </div>
@@ -45,27 +91,27 @@ export default function SearchSitter() {
                 <RatingSelect
                   value={5}
                   selectRating={rating}
-                  onChange={handleChange}
+                  onChange={handleRatingChange}
                 />
                 <RatingSelect
                   value={4}
                   selectRating={rating}
-                  onChange={handleChange}
+                  onChange={handleRatingChange}
                 />
                 <RatingSelect
                   value={3}
                   selectRating={rating}
-                  onChange={handleChange}
+                  onChange={handleRatingChange}
                 />
                 <RatingSelect
                   value={2}
                   selectRating={rating}
-                  onChange={handleChange}
+                  onChange={handleRatingChange}
                 />
                 <RatingSelect
                   value={1}
                   selectRating={rating}
-                  onChange={handleChange}
+                  onChange={handleRatingChange}
                 />
               </div>
             </div>
@@ -75,11 +121,12 @@ export default function SearchSitter() {
               <label className="text-sm font-semibold text-gray-7 whitespace-nowrap">
                 Experience:
               </label>
-                <Select>
-                  <SelectTrigger className="w-full sm:w-[140px] hover:cursor-pointer bg-white border-gray-2 focus:border-orange-5 focus:ring-orange-5">
-                    <SelectValue placeholder="0-2 Years" />
+                <Select value={selectedExperience} onValueChange={setSelectedExperience}>
+                  <SelectTrigger className="w-full sm:w-[180px] hover:cursor-pointer bg-white border-gray-2 focus:border-orange-5 focus:ring-orange-5">
+                    <SelectValue placeholder="All Experience" />
                   </SelectTrigger>
                   <SelectContent className="bg-white border border-gray-2">
+                    <SelectItem value="all" className="bg-white hover:bg-gray-1">All Experience</SelectItem>
                     <SelectItem value="0-2" className="bg-white hover:bg-gray-1">0-2 Years</SelectItem>
                     <SelectItem value="3-5" className="bg-white hover:bg-gray-1">3-5 Years</SelectItem>
                     <SelectItem value="5+" className="bg-white hover:bg-gray-1">5+ Years</SelectItem>
@@ -93,6 +140,7 @@ export default function SearchSitter() {
                 text="Search" 
                 textColor="white" 
                 bgColor="primary"
+                onClick={handleSearch}
                 className="w-full sm:w-auto px-6 sm:px-8 py-2 sm:py-3 text-sm sm:text-base font-semibold shadow-md hover:shadow-lg transition-all duration-200"
               />
             </div>

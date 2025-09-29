@@ -52,7 +52,7 @@ const DesktopNav: React.FC<NavigationProps> = ({
         </>
       )}
 
-      <Link href="/find-a-pet-sitter">
+      <Link href="/findpetsitter">
         <PrimaryButton
           text="Find a Pet Sitter"
           textColor="white"
