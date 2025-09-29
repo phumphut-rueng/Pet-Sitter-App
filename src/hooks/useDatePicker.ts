@@ -1,8 +1,7 @@
 import { useState } from "react"
-import { format } from "date-fns"
 
-export function useBookingDate() {
-    const [isOpen, setOpen] = useState(false)
+export function useDatePicker() {
+    // State สำหรับ Date Picker
     const [date, setDate] = useState<Date | undefined>(undefined)
     const [month, setMonth] = useState<Date | undefined>(date)
     const [value, setValue] = useState("")
@@ -19,12 +18,9 @@ export function useBookingDate() {
     function handleSelect(d?: Date) {
         setDate(d)
         if (d) setValue(formatDate(d))
-        setOpen(false)
     }
 
     return {
-        isOpen,
-        setOpen,
         date,
         month,
         setMonth,

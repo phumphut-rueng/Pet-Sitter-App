@@ -4,18 +4,11 @@ import {
 import AlertConfirm from "./AlertConfirm"
 import PrimaryButton from "../buttons/PrimaryButton"
 import { useState } from "react"
-import {
-    Popover,
-    PopoverContent,
-    PopoverTrigger,
-} from "@/components/ui/popover"
-import { Calendar } from "@/components/ui/calendar"
-import InputText from "../input/InputText";
 import Image from "next/image";
-import { format } from "date-fns"
-import { DayButton, DayPicker } from "react-day-picker"
-import BookingCalendar from "./BookingCalendar"
-import { useBookingDate } from "@/hooks/useBookingDate"
+import { useDatePicker } from "@/hooks/useDatePicker"
+import { useTimePicker } from "@/hooks/useTimePicker"
+import TimePicker from "../date-time-picker/TimePicker"
+import DatePicker from "../date-time-picker/DatePicker"
 
 interface ConfirmationProps {
     title?: string
@@ -36,8 +29,9 @@ export default function BookingSelect({
     onConfirm,
     disabledDates = [],
 }: ConfirmationProps) {
-    const { isOpen, setOpen, date, month, setMonth, handleSelect } = useBookingDate()
+    const { date, month, setMonth, handleSelect } = useDatePicker()
 
+    const { startTime, endTime, setStartTime, setEndTime } = useTimePicker()
     return (
         <div>
             <AlertConfirm
@@ -53,46 +47,44 @@ export default function BookingSelect({
                             {description}
                         </AlertDialogDescription>
 
-                        <div className="flex justify-start gap-3">
-                            <Image
-                                src="/icons/ic-calendar.svg"
-                                alt="calendar"
-                                width={20}
-                                height={20}
-                            />
-                            <Popover open={isOpen} onOpenChange={setOpen}>
-                                <PopoverTrigger asChild>
-                                    <button
-                                        id="date"
-                                        className="flex justify-start items-center w-full h-12 px-3 rounded-xl border border-gray-2 text-[16px] font-[400] text-black"
-                                    >
-                                        {date ? format(date, "dd MMM, yyyy") : "Select date"}
-                                    </button>
-                                </PopoverTrigger>
-                                <PopoverContent
-                                    className="w-auto overflow-hidden p-0 bg-white border border-gray-2 shadow"
-                                    align="start"
-                                >
-                                    <BookingCalendar
-                                        date={date}
-                                        month={month}
-                                        onMonthChange={setMonth}
-                                        onSelect={handleSelect}
-                                        disabledDates={disabledDates}
-                                    />
-                                </PopoverContent>
-                            </Popover>
-                        </div>
+                        <div className="space-y-3">
+                            <div className="flex justify-start gap-3">
+                                <Image
+                                    src="/icons/ic-calendar.svg"
+                                    alt="calendar"
+                                    width={20}
+                                    height={20}
+                                />
+                                <DatePicker
+                                    date={date}
+                                    month={month}
+                                    onMonthChange={setMonth}
+                                    onSelect={handleSelect}
+                                    disabledDates={disabledDates}
+                                />
+                            </div>
 
-                        <div className="flex justify-start gap-3">
-                            {/* <Image
-                                src="/icons/ic-clock.svg"
-                                alt="time"
-                                width={20}
-                                height={20}
-                            /> */}
+                            {/* Time Picker */}
+                            <div className="flex justify-start gap-3">
+                                <Image
+                                    src="/icons/ic-clock.svg"
+                                    alt="time"
+                                    width={20}
+                                    height={20}
+                                />
+                                <TimePicker
+                                    value={startTime}
+                                    onChange={setStartTime}
+                                    placeholder="Start time"
+                                />
+                                <span className="text-gray-4 flex items-center">-</span>
+                                <TimePicker
+                                    value={endTime}
+                                    onChange={setEndTime}
+                                    placeholder="End time"
+                                />
+                            </div>
                         </div>
-
                         {/* Actions */}
                         <div
                             className="flex justify-between gap-4 mt-4 ">
