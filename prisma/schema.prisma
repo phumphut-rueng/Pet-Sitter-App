@@ -9,7 +9,8 @@ datasource db {
 
 model pet_type {
   id              Int               @id @default(autoincrement())
-  pet_type_name   String            @db.VarChar(100)
+  pet_type_name   String            @unique @db.VarChar(100)
+  pets            pet[]
   sitter_pet_type sitter_pet_type[]
 }
 
@@ -60,6 +61,7 @@ model user {
   bank_number   String?     @db.VarChar(50)
   created_at    DateTime    @default(now()) @db.Timestamp(6)
   updated_at    DateTime?   @db.Timestamp(6)
+  pets          pet[]
   reviews       review[]
   sitter        sitter[]
   user_role     user_role[]
@@ -91,4 +93,26 @@ model review {
   created_at DateTime @default(now())
   sitter     sitter   @relation(fields: [sitter_id], references: [id], onDelete: Cascade)
   user       user     @relation(fields: [user_id], references: [id], onDelete: Cascade)
+}
+
+model pet {
+  id          Int       @id @default(autoincrement())
+  owner_id    Int
+  pet_type_id Int
+  name        String    @db.VarChar(100)
+  breed       String    @db.VarChar(100)
+  sex         String    @db.VarChar(10)
+  age_month   Int
+  color       String    @db.VarChar(100)
+  weight_kg   Decimal   @db.Decimal(6, 2)
+  about       String?   @db.VarChar(1000)
+  image_url   String?   @db.VarChar(255)
+  created_at  DateTime  @default(now()) @db.Timestamp(6)
+  updated_at  DateTime? @db.Timestamp(6)
+  owner       user      @relation(fields: [owner_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  pet_type    pet_type  @relation(fields: [pet_type_id], references: [id], onUpdate: NoAction)
+
+  @@index([name], map: "idx_pet_name")
+  @@index([owner_id], map: "idx_pet_owner_id")
+  @@index([pet_type_id], map: "idx_pet_pet_type_id")
 }

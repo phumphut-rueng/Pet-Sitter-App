@@ -3,7 +3,8 @@ import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
 
-type Item = {
+
+type SidebarItem = {
   id: string;
   label: string;
   href?: string;
@@ -18,11 +19,100 @@ export type SidebarProps = {
   logoSrc?: string;
 };
 
-function cn(...classes: (string | false | null | undefined)[]) {
-  return classes.filter(Boolean).join(" ");
-}
 
-const IconMask = ({ src, className = "w-5 h-5" }: { src: string; className?: string }) => (
+const SIDEBAR_CONFIG = {
+  width: 240,
+  logoWidth: 120,
+  logoHeight: 30,
+  defaultLogoSrc: "/icons/sitter-logo-1.svg",
+  defaultActiveId: "profile",
+} as const;
+
+const NAVIGATION_ITEMS: readonly SidebarItem[] = [
+  { 
+    id: "profile", 
+    label: "Pet Sitter Profile", 
+    href: "/sitter/profile", 
+    iconSrc: "/icons/ic-user.svg" 
+  },
+  { 
+    id: "booking", 
+    label: "Booking List", 
+    href: "/sitter/booking", 
+    iconSrc: "/icons/ic-list.svg", 
+    notify: true 
+  },
+  { 
+    id: "calendar", 
+    label: "Calendar", 
+    href: "/sitter/calendar", 
+    iconSrc: "/icons/ic-calendar.svg" 
+  },
+  { 
+    id: "payout", 
+    label: "Payout Option", 
+    href: "/sitter/payout", 
+    iconSrc: "/icons/ic-creditcard.svg" 
+  },
+] as const;
+
+const LOGOUT_CONFIG = {
+  id: "logout",
+  label: "Log Out",
+  iconSrc: "/icons/ic-logout.svg",
+} as const;
+
+const STYLES = {
+  sidebar: "flex h-screen shrink-0 flex-col bg-bg text-text border-r border-border",
+  header: "px-5 pt-8 pb-6 border-b border-border",
+  nav: "flex-1 overflow-y-auto px-2 py-4",
+  navList: "space-y-0.5",
+  menuItem: {
+    base: `
+      group flex w-full items-center gap-3 rounded-xl px-3 py-3 
+      transition-colors focus-visible:outline-none focus-visible:ring-2 
+      focus-visible:ring-brand focus-visible:ring-offset-2 focus-visible:ring-offset-bg
+    `,
+    active: "bg-orange-50 text-orange-6",
+    inactive: "text-gray-7 hover:bg-orange-50 hover:text-orange-6",
+  },
+  logout: {
+    container: "mt-auto border-t border-border",
+    button: `
+      flex w-full items-center gap-3 px-4 py-4 transition-colors 
+      text-gray-7 hover:bg-orange-50 hover:text-orange-6 
+      focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand 
+      focus-visible:ring-offset-2 focus-visible:ring-offset-bg
+    `,
+  },
+  text: "text-[15px] font-medium leading-5",
+  notification: "ml-auto mt-[1px] inline-block h-2 w-2 rounded-full bg-red",
+} as const;
+
+
+const cn = (...classes: (string | false | null | undefined)[]) => {
+  return classes.filter(Boolean).join(" ");
+};
+
+const findActiveItem = (pathname: string): string => {
+  const matchedItem = NAVIGATION_ITEMS.find(
+    item => item.href && pathname?.startsWith(item.href)
+  );
+  return matchedItem ? matchedItem.id : SIDEBAR_CONFIG.defaultActiveId;
+};
+
+const getMenuItemClassName = (isActive: boolean): string => {
+  return cn(
+    STYLES.menuItem.base,
+    isActive ? STYLES.menuItem.active : STYLES.menuItem.inactive
+  );
+};
+
+
+const IconMask: React.FC<{
+  src: string;
+  className?: string;
+}> = React.memo(({ src, className = "w-5 h-5" }) => (
   <span
     aria-hidden
     className={cn("inline-block align-middle", className)}
@@ -39,84 +129,129 @@ const IconMask = ({ src, className = "w-5 h-5" }: { src: string; className?: str
       display: "inline-block",
     }}
   />
-);
+));
+IconMask.displayName = "IconMask";
+
+const SidebarLogo: React.FC<{
+  logoSrc: string;
+}> = React.memo(({ logoSrc }) => (
+  <div className={STYLES.header}>
+    <Image
+      src={logoSrc}
+      alt="Sitter"
+      width={SIDEBAR_CONFIG.logoWidth}
+      height={SIDEBAR_CONFIG.logoHeight}
+      priority
+      className={`h-auto w-[${SIDEBAR_CONFIG.logoWidth}px]`}
+    />
+  </div>
+));
+SidebarLogo.displayName = "SidebarLogo";
+
+const NotificationBadge: React.FC = React.memo(() => (
+  <span className={STYLES.notification} />
+));
+NotificationBadge.displayName = "NotificationBadge";
+
+const MenuItem: React.FC<{
+  item: SidebarItem;
+  isActive: boolean;
+  onNavigate?: (id: string) => void;
+}> = React.memo(({ item, isActive, onNavigate }) => {
+  const handleClick = React.useCallback(() => {
+    onNavigate?.(item.id);
+  }, [item.id, onNavigate]);
+
+  const menuItemClassName = getMenuItemClassName(isActive);
+
+  return (
+    <li>
+      <Link href={item.href || "#"} className="block">
+        <div
+          className={menuItemClassName}
+          onClick={handleClick}
+          role="button"
+          tabIndex={0}
+        >
+          <IconMask src={item.iconSrc} />
+          <span className={STYLES.text}>{item.label}</span>
+          {item.notify && <NotificationBadge />}
+        </div>
+      </Link>
+    </li>
+  );
+});
+MenuItem.displayName = "MenuItem";
+
+const NavigationList: React.FC<{
+  currentActiveId: string;
+  onNavigate?: (id: string) => void;
+}> = React.memo(({ currentActiveId, onNavigate }) => (
+  <nav className={STYLES.nav}>
+    <ul className={STYLES.navList}>
+      {NAVIGATION_ITEMS.map(item => (
+        <MenuItem
+          key={item.id}
+          item={item}
+          isActive={currentActiveId === item.id}
+          onNavigate={onNavigate}
+        />
+      ))}
+    </ul>
+  </nav>
+));
+NavigationList.displayName = "NavigationList";
+
+const LogoutSection: React.FC<{
+  onNavigate?: (id: string) => void;
+}> = React.memo(({ onNavigate }) => {
+  const handleLogout = React.useCallback(() => {
+    onNavigate?.(LOGOUT_CONFIG.id);
+  }, [onNavigate]);
+
+  return (
+    <div className={STYLES.logout.container}>
+      <button
+        className={STYLES.logout.button}
+        onClick={handleLogout}
+      >
+        <IconMask src={LOGOUT_CONFIG.iconSrc} />
+        <span className={STYLES.text}>{LOGOUT_CONFIG.label}</span>
+      </button>
+    </div>
+  );
+});
+LogoutSection.displayName = "LogoutSection";
+
 
 export default function Sidebar({
   className = "",
   activeId,
   onNavigate,
-  logoSrc = "/icons/sitter-logo-1.svg",
+  logoSrc = SIDEBAR_CONFIG.defaultLogoSrc,
 }: SidebarProps) {
   const pathname = usePathname();
 
-  const items: Item[] = [
-    { id: "profile",  label: "Pet Sitter Profile", href: "/sitter/profile",  iconSrc: "/icons/ic-user.svg" },
-    { id: "booking",  label: "Booking List",       href: "/sitter/booking",  iconSrc: "/icons/ic-list.svg", notify: true },
-    { id: "calendar", label: "Calendar",           href: "/sitter/calendar", iconSrc: "/icons/ic-calendar.svg" },
-    { id: "payout",   label: "Payout Option",      href: "/sitter/payout",   iconSrc: "/icons/ic-creditcard.svg" },
-  ];
+  const currentActiveId = React.useMemo(() => {
+    return activeId || findActiveItem(pathname || "");
+  }, [activeId, pathname]);
 
-  let currentActiveId = activeId;
-  if (!currentActiveId) {
-    const foundItem = items.find(item => item.href && pathname?.startsWith(item.href));
-    currentActiveId = foundItem ? foundItem.id : "profile";
-  }
+  const sidebarClassName = cn(
+    STYLES.sidebar,
+    `w-[${SIDEBAR_CONFIG.width}px]`,
+    className
+  );
 
   return (
-    <aside className={cn("flex h-screen w-[240px] shrink-0 flex-col bg-bg text-text border-r border-border", className)}>
-      <div className="px-5 pt-8 pb-6 border-b border-border">
-        <Image
-          src={logoSrc}
-          alt="Sitter"
-          width={120}
-          height={30}
-          priority
-          className="h-auto w-[120px]"
-        />
-      </div>
-
-      <nav className="flex-1 overflow-y-auto px-2 py-4">
-        <ul className="space-y-0.5">
-          {items.map(item => {
-            const isActive = currentActiveId === item.id;
-            let itemClass =
-              "group flex w-full items-center gap-3 rounded-xl px-3 py-3 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2 focus-visible:ring-offset-bg ";
-
-            if (isActive) {
-              itemClass += "bg-orange-50 text-orange-6";
-            } else {
-              itemClass += "text-gray-7 hover:bg-orange-50 hover:text-orange-6";
-            }
-
-            return (
-              <li key={item.id}>
-                <Link href={item.href || "#"} className="block">
-                  <div
-                    className={itemClass}
-                    onClick={() => onNavigate?.(item.id)}
-                    role="button"
-                    tabIndex={0}
-                  >
-                    <IconMask src={item.iconSrc} />
-                    <span className="text-[15px] font-medium leading-5">{item.label}</span>
-                    {item.notify && <span className="ml-auto mt-[1px] inline-block h-2 w-2 rounded-full bg-red" />}
-                  </div>
-                </Link>
-              </li>
-            );
-          })}
-        </ul>
-      </nav>
-
-      <div className="mt-auto border-t border-border">
-        <button
-          className="flex w-full items-center gap-3 px-4 py-4 transition-colors text-gray-7 hover:bg-orange-50 hover:text-orange-6 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2 focus-visible:ring-offset-bg"
-          onClick={() => onNavigate?.("logout")}
-        >
-          <IconMask src="/icons/ic-logout.svg" />
-          <span className="text-[15px] font-medium">Log Out</span>
-        </button>
-      </div>
+    <aside className={sidebarClassName}>
+      <SidebarLogo logoSrc={logoSrc} />
+      
+      <NavigationList 
+        currentActiveId={currentActiveId}
+        onNavigate={onNavigate}
+      />
+      
+      <LogoutSection onNavigate={onNavigate} />
     </aside>
   );
 }

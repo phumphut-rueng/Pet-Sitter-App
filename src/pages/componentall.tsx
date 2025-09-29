@@ -448,7 +448,6 @@ export default function ComponentAll() {
     */}
             <div className="space-y-3 rounded-2xl border border-dashed border-purple-300 p-5">
               <h3 className="text-lg font-semibold text-ink/90">Pet Sitter – Large</h3>
-              <p className="text-gray-500 text-sm -mt-1">ขาดขนาดรูป large ต้องแก้</p>
 
               {/* Desktop: รูปซ้าย (ปกติ + มีกรอบส้ม) */}
               <div className="hidden md:block w-[848px] mx-auto space-y-4">
