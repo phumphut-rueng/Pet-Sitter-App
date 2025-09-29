@@ -20,129 +20,86 @@ import {
   petResponseToFormValues,
   formValuesToPayload,
   petService,
-  delayedNavigation
 } from "@/lib/pet-utils";
 
-/* ---- Component ---- */
 export default function EditPetPage() {
   const router = useRouter();
   const { getPetTypes } = usePetsApi();
-  
-  // Parse pet ID from router
-  const petId = React.useMemo(
-    () => parsePetId(router.query.id),
-    [router.query.id]
-  );
 
-  // Component state
+  const petId = React.useMemo(() => parsePetId(router.query.id), [router.query.id]);
+
   const [loading, setLoading] = React.useState(true);
   const [serverError, setServerError] = React.useState<string | null>(null);
   const [initialValues, setInitialValues] = React.useState<PetFormValues | null>(null);
   const [showDeleteDialog, setShowDeleteDialog] = React.useState(false);
 
-  // Load pet data on mount
   React.useEffect(() => {
     if (!petId) return;
-
-    let isMounted = true;
-
-    const loadPet = async () => {
+    let active = true;
+    (async () => {
       try {
         setLoading(true);
         setServerError(null);
-        
         const pet = await petService.fetchPet(petId);
-        
-        if (isMounted) {
-          const formValues = petResponseToFormValues(pet);
-          setInitialValues(formValues);
-        }
+        if (!active) return;
+        setInitialValues(petResponseToFormValues(pet));
       } catch (error) {
-        if (isMounted) {
-          const errorMessage = getErrorMessage(error);
-          setServerError(errorMessage);
-          toast.error(errorMessage);
-        }
+        if (!active) return;
+        const msg = getErrorMessage(error);
+        setServerError(msg);
+        toast.error(msg);
       } finally {
-        if (isMounted) {
-          setLoading(false);
-        }
+        if (active) setLoading(false);
       }
-    };
-
-    loadPet();
-
-    return () => {
-      isMounted = false;
-    };
+    })();
+    return () => { active = false; };
   }, [petId]);
 
-  // Event handlers
   const handleSubmit = async (values: PetFormValues) => {
     if (!petId) return;
-
     try {
-      const payload = await formValuesToPayload(values, getPetTypes);
+      const payload = await formValuesToPayload(values, getPetTypes); 
       await petService.updatePet(petId, payload);
-      
       toast.success(SUCCESS_MESSAGES.petUpdated);
-      delayedNavigation(router, ROUTES.petList);
+      router.push(ROUTES.petList);
     } catch (error) {
-      const errorMessage = getErrorMessage(error);
-      toast.error(errorMessage);
+      const msg = getErrorMessage(error);
+      toast.error(msg);
       console.error("Update pet failed:", error);
     }
   };
 
   const handleDelete = async () => {
     if (!petId) return;
-
     try {
       await petService.deletePet(petId);
       toast.success(SUCCESS_MESSAGES.petDeleted);
-      delayedNavigation(router, ROUTES.petList);
+      router.push(ROUTES.petList);
     } catch (error) {
-      const errorMessage = getErrorMessage(error);
-      toast.error(errorMessage);
+      const msg = getErrorMessage(error);
+      toast.error(msg);
       console.error("Delete pet failed:", error);
     } finally {
       setShowDeleteDialog(false);
     }
   };
 
-  const handleCancel = () => {
-    router.push(ROUTES.petList);
-  };
-
-  const handleGoBack = () => {
-    router.back();
-  };
-
-  const handleShowDeleteDialog = () => {
-    setShowDeleteDialog(true);
-  };
+  const handleCancel = () => router.push(ROUTES.petList);
 
   return (
     <AccountPageShell title="Your Pet">
       <PageToaster />
 
-
       <div className="mb-4 flex items-center gap-2">
         <button
           type="button"
-          onClick={handleGoBack}
+          onClick={() => router.back()}
           className="inline-flex h-8 w-8 items-center justify-center rounded-full hover:bg-muted/60"
           aria-label="Go back"
           title="Back"
         >
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-            <path 
-              d="M15 19L8 12L15 5" 
-              stroke="currentColor" 
-              strokeWidth="2" 
-              strokeLinecap="round" 
-              strokeLinejoin="round"
-            />
+            <path d="M15 19L8 12L15 5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
           </svg>
         </button>
         <h1 className="text-2xl font-bold text-ink">Your Pet</h1>
@@ -158,9 +115,8 @@ export default function EditPetPage() {
             serverError={serverError}
             onSubmit={handleSubmit}
             onCancel={handleCancel}
-            onDelete={handleShowDeleteDialog}
+            onDelete={() => setShowDeleteDialog(true)}
           />
-
 
           <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
             <AlertDialogContent className="p-0 rounded-2xl font-[700] border-transparent w-[90vw] max-w-[400px]">
@@ -172,13 +128,9 @@ export default function EditPetPage() {
                   ✕
                 </AlertDialogCancel>
               </div>
-
- 
               <div className="pl-5 pr-4 pt-4 pb-2 text-[16px] font-normal text-ink/80">
                 Are you sure to delete this pet?
               </div>
-
-
               <div className="px-4 pb-4 pt-2 grid grid-cols-2 gap-3">
                 <AlertDialogCancel className="h-11 rounded-full bg-orange-1/40 text-orange-6 font-semibold hover:bg-orange-1/60 transition">
                   Cancel

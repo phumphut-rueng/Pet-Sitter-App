@@ -36,6 +36,9 @@ const RATING_SIZES = {
   md: "h-5 w-5",
 } as const;
 
+// ✅ map ขนาดตัวเลขไว้ใช้กับ <Image width/height>
+const AVATAR_DIM = { sm: 36, md: 40, lg: 64 } as const;
+
 const CARD_STYLES = {
   base: `
     group cursor-pointer rounded-2xl border border-border bg-white
@@ -50,13 +53,14 @@ const CARD_STYLES = {
     lg: "text-[24px] leading-8 font-semibold text-ink",
     md: "text-[20px] leading-7 font-semibold text-ink",
   },
-  subtitle: "text-[14px] leading-5 text-muted-text",
-  location: "flex items-center gap-1 text-muted-text",
-  locationText: "truncate text-[14px] leading-5",
-  tagContainer: "flex flex-row flex-wrap items-center gap-2",
+  subtitle: "text-[14px] leading-[22px] text-muted-text",    
+  location: "flex items-center gap-2 text-muted-text",      
+  locationText: "truncate text-[14px] leading-[22px]",        
+  tagContainer: "flex flex-row flex-wrap items-center gap-x-2 gap-y-2.5",
   avatar: {
-    sm: "h-9 w-9 rounded-full object-cover",
-    md: "h-10 w-10 rounded-full object-cover",
+    sm: "h-9 w-9 rounded-full object-cover",    
+    md: "h-10 w-10 rounded-full object-cover",  
+    lg: "h-16 w-16 rounded-full object-cover",  
   },
   image: "h-full w-full object-cover",
   imageContainer: "overflow-hidden rounded-xl bg-muted",
@@ -134,7 +138,7 @@ const CardHeader: React.FC<{
   coverUrl: string;
   showAvatar: boolean;
   titleSize: "lg" | "md";
-  avatarSize: "sm" | "md";
+  avatarSize: "sm" | "md" | "lg"; 
   ratingSize: keyof typeof RATING_SIZES;
 }> = React.memo(
   ({ title, hostName, rating, avatarUrl, coverUrl, showAvatar, titleSize, avatarSize, ratingSize }) => (
@@ -145,8 +149,8 @@ const CardHeader: React.FC<{
             src={avatarUrl || coverUrl}
             alt=""
             className={CARD_STYLES.avatar[avatarSize]}
-            width={avatarSize === "sm" ? 36 : 40}
-            height={avatarSize === "sm" ? 36 : 40}
+            width={AVATAR_DIM[avatarSize]}
+            height={AVATAR_DIM[avatarSize]}
           />
         )}
         <div className="min-w-0">
@@ -209,7 +213,7 @@ const LargeCoverLayout: React.FC<{
         coverUrl={props.coverUrl}
         showAvatar={props.showAvatar}
         titleSize="md"
-        avatarSize="sm"
+        avatarSize="sm"     // mobile/cover ใช้เล็ก
         ratingSize="xs"
       />
       <LocationInfo location={props.location} />
@@ -230,9 +234,12 @@ const LargeSideLayout: React.FC<{
   showAvatar: boolean;
   className?: string;
 }> = React.memo((props) => (
-  <article tabIndex={0} className={cn(CARD_STYLES.base, "grid grid-cols-[280px_1fr] gap-4 p-4", props.className)}>
+  <article
+    tabIndex={0}
+    className={cn(CARD_STYLES.base, "grid grid-cols-[280px_1fr] items-start gap-5 p-5", props.className)}
+  >
     <CoverImage src={props.coverUrl} alt="" width={280} height={200} className="h-[200px] w-[280px]" />
-    <div className="min-w-0 self-center space-y-3">
+    <div className="min-w-0 self-start grid grid-rows-[auto_auto_auto] gap-y-3.5">
       <CardHeader
         title={props.title}
         hostName={props.hostName}
@@ -241,11 +248,15 @@ const LargeSideLayout: React.FC<{
         coverUrl={props.coverUrl}
         showAvatar={props.showAvatar}
         titleSize="lg"
-        avatarSize="md"
+        avatarSize="lg"   
         ratingSize="md"
       />
-      <LocationInfo location={props.location} />
-      <TagList tags={props.tags} />
+    <div className="mt-0.5">
+     <LocationInfo location={props.location} />
+   </div>
+     <div className="mt-1">
+       <TagList tags={props.tags} />
+   </div>
     </div>
   </article>
 ));
@@ -308,7 +319,7 @@ const SmallCompactLayout: React.FC<{
 ));
 SmallCompactLayout.displayName = "SmallCompactLayout";
 
-// ===== Main Component (use lgLayout & smPreset properly)
+// ===== Main Component
 const PetSitterCardBase: React.FC<PetSitterCardProps> = ({
   size = "lg",
   title,
@@ -326,28 +337,36 @@ const PetSitterCardBase: React.FC<PetSitterCardProps> = ({
   const isSmall = size === "sm";
   const shouldShowAvatar = showAvatar !== undefined ? showAvatar : !isSmall;
 
-  const commonLargeProps = {
-    title,
-    hostName,
-    location,
-    rating,
-    tags,
-    coverUrl,
-    avatarUrl,
-    showAvatar: shouldShowAvatar,
-    className,
-  };
-
   if (!isSmall) {
- 
+    //  ใช้ lgLayout จริง เพื่อเลือก layout
     return lgLayout === "side" ? (
-      <LargeSideLayout {...commonLargeProps} />
+      <LargeSideLayout
+        title={title}
+        hostName={hostName}
+        location={location}
+        rating={rating}
+        tags={tags}
+        coverUrl={coverUrl}
+        avatarUrl={avatarUrl}
+        showAvatar={shouldShowAvatar}
+        className={className}
+      />
     ) : (
-      <LargeCoverLayout {...commonLargeProps} />
+      <LargeCoverLayout
+        title={title}
+        hostName={hostName}
+        location={location}
+        rating={rating}
+        tags={tags}
+        coverUrl={coverUrl}
+        avatarUrl={avatarUrl}
+        showAvatar={shouldShowAvatar}
+        className={className}
+      />
     );
   }
 
-
+  // Small
   const smallCommon = { title, hostName, rating, tags, coverUrl, className };
   return smPreset === "wide" ? <SmallWideLayout {...smallCommon} /> : <SmallCompactLayout {...smallCommon} />;
 };

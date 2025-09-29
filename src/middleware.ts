@@ -1,50 +1,60 @@
-// src/middleware.ts
-import { withAuth, type NextRequestWithAuth } from "next-auth/middleware";
+import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
-import type { JWT } from "next-auth/jwt";
-import { routeRules, hasAny, hasAll, type Role } from "@/server/roles";
+import { getToken, type JWT } from "next-auth/jwt";
+import { routeRules } from "@/lib/auth/route-rules";
+import { normalizeRole, type Role } from "@/lib/auth/roles";
 
-function getRoles(token: JWT | null | undefined): string[] {
-  return Array.isArray(token?.roles) ? (token.roles as string[]) : [];
+type AppJWT = JWT & { roles?: string[] };
+
+const PUBLIC_PATHS: readonly string[] = [
+  "/", "/auth/login", "/auth/register", "/auth/forgot-password",
+  "/api/auth", "/favicon.ico", "/images", "/icons", "/_next", "/static",
+];
+
+function isPublic(pathname: string): boolean {
+  const p = pathname.endsWith("/") && pathname !== "/" ? pathname.slice(0, -1) : pathname;
+  return PUBLIC_PATHS.some((prefix) => p === prefix || p.startsWith(prefix + "/"));
 }
 
-export default withAuth(
-  function middleware(req: NextRequestWithAuth) {
-    const token = req.nextauth?.token as JWT | null;
-    const userRoles = getRoles(token);
-    const path = req.nextUrl.pathname;
+export async function middleware(req: NextRequest) {
+  const { pathname, search } = req.nextUrl;
 
-    // เลือก prefix ที่ยาวสุดก่อน → /account/profile ชนะ /account
-    const matched = Object.keys(routeRules)
-      .sort((a, b) => b.length - a.length)
-      .find((p) => path.startsWith(p));
-
-    // (debug ชั่วคราว)
-    // console.log("[MW]", { path, userRoles, matched });
-
-    if (matched) {
-      const rule = routeRules[matched]!;
-      if (rule.allOf && !hasAll(userRoles, rule.allOf as Role[])) {
-        return NextResponse.redirect(new URL("/", req.url));
-      }
-      if (rule.anyOf && !hasAny(userRoles, rule.anyOf as Role[])) {
-        return NextResponse.redirect(new URL("/", req.url));
-      }
-    }
-
-    return NextResponse.next();
-  },
-  {
-    callbacks: {
-      // ต้องมี token ถึงจะเข้ามาถึงขั้นตรวจบทบาท
-      authorized: ({ token }) => !!token,
-    },
+  // 1) Canonical redirect
+  if (pathname.startsWith("/pet-sitter")) {
+    const url = req.nextUrl.clone();
+    url.pathname = pathname.replace(/^\/pet-sitter/, "/sitter");
+    url.search = search;
+    return NextResponse.redirect(url, 308);
   }
-);
 
-// ให้ middleware รันบน /account/* และ /sitter/* (ส่วนกฎละเอียดอยู่ใน routeRules)
-export const config = {
-  matcher: ["/account/:path*", "/sitter/:path*"],
-  // ถ้าพร้อมคุม /user/* หรือ /admin/* ก็เพิ่มได้ภายหลัง:
-  // matcher: ["/account/:path*", "/sitter/:path*", "/user/:path*", "/admin/:path*"],
-};
+  // 2) public  ผ่าน
+  if (isPublic(pathname)) return NextResponse.next();
+
+  // 3) อ่านโทเคน NextAuth (ต้องมี SECRET เดียวกับ NextAuth)
+  const token = (await getToken({ req, secret: process.env.NEXTAUTH_SECRET })) as AppJWT | null;
+  if (!token) {
+    const login = new URL("/auth/login", req.url);
+    login.searchParams.set("callbackUrl", req.nextUrl.pathname + req.nextUrl.search);
+    return NextResponse.redirect(login);
+  }
+
+  // 4) map roles  Role[]
+  const roles: Role[] = (token.roles ?? [])
+    .map(normalizeRole)
+    .filter((r): r is Role => r !== null);
+
+  // 5) หา rule
+  const rule = routeRules.find((r) => r.pattern.test(pathname));
+  if (!rule) return NextResponse.next();
+
+  // 6) ตรวจสิทธิ์ (กำหนดอะไรไว้ ต้องผ่านอันนั้น)
+  let allowed = true;
+  if (rule.anyOf) allowed &&= rule.anyOf.some((r) => roles.includes(r));
+  if (rule.allOf) allowed &&= rule.allOf.every((r) => roles.includes(r));
+
+  if (!allowed) return NextResponse.redirect(new URL("/", req.url));
+  return NextResponse.next();
+}
+
+// จับทุก path ยกเว้นไฟล์และ _next
+export const config = { matcher: ["/((?!_next|.*\\..*).*)"] };

@@ -12,45 +12,34 @@ import {
   getErrorMessage,
   formValuesToPayload,
   petService,
-  delayedNavigation
 } from "@/lib/pet-utils";
-
 
 export default function CreatePetPage() {
   const router = useRouter();
   const { getPetTypes } = usePetsApi();
+  const [loading, setLoading] = React.useState(false);
 
   const handleSubmit = async (values: PetFormValues) => {
     try {
-
+      setLoading(true);
       const payload = await formValuesToPayload(values, getPetTypes);
-      
-      // Create pet via API
       await petService.createPet(payload);
-      
-      // Show success message and navigate
       toast.success(SUCCESS_MESSAGES.petCreated);
-      delayedNavigation(router, ROUTES.petList);
-      
+      router.push(ROUTES.petList);
     } catch (error) {
-      const errorMessage = getErrorMessage(error);
-      toast.error(errorMessage);
+      toast.error(getErrorMessage(error));
       console.error("Create pet failed:", error);
+    } finally {
+      setLoading(false);
     }
   };
 
-  const handleCancel = () => {
-    router.push(ROUTES.petList);
-  };
+  const handleCancel = () => router.push(ROUTES.petList);
 
   return (
     <AccountPageShell title="Your Pet">
       <PageToaster />
-      <PetForm
-        mode="create"
-        onSubmit={handleSubmit}
-        onCancel={handleCancel}
-      />
+      <PetForm mode="create" loading={loading} onSubmit={handleSubmit} onCancel={handleCancel} />
     </AccountPageShell>
   );
 }

@@ -125,8 +125,8 @@ export const authOptions: NextAuthOptions = {
 
   pages: {
     signIn: "/auth/login",
-    signOut: "/",        // ออกจากระบบ → หน้าแรก
-    error: "/auth/login" // error → กลับหน้า login
+    signOut: "/",        // ออกจากระบบ  หน้าแรก
+    error: "/auth/login" // error  กลับหน้า login
   },
 
   debug: process.env.NODE_ENV === "development",
