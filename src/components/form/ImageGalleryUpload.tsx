@@ -34,6 +34,20 @@ export default function ImageGallery({
     }))
   );
 
+  const itemsRef = useRef<GalleryItem[]>([]);
+
+  useEffect(() => {
+    itemsRef.current = items
+  }, [items]);
+
+  useEffect(() => {
+    return () => {
+      itemsRef.current.forEach((i) => {
+        if (i.kind === "newFile") URL.revokeObjectURL(i.displayUrl);
+      });
+    };
+  }, []);
+
   useEffect(() => {
     onChange?.({
       existingImageUrls: items
@@ -92,14 +106,6 @@ export default function ImageGallery({
       return previous.filter((i) => i.id !== id);
     });
   };
-
-  useEffect(() => {
-    return () => {
-      items.forEach(
-        (i) => i.kind === "newFile" && URL.revokeObjectURL(i.displayUrl)
-      );
-    };
-  }, []);
 
   return (
     <div>
