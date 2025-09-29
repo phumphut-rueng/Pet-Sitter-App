@@ -6,10 +6,11 @@ import Image from "next/image";
         selectRating ใช้เป็นตัวแปรที่เก็บค่า rating ที่ถูกเลือกเพื่อให้เวลากดแล้วสีปุ่มเปลี่ยน
         เก็บค่า rating ไว้ใน state
 */}
+
 type RatingSelectProps = {
-    value?: number;
+    value?: number | string;
     selectRating?: number;
-    onChange?: (value: number) => void;
+    onChange?: (value: number | string) => void;
     className?: string;
     classNameStar?: string;
   };
@@ -39,7 +40,9 @@ export default function RatingSelect({
       >
           {value}
         </span>
-        {Array.from({ length: value }).map((_, i) => (
+
+        {typeof value === "number" && 
+        Array.from({ length: value }).map((_, i) => (
           <Image
             key={i}
             src="/icons/Rating-Star.svg"

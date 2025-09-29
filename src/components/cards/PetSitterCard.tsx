@@ -72,7 +72,8 @@ const cn = (...classes: (string | undefined | false | null)[]) =>
 const getTagColor = (tag: string): string =>
   TAG_COLORS[tag as keyof typeof TAG_COLORS] ?? TAG_COLORS.default;
 
-const LocationIcon: React.FC<{ className?: string }> = ({ className = "h-4 w-4" }) => (
+
+export const LocationIcon: React.FC<{ className?: string }> = ({ className = "h-4 w-4" }) => (
   <svg viewBox="0 0 24 24" aria-hidden className={className}>
     <path
       fill="currentColor"
@@ -87,7 +88,7 @@ const StarIcon: React.FC<{ className?: string }> = ({ className = "h-4 w-4" }) =
   </svg>
 );
 
-const StarRating: React.FC<{ value: number; size: keyof typeof RATING_SIZES }> = React.memo(
+export const StarRating: React.FC<{ value: number; size: keyof typeof RATING_SIZES }> = React.memo(
   ({ value = 0, size = "md" }) => {
     const starSize = RATING_SIZES[size];
     const stars = React.useMemo(() => {
@@ -174,7 +175,7 @@ const LocationInfo: React.FC<{ location: string }> = React.memo(({ location }) =
 ));
 LocationInfo.displayName = "LocationInfo";
 
-const TagList: React.FC<{ tags: string[] }> = React.memo(({ tags }) => (
+export const TagList: React.FC<{ tags: string[] }> = React.memo(({ tags }) => (
   <div className={CARD_STYLES.tagContainer}>
     {tags.map((tag) => (
       <TagChip key={tag} label={tag} />
