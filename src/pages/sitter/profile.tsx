@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { useSession } from "next-auth/react";
 import { useForm, Controller } from "react-hook-form";
 import Sidebar from "@/components/layout/SitterSidebar";
@@ -115,9 +115,22 @@ export default function PetSitterProfilePage() {
   const { status, update } = useSession();
   const [initialGallery, setInitialGallery] = useState<string[]>([]);
 
-  type Province = { code: string; name: string };
-  type District = { code: string; name: string };
-  type Subdistrict = { code: string; name: string; postalCode: string };
+  type Province = {
+    code: string;
+    name: string;
+  };
+
+  type District = {
+    code: string;
+    name: string;
+  };
+
+  type Subdistrict = {
+    code: string;
+    name: string;
+    postalCode: string;
+  };
+
   type AddressData = {
     provinces: Province[];
     districtsByProvince: Record<string, District[]>;
@@ -129,6 +142,12 @@ export default function PetSitterProfilePage() {
   const [districtOpts, setDistrictOpts] = useState<District[]>([]);
   const [subdistrictOpts, setSubdistrictOpts] = useState<Subdistrict[]>([]);
   const [profileLoaded, setProfileLoaded] = useState(false);
+
+  const initialAddrRef = useRef<{
+    province?: string;
+    district?: string;
+    subdistrict?: string;
+  }>({});
 
   const {
     register,
@@ -159,17 +178,12 @@ export default function PetSitterProfilePage() {
       images: [],
     },
     mode: "onBlur",
+    shouldUnregister: false,
   });
 
   const watchProvince = watch("address_province");
   const watchDistrict = watch("address_district");
   const watchSubdistrict = watch("address_sub_district");
-
-  useEffect(() => {
-    register("address_province");
-    register("address_district");
-    register("address_sub_district");
-  }, [register]);
 
   useEffect(() => {
     fetch("/th-address.json")
@@ -180,71 +194,6 @@ export default function PetSitterProfilePage() {
       })
       .catch((e) => console.error("load th-address.json failed:", e));
   }, []);
-
-  // เมื่อเลือก province → สร้างลิสต์อำเภอ
-  useEffect(() => {
-    if (!addr || !watchProvince) {
-      setDistrictOpts([]);
-      setSubdistrictOpts([]);
-      return;
-    }
-    const p = addr.provinces.find((x) => x.name === watchProvince);
-    const districts = p ? addr.districtsByProvince[p.code] ?? [] : [];
-    setDistrictOpts(districts);
-  }, [addr, watchProvince]);
-
-  // เมื่อเลือก district → สร้างลิสต์ตำบล + เติมรหัสไปรษณีย์ตามตำบลที่เลือก
-  useEffect(() => {
-    if (!addr || !watchProvince) {
-      setSubdistrictOpts([]);
-      return;
-    }
-    const p = addr.provinces.find((x) => x.name === watchProvince);
-    const dList = p ? addr.districtsByProvince[p.code] ?? [] : [];
-    const d = dList.find((x) => x.name === watchDistrict);
-    const subs = d ? addr.subdistrictsByDistrict[d.code] ?? [] : [];
-    setSubdistrictOpts(subs);
-
-    // auto postcode เมื่อมีการเลือก subdistrict
-    const s = subs.find((x) => x.name === watchSubdistrict);
-    setValue("address_post_code", s?.postalCode ?? "", { shouldDirty: true });
-  }, [addr, watchProvince, watchDistrict, watchSubdistrict, setValue]);
-
-  const onProvinceChange = (provName: string) => {
-    setValue("address_province", provName, { shouldDirty: true });
-    setValue("address_district", "", { shouldDirty: true });
-    setValue("address_sub_district", "", { shouldDirty: true });
-    setValue("address_post_code", "", { shouldDirty: true });
-  };
-  
-  const onDistrictChange = (distName: string) => {
-    setValue("address_district", distName, { shouldDirty: true });
-    setValue("address_sub_district", "", { shouldDirty: true });
-    setValue("address_post_code", "", { shouldDirty: true });
-  };
-  
-  const onSubdistrictChange = (subName: string) => {
-    setValue("address_sub_district", subName, { shouldDirty: true });
-  };
-
-  useEffect(() => {
-    if (!addr || !profileLoaded) return;
-  
-    const pName = getValues("address_province");
-    const dName = getValues("address_district");
-    const sName = getValues("address_sub_district");
-  
-    const p = addr.provinces.find(x => x.name === pName);
-    const dList = p ? addr.districtsByProvince[p.code] ?? [] : [];
-    setDistrictOpts(dList);
-  
-    const d = dList.find(x => x.name === dName);
-    const subs = d ? addr.subdistrictsByDistrict[d.code] ?? [] : [];
-    setSubdistrictOpts(subs);
-  
-    const s = subs.find(x => x.name === sName);
-    setValue("address_post_code", s?.postalCode ?? "", { shouldDirty: false });
-  }, [addr, profileLoaded, getValues, setValue]);
 
   useEffect(() => {
     if (status === "loading") return;
@@ -258,6 +207,12 @@ export default function PetSitterProfilePage() {
         }
         const data: GetSitterResponse = await res.json();
         setUserId(data.user.id);
+
+        initialAddrRef.current = {
+          province: data.sitter?.address_province || "",
+          district: data.sitter?.address_district || "",
+          subdistrict: data.sitter?.address_sub_district || "",
+        };
 
         reset({
           fullName: data.user.name || "",
@@ -287,6 +242,91 @@ export default function PetSitterProfilePage() {
     })();
   }, [status, reset]);
 
+  //เมื่อ province พร้อม -> สร้าง district options
+  useEffect(() => {
+    if (!addr || !watchProvince || !profileLoaded) return;
+
+    const p = addr.provinces.find((x) => x.name === watchProvince);
+    const dList = p ? addr.districtsByProvince[p.code] ?? [] : [];
+    setDistrictOpts(dList);
+
+    if (!watchDistrict && initialAddrRef.current.district) {
+      const exists = dList.some(
+        (x) => x.name === initialAddrRef.current.district
+      );
+      if (exists) {
+        setValue("address_district", initialAddrRef.current.district, {
+          shouldDirty: false,
+        });
+      }
+    }
+  }, [addr, watchProvince, profileLoaded, watchDistrict, setValue]);
+
+  //เมื่อ district พร้อม -> สร้าง subdistrict options & postcode
+  useEffect(() => {
+    if (!addr || !watchProvince || !watchDistrict || !profileLoaded) return;
+
+    const p = addr.provinces.find((x) => x.name === watchProvince);
+    const dList = p ? addr.districtsByProvince[p.code] ?? [] : [];
+    const d = dList.find((x) => x.name === watchDistrict);
+    const subs = d ? addr.subdistrictsByDistrict[d.code] ?? [] : [];
+    setSubdistrictOpts(subs);
+
+    if (!watchSubdistrict && initialAddrRef.current.subdistrict) {
+      const exists = subs.some(
+        (x) => x.name === initialAddrRef.current.subdistrict
+      );
+      if (exists) {
+        setValue("address_sub_district", initialAddrRef.current.subdistrict, {
+          shouldDirty: false,
+        });
+        const s = subs.find(
+          (x) => x.name === initialAddrRef.current.subdistrict
+        );
+        setValue("address_post_code", s?.postalCode ?? "", {
+          shouldDirty: false,
+        });
+      }
+    }
+  }, [
+    addr,
+    watchProvince,
+    watchDistrict,
+    profileLoaded,
+    watchSubdistrict,
+    setValue,
+  ]);
+
+  useEffect(() => {
+    if (!watchSubdistrict) return;
+    const s = subdistrictOpts.find((x) => x.name === watchSubdistrict);
+    setValue("address_post_code", s?.postalCode ?? "", { shouldDirty: false });
+  }, [watchSubdistrict, subdistrictOpts, setValue]);
+
+  const onProvinceChange = (provName: string) => {
+    const current = getValues("address_province");
+    if (provName === current) return;
+    setValue("address_province", provName, { shouldDirty: true });
+    setValue("address_district", "", { shouldDirty: true });
+    setValue("address_sub_district", "", { shouldDirty: true });
+    setValue("address_post_code", "", { shouldDirty: true });
+  };
+
+  const onDistrictChange = (distName: string) => {
+    const current = getValues("address_district");
+    if (distName === current) return;
+    setValue("address_district", distName, { shouldDirty: true });
+    setValue("address_sub_district", "", { shouldDirty: true });
+    setValue("address_post_code", "", { shouldDirty: true });
+  };
+
+  const onSubdistrictChange = (subName: string) => {
+    setValue("address_sub_district", subName, { shouldDirty: true });
+    const s = subdistrictOpts.find((x) => x.name === subName);
+  setValue("address_post_code", s?.postalCode ?? "", { shouldDirty: true });
+
+  };
+
   const onSubmit = handleSubmit(async (values) => {
     await toast.promise(
       (async () => {
@@ -299,7 +339,7 @@ export default function PetSitterProfilePage() {
           const data = await res.json().catch(() => ({}));
           throw new Error(data?.message || "Failed to update sitter");
         }
-        await update(); // refresh session ถ้ามีการเปลี่ยนอีเมล/ชื่อ ฯลฯ
+        await update();
       })(),
       {
         loading: "Saving profile...",
@@ -600,61 +640,92 @@ export default function PetSitterProfilePage() {
               {/* Province */}
               <div className="flex flex-col gap-1">
                 <label className="font-medium text-black">Province*</label>
-                <Select
-                  onValueChange={onProvinceChange}
-                  value={watchProvince || undefined}
-                >
-                  <SelectTrigger className="!h-12 w-full rounded-xl border border-gray-2 px-4 text-left">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent className="bg-white border border-gray-2 max-h-72 overflow-auto">
-                    {provinceOpts.map((p) => (
-                      <SelectItem key={p.code} value={p.name}>
-                        {p.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <Controller
+                  name="address_province"
+                  control={control}
+                  render={({ field }) => (
+                    <Select
+                      value={field.value || ""}
+                      onValueChange={(val) => {
+                        if (val !== field.value) {
+                          field.onChange(val);
+                          onProvinceChange(val);
+                        }
+                      }}
+                    >
+                      <SelectTrigger className="!h-12 w-full rounded-xl border border-gray-2 px-4 text-left">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent className="bg-white border border-gray-2 max-h-72 overflow-auto">
+                        {provinceOpts.map((p) => (
+                          <SelectItem key={p.code} value={p.name}>
+                            {p.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  )}
+                />
               </div>
 
               {/* District */}
               <div className="flex flex-col gap-1">
                 <label className="font-medium text-black">District*</label>
-                <Select
-                  onValueChange={onDistrictChange}
-                  value={watchDistrict || undefined}
-                >
-                  <SelectTrigger className="!h-12 w-full rounded-xl border border-gray-2 px-4 text-left">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent className="bg-white border border-gray-2 max-h-72 overflow-auto">
-                    {districtOpts.map((d) => (
-                      <SelectItem key={d.code} value={d.name}>
-                        {d.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <Controller
+                  name="address_district"
+                  control={control}
+                  render={({ field }) => (
+                    <Select
+                      value={field.value || ""}
+                      onValueChange={(val) => {
+                        if (val !== field.value) {
+                          field.onChange(val);
+                          onDistrictChange(val);
+                        }
+                      }}
+                    >
+                      <SelectTrigger className="!h-12 w-full rounded-xl border border-gray-2 px-4 text-left">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent className="bg-white border border-gray-2 max-h-72 overflow-auto">
+                        {districtOpts.map((d) => (
+                          <SelectItem key={d.code} value={d.name}>
+                            {d.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  )}
+                />
               </div>
 
               {/* Sub-district */}
               <div className="flex flex-col gap-1">
                 <label className="font-medium text-black">Sub-district*</label>
-                <Select
-                  onValueChange={onSubdistrictChange}
-                  value={watchSubdistrict || undefined}
-                >
-                  <SelectTrigger className="!h-12 w-full rounded-xl border border-gray-2 px-4 text-left">
-                    <SelectValue/>
-                  </SelectTrigger>
-                  <SelectContent className="bg-white border border-gray-2 max-h-72 overflow-auto">
-                    {subdistrictOpts.map((s) => (
-                      <SelectItem key={s.code} value={s.name}>
-                        {s.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <Controller
+                  name="address_sub_district"
+                  control={control}
+                  render={({ field }) => (
+                    <Select
+                      value={field.value}
+                      onValueChange={(val) => {
+                        field.onChange(val);
+                        onSubdistrictChange(val);
+                      }}
+                    >
+                      <SelectTrigger className="!h-12 w-full rounded-xl border border-gray-2 px-4 text-left">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent className="bg-white border border-gray-2 max-h-72 overflow-auto">
+                        {subdistrictOpts.map((s) => (
+                          <SelectItem key={s.code} value={s.name}>
+                            {s.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  )}
+                />
               </div>
 
               <div>
