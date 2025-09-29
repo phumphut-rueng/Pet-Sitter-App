@@ -174,7 +174,7 @@ export default function RegisterPage() {
 
       <div className="w-full p-4 max-w-[440px] flex flex-col relative">
         <div className="text-center font-[700]">
-          <h1 className="text-black text-[56px] pb-5">
+          <h1 className="text-black text-[56px]">
             Join Us!
           </h1>
           <p className="text-gray-6 text-[24px]">
