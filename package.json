@@ -5,9 +5,12 @@
   "type": "module",
   "scripts": {
     "dev": "next dev --turbopack",
+    "prebuild": "prisma generate",
     "build": "next build --turbopack",
     "start": "next start",
-    "lint": "eslint"
+    "postinstall": "prisma generate",
+    "lint": "eslint",
+    "prisma:generate": "prisma generate"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.2.2",
@@ -60,7 +63,7 @@
   "prisma": {
     "seed": "tsx prisma/seed.ts"
   },
-  "description": "This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/pages/api-reference/create-next-app).",
+  "description": "This is a Next.js project.",
   "main": "index.js",
   "keywords": [],
   "author": "",
