@@ -32,8 +32,6 @@ export function CustomSearchPage() {
     rating,
     selectedExperience,
     setSearchTerm,
-    setSelectedPetTypes,
-    setRating,
     setSelectedExperience,
     handleSearch,
     handleClear,
