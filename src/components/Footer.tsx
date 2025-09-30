@@ -44,7 +44,8 @@ const Footer = () => {
                   alt="Logo"
                   width={180}
                   height={100}
-                  className="w-30 md:w-45 object-contain"
+                  className="object-contain"
+                  style={{ width: '120px', height: 'auto' }}
                   priority
                 />
               </div>

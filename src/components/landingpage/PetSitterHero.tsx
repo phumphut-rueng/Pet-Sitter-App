@@ -16,7 +16,8 @@ const PetSitterHero = () => {
             alt="Blue arch shape"
             width={256}
             height={256}
-            className="pointer-events-none select-none object-contain w-full h-full"
+            className="pointer-events-none select-none object-contain"
+            style={{ width: '100%', height: '100%' }}
           />
         </div>
 
@@ -27,7 +28,8 @@ const PetSitterHero = () => {
             alt="Star and circle"
             width={240}
             height={240}
-            className="pointer-events-none select-none object-contain w-full h-full"
+            className="pointer-events-none select-none object-contain"
+            style={{ width: '100%', height: '100%' }}
           />
         </div>
 
