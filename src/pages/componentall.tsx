@@ -25,8 +25,8 @@ import BookingCard from "@/components/cards/BookingCard";
 import PetCard from "@/components/cards/PetCard";
 import AccountSidebarMini from "@/components/layout/AccountSidebarMini";
 import BookingSelect from "@/components/modal/BookingSelect";
-import DatePicker from "@/components/date-time-picker/DatePicker";
-import TimePicker from "@/components/date-time-picker/TimePicker";
+import DatePicker from "@/components/date-picker/DatePicker";
+import TimePicker from "@/components/time-picker/TimePicker";
 
 // Section Wrapper
 const Section = ({ title, cols = 1, children }: {
@@ -810,7 +810,7 @@ export default function ComponentAll() {
               />
             </div>
             <div className="w-[250px]">
-              <span className="text-gray-6"> ไม่โชว์เวลาที่ผ่านมาแล้ว</span>
+              <span className="text-gray-6">กำหนดเวลาไม่ให้แสดง</span>
               <TimePicker
                 value={endTime2}
                 onChange={setendTime2}

@@ -5,32 +5,10 @@ import {
     PopoverContent,
     PopoverTrigger,
 } from "@/components/ui/popover"
-import { formatDate } from "@/utils/formatDate"
+import { formatDate } from "@/utils/date-utili"
 import { cn } from "@/lib/utils"
-
-interface DatePickerProps {
-    date: Date | undefined // วันที่ที่เลือกไว้
-    month: Date | undefined // เดือนที่กำลังแสดงในปฏิทิน
-    onMonthChange: (month: Date | undefined) => void // callback เมื่อเปลี่ยนเดือน
-    onSelect: (date?: Date) => void // callback เมื่อเลือกวันที่
-    disabledDates?: Date[] // array ของวันที่ที่ต้องการ disable
-    width?: number // ความกว้างของ calendar
-    classNameButton?: string
-
-    rules?: {
-        disablePastDates?: boolean // ไม่สามารถเลือกวันที่ในอดีตได้ (default: false)
-        maxMonthsAhead?: number // จำนวนเดือนไม่เกินกี่เดือนนับจากเดือนจากปัจจุบัน (default: 0)
-        disablePastMonthNavigation?: boolean // ไม่สามารถย้อนกลับไปเดือนที่แล้วได้ (default: false)
-        minDate?: Date // วันที่เริ่มต้นที่เลือกได้
-        maxDate?: Date // วันที่สุดท้ายที่เลือกได้
-    }
-
-    yearConfig?: {
-        startYear?: number // ปีเริ่มต้น (default: current year - 100)
-        endYear?: number // ปีสิ้นสุด (default: current year)
-        yearsPerPage?: number // จำนวนปีต่อหน้า (default: 12)
-    }
-}
+import { getDaysInMonth, getFirstDayOfMonth } from "@/utils/date-utili"
+import { DatePickerProps } from "@/types/date-picker.types"
 
 function DatePicker({
     date,
@@ -70,7 +48,7 @@ function DatePicker({
         return d
     }, [])
 
-    // แปลง disabledDates เป็น Set เพื่อการค้นหาที่เร็วขึ้น O(1)
+    // ----- Disabled Dates -----
     const disabledDatesSet = useMemo(() => {
         const set = new Set<string>()
         disabledDates.forEach(d => {
@@ -83,30 +61,16 @@ function DatePicker({
 
     // Memoize การคำนวณ calendar grid เพื่อไม่ต้องคำนวณใหม่ทุก render
     const calendarData = useMemo(() => {
-        // หาจำนวนวันในเดือน
-        const getDaysInMonth = (date: Date) => {
-            const year = date.getFullYear()
-            const month = date.getMonth()
-            return new Date(year, month + 1, 0).getDate()
-        }
-
-        // หาว่าวันแรกของเดือนตรงกับวันอะไรในสัปดาห์
-        const getFirstDayOfMonth = (date: Date) => {
-            const year = date.getFullYear()
-            const month = date.getMonth()
-            return new Date(year, month, 1).getDay()
-        }
-
         const daysInMonth = getDaysInMonth(currentMonth)
         const firstDay = getFirstDayOfMonth(currentMonth)
 
-        // หาข้อมูลเดือนก่อนหน้า สำหรับแสดงวันที่ของเดือนก่อนหน้าในตาราง
+        // วันของเดือนก่อนหน้า สำหรับแสดงวันที่ของเดือนก่อนหน้าในตาราง
         const prevMonth = new Date(currentMonth.getFullYear(), currentMonth.getMonth(), 0)
         const daysInPrevMonth = prevMonth.getDate()
 
         // ===== Build Calendar Grid =====
         // สร้าง array ของวันที่ทั้งหมดที่จะแสดงในตาราง (รวมวันของเดือนก่อนและเดือนถัดไป)
-        const days = []
+        const days: { day: number; isCurrentMonth: boolean }[] = []
 
         // เพิ่มวันของเดือนที่แล้ว (วันที่จะแสดงสีเทา)
         for (let i = firstDay - 1; i >= 0; i--) {
@@ -126,6 +90,7 @@ function DatePicker({
             }
         }
 
+        // Split into weeks
         const weeks = []
         for (let i = 0; i < days.length; i += 7) {
             weeks.push(days.slice(i, i + 7))
@@ -134,7 +99,7 @@ function DatePicker({
         return weeks
     }, [currentMonth])
 
-    // Memoize การคำนวณ limits ของเดือน (prev/next disabled)
+    // การคำนวณ limits ของเดือน (prev/next disabled)
     const limits = useMemo(() => {
         const todayMonth = new Date(today.getFullYear(), today.getMonth(), 1)
         const currentMonthStart = new Date(currentMonth.getFullYear(), currentMonth.getMonth(), 1)
@@ -172,14 +137,7 @@ function DatePicker({
         }
     }, [currentMonth, limits.isPrevDisabled, onMonthChange])
 
-    const handleNextMonth = useCallback(() => {
-        if (!limits.isNextDisabled) {
-            const newMonth = new Date(currentMonth)
-            newMonth.setMonth(newMonth.getMonth() + 1)
-            onMonthChange(newMonth)
-        }
-    }, [currentMonth, limits.isNextDisabled, onMonthChange])
-
+    // ----- State Checkers -----
     const isSelected = useCallback((day: number) => {
         if (!date) return false
         return date.getDate() === day &&
@@ -204,6 +162,16 @@ function DatePicker({
 
         return false
     }, [currentMonth, disablePastDates, today, minDate, maxDate, disabledDatesSet])
+
+    // ----- Handlers -----
+    const handleNextMonth = useCallback(() => {
+        if (!limits.isNextDisabled) {
+            const newMonth = new Date(currentMonth)
+            newMonth.setMonth(newMonth.getMonth() + 1)
+            onMonthChange(newMonth)
+        }
+    }, [currentMonth, limits.isNextDisabled, onMonthChange])
+
 
     const handleDayClick = useCallback((day: number) => {
         const selectedDate = new Date(currentMonth.getFullYear(), currentMonth.getMonth(), day)
