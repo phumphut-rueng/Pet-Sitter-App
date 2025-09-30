@@ -1,7 +1,6 @@
 import * as React from "react";
 import Image from "next/image";
 
-
 export type CardSize = "lg" | "sm";
 export type CardVariant = "default" | "chips" | "compact";
 export type SmallPreset = "wide" | "compact";
@@ -23,7 +22,6 @@ export type PetSitterCardProps = {
   className?: string;
 };
 
-
 const TAG_COLORS = {
   Dog: "bg-green-bg text-success ring-success",
   Cat: "bg-pink-bg text-pink ring-pink",
@@ -38,39 +36,41 @@ const RATING_SIZES = {
   md: "h-5 w-5",
 } as const;
 
+// ✅ map ขนาดตัวเลขไว้ใช้กับ <Image width/height>
+const AVATAR_DIM = { sm: 36, md: 40, lg: 64 } as const;
+
 const CARD_STYLES = {
   base: `
     group cursor-pointer rounded-2xl border border-border bg-white
-    hover:shadow-[0_6px_24px_rgba(50,54,64,0.08)] 
+    hover:shadow-[0_6px_24px_rgba(50,54,64,0.08)]
     focus-visible:outline-none
   `,
   tag: `
-    inline-flex h-8 items-center rounded-full px-3 text-[14px] 
+    inline-flex h-8 items-center rounded-full px-3 text-[14px]
     font-medium ring-1 ring-inset whitespace-nowrap shrink-0
   `,
   title: {
     lg: "text-[24px] leading-8 font-semibold text-ink",
     md: "text-[20px] leading-7 font-semibold text-ink",
   },
-  subtitle: "text-[14px] leading-5 text-muted-text",
-  location: "flex items-center gap-1 text-muted-text",
-  locationText: "truncate text-[14px] leading-5",
-  tagContainer: "flex flex-row flex-wrap items-center gap-2",
+  subtitle: "text-[14px] leading-[22px] text-muted-text",    
+  location: "flex items-center gap-2 text-muted-text",      
+  locationText: "truncate text-[14px] leading-[22px]",        
+  tagContainer: "flex flex-row flex-wrap items-center gap-x-2 gap-y-2.5",
   avatar: {
-    sm: "h-9 w-9 rounded-full object-cover",
-    md: "h-10 w-10 rounded-full object-cover",
+    sm: "h-9 w-9 rounded-full object-cover",    
+    md: "h-10 w-10 rounded-full object-cover",  
+    lg: "h-16 w-16 rounded-full object-cover",  
   },
   image: "h-full w-full object-cover",
   imageContainer: "overflow-hidden rounded-xl bg-muted",
 } as const;
-
 
 const cn = (...classes: (string | undefined | false | null)[]) =>
   classes.filter(Boolean).join(" ");
 
 const getTagColor = (tag: string): string =>
   TAG_COLORS[tag as keyof typeof TAG_COLORS] ?? TAG_COLORS.default;
-
 
 const LocationIcon: React.FC<{ className?: string }> = ({ className = "h-4 w-4" }) => (
   <svg viewBox="0 0 24 24" aria-hidden className={className}>
@@ -87,11 +87,9 @@ const StarIcon: React.FC<{ className?: string }> = ({ className = "h-4 w-4" }) =
   </svg>
 );
 
-
 const StarRating: React.FC<{ value: number; size: keyof typeof RATING_SIZES }> = React.memo(
   ({ value = 0, size = "md" }) => {
     const starSize = RATING_SIZES[size];
-    //  useMemo ถูกเรียกเสมอ ไม่ขึ้นกับเงื่อนไข (และอยู่ในคอมโพเนนต์นี้เอง)
     const stars = React.useMemo(() => {
       const result: (1 | 0.5 | 0)[] = [];
       for (let i = 0; i < 5; i++) {
@@ -140,7 +138,7 @@ const CardHeader: React.FC<{
   coverUrl: string;
   showAvatar: boolean;
   titleSize: "lg" | "md";
-  avatarSize: "sm" | "md";
+  avatarSize: "sm" | "md" | "lg"; 
   ratingSize: keyof typeof RATING_SIZES;
 }> = React.memo(
   ({ title, hostName, rating, avatarUrl, coverUrl, showAvatar, titleSize, avatarSize, ratingSize }) => (
@@ -151,8 +149,8 @@ const CardHeader: React.FC<{
             src={avatarUrl || coverUrl}
             alt=""
             className={CARD_STYLES.avatar[avatarSize]}
-            width={avatarSize === "sm" ? 36 : 40}
-            height={avatarSize === "sm" ? 36 : 40}
+            width={AVATAR_DIM[avatarSize]}
+            height={AVATAR_DIM[avatarSize]}
           />
         )}
         <div className="min-w-0">
@@ -193,7 +191,6 @@ const CoverImage: React.FC<{ src: string; alt: string; width: number; height: nu
   ));
 CoverImage.displayName = "CoverImage";
 
-
 const LargeCoverLayout: React.FC<{
   title: string;
   hostName: string;
@@ -216,7 +213,7 @@ const LargeCoverLayout: React.FC<{
         coverUrl={props.coverUrl}
         showAvatar={props.showAvatar}
         titleSize="md"
-        avatarSize="sm"
+        avatarSize="sm"     // mobile/cover ใช้เล็ก
         ratingSize="xs"
       />
       <LocationInfo location={props.location} />
@@ -237,9 +234,12 @@ const LargeSideLayout: React.FC<{
   showAvatar: boolean;
   className?: string;
 }> = React.memo((props) => (
-  <article tabIndex={0} className={cn(CARD_STYLES.base, "grid grid-cols-[280px_1fr] gap-4 p-4", props.className)}>
+  <article
+    tabIndex={0}
+    className={cn(CARD_STYLES.base, "grid grid-cols-[280px_1fr] items-start gap-5 p-5", props.className)}
+  >
     <CoverImage src={props.coverUrl} alt="" width={280} height={200} className="h-[200px] w-[280px]" />
-    <div className="min-w-0 self-center space-y-3">
+    <div className="min-w-0 self-start grid grid-rows-[auto_auto_auto] gap-y-3.5">
       <CardHeader
         title={props.title}
         hostName={props.hostName}
@@ -248,11 +248,15 @@ const LargeSideLayout: React.FC<{
         coverUrl={props.coverUrl}
         showAvatar={props.showAvatar}
         titleSize="lg"
-        avatarSize="md"
+        avatarSize="lg"   
         ratingSize="md"
       />
-      <LocationInfo location={props.location} />
-      <TagList tags={props.tags} />
+    <div className="mt-0.5">
+     <LocationInfo location={props.location} />
+   </div>
+     <div className="mt-1">
+       <TagList tags={props.tags} />
+   </div>
     </div>
   </article>
 ));
@@ -315,8 +319,7 @@ const SmallCompactLayout: React.FC<{
 ));
 SmallCompactLayout.displayName = "SmallCompactLayout";
 
-
-// ไม่มีการเรียก Hook แบบมีเงื่อนไขในตัวหลัก
+// ===== Main Component
 const PetSitterCardBase: React.FC<PetSitterCardProps> = ({
   size = "lg",
   title,
@@ -334,86 +337,40 @@ const PetSitterCardBase: React.FC<PetSitterCardProps> = ({
   const isSmall = size === "sm";
   const shouldShowAvatar = showAvatar !== undefined ? showAvatar : !isSmall;
 
-  const commonProps = { title, hostName, rating, tags, coverUrl, className };
-
   if (!isSmall) {
-    return (
-      <article
-        tabIndex={0}
-        className={cn(
-          "group grid cursor-pointer grid-cols-1 lg:grid-cols-[224px_1fr] gap-4 rounded-2xl border border-border bg-white p-4 hover:shadow-[0_6px_24px_rgba(50,54,64,0.08)] focus-visible:outline-none",
-          className
-        )}
-      >
-        {/* Mobile Layout - Cover Image */}
-        <div className="block lg:hidden">
-          <div className="h-48 w-full overflow-hidden rounded-xl bg-muted mb-4">
-            <Image src={coverUrl} alt="" className="h-full w-full object-cover" width={400} height={192} />
-          </div>
-          <div className="flex items-start gap-3">
-            <div className="h-12 w-12 rounded-full overflow-hidden bg-muted flex-shrink-0">
-              <Image src={avatarUrl || coverUrl} alt="" className="h-full w-full object-cover" width={48} height={48} />
-            </div>
-            <div className="flex-1 min-w-0">
-              <h3 className="text-lg font-semibold text-ink break-words mb-1">{title}</h3>
-              <p className="text-sm text-muted-text mb-2">By {hostName}</p>
-              <div className="flex items-center gap-1 text-muted-text mb-2">
-                <LocationIcon className="h-4 w-4" />
-                <span className="text-sm">{location}</span>
-              </div>
-              <div className="flex items-center justify-between">
-                <div className="flex flex-wrap items-center gap-2">
-                  {tags.map((tag) => <TagChip key={tag} label={tag} />)}
-                </div>
-                <div className="flex-shrink-0">
-                  <StarRating value={rating} size="sm" />
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Desktop Layout - Side by side */}
-        <div className="hidden lg:contents">
-          <div className="h-36 w-56 overflow-hidden rounded-xl bg-muted">
-            <Image src={coverUrl} alt="" className="h-full w-full object-cover" width={224} height={144} />
-          </div>
-          <div className="min-w-0 self-center space-y-3">
-            <div className="flex items-start justify-between gap-4">
-              <div className="flex min-w-0 items-center gap-3">
-                {shouldShowAvatar && (
-                  <Image src={avatarUrl || coverUrl} alt="" className="h-10 w-10 rounded-full object-cover" width={40} height={40} />
-                )}
-                <div className="min-w-0">
-                  <h3 className="text-[21px] leading-8 font-semibold text-ink break-words">{title}</h3>
-                  <p className="truncate text-[14px] leading-5 text-muted-text">By {hostName}</p>
-                </div>
-              </div>
-              <div className="shrink-0 translate-y-[2px]">
-                <StarRating value={rating} size="md" />
-              </div>
-            </div>
-            <div className="flex items-center gap-1 text-muted-text">
-              <LocationIcon />
-              <span className="truncate text-[14px] leading-5">{location}</span>
-            </div>
-            <div className="flex flex-row flex-wrap items-center gap-2">
-              {tags.map((tag) => <TagChip key={tag} label={tag} />)}
-            </div>
-          </div>
-        </div>
-      </article>
+    //  ใช้ lgLayout จริง เพื่อเลือก layout
+    return lgLayout === "side" ? (
+      <LargeSideLayout
+        title={title}
+        hostName={hostName}
+        location={location}
+        rating={rating}
+        tags={tags}
+        coverUrl={coverUrl}
+        avatarUrl={avatarUrl}
+        showAvatar={shouldShowAvatar}
+        className={className}
+      />
+    ) : (
+      <LargeCoverLayout
+        title={title}
+        hostName={hostName}
+        location={location}
+        rating={rating}
+        tags={tags}
+        coverUrl={coverUrl}
+        avatarUrl={avatarUrl}
+        showAvatar={shouldShowAvatar}
+        className={className}
+      />
     );
   }
 
-  return smPreset === "wide" ? (
-    <SmallWideLayout {...commonProps} />
-  ) : (
-    <SmallCompactLayout {...commonProps} />
-  );
+  // Small
+  const smallCommon = { title, hostName, rating, tags, coverUrl, className };
+  return smPreset === "wide" ? <SmallWideLayout {...smallCommon} /> : <SmallCompactLayout {...smallCommon} />;
 };
 
-//  เมโมคอมโพเนนต์หลัก เพื่อลด re-render เมื่อพร็อพเหมือนเดิม
 export const PetSitterCard = React.memo(PetSitterCardBase);
 export const PetSitterCardLarge = (props: Omit<PetSitterCardProps, "size">) => <PetSitterCard size="lg" {...props} />;
 export const PetSitterCardSmall = (props: Omit<PetSitterCardProps, "size">) => <PetSitterCard size="sm" {...props} />;

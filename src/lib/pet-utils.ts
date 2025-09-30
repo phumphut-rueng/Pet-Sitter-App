@@ -2,7 +2,6 @@ import type { NextRouter } from "next/router";
 import type { PetInput } from "@/lib/validators/pet";
 import { Pet, PetFormValues, PetType } from "@/types/pet.types";
 
-
 export type { Pet, PetFormValues, PetType };
 
 
@@ -48,11 +47,11 @@ export const parsePetId = (routerQuery: unknown): number | undefined => {
 
 export const validateImageUrl = (url?: string | null): string => {
   const trimmed = (url ?? "").trim();
-  return trimmed && (trimmed.startsWith("http") || trimmed.startsWith("data:"))
+  return trimmed &&
+    (trimmed.startsWith("http") || trimmed.startsWith("data:") || trimmed.startsWith("/"))
     ? trimmed
     : "";
 };
-
 
 export const delayedNavigation = (
   router: Pick<NextRouter, "push">,
@@ -68,7 +67,7 @@ export const delayedNavigation = (
 function toFormSex(value: unknown): PetFormValues["sex"] {
   return value === "Male" || value === "Female"
     ? (value as PetFormValues["sex"])
-    : ("Male" as PetFormValues["sex"]); // เปลี่ยน default ได้ตามต้องการ
+    : "";
 }
 
 export const petResponseToFormValues = (pet: Pet): PetFormValues => ({
@@ -83,106 +82,152 @@ export const petResponseToFormValues = (pet: Pet): PetFormValues => ({
   image: validateImageUrl(pet.imageUrl),
 });
 
+
+const norm = (s: string) =>
+  s
+    .normalize("NFKC")
+    .toLowerCase()
+    .replace(/\s+/g, "")
+    .replace(/[_\-]/g, "")
+    .trim();
+
+const PET_TYPE_ALIASES: Record<string, string[]> = {
+  dog: ["dog", "dogs", "canine", "สุนัข", "หมา"],
+  cat: ["cat", "cats", "feline", "แมว"],
+  bird: ["bird", "birds", "นก"],
+  rabbit: ["rabbit", "rabbits", "กระต่าย"],
+};
+
+function resolvePetTypeId(input: string, types: PetType[]): number | null {
+  if (!types?.length) return null;
+  const k = norm(input);
+  if (!k) return null;
+
+
+  const exact = types.find((t) => norm(t.name) === k);
+  if (exact) return exact.id;
+
+
+  const loose = types.find((t) => {
+    const tn = norm(t.name);
+    return tn.includes(k) || k.includes(tn);
+  });
+  if (loose) return loose.id;
+
+ 
+  const aliasKey = Object.keys(PET_TYPE_ALIASES).find((key) =>
+    PET_TYPE_ALIASES[key].includes(k)
+  );
+  if (aliasKey) {
+    const byKey = types.find((t) => norm(t.name) === norm(aliasKey));
+    if (byKey) return byKey.id;
+    const cap = aliasKey[0].toUpperCase() + aliasKey.slice(1);
+    const byCap = types.find((t) => norm(t.name) === norm(cap));
+    if (byCap) return byCap.id;
+  }
+
+
+  const other = types.find((t) => PET_TYPE_ALIASES.other.some((a) => norm(t.name) === a));
+  return other?.id ?? null;
+}
+
+
 export const formValuesToPayload = async (
   values: PetFormValues,
   getPetTypes: () => Promise<PetType[]>
 ): Promise<PetInput> => {
-  const petTypes = await getPetTypes();
-  const foundType = petTypes.find(
-    (type) => type.name.toLowerCase() === values.type.toLowerCase()
-  );
+  const types = await getPetTypes();
+  const petTypeId = resolvePetTypeId(values.type, types);
 
-  if (!foundType) {
+  if (petTypeId == null) {
     throw new Error(ERROR_MESSAGES.invalidPetType);
   }
 
   return {
-    petTypeId: foundType.id,
-    name: values.name,
-    breed: values.breed,
-    sex: values.sex as "Male" | "Female",
+    petTypeId,
+    name: values.name.trim(),
+    breed: values.breed.trim(),
+    sex: values.sex === "Female" ? "Female" : "Male",
     ageMonth: Number(values.ageMonth || 0),
-    color: values.color,
+    color: values.color.trim(),
     weightKg: Number(values.weightKg || 0),
-    about: values.about || "",
+    about: values.about?.trim() || "",
     imageUrl: (values.image ?? "").trim(),
   };
 };
 
 
+const API_BASE = process.env.NEXT_PUBLIC_API_BASE ?? "";
+
+
+function parseApiErrorMessage(payload: unknown): string | null {
+  if (typeof payload !== "object" || payload === null) return null;
+  const rec = payload as Record<string, unknown>;
+  const e = rec["error"];
+  const m = rec["message"];
+  if (typeof e === "string") return e;
+  if (typeof m === "string") return m;
+  return null;
+}
+
 export const petService = {
-  fetchPet: async (id: number): Promise<Pet> => {
-    const response = await fetch(`/api/pets/${id}`, {
+  async fetchPet(id: number): Promise<Pet> {
+    const res = await fetch(`${API_BASE}/api/pets/${id}`, {
       credentials: "include",
+      cache: "no-store",
     });
-
-    if (!response.ok) {
-      throw new Error(ERROR_MESSAGES.loadFailed);
-    }
-
-    return (await response.json()) as Pet;
+    if (!res.ok) throw new Error(ERROR_MESSAGES.loadFailed);
+    return (await res.json()) as Pet;
   },
 
-  updatePet: async (id: number, payload: PetInput): Promise<void> => {
-    const response = await fetch(`/api/pets/${id}`, {
+  async updatePet(id: number, payload: PetInput): Promise<void> {
+    const res = await fetch(`${API_BASE}/api/pets/${id}`, {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
       credentials: "include",
       body: JSON.stringify(payload),
     });
-
-    if (!response.ok) {
-      let errorMessage: string = ERROR_MESSAGES.updateFailed; 
+    if (!res.ok) {
+      let errorMessage: string = ERROR_MESSAGES.updateFailed;
       try {
-        const errorData = (await response.json()) as unknown;
-        errorMessage =
-          (errorData as { error?: string; message?: string })?.error ||
-          (errorData as { error?: string; message?: string })?.message ||
-          errorMessage;
-      } catch {
-      }
+        const parsed: unknown = await res.json();
+        const msg = parseApiErrorMessage(parsed);
+        if (msg) errorMessage = msg;
+      } catch { /* ignore parse error */ }
       throw new Error(errorMessage);
     }
   },
 
-  deletePet: async (id: number): Promise<void> => {
-    const response = await fetch(`/api/pets/${id}`, {
+  async deletePet(id: number): Promise<void> {
+    const res = await fetch(`${API_BASE}/api/pets/${id}`, {
       method: "DELETE",
       credentials: "include",
     });
-
-    if (!response.ok) {
-      let errorMessage: string = ERROR_MESSAGES.deleteFailed; 
+    if (!res.ok) {
+      let errorMessage: string = ERROR_MESSAGES.deleteFailed;
       try {
-        const errorData = (await response.json()) as unknown;
-        errorMessage =
-          (errorData as { error?: string; message?: string })?.error ||
-          (errorData as { error?: string; message?: string })?.message ||
-          errorMessage;
-      } catch {
-      }
+        const parsed: unknown = await res.json();
+        const msg = parseApiErrorMessage(parsed);
+        if (msg) errorMessage = msg;
+      } catch { /* ignore parse error */ }
       throw new Error(errorMessage);
     }
   },
 
-  createPet: async (payload: PetInput): Promise<void> => {
-    const response = await fetch("/api/pets", {
+  async createPet(payload: PetInput): Promise<void> {
+    const res = await fetch(`${API_BASE}/api/pets`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       credentials: "include",
       body: JSON.stringify(payload),
     });
-
-    if (!response.ok) {
-      let errorMessage: string = ERROR_MESSAGES.createFailed; 
+    if (!res.ok) {
+      let errorMessage: string = ERROR_MESSAGES.createFailed;
       try {
-        const errorData = (await response.json()) as unknown;
-        errorMessage =
-          (errorData as { error?: string; message?: string })?.error ||
-          (errorData as { error?: string; message?: string })?.message ||
-          errorMessage;
-      } catch {
-      }
+        const parsed: unknown = await res.json();
+        const msg = parseApiErrorMessage(parsed);
+        if (msg) errorMessage = msg;
+      } catch { /* ignore parse error */ }
       throw new Error(errorMessage);
     }
   },
