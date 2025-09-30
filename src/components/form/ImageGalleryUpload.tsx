@@ -124,7 +124,7 @@ export default function ImageGallery({
           type="button"
           onClick={openFilePicker}
           className="w-42 h-42 rounded-md bg-orange-1 text-orange-5
-                     grid place-items-center hover:bg-orange-2 transition"
+                     grid place-items-center hover:bg-orange-2 transition cursor-pointer"
           title="Upload image"
         >
           <div className="grid place-items-center gap-4">
