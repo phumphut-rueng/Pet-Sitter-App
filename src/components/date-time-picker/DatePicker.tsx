@@ -6,6 +6,7 @@ import {
     PopoverTrigger,
 } from "@/components/ui/popover"
 import { formatDate } from "@/utils/formatDate"
+import { cn } from "@/lib/utils"
 
 interface DatePickerProps {
     date: Date | undefined // วันที่ที่เลือกไว้
@@ -14,6 +15,7 @@ interface DatePickerProps {
     onSelect: (date?: Date) => void // callback เมื่อเลือกวันที่
     disabledDates?: Date[] // array ของวันที่ที่ต้องการ disable
     width?: number // ความกว้างของ calendar
+    classNameButton?: string
 
     rules?: {
         disablePastDates?: boolean // ไม่สามารถเลือกวันที่ในอดีตได้ (default: false)
@@ -38,7 +40,8 @@ function DatePicker({
     disabledDates = [],
     rules = {},
     yearConfig = {},
-    width = 400
+    width = 400,
+    classNameButton,
 }: DatePickerProps) {
     const [isOpen, setIsOpen] = useState(false)
     const [pickerView, setPickerView] = useState<'date' | 'month' | 'year'>('date')
@@ -288,11 +291,13 @@ function DatePicker({
             <PopoverTrigger asChild>
                 <button
                     id="date"
-                    className="flex justify-start items-center w-full h-12 px-3 
+                    className={cn(`flex justify-start items-center w-full px-3 
                     rounded-xl border border-gray-2 
                     text-[16px] font-[400] text-black
                     hover:border-gray-4 
-                    cursor-pointer"
+                    cursor-pointer`,
+                        classNameButton ? classNameButton : "h-12"
+                    )}
                 >
                     {date
                         ? formatDate(date)
