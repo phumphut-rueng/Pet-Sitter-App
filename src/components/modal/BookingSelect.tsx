@@ -8,6 +8,7 @@ import { useDatePicker } from "@/hooks/useDatePicker"
 import { useTimePicker } from "@/hooks/useTimePicker"
 import TimePicker from "../date-time-picker/TimePicker"
 import DatePicker from "../date-time-picker/DatePicker"
+import { Calendar, Clock } from 'lucide-react';
 
 interface ConfirmationProps {
     title?: string
@@ -48,11 +49,10 @@ export default function BookingSelect({
 
                         <div className="space-y-3">
                             <div className="flex justify-start gap-3">
-                                <Image
-                                    src="/icons/ic-calendar.svg"
-                                    alt="calendar"
-                                    width={20}
-                                    height={20}
+                                <Calendar
+                                    className="text-gray-6"
+                                    width={24}
+                                    height={24}
                                 />
                                 <DatePicker
                                     date={date}
@@ -65,11 +65,10 @@ export default function BookingSelect({
 
                             {/* Time Picker */}
                             <div className="flex justify-start gap-3">
-                                <Image
-                                    src="/icons/ic-clock.svg"
-                                    alt="time"
-                                    width={20}
-                                    height={20}
+                                <Clock
+                                    className="text-gray-6"
+                                    width={24}
+                                    height={24}
                                 />
                                 <TimePicker
                                     value={startTime}

@@ -34,9 +34,6 @@ export function useRegister() {
 
         const newErrors = await validateForm(role)
 
-        console.log(newErrors);
-
-
         if (form.email.trim() && role === 3) {
             if (!newErrors.email) {
                 saveOwnerData(newErrors, [2, 3])
