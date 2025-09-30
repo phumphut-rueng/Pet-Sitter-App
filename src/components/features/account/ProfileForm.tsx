@@ -92,7 +92,8 @@ const FORM_CONFIG = {
   styles: {
     form: "text-ink space-y-6",
     error: "rounded-md border border-red-300 bg-red-50 px-4 py-3 text-red-700",
-    avatarContainer: "w-fit",
+    // ทำให้ container และ label ของ avatar เป็น pointer
+    avatarContainer: "w-fit cursor-pointer",
     avatarHelp: "mt-2 text-xs text-muted-foreground",
     grid: "grid gap-4 md:grid-cols-2",
     buttonContainer: "flex justify-end",
@@ -105,10 +106,7 @@ type InputVariant = "default" | "error" | "success";
 const getInputVariant = (hasError: boolean): InputVariant =>
   hasError ? "error" : "default";
 
-/** === Helpers แปลงวันที่ ===
- * toYmd: Date -> 'YYYY-MM-DD' (timezone-safe)
- * parseYmd: 'YYYY-MM-DD' -> Date | undefined
- */
+/** === Helpers แปลงวันที่ === */
 const toYmd = (d?: Date) =>
   d
     ? new Date(d.getTime() - d.getTimezoneOffset() * 60000)
@@ -146,8 +144,12 @@ const AvatarField: React.FC<{ control: Control<OwnerProfileInput> }> = ({ contro
       const value = typeof field.value === "string" ? field.value : "";
       return (
         <div className={FORM_CONFIG.styles.avatarContainer}>
-          <AvatarUploader imageUrl={value} onChange={field.onChange} />
-          <p className={FORM_CONFIG.styles.avatarHelp}>Profile Image (optional)</p>
+          <div className="inline-block cursor-pointer [&_*]:cursor-pointer [&_svg]:pointer-events-none">
+            <AvatarUploader imageUrl={value} onChange={field.onChange} />
+          </div>
+          <p className="mt-2 text-xs text-muted-foreground cursor-pointer">
+            Profile Image (optional)
+          </p>
         </div>
       );
     }}
@@ -214,7 +216,6 @@ const DobPickerInner: React.FC<DobInnerProps> = ({ value, onChange, error }) => 
 
   const selected = React.useMemo(() => parseYmd(value), [value]);
 
-  // sync เดือนกับค่าที่เลือก (เฉพาะเมื่อเปลี่ยนไปเดือนใหม่)
   React.useEffect(() => {
     if (!selected) {
       setMonth((prev) => (prev ? undefined : prev));
@@ -224,14 +225,12 @@ const DobPickerInner: React.FC<DobInnerProps> = ({ value, onChange, error }) => 
     setMonth((prev) => (sameMonth(prev, m) ? prev : m));
   }, [selected]);
 
-  // เลือกวัน: อัปเดตเฉพาะเมื่อค่าจริงๆ เปลี่ยน
   const handleSelect = (d?: Date) => {
     const next = toYmd(d);
     const prev = value ?? "";
     if (next !== prev) onChange(next);
   };
 
-  // เปลี่ยนเดือน/ปีจากเพื่อน: อัปเดตฟอร์มทันทีถ้ามีวันอยู่แล้ว
   const handleMonthChange = (m?: Date) => {
     setMonth((prev) => (sameMonth(prev, m) ? prev : m));
     if (!m || !selected) return;
@@ -239,7 +238,6 @@ const DobPickerInner: React.FC<DobInnerProps> = ({ value, onChange, error }) => 
     const day = clampDay(m.getFullYear(), m.getMonth(), selected.getDate());
     let nextDate = new Date(m.getFullYear(), m.getMonth(), day);
 
-    // เคารพ maxDate = วันนี้
     const today = new Date(); today.setHours(0, 0, 0, 0);
     if (nextDate > today) nextDate = today;
 
@@ -254,7 +252,8 @@ const DobPickerInner: React.FC<DobInnerProps> = ({ value, onChange, error }) => 
         Date of Birth
       </label>
 
-      <div className="[&_#date]:bg-white [&_#date]:text-black [&_#date]:border-gray-300">
+
+      <div className="[&_#date]:bg-white [&_#date]:text-black [&_#date]:border-gray-300 [&_button]:cursor-pointer">
         <DatePicker
           date={selected}
           month={month}
@@ -325,7 +324,7 @@ export default function ProfileForm({
 
       <div className={FORM_CONFIG.styles.grid}>
         <IdNumberField control={control} />
-        <DobDatePickerField control={control} /> {/* << เปลี่ยนมาใช้ DatePicker */}
+        <DobDatePickerField control={control} />
       </div>
 
       <div className={FORM_CONFIG.styles.buttonContainer}>

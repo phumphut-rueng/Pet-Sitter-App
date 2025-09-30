@@ -11,7 +11,6 @@ import { useOwnerProfileForm } from "@/hooks/useOwnerProfileForm";
 import { authOptions } from "@/pages/api/auth/[...nextauth]";
 import type { OwnerProfileInput } from "@/lib/validators/account";
 
-
 const ERROR_MESSAGES = {
   loadFailed: "Failed to load profile.",
   saveFailed: "Something went wrong. Please try again.",
@@ -22,7 +21,6 @@ const ERROR_MESSAGES = {
 const SUCCESS_MESSAGES = {
   profileUpdated: "Profile updated!",
 } as const;
-
 
 const getErrorMessage = (error: unknown): string => {
   if (typeof error === "string") return error;
@@ -98,7 +96,7 @@ const AccountProfilePage: NextPage = () => {
   const handleSubmit = form.handleSubmit(submitProfile);
 
   return (
-    <AccountPageShell title="Profile">
+    <AccountPageShell title="Profile" showTitle>
       <PageToaster />
       <ProfileForm
         control={form.control}
