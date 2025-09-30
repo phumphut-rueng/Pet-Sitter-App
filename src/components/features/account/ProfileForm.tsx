@@ -11,7 +11,7 @@ import InputText from "@/components/input/InputText";
 import AvatarUploader from "@/components/form/AvatarUpload";
 import PrimaryButton from "@/components/buttons/PrimaryButton";
 import { cn } from "@/lib/utils";
-import DatePicker from "@/components/date-time-picker/DatePicker"; 
+import DatePicker from "@/components/date-picker/DatePicker"; 
 
 export interface ProfileFormProps {
   control: Control<OwnerProfileInput>;
