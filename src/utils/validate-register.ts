@@ -44,7 +44,7 @@ export async function validateEmail(
                 { email: value }
             );
 
-            if (data?.exists && !role_ids) {
+            if (data?.exists && role_ids) {
                 const hasRole = data.data.user_role.some((ur: UserRole) => ur.role_id === role_ids)
                 const msg = "This email is already registered";
                 return hasRole

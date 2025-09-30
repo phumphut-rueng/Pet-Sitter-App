@@ -25,7 +25,8 @@ import BookingCard from "@/components/cards/BookingCard";
 import PetCard from "@/components/cards/PetCard";
 import AccountSidebarMini from "@/components/layout/AccountSidebarMini";
 import BookingSelect from "@/components/modal/BookingSelect";
-
+import DatePicker from "@/components/date-time-picker/DatePicker";
+import TimePicker from "@/components/date-time-picker/TimePicker";
 
 // Section Wrapper
 const Section = ({ title, cols = 1, children }: {
@@ -66,9 +67,6 @@ const COVER = "/images/cards/pet-sitter-cover.svg";
 const AVATAR = "/images/cards/jane-maison.svg";
 const PETIMG = "/images/cards/pet-cat-mr-hem-card.svg";
 
-
-
-
 // mock สำหรับ PetCard grid
 const pets = [
   { id: 1, name: "Mr. Ham", selected: false },
@@ -78,7 +76,6 @@ const pets = [
 ];
 
 // grid แสดง PetCard
-
 function PetCardGrid() {
   return (
     <div className="space-y-10">
@@ -153,15 +150,54 @@ const bookingBase = {
 const on = (k: string) => () => console.log(k);
 //===================================================================
 
+//ข้อมูลสำหรับ modal BookingSelect
+const disabledDates = [
+  new Date(2025, 9, 10),  // 10 ตุลาคม 2025 (เดือนเริ่มที่ 0)
+  new Date(2025, 9, 16),  // 16 ตุลาคม 2025
+  new Date(2025, 9, 20),  // 20 ตุลาคม 2025
+]
+//=================================================================== 
+
 export default function ComponentAll() {
   //ใช้สำหรับ modal
   const [isOpenBooking, setIsOpenBooking] = useState(false);
   const [isOpenReject, setIsOpenReject] = useState(false);
   const [isOpenPopup, setIsOpenPopup] = useState(false);
   const [isOpenBookingSelect, setIsOpenBookingSelect] = useState(false);
+  //=================================================================== 
+  //ข้อมูลสำหรับ datepicker
+  // ตัวอย่างที่ 1: การใช้งานแบบพื้นฐาน
+  const [date1, setDate1] = useState<Date | undefined>()
+  const [month1, setMonth1] = useState<Date | undefined>(new Date())
+
+  // ตัวอย่างที่ 2: กำหนด min/max date
+  const [date2, setDate2] = useState<Date | undefined>()
+  const [month2, setMonth2] = useState<Date | undefined>(new Date())
+  const minDate = new Date()
+  const maxDate = new Date()
+  maxDate.setDate(maxDate.getDate() + 30)
+
+  // ตัวอย่างที่ 3: ปิดการ disable วันในอดีต
+  const [date3, setDate3] = useState<Date | undefined>()
+  const [month3, setMonth3] = useState<Date | undefined>(new Date())
+
+  // ตัวอย่างที่ 4: กำหนดวันที่ต้องการ disable
+  const [date4, setDate4] = useState<Date | undefined>()
+  const [month4, setMonth4] = useState<Date | undefined>(new Date())
+  //=================================================================== 
+  //ข้อมูลสำหรับ Time picker
+  const [startTime, setStartTime] = useState("")
+  //=================================================================== 
 
   return (
     <div className="min-h-screen text-white p-6">
+      <PrimaryButton
+        text="Booking Select  Click!!"
+        bgColor="primary"
+        textColor="white"
+        onClick={() => setIsOpenBookingSelect(true)}
+      />
+
       <div className=" mx-auto space-y-10">
         {/* Rating */}
         <Section title="Selection">
@@ -684,7 +720,75 @@ export default function ComponentAll() {
             open={isOpenBookingSelect}
             onOpenChange={setIsOpenBookingSelect}
             onConfirm={() => console.log("Booking Select")}
+            disabledDates={disabledDates}
           />
+        </Section>
+
+        {/* Date Picker */}
+        <Section title="Date Picker">
+          <SubSection title="">
+            <div className="w-[250px]">
+              <span className="text-gray-6 w-[300px]"> เลือกวันก่อนหน้าไม่ได้ และเลือกได้ไม่เกิน 10 เดือนข้างหน้า</span>
+              <DatePicker
+                date={date1}
+                month={month1}
+                onMonthChange={setMonth1}
+                onSelect={setDate1}
+                rules={{
+                  disablePastDates: true,
+                  disablePastMonthNavigation: true,
+                  maxMonthsAhead: 10
+                }}
+              />
+            </div>
+            <div className="w-[250px]">
+              <span className="text-gray-6"> กำหนด min/max date</span>
+              <DatePicker
+                date={date2}
+                month={month2}
+                onMonthChange={setMonth2}
+                onSelect={setDate2}
+                rules={{
+                  minDate: minDate,
+                  maxDate: maxDate,
+                }}
+              />
+            </div>
+            <div className="w-[250px]">
+              <span className="text-gray-6"> กำหนด ปีที่เริ่ม-สิ้นสุด</span>
+              <DatePicker
+                date={date3}
+                month={month3}
+                onMonthChange={setMonth3}
+                onSelect={setDate3}
+                yearConfig={{
+                  startYear: 1950,
+                  endYear: new Date().getFullYear()
+                }}
+              />
+            </div>
+            <div className="w-[250px]">
+              <span className="text-gray-6"> กำหนดวันที่ต้องการ disable</span>
+              <DatePicker
+                date={date4}
+                month={month4}
+                onMonthChange={setMonth4}
+                onSelect={setDate4}
+                disabledDates={disabledDates}
+              />
+            </div>
+          </SubSection>
+        </Section>
+
+        {/* Time picker */}
+        <Section title="Time picker">
+          <SubSection title="Time picker">
+            <TimePicker
+              value={startTime}
+              onChange={setStartTime}
+              placeholder="Start time"
+            />
+          </SubSection>
         </Section>
 
         {/* Chat */}

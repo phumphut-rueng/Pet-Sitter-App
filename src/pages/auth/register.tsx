@@ -1,154 +1,26 @@
 import * as React from "react"
-import axios from "axios"
 import Link from "next/link"
 import Image from "next/image"
-import { useRouter } from "next/router";
-import { useState } from "react";
 import PrimaryButton from "@/components/buttons/PrimaryButton";
 import InputText from "@/components/input/InputText"
-import { validateEmail, validatePhone, validatePassword } from "@/utils/validate-register"
-import { RegisterForm } from "@/types/register.type"
 import BookingConfirmation from "@/components/modal/BookingConfirmation";
 import SocialLogin from "@/components/login-register/SocialLogin";
+import { useRegister } from "@/hooks/register/useRegister"
 
 export default function RegisterPage() {
-  const router = useRouter();
-
-  const [isLoading, setIsLoading] = React.useState(false)
-  const [role, setRole] = useState<number>(2); //2="owner" | 3="sitter"
-  const [isOpen, setIsOpen] = useState<boolean>(false);
-
-  const [form, setForm] = React.useState<RegisterForm>({
-    name: "",
-    email: "",
-    phone: "",
-    password: ""
-  })
-  const [error, setError] = React.useState<RegisterForm>({
-    name: "",
-    email: "",
-    phone: "",
-    password: ""
-  })
-
-  const handleChange = React.useCallback(
-    (e: React.ChangeEvent<HTMLInputElement>) => {
-      const { name, value } = e.target
-      setForm((prev) => ({ ...prev, [name]: value }))
-    },
-    []
-  )
-
-  const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const onlyNums = e.target.value.replace(/\D/g, "")
-    if (onlyNums.length <= 10) {
-      handleChange({
-        ...e,
-        target: { ...e.target, name: "phone", value: onlyNums },
-      })
-    }
-  }
-  const clearData = React.useCallback(() => {
-    setError({ name: "", email: "", phone: "", password: "" })
-    setForm({ name: "", email: "", phone: "", password: "" })
-    router.push("/auth/login")
-  }, [router])
-
-  const saveData = async (role_ids: number[]) => {
-    let result;
-    try {
-      result = await axios.post(
-        "/api/auth/register",
-        {
-          ...form,
-          role_ids
-        }
-      );
-
-      if (result?.status === 201) {
-        clearData();
-      }
-    } catch (e) {
-      console.error("axios.register", e);
-    }
-  }
-
-  const addRole = async () => {
-    let result;
-    try {
-      result = await axios.post(
-        "/api/user/post-role",
-        {
-          ...form,
-          role_ids: 3
-        }
-      );
-      if (result?.status === 201) {
-        clearData();
-      }
-    } catch (e) {
-      console.error("axios.post-role", e);
-    }
-
-  }
-
-  const handleOnConfirm = async () => {
-    await addRole();
-    setIsOpen(false);
-  }
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setIsLoading(true);
-
-    const checkMail = await validateEmail(form.email, role)
-    const checkPhone = await validatePhone(form.phone)
-    const checkPassword = await validatePassword(form.password)
-
-    const newErrors: RegisterForm = {
-      name: "",
-      email: checkMail.message || "",
-      phone: checkPhone.message || "",
-      password: checkPassword.message || "",
-    }
-
-    if (form.email.trim() && role === 3) {
-      if (!checkMail.data) {
-        // user ที่ยังไม่เคย register owner
-        saveOwnerData(newErrors, [2, 3]);
-      } else if (checkMail.error !== "Conflict") {
-        // user ที่ register owner แล้ว และยังไม่เป็น sitter
-        setIsOpen(true);
-      } else {
-        setError(newErrors);
-      }
-    } else {
-      saveOwnerData(newErrors, [2])
-    }
-
-    setIsLoading(false)
-  }
-
-  const saveOwnerData = (
-    newErrors: RegisterForm,
-    role_ids: number[]
-  ) => {
-    if (Object.values(newErrors).every((val) => val === "")) {
-      saveData(role_ids);
-    } else {
-      setError(newErrors);
-    }
-  }
-
-  const handleChangeRole = (roleId: number) => {
-    setRole(roleId)
-    setError({
-      name: "",
-      email: "",
-      phone: "",
-      password: "",
-    });
-  }
+  const {
+    form,
+    error,
+    role,
+    isLoading,
+    isOpen,
+    setIsOpen,
+    handleChange,
+    handlePhoneChange,
+    handleSubmit,
+    handleChangeRole,
+    handleOnConfirm,
+  } = useRegister()
 
   return (
     <div className="relative min-h-screen flex items-center justify-center">
