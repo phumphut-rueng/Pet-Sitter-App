@@ -11,7 +11,7 @@ import InputText from "@/components/input/InputText";
 import AvatarUploader from "@/components/form/AvatarUpload";
 import PrimaryButton from "@/components/buttons/PrimaryButton";
 import { cn } from "@/lib/utils";
-
+import DatePicker from "@/components/date-time-picker/DatePicker"; // <— ใช้ของเพื่อน
 
 export interface ProfileFormProps {
   control: Control<OwnerProfileInput>;
@@ -47,7 +47,6 @@ type FieldConfig = {
   pattern?: string;
   maxLength?: number;
 };
-
 
 const FORM_CONFIG = {
   fields: {
@@ -92,8 +91,7 @@ const FORM_CONFIG = {
   } as const,
   styles: {
     form: "text-ink space-y-6",
-    error:
-      "rounded-md border border-red-300 bg-red-50 px-4 py-3 text-red-700",
+    error: "rounded-md border border-red-300 bg-red-50 px-4 py-3 text-red-700",
     avatarContainer: "w-fit",
     avatarHelp: "mt-2 text-xs text-muted-foreground",
     grid: "grid gap-4 md:grid-cols-2",
@@ -102,17 +100,32 @@ const FORM_CONFIG = {
   },
 };
 
-
-const getTodayString = (): string => new Date().toISOString().slice(0, 10);
 const formatIdNumber = (v: string): string => v.replace(/\D/g, "").slice(0, 13);
 type InputVariant = "default" | "error" | "success";
 const getInputVariant = (hasError: boolean): InputVariant =>
   hasError ? "error" : "default";
 
+/** === Helpers แปลงวันที่ ===
+ * toYmd: Date -> 'YYYY-MM-DD' (timezone-safe)
+ * parseYmd: 'YYYY-MM-DD' -> Date | undefined
+ */
+const toYmd = (d?: Date) =>
+  d
+    ? new Date(d.getTime() - d.getTimezoneOffset() * 60000)
+        .toISOString()
+        .slice(0, 10)
+    : "";
 
-function FormField<Name extends Path<OwnerProfileInput>>(
-  props: FormFieldProps<Name>
-) {
+const parseYmd = (s?: string) => {
+  if (!s) return undefined;
+  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(s.trim());
+  if (!m) return undefined;
+  const [, yyyy, mm, dd] = m;
+  const d = new Date(Number(yyyy), Number(mm) - 1, Number(dd));
+  return Number.isNaN(d.getTime()) ? undefined : d;
+};
+
+function FormField<Name extends Path<OwnerProfileInput>>(props: FormFieldProps<Name>) {
   const { control, name, children } = props;
   return (
     <Controller
@@ -127,19 +140,14 @@ const ErrorMessage: React.FC<{ message: string }> = ({ message }) => (
   <div className={FORM_CONFIG.styles.error}>{message}</div>
 );
 
-
-const AvatarField: React.FC<{ control: Control<OwnerProfileInput> }> = ({
-  control,
-}) => (
+const AvatarField: React.FC<{ control: Control<OwnerProfileInput> }> = ({ control }) => (
   <FormField control={control} name={"image"}>
     {(field) => {
       const value = typeof field.value === "string" ? field.value : "";
       return (
         <div className={FORM_CONFIG.styles.avatarContainer}>
           <AvatarUploader imageUrl={value} onChange={field.onChange} />
-          <p className={FORM_CONFIG.styles.avatarHelp}>
-            Profile Image (optional)
-          </p>
+          <p className={FORM_CONFIG.styles.avatarHelp}>Profile Image (optional)</p>
         </div>
       );
     }}
@@ -170,9 +178,7 @@ const TextInputField: React.FC<{
   </FormField>
 );
 
-const IdNumberField: React.FC<{ control: Control<OwnerProfileInput> }> = ({
-  control,
-}) => (
+const IdNumberField: React.FC<{ control: Control<OwnerProfileInput> }> = ({ control }) => (
   <FormField control={control} name={"idNumber"}>
     {(field, fieldState) => (
       <InputText
@@ -190,31 +196,68 @@ const IdNumberField: React.FC<{ control: Control<OwnerProfileInput> }> = ({
   </FormField>
 );
 
-const DateField: React.FC<{ control: Control<OwnerProfileInput> }> = ({
+/** === ใช้ DatePicker ของเพื่อนแทน input type="date" === */
+const DobDatePickerField: React.FC<{ control: Control<OwnerProfileInput> }> = ({
   control,
 }) => {
-  const today = React.useMemo(() => getTodayString(), []);
+  const [month, setMonth] = React.useState<Date | undefined>(undefined);
+
+  // helper เทียบว่าเป็นเดือนเดียวกันไหม
+  const sameMonth = (a?: Date, b?: Date) =>
+    !!a && !!b && a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth();
+
   return (
     <FormField control={control} name={"dob"}>
-      {(field, fieldState) => (
-        <InputText
-          {...FORM_CONFIG.fields.dob}
-          name="dob"
-          placeholder={FORM_CONFIG.fields.dob.placeholder ?? ""}
-          value={(field.value as string | undefined) ?? ""}
-          onChange={field.onChange}
-          onBlur={field.onBlur}
-          max={today}
-          variant={getInputVariant(!!fieldState.error)}
-          errorText={fieldState.error?.message ?? ""}
-          aria-invalid={!!fieldState.error}
-          onWheel={(e) => (e.currentTarget as HTMLInputElement).blur()}
-        />
-      )}
+      {(field, fieldState) => {
+        const selected = parseYmd(field.value as string | undefined);
+
+        // sync month เฉพาะตอน selected เปลี่ยน "ไปเดือนใหม่" เท่านั้น
+        React.useEffect(() => {
+          if (!selected) {
+            if (month) setMonth(undefined);
+            return;
+          }
+          const m = new Date(selected.getFullYear(), selected.getMonth(), 1);
+          setMonth(prev => (sameMonth(prev, m) ? prev : m));
+        }, [selected]); // ไม่ใส่ month ใน deps เพื่อกันลูป
+
+        // เรียก onChange เฉพาะเมื่อค่าจริงๆ เปลี่ยน
+        const handleSelect = (d?: Date) => {
+          const next = toYmd(d);
+          const prev = (field.value as string | undefined) ?? "";
+          if (next !== prev) {
+            field.onChange(next);
+          }
+        };
+
+        return (
+          <div className="flex flex-col gap-1">
+            <label htmlFor="date" className="text-sm font-medium text-gray-700">
+              {FORM_CONFIG.fields.dob.label}
+            </label>
+            <div className="[&_#date]:bg-white [&_#date]:text-black [&_#date]:border-gray-300">
+            <DatePicker
+              date={selected}
+              month={month}
+              onMonthChange={(m?: Date) => {
+                // กัน setMonth ซ้ำเดือนเดิม
+                setMonth(prev => (sameMonth(prev, m) ? prev : m));
+              }}
+              onSelect={handleSelect}
+              rules={{ maxDate: new Date() }} // DOB ห้ามเป็นอนาคต
+              width={400}
+            />
+            </div>
+
+            {fieldState.error?.message && (
+              <span className="text-sm text-red-600">{fieldState.error.message}</span>
+            )}
+          </div>
+        );
+      }}
     </FormField>
   );
 };
-
 
 export default function ProfileForm({
   control,
@@ -259,7 +302,7 @@ export default function ProfileForm({
 
       <div className={FORM_CONFIG.styles.grid}>
         <IdNumberField control={control} />
-        <DateField control={control} />
+        <DobDatePickerField control={control} /> {/* << เปลี่ยนมาใช้ DatePicker */}
       </div>
 
       <div className={FORM_CONFIG.styles.buttonContainer}>
