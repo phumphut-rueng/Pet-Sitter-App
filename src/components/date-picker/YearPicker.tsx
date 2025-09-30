@@ -1,14 +1,6 @@
 import { ChevronLeft, ChevronRight } from "lucide-react"
 import { useCallback, useMemo } from "react"
-
-interface Props {
-    currentMonth: Date
-    onYearSelect: (d: Date) => void
-    yearRangeStart: number
-    setYearRangeStart: (n: number) => void
-    setView: (v: "date" | "month" | "year") => void
-    yearConfig: { startYear: number; endYear: number; yearsPerPage: number }
-}
+import { YearProps } from "@/types/date-picker.types"
 
 export default function YearPicker({
     currentMonth,
@@ -17,12 +9,12 @@ export default function YearPicker({
     setYearRangeStart,
     setView,
     yearConfig,
-}: Props) {
+}: YearProps) {
     const { startYear, endYear, yearsPerPage } = yearConfig
     const isPrevDisabled = yearRangeStart <= startYear
     const isNextDisabled = yearRangeStart + yearsPerPage > endYear
 
-    //สร้าง array ของตัวเลขตั้งแต่ yearRangeStart ถึง rangeEnd เช่น [2020, 2021, 2022, 2023, 2024, 2025]
+    //สร้าง label year เช่น [2020, 2021, 2022, 2023, 2024, 2025]
     const yearRange = useMemo(() => {
         const rangeEnd = Math.min(yearRangeStart + yearsPerPage - 1, endYear)
         const years = Array.from({ length: rangeEnd - yearRangeStart + 1 }, (_, i) => yearRangeStart + i)
@@ -36,25 +28,28 @@ export default function YearPicker({
         return `${yearRangeStart}-${rangeEnd}`
     }, [yearRangeStart, yearsPerPage, endYear])
 
-    console.log(yearRangeStart, startYear, endYear, yearsPerPage, yearRangeLabel);
+    // handle
     const handleYearRangePrev = useCallback(() => {
-        const newStart = yearRangeStart - yearsPerPage
-        if (newStart >= startYear) {
-            setYearRangeStart(newStart)
-        }
-    }, [yearRangeStart, yearsPerPage, startYear])
+        setYearRangeStart((prev: number) => {
+            const newStart = prev - yearsPerPage
+            return newStart >= startYear ? newStart : prev
+        })
+    }, [yearsPerPage, startYear, setYearRangeStart])
 
     const handleYearRangeNext = useCallback(() => {
-        const newStart = yearRangeStart + yearsPerPage
-        if (newStart <= endYear) {
-            setYearRangeStart(newStart)
-        }
-    }, [yearRangeStart, yearsPerPage, endYear])
+        setYearRangeStart((prev: number) => {
+            const newStart = prev + yearsPerPage
+            return newStart <= endYear ? newStart : prev
+        })
+    }, [yearsPerPage, endYear, setYearRangeStart])
 
-    const handleYearSelect = useCallback((year: number) => {
-        onYearSelect(new Date(year, currentMonth.getMonth(), 1))
-        setView("month")
-    }, [currentMonth, onYearSelect])
+    const handleYearSelect = useCallback(
+        (year: number) => {
+            onYearSelect(new Date(year, currentMonth.getMonth(), 1))
+            setView("month")
+        },
+        [currentMonth, onYearSelect, setView]
+    )
 
     return (
         <div className="space-y-4">

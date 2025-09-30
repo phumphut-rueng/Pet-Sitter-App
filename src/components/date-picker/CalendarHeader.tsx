@@ -5,7 +5,7 @@ interface Props {
     onMonthChange: (d: Date) => void
     setView: (v: "date" | "month" | "year") => void
     rules: {
-        disablePastMonthNavigation?: boolean
+        disablePastDates?: boolean
         minDate?: Date
         maxDate?: Date
         maxMonthsAhead?: number
@@ -19,7 +19,7 @@ export default function CalendarHeader({
     setView,
     rules
 }: Props) {
-    const { disablePastMonthNavigation, minDate, maxDate, maxMonthsAhead, today } = rules
+    const { disablePastDates, minDate, maxDate, maxMonthsAhead, today } = rules
 
     const todayMonth = new Date(today.getFullYear(), today.getMonth(), 1)
     const currentMonthStart = new Date(currentMonth.getFullYear(), currentMonth.getMonth(), 1)
@@ -27,10 +27,10 @@ export default function CalendarHeader({
     let isPrevDisabled = false
     let isNextDisabled = false
 
-    if (!disablePastMonthNavigation && minDate) {
+    if (!disablePastDates && minDate) {
         const minMonth = new Date(minDate.getFullYear(), minDate.getMonth(), 1)
         isPrevDisabled = currentMonthStart <= minMonth
-    } else if (disablePastMonthNavigation) {
+    } else if (disablePastDates) {
         isPrevDisabled = currentMonthStart <= todayMonth
     }
 

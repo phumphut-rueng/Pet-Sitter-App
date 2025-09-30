@@ -27,8 +27,6 @@ import AccountSidebarMini from "@/components/layout/AccountSidebarMini";
 import BookingSelect from "@/components/modal/BookingSelect";
 import DatePicker from "@/components/date-picker/DatePicker";
 import TimePicker from "@/components/time-picker/TimePicker";
-import DatePickerOld from "@/components/date-picker/DatePickerOld";
-
 // Section Wrapper
 const Section = ({ title, cols = 1, children }: {
   title: string;
@@ -188,7 +186,7 @@ export default function ComponentAll() {
   //=================================================================== 
   //ข้อมูลสำหรับ Time picker
   const [startTime, setStartTime] = useState<Date | undefined>(undefined)
-  const [startTime2, setStartTime2] = useState<Date | undefined>(undefined)
+  const [startTime2] = useState<Date | undefined>(undefined)
   const [endTime2, setendTime2] = useState<Date | undefined>(undefined)
   //===================================================================
 
@@ -201,7 +199,7 @@ export default function ComponentAll() {
         onClick={() => setIsOpenBookingSelect(true)}
       />
 
-      <DatePickerOld
+      <DatePicker
         date={date2}
         month={month2}
         onMonthChange={setMonth2}
@@ -745,9 +743,7 @@ export default function ComponentAll() {
                 onMonthChange={setMonth1}
                 onSelect={setDate1}
                 rules={{
-                  disablePastDates: true,
-                  disablePastMonthNavigation: true,
-                  maxMonthsAhead: 10
+                  disablePastDates: true
                 }}
               />
             </div>
@@ -771,9 +767,9 @@ export default function ComponentAll() {
                 month={month3}
                 onMonthChange={setMonth3}
                 onSelect={setDate3}
-                yearConfig={{
-                  startYear: 1950,
-                  endYear: new Date().getFullYear()
+                rules={{
+                  minDate: new Date(new Date().getFullYear() + 1950),
+                  maxDate: new Date(new Date().getFullYear() + 2026)
                 }}
               />
             </div>
@@ -784,7 +780,7 @@ export default function ComponentAll() {
                 month={month4}
                 onMonthChange={setMonth4}
                 onSelect={setDate4}
-                disabledDates={disabledDates}
+                disabledDatesSlots={disabledDates}
               />
             </div>
           </SubSection>
