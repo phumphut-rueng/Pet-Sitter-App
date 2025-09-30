@@ -208,6 +208,7 @@ function DatePicker({
     const handleDayClick = useCallback((day: number) => {
         const selectedDate = new Date(currentMonth.getFullYear(), currentMonth.getMonth(), day)
         if (!isDisabled(day) && !isSelected(day)) {
+            console.log("selectedDate", selectedDate);
             onSelect(selectedDate)
             setIsOpen(false)
             setPickerView('date')
