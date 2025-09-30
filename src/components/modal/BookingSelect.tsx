@@ -17,7 +17,7 @@ interface BookingSelectProps {
 }
 
 export default function BookingSelect({
-    sitterId = 1,
+    sitterId = 1, //เดี๋ยวใช้
     open,
     onOpenChange,
     disabledDates = [],
@@ -56,12 +56,27 @@ export default function BookingSelect({
                                         setStartTime(undefined)
                                         setEndTime(undefined)
                                     }}
-                                    disabledDates={disabledDates}
+                                    disabledDatesSlots={disabledDates}
                                     rules={{
                                         disablePastDates: true,
                                     }}
-
                                 />
+
+                                {/* <DatePicker
+                                    date={date}
+                                    month={month}
+                                    onMonthChange={setMonth}
+                                    onSelect={(date?: Date) => {
+                                        handleSelect(date)
+                                        setStartTime(undefined)
+                                        setEndTime(undefined)
+                                    }}
+                                    disabledDates={disabledDates}
+                                    rules={{
+                                        disablePastDates: true,
+                                        minDate: new Date(1995, 1, 1),
+                                    }}
+                                /> */}
                             </div>
 
                             {/* Time Picker */}

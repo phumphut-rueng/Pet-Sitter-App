@@ -14,31 +14,51 @@ function DatePicker({
     month,
     onMonthChange,
     onSelect,
-    disabledDates = [],
+    disabledDatesSlots = [],
     rules = {},
-    yearConfig = {},
     width = 400,
     classNameButton,
 }: DatePickerProps) {
     const [isOpen, setIsOpen] = useState(false)
     const [pickerView, setPickerView] = useState<"date" | "month" | "year">("date")
     const [yearRangeStart, setYearRangeStart] = useState<number>(0)
-
-    const currentMonth = month || new Date()
+    const currentMonth = useMemo(() => {
+        return month || new Date()
+    }, [month])
 
     const {
-        disablePastDates = false,
-        maxMonthsAhead = 0,
-        disablePastMonthNavigation = false,
+        disablePastDates,
         minDate,
         maxDate,
     } = rules
 
-    const {
-        startYear = new Date().getFullYear() - 100,
-        endYear = new Date().getFullYear(),
-        yearsPerPage = 12,
-    } = yearConfig
+    // ถ้า minDate ถูกส่งเข้ามา ให้ disablePastDates = false
+    const newDisablePastDates =
+        (minDate !== undefined) ? false : disablePastDates;
+
+    const newMinDate = minDate ?? (
+        newDisablePastDates
+            ? new Date()
+            : (() => {
+                const d = new Date()
+                d.setFullYear(d.getFullYear() - 100)
+                return d
+            })()
+    )
+
+    const newMaxDate = maxDate ?? (
+        newDisablePastDates
+            ? (() => {
+                const d = new Date()
+                d.setFullYear(d.getFullYear() + 11)
+                return d
+            })()
+            : new Date()
+    )
+
+    const startYear = disablePastDates ? newMinDate.getFullYear() : new Date().getFullYear() - 100
+    const endYear = newMaxDate.getFullYear()
+    const yearsPerPage = 12
 
     const today = useMemo(() => {
         const d = new Date()
@@ -48,13 +68,13 @@ function DatePicker({
 
     const disabledDatesSet = useMemo(() => {
         const set = new Set<string>()
-        disabledDates.forEach((d) => {
+        disabledDatesSlots.forEach((d) => {
             const normalized = new Date(d)
             normalized.setHours(0, 0, 0, 0)
             set.add(normalized.toISOString())
         })
         return set
-    }, [disabledDates])
+    }, [disabledDatesSlots])
 
     // --- Calendar data ---
     const calendarData = useMemo(() => {
@@ -117,13 +137,13 @@ function DatePicker({
         (day: number) => {
             const checkDate = new Date(currentMonth.getFullYear(), currentMonth.getMonth(), day)
             checkDate.setHours(0, 0, 0, 0)
-            if (disablePastDates && checkDate < today) return true
+            if (newDisablePastDates && checkDate < today) return true
             if (minDate && checkDate < minDate) return true
             if (maxDate && checkDate > maxDate) return true
             if (disabledDatesSet.has(checkDate.toISOString())) return true
             return false
         },
-        [currentMonth, disablePastDates, today, minDate, maxDate, disabledDatesSet]
+        [currentMonth, newDisablePastDates, today, minDate, maxDate, disabledDatesSet]
     )
 
     const openYearPicker = useCallback(() => {
@@ -159,14 +179,21 @@ function DatePicker({
                 className="w-auto overflow-hidden p-0 bg-white border border-gray-2 rounded-xl shadow-lg z-70"
                 align="start"
             >
-                <div style={{ width }} className="p-3 w-full max-w-sm ">
+                <div
+                    style={{ width }}
+                    className="p-3 w-full max-w-sm ">
                     {pickerView === "date" && (
                         <>
                             <CalendarHeader
                                 setView={setPickerView}
                                 currentMonth={currentMonth}
                                 onMonthChange={onMonthChange}
-                                rules={{ disablePastMonthNavigation, minDate, maxDate, maxMonthsAhead, today }}
+                                rules={{
+                                    disablePastDates: newDisablePastDates,
+                                    minDate,
+                                    maxDate,
+                                    today
+                                }}
                             />
                             <CalendarTable
                                 weeks={calendarData}
@@ -194,6 +221,9 @@ function DatePicker({
                             openYearPicker={openYearPicker}
                             onMonthSelect={onMonthChange}
                             setView={setPickerView}
+                            rules={{
+                                disablePastDates: newDisablePastDates
+                            }}
                         />
                     )}
 
@@ -204,7 +234,11 @@ function DatePicker({
                             yearRangeStart={yearRangeStart}
                             setYearRangeStart={setYearRangeStart}
                             setView={setPickerView}
-                            yearConfig={{ startYear, endYear, yearsPerPage }}
+                            yearConfig={{
+                                startYear,
+                                endYear,
+                                yearsPerPage
+                            }}
                         />
                     )}
                 </div>

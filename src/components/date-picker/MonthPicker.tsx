@@ -1,22 +1,26 @@
 import { ChevronLeft, ChevronDown } from "lucide-react"
-
-interface Props {
-    currentMonth: Date
-    openYearPicker: () => void
-    onMonthSelect: (d: Date) => void
-    setView: (v: "date" | "month" | "year") => void
-}
+import { useCallback } from "react"
+import { MonthProps } from "@/types/date-picker.types"
 
 export default function MonthPicker({
     currentMonth,
     openYearPicker,
     onMonthSelect,
-    setView
-}: Props) {
+    setView,
+    rules = {},
+}: MonthProps) {
     const months = [
         "January", "February", "March", "April", "May", "June",
         "July", "August", "September", "October", "November", "December"
     ]
+    const {
+        disablePastDates = false
+    } = rules
+
+    const handleMonthSelect = useCallback((id: number) => {
+        onMonthSelect(new Date(currentMonth.getFullYear(), id, 1))
+        setView("date")
+    }, [onMonthSelect, setView, currentMonth])
 
     return (
         <div className="space-y-4">
@@ -44,22 +48,34 @@ export default function MonthPicker({
 
             {/* Grid แสดงเดือนทั้งหมด (3 คอลัมน์) */}
             <div className="grid grid-cols-3 gap-2">
-                {months.map((m, idx) => (
-                    <button
-                        key={m}
-                        onClick={() => {
-                            onMonthSelect(new Date(currentMonth.getFullYear(), idx, 1))
-                            setView("date")
-                        }}
-                        className={`p-3 text-sm rounded-md cursor-pointer 
-                            ${idx === currentMonth.getMonth()
-                                ? "bg-orange-5 text-white"
-                                : "hover:bg-orange-1 text-gray-9"
-                            }`}
-                    >
-                        {m.substring(0, 3)}
-                    </button>
-                ))}
+                {months.map((m, idx) => {
+                    console.log(disablePastDates);
+
+                    const isCurrentYear = currentMonth.getFullYear() === new Date().getFullYear()
+                    const isPastMonth = disablePastDates &&
+                        isCurrentYear && idx < new Date().getMonth()
+
+                    return (
+                        <button
+                            key={m}
+                            onClick={() => {
+                                if (!isPastMonth) {
+                                    handleMonthSelect(idx)
+                                }
+                            }}
+                            className={`p-3 text-sm rounded-md
+                                ${idx === currentMonth.getMonth()
+                                    ? "bg-orange-5 text-white"
+                                    : isPastMonth
+                                        ? "text-gray-4 cursor-not-allowed"
+                                        : "hover:bg-orange-1 text-gray-9 cursor-pointer"
+                                }`
+                            }
+                        >
+                            {m.substring(0, 3)}
+                        </button>
+                    )
+                })}
             </div>
         </div>
     )
