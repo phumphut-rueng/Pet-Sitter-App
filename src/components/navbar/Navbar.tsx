@@ -54,7 +54,7 @@ const Navbar: React.FC = () => {
       { href: "/account/pet",      icon: Heart,     avatarIcon: Heart,     text: "Your Pet",        avatarText: "Your Pet" },
       { href: "/account/bookings", icon: History,   avatarIcon: History,   text: "Booking History", avatarText: "History" },
 
-      // ✅ โชว์เสมอเมื่อ login แล้ว (ไม่เช็ก role)
+      //  โชว์เสมอเมื่อ login แล้ว (ไม่เช็ก role)
       { href: "/sitter/profile",   icon: User,      avatarIcon: User,      text: "Sitter Page",     avatarText: "Sitter Page" },
 
       // Logout

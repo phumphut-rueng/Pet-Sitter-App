@@ -26,7 +26,7 @@ const formatters = {
   dateToString: (date: Date | null): string =>
     date ? date.toISOString().slice(0, 10) : DEFAULT_VALUES.DOB,
 
-  // รองรับทั้ง null/undefined → string
+  // รองรับทั้ง null/undefined string
   nullableStringToString: (value: string | null | undefined): string =>
     value ?? "",
 };
