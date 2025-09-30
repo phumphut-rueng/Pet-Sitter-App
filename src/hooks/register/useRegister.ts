@@ -9,7 +9,7 @@ export function useRegister() {
     const [isLoading, setIsLoading] = useState(false)
     const [isOpen, setIsOpen] = useState(false)
 
-    const { form, setForm, error, setError, handleChange, handlePhoneChange, validateForm } =
+    const { form, error, setError, handleChange, handlePhoneChange, validateForm } =
         useRegisterForm()
 
     const { role, handleChangeRole } = useRegisterRole(setError)

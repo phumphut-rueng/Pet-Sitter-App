@@ -2,12 +2,8 @@ import Image from "next/image";
 import InputText from "@/components/input/InputText";
 import PrimaryButton from "@/components/buttons/PrimaryButton";
 import { Checkbox } from "@/components/ui/checkbox";
-import { useState, useEffect } from "react";
 import Link from "next/link";
-import { signIn, useSession } from "next-auth/react";
-import { useRouter } from "next/router";
 import SocialLogin from "@/components/login-register/SocialLogin";
-import { validateEmail, validatePassword } from "@/utils/validate-register";
 import { useLogin } from "@/hooks/login/useLogin";
 
 export default function Login() {

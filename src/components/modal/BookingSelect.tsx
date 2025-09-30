@@ -3,7 +3,6 @@ import {
 } from "@/components/ui/alert-dialog"
 import AlertConfirm from "./AlertConfirm"
 import PrimaryButton from "../buttons/PrimaryButton"
-import { useState } from "react"
 import Image from "next/image";
 import { useDatePicker } from "@/hooks/useDatePicker"
 import { useTimePicker } from "@/hooks/useTimePicker"
@@ -26,7 +25,7 @@ export default function BookingSelect({
     textButton = "Continue",
     open,
     onOpenChange,
-    onConfirm,
+    // onConfirm,
     disabledDates = [],
 }: ConfirmationProps) {
     const { date, month, setMonth, handleSelect } = useDatePicker()

@@ -1,4 +1,4 @@
-import { useState } from "react"
+import { useState, useMemo, useCallback } from "react"
 import { ChevronLeft, ChevronRight, ChevronDown } from "lucide-react"
 import {
     Popover,
@@ -6,7 +6,6 @@ import {
     PopoverTrigger,
 } from "@/components/ui/popover"
 import { formatDate } from "@/utils/formatDate"
-import { cn } from "@/lib/utils"
 
 interface DatePickerProps {
     date: Date | undefined // วันที่ที่เลือกไว้
@@ -14,12 +13,12 @@ interface DatePickerProps {
     onMonthChange: (month: Date | undefined) => void // callback เมื่อเปลี่ยนเดือน
     onSelect: (date?: Date) => void // callback เมื่อเลือกวันที่
     disabledDates?: Date[] // array ของวันที่ที่ต้องการ disable
-    width?: number
+    width?: number // ความกว้างของ calendar
 
     rules?: {
-        disablePastDates?: boolean // ไม่สามารถเลือกวันที่ในอดีตได้ (default: true)
-        maxMonthsAhead?: number // จำนวนเดือนไม่เกิดกี่เดือนนับจากเดือนจากปัจจุบัน (default: 10)
-        disablePastMonthNavigation?: boolean // ไม่สามารถย้อนกลับไปเดือนที่แล้วได้ (default: true)
+        disablePastDates?: boolean // ไม่สามารถเลือกวันที่ในอดีตได้ (default: false)
+        maxMonthsAhead?: number // จำนวนเดือนไม่เกินกี่เดือนนับจากเดือนจากปัจจุบัน (default: 0)
+        disablePastMonthNavigation?: boolean // ไม่สามารถย้อนกลับไปเดือนที่แล้วได้ (default: false)
         minDate?: Date // วันที่เริ่มต้นที่เลือกได้
         maxDate?: Date // วันที่สุดท้ายที่เลือกได้
     }
@@ -44,12 +43,13 @@ function DatePicker({
     const [isOpen, setIsOpen] = useState(false)
     const [pickerView, setPickerView] = useState<'date' | 'month' | 'year'>('date')
     const [yearRangeStart, setYearRangeStart] = useState<number>(0)
+
     const currentMonth = month || new Date()
 
     const {
-        disablePastDates = true,
-        maxMonthsAhead = 10,
-        disablePastMonthNavigation = true,
+        disablePastDates = false,
+        maxMonthsAhead = 0,
+        disablePastMonthNavigation = false,
         minDate,
         maxDate
     } = rules
@@ -60,240 +60,227 @@ function DatePicker({
         yearsPerPage = 12
     } = yearConfig
 
-    // หาจำนวนวันในเดือน
-    const getDaysInMonth = (date: Date) => {
-        const year = date.getFullYear()
-        const month = date.getMonth()
-        return new Date(year, month + 1, 0).getDate()
-    }
+    // Cache วันที่วันนี้เพื่อไม่ต้องสร้างใหม่ทุก render
+    const today = useMemo(() => {
+        const d = new Date()
+        d.setHours(0, 0, 0, 0)
+        return d
+    }, [])
 
-    // หาว่าวันแรกของเดือนตรงกับวันอะไรในสัปดาห์
-    const getFirstDayOfMonth = (date: Date) => {
-        const year = date.getFullYear()
-        const month = date.getMonth()
-        return new Date(year, month, 1).getDay()
-    }
+    // แปลง disabledDates เป็น Set เพื่อการค้นหาที่เร็วขึ้น O(1)
+    const disabledDatesSet = useMemo(() => {
+        const set = new Set<string>()
+        disabledDates.forEach(d => {
+            const normalized = new Date(d)
+            normalized.setHours(0, 0, 0, 0)
+            set.add(normalized.toISOString())
+        })
+        return set
+    }, [disabledDates])
 
-    const daysInMonth = getDaysInMonth(currentMonth)
-    const firstDay = getFirstDayOfMonth(currentMonth)
-    const today = new Date()
-    today.setHours(0, 0, 0, 0)
-
-    // หาข้อมูลเดือนก่อนหน้า สำหรับแสดงวันที่ของเดือนก่อนหน้าในตาราง
-    const prevMonth = new Date(currentMonth.getFullYear(), currentMonth.getMonth(), 0)
-    const daysInPrevMonth = prevMonth.getDate()
-
-    // ===== Build Calendar Grid =====
-    // สร้าง array ของวันที่ทั้งหมดที่จะแสดงในตาราง (รวมวันของเดือนก่อนและเดือนถัดไป)
-    const days = []
-    // เพิ่มวันของเดือนที่แล้ว (วันที่จะแสดงสีเทา)
-    for (let i = firstDay - 1; i >= 0; i--) {
-        days.push({ day: daysInPrevMonth - i, isCurrentMonth: false })
-    }
-    // เพิ่มวันของเดือนปัจจุบัน
-    for (let i = 1; i <= daysInMonth; i++) {
-        days.push({ day: i, isCurrentMonth: true })
-    }
-    // เพิ่มวันของเดือนถัดไป (เติมให้ครบสัปดาห์)
-    const remainingInWeek = 7 - (days.length % 7)
-    if (remainingInWeek < 7) {
-        for (let i = 1; i <= remainingInWeek; i++) {
-            days.push({ day: i, isCurrentMonth: false })
+    // Memoize การคำนวณ calendar grid เพื่อไม่ต้องคำนวณใหม่ทุก render
+    const calendarData = useMemo(() => {
+        // หาจำนวนวันในเดือน
+        const getDaysInMonth = (date: Date) => {
+            const year = date.getFullYear()
+            const month = date.getMonth()
+            return new Date(year, month + 1, 0).getDate()
         }
-    }
 
-    const weeks = []
-    for (let i = 0; i < days.length; i += 7) {
-        weeks.push(days.slice(i, i + 7))
-    }
-
-    const handlePrevMonth = () => {
-        const newMonth = new Date(currentMonth)
-        newMonth.setMonth(newMonth.getMonth() - 1)
-
-        if (!isPrevDisabled()) {
-            onMonthChange(newMonth)
+        // หาว่าวันแรกของเดือนตรงกับวันอะไรในสัปดาห์
+        const getFirstDayOfMonth = (date: Date) => {
+            const year = date.getFullYear()
+            const month = date.getMonth()
+            return new Date(year, month, 1).getDay()
         }
-    }
 
-    const handleNextMonth = () => {
-        const newMonth = new Date(currentMonth)
-        newMonth.setMonth(newMonth.getMonth() + 1)
+        const daysInMonth = getDaysInMonth(currentMonth)
+        const firstDay = getFirstDayOfMonth(currentMonth)
 
-        if (!isNextDisabled()) {
-            onMonthChange(newMonth)
+        // หาข้อมูลเดือนก่อนหน้า สำหรับแสดงวันที่ของเดือนก่อนหน้าในตาราง
+        const prevMonth = new Date(currentMonth.getFullYear(), currentMonth.getMonth(), 0)
+        const daysInPrevMonth = prevMonth.getDate()
+
+        // ===== Build Calendar Grid =====
+        // สร้าง array ของวันที่ทั้งหมดที่จะแสดงในตาราง (รวมวันของเดือนก่อนและเดือนถัดไป)
+        const days = []
+
+        // เพิ่มวันของเดือนที่แล้ว (วันที่จะแสดงสีเทา)
+        for (let i = firstDay - 1; i >= 0; i--) {
+            days.push({ day: daysInPrevMonth - i, isCurrentMonth: false })
         }
-    }
 
-    //ตรวจสอบว่าปุ่ม Prev ควร disable หรือไม่
-    const isPrevDisabled = () => {
+        // เพิ่มวันของเดือนปัจจุบัน
+        for (let i = 1; i <= daysInMonth; i++) {
+            days.push({ day: i, isCurrentMonth: true })
+        }
+
+        // เพิ่มวันของเดือนถัดไป (เติมให้ครบสัปดาห์)
+        const remainingInWeek = 7 - (days.length % 7)
+        if (remainingInWeek < 7) {
+            for (let i = 1; i <= remainingInWeek; i++) {
+                days.push({ day: i, isCurrentMonth: false })
+            }
+        }
+
+        const weeks = []
+        for (let i = 0; i < days.length; i += 7) {
+            weeks.push(days.slice(i, i + 7))
+        }
+
+        return weeks
+    }, [currentMonth])
+
+    // Memoize การคำนวณ limits ของเดือน (prev/next disabled)
+    const limits = useMemo(() => {
+        const todayMonth = new Date(today.getFullYear(), today.getMonth(), 1)
+        const currentMonthStart = new Date(currentMonth.getFullYear(), currentMonth.getMonth(), 1)
+
+        let isPrevDisabled = false
+        let isNextDisabled = false
+
+        // ตรวจสอบว่าปุ่ม Prev ควร disable หรือไม่
         if (!disablePastMonthNavigation && minDate) {
             const minMonth = new Date(minDate.getFullYear(), minDate.getMonth(), 1)
-            const currentMonthStart = new Date(currentMonth.getFullYear(), currentMonth.getMonth(), 1)
-            return currentMonthStart <= minMonth
+            isPrevDisabled = currentMonthStart <= minMonth
+        } else if (disablePastMonthNavigation) {
+            isPrevDisabled = currentMonthStart <= todayMonth
         }
 
-        if (disablePastMonthNavigation) {
-            const todayMonth = new Date(today.getFullYear(), today.getMonth(), 1)
-            const currentMonthStart = new Date(currentMonth.getFullYear(), currentMonth.getMonth(), 1)
-            return currentMonthStart <= todayMonth
-        }
-
-        return false
-    }
-
-    //ตรวจสอบว่าปุ่ม Next ควร disable หรือไม่
-    const isNextDisabled = () => {
+        // ตรวจสอบว่าปุ่ม Next ควร disable หรือไม่
         if (maxMonthsAhead === 0 && maxDate) {
             const maxMonth = new Date(maxDate.getFullYear(), maxDate.getMonth(), 1)
-            const currentMonthStart = new Date(currentMonth.getFullYear(), currentMonth.getMonth(), 1)
-            return currentMonthStart >= maxMonth
-        }
-
-        if (maxMonthsAhead > 0) {
+            isNextDisabled = currentMonthStart >= maxMonth
+        } else if (maxMonthsAhead > 0) {
             const maxMonth = new Date(today)
             maxMonth.setMonth(maxMonth.getMonth() + maxMonthsAhead)
-            const currentMonthStart = new Date(currentMonth.getFullYear(), currentMonth.getMonth(), 1)
             const limitMonth = new Date(maxMonth.getFullYear(), maxMonth.getMonth(), 1)
-            return currentMonthStart >= limitMonth
+            isNextDisabled = currentMonthStart >= limitMonth
         }
 
-        return false
-    }
+        return { isPrevDisabled, isNextDisabled }
+    }, [currentMonth, today, disablePastMonthNavigation, minDate, maxMonthsAhead, maxDate])
 
-    const handleDayClick = (day: number) => {
+    const handlePrevMonth = useCallback(() => {
+        if (!limits.isPrevDisabled) {
+            const newMonth = new Date(currentMonth)
+            newMonth.setMonth(newMonth.getMonth() - 1)
+            onMonthChange(newMonth)
+        }
+    }, [currentMonth, limits.isPrevDisabled, onMonthChange])
+
+    const handleNextMonth = useCallback(() => {
+        if (!limits.isNextDisabled) {
+            const newMonth = new Date(currentMonth)
+            newMonth.setMonth(newMonth.getMonth() + 1)
+            onMonthChange(newMonth)
+        }
+    }, [currentMonth, limits.isNextDisabled, onMonthChange])
+
+    const isSelected = useCallback((day: number) => {
+        if (!date) return false
+        return date.getDate() === day &&
+            date.getMonth() === currentMonth.getMonth() &&
+            date.getFullYear() === currentMonth.getFullYear()
+    }, [date, currentMonth])
+
+    const isToday = useCallback((day: number) => {
+        return today.getDate() === day &&
+            today.getMonth() === currentMonth.getMonth() &&
+            today.getFullYear() === currentMonth.getFullYear()
+    }, [today, currentMonth])
+
+    const isDisabled = useCallback((day: number) => {
+        const checkDate = new Date(currentMonth.getFullYear(), currentMonth.getMonth(), day)
+        checkDate.setHours(0, 0, 0, 0)
+
+        if (disablePastDates && checkDate < today) return true
+        if (minDate && checkDate < minDate) return true
+        if (maxDate && checkDate > maxDate) return true
+        if (disabledDatesSet.has(checkDate.toISOString())) return true
+
+        return false
+    }, [currentMonth, disablePastDates, today, minDate, maxDate, disabledDatesSet])
+
+    const handleDayClick = useCallback((day: number) => {
         const selectedDate = new Date(currentMonth.getFullYear(), currentMonth.getMonth(), day)
         if (!isDisabled(day) && !isSelected(day)) {
             onSelect(selectedDate)
             setIsOpen(false)
             setPickerView('date')
         }
-    }
+    }, [currentMonth, isDisabled, isSelected, onSelect])
 
-    const isSelected = (day: number) => {
-        if (!date) return false
-        return date.getDate() === day &&
-            date.getMonth() === currentMonth.getMonth() &&
-            date.getFullYear() === currentMonth.getFullYear()
-    }
-
-    const isToday = (day: number) => {
-        return today.getDate() === day &&
-            today.getMonth() === currentMonth.getMonth() &&
-            today.getFullYear() === currentMonth.getFullYear()
-    }
-
-    const isInDisabledList = (day: number) => {
-        return disabledDates.some(disabledDate => {
-            const d = new Date(disabledDate)
-            d.setHours(0, 0, 0, 0)
-            return d.getDate() === day &&
-                d.getMonth() === currentMonth.getMonth() &&
-                d.getFullYear() === currentMonth.getFullYear()
-        })
-    }
-
-    const isDisabled = (day: number) => {
-        const checkDate = new Date(currentMonth.getFullYear(), currentMonth.getMonth(), day)
-        checkDate.setHours(0, 0, 0, 0)
-
-        let disabled = false
-
-        if (disablePastDates && checkDate < today) {
-            disabled = true
-        }
-
-        if (minDate && checkDate < minDate) {
-            disabled = true
-        }
-
-        if (maxDate && checkDate > maxDate) {
-            disabled = true
-        }
-
-        if (isInDisabledList(day)) {
-            disabled = true
-        }
-
-        return disabled
-    }
-
-    const handleMonthSelect = (monthIndex: number) => {
+    const handleMonthSelect = useCallback((monthIndex: number) => {
         const newDate = new Date(currentMonth.getFullYear(), monthIndex, 1)
         onMonthChange(newDate)
         setPickerView('date')
-    }
+    }, [currentMonth, onMonthChange])
 
-    const handleYearSelect = (year: number) => {
+    const handleYearSelect = useCallback((year: number) => {
         const newDate = new Date(year, currentMonth.getMonth(), 1)
         onMonthChange(newDate)
         setPickerView('month')
-    }
+    }, [currentMonth, onMonthChange])
 
-    //สร้าง array ของปีที่จะแสดงในหน้า year picker (ตาม range ปัจจุบัน)
-    const generateYearRange = () => {
+    // สร้าง array ของปีที่จะแสดงในหน้า year picker (ตาม range ปัจจุบัน)
+    const yearRange = useMemo(() => {
         const years = []
         const rangeEnd = Math.min(yearRangeStart + yearsPerPage - 1, endYear)
-
         for (let i = yearRangeStart; i <= rangeEnd; i++) {
             years.push(i)
         }
         return years
-    }
+    }, [yearRangeStart, yearsPerPage, endYear])
 
-    const handleYearRangePrev = () => {
+    const handleYearRangePrev = useCallback(() => {
         const newStart = yearRangeStart - yearsPerPage
         if (newStart >= startYear) {
             setYearRangeStart(newStart)
         }
-    }
+    }, [yearRangeStart, yearsPerPage, startYear])
 
-    const handleYearRangeNext = () => {
+    const handleYearRangeNext = useCallback(() => {
         const newStart = yearRangeStart + yearsPerPage
         if (newStart <= endYear) {
             setYearRangeStart(newStart)
         }
-    }
+    }, [yearRangeStart, yearsPerPage, endYear])
 
-    //ตรวจสอบว่า Prev year range ควร disable หรือไม่
-    const isYearRangePrevDisabled = () => {
-        return yearRangeStart <= startYear
-    }
-
-    //ตรวจสอบว่า Next year range ควร disable หรือไม่
-    const isYearRangeNextDisabled = () => {
-        return yearRangeStart + yearsPerPage > endYear
-    }
-
-    //สร้าง label แสดง range ของปี เช่น "2000-2011"
-    const getYearRangeLabel = () => {
-        const rangeEnd = Math.min(yearRangeStart + yearsPerPage - 1, endYear)
-        return `${yearRangeStart}-${rangeEnd}`
-    }
-
-    //เปิด year picker และตั้งค่า range ให้แสดงปีปัจจุบัน
-    const openYearPicker = () => {
+    // เปิด year picker และตั้งค่า range ให้แสดงปีปัจจุบัน
+    const openYearPicker = useCallback(() => {
         const currentYear = currentMonth.getFullYear()
         // หา range ที่มีปีปัจจุบันอยู่
         const rangeIndex = Math.floor((currentYear - startYear) / yearsPerPage)
         const calculatedStart = startYear + (rangeIndex * yearsPerPage)
         setYearRangeStart(calculatedStart)
         setPickerView('year')
-    }
+    }, [currentMonth, startYear, yearsPerPage])
 
-    const months = [
-        'January', 'February', 'March', 'April', 'May', 'June',
-        'July', 'August', 'September', 'October', 'November', 'December'
-    ]
-
-    const weekDays = ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa']
-
-    const handlePopoverOpenChange = (open: boolean) => {
+    const handlePopoverOpenChange = useCallback((open: boolean) => {
         setIsOpen(open)
         if (!open) {
             setPickerView('date')
         }
-    }
+    }, [])
+
+    // Cache static arrays
+    const months = useMemo(() => [
+        'January', 'February', 'March', 'April', 'May', 'June',
+        'July', 'August', 'September', 'October', 'November', 'December'
+    ], [])
+
+    const weekDays = useMemo(() => ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'], [])
+
+    // สร้าง label แสดง range ของปี เช่น "2000-2011"
+    const yearRangeLabel = useMemo(() => {
+        const rangeEnd = Math.min(yearRangeStart + yearsPerPage - 1, endYear)
+        return `${yearRangeStart}-${rangeEnd}`
+    }, [yearRangeStart, yearsPerPage, endYear])
+
+    // ตรวจสอบว่า Prev/Next year range ควร disable หรือไม่
+    const isYearRangePrevDisabled = yearRangeStart <= startYear
+    const isYearRangeNextDisabled = yearRangeStart + yearsPerPage > endYear
 
     return (
         <Popover open={isOpen} onOpenChange={handlePopoverOpenChange}>
@@ -340,9 +327,9 @@ function DatePicker({
                                 <div className="flex gap-1">
                                     <button
                                         onClick={handlePrevMonth}
-                                        disabled={isPrevDisabled()}
+                                        disabled={limits.isPrevDisabled}
                                         className={`p-2 rounded-full
-                                            ${isPrevDisabled()
+                                            ${limits.isPrevDisabled
                                                 ? 'text-gray-4 cursor-not-allowed'
                                                 : 'hover:text-orange-5 cursor-pointer'
                                             }`}
@@ -352,9 +339,9 @@ function DatePicker({
 
                                     <button
                                         onClick={handleNextMonth}
-                                        disabled={isNextDisabled()}
+                                        disabled={limits.isNextDisabled}
                                         className={`p-2 rounded-full
-                                            ${isNextDisabled()
+                                            ${limits.isNextDisabled
                                                 ? 'text-gray-4 cursor-not-allowed'
                                                 : ' hover:text-orange-5 cursor-pointer'
                                             }`}
@@ -379,35 +366,42 @@ function DatePicker({
                                 </thead>
                                 <tbody>
                                     {/* แสดงวันที่ทั้งหมดในตาราง (แบ่งเป็นสัปดาห์) */}
-                                    {weeks.map((week, weekIndex) => (
+                                    {calendarData.map((week, weekIndex) => (
                                         <tr key={weekIndex}>
-                                            {week.map((dayObj, dayIndex) => (
-                                                <td
-                                                    key={dayIndex}
-                                                    className="text-center p-1">
-                                                    {dayObj && (
-                                                        <button
-                                                            onClick={() => dayObj.isCurrentMonth && handleDayClick(dayObj.day)}
-                                                            disabled={!dayObj.isCurrentMonth || isDisabled(dayObj.day)}
-                                                            className={`
-                                                                w-9 h-9 rounded-full flex items-center justify-center relative
-                                                                ${!dayObj.isCurrentMonth
-                                                                    ? "text-gray-2 cursor-default"
-                                                                    : isSelected(dayObj.day)
-                                                                        ? "bg-orange-5 text-white font-semibold"
-                                                                        : isToday(dayObj.day)
-                                                                            ? "text-orange-5 ring-2 ring-orange-5"
-                                                                            : isDisabled(dayObj.day)
-                                                                                ? "text-gray-2 cursor-not-allowed"
-                                                                                : "hover:bg-orange-1 text-gray-9 cursor-pointer"
-                                                                }
-                                                            `}
-                                                        >
-                                                            {dayObj.day}
-                                                        </button>
-                                                    )}
-                                                </td>
-                                            ))}
+                                            {week.map((dayObj, dayIndex) => {
+                                                // Pre-calculate states เพื่อหลีกเลี่ยงการเรียก function หลายครั้งใน className
+                                                const disabled = !dayObj.isCurrentMonth || isDisabled(dayObj.day)
+                                                const selected = isSelected(dayObj.day)
+                                                const today = isToday(dayObj.day)
+
+                                                return (
+                                                    <td
+                                                        key={dayIndex}
+                                                        className="text-center p-1">
+                                                        {dayObj && (
+                                                            <button
+                                                                onClick={() => dayObj.isCurrentMonth && handleDayClick(dayObj.day)}
+                                                                disabled={disabled}
+                                                                className={`
+                                                                    w-9 h-9 rounded-full flex items-center justify-center relative
+                                                                    ${!dayObj.isCurrentMonth
+                                                                        ? "text-gray-2 cursor-default"
+                                                                        : selected
+                                                                            ? "bg-orange-5 text-white font-semibold"
+                                                                            : today
+                                                                                ? "text-orange-5 ring-2 ring-orange-5"
+                                                                                : disabled
+                                                                                    ? "text-gray-2 cursor-not-allowed"
+                                                                                    : "hover:bg-orange-1 text-gray-9 cursor-pointer"
+                                                                    }
+                                                                `}
+                                                            >
+                                                                {dayObj.day}
+                                                            </button>
+                                                        )}
+                                                    </td>
+                                                )
+                                            })}
                                         </tr>
                                     ))}
                                 </tbody>
@@ -418,8 +412,7 @@ function DatePicker({
                     {/* ===== Month View - หน้าเลือกเดือน ===== */}
                     {pickerView === 'month' && (
                         <div className="space-y-4">
-                            <div
-                                className="flex items-center justify-between px-2">
+                            <div className="flex items-center justify-between px-2">
                                 <button
                                     onClick={openYearPicker}
                                     className="flex items-center gap-1 px-2 py-1
@@ -464,8 +457,8 @@ function DatePicker({
                                 <div className="flex items-center gap-2">
                                     <button
                                         onClick={handleYearRangePrev}
-                                        disabled={isYearRangePrevDisabled()}
-                                        className={`p-1 rounded-full ${isYearRangePrevDisabled()
+                                        disabled={isYearRangePrevDisabled}
+                                        className={`p-1 rounded-full ${isYearRangePrevDisabled
                                             ? 'text-gray-4 cursor-not-allowed'
                                             : 'hover:text-orange-5 cursor-pointer'
                                             }`}
@@ -473,12 +466,12 @@ function DatePicker({
                                         <ChevronLeft className="h-4 w-4" />
                                     </button>
                                     <h4 className="font-medium text-[14px] min-w-[80px] text-center">
-                                        {getYearRangeLabel()}
+                                        {yearRangeLabel}
                                     </h4>
                                     <button
                                         onClick={handleYearRangeNext}
-                                        disabled={isYearRangeNextDisabled()}
-                                        className={`p-1 rounded-full ${isYearRangeNextDisabled()
+                                        disabled={isYearRangeNextDisabled}
+                                        className={`p-1 rounded-full ${isYearRangeNextDisabled
                                             ? 'text-gray-4 cursor-not-allowed'
                                             : 'hover:text-orange-5 cursor-pointer'
                                             }`}
@@ -493,9 +486,10 @@ function DatePicker({
                                     <ChevronLeft className="h-5 w-5" />
                                 </button>
                             </div>
+
                             {/* Grid แสดงปีทั้งหมด (4 คอลัมน์) */}
                             <div className="grid grid-cols-4 gap-4">
-                                {generateYearRange().map((year) => (
+                                {yearRange.map((year) => (
                                     <button
                                         key={year}
                                         onClick={() => handleYearSelect(year)}
