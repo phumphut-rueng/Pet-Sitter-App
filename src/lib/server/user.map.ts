@@ -1,7 +1,9 @@
 import type { user } from "@prisma/client";
 
-
-type UserProfileFields = Pick<user, "id" | "name" | "email" | "phone" | "dob" | "profile_image">;
+type UserProfileFields = Pick<
+  user,
+  "id" | "name" | "email" | "phone" | "dob" | "profile_image"
+>;
 
 type OwnerProfileDto = {
   id: number;
@@ -13,7 +15,6 @@ type OwnerProfileDto = {
   profileImage: string;
 };
 
-
 const DEFAULT_VALUES = {
   PHONE: "",
   ID_NUMBER: "",
@@ -21,41 +22,36 @@ const DEFAULT_VALUES = {
   PROFILE_IMAGE: "",
 } as const;
 
-
 const formatters = {
-  dateToString: (date: Date | null): string => {
-    return date ? date.toISOString().slice(0, 10) : DEFAULT_VALUES.DOB;
-  },
+  dateToString: (date: Date | null): string =>
+    date ? date.toISOString().slice(0, 10) : DEFAULT_VALUES.DOB,
 
-  nullableStringToString: (value: string | null): string => {
-    return value ?? "";
-  }
+  // รองรับทั้ง null/undefined → string
+  nullableStringToString: (value: string | null | undefined): string =>
+    value ?? "",
 };
 
-
-export const toOwnerProfileDto = (user: UserProfileFields): OwnerProfileDto => ({
-  id: user.id,
-  name: user.name,
-  email: user.email,
-  phone: formatters.nullableStringToString(user.phone),
+export const toOwnerProfileDto = (u: UserProfileFields): OwnerProfileDto => ({
+  id: u.id,
+  name: formatters.nullableStringToString(u.name),         
+  email: formatters.nullableStringToString(u.email),        
+  phone: formatters.nullableStringToString(u.phone),
   idNumber: DEFAULT_VALUES.ID_NUMBER,
-  dob: formatters.dateToString(user.dob),
-  profileImage: formatters.nullableStringToString(user.profile_image),
+  dob: formatters.dateToString(u.dob),
+  profileImage: formatters.nullableStringToString(u.profile_image),
 });
-
 
 export const userMappers = {
   toOwnerProfile: toOwnerProfileDto,
-  
-  // สำหรับ mapping แบบอื่นในอนาคต
-  toPublicProfile: (user: UserProfileFields) => ({
-    id: user.id,
-    name: user.name,
-    profileImage: formatters.nullableStringToString(user.profile_image),
+
+  toPublicProfile: (u: UserProfileFields) => ({
+    id: u.id,
+    name: formatters.nullableStringToString(u.name),       
+    profileImage: formatters.nullableStringToString(u.profile_image),
   }),
 
-  toMinimalProfile: (user: Pick<user, "id" | "name">) => ({
-    id: user.id,
-    name: user.name,
+  toMinimalProfile: (u: Pick<user, "id" | "name">) => ({
+    id: u.id,
+    name: formatters.nullableStringToString(u.name),        
   }),
 } as const;

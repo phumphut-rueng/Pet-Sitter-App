@@ -52,7 +52,7 @@ model sitter_image {
 
 model user {
   id            Int         @id @default(autoincrement())
-  name          String      @db.VarChar(100)
+  name          String?     @db.VarChar(100)
   email         String      @unique @db.VarChar(100)
   password      String      @db.VarChar(255)
   phone         String?     @db.VarChar(20)

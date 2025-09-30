@@ -8,12 +8,12 @@ import { UserRound, History, LogOut, Heart, User } from "lucide-react";
 import Navigation from "./Navigation";
 import type { MenuItem } from "@/types/navigation.types";
 
-// util เช็ก role
-function hasRole(sessionRoles: string[] | undefined, target: string): boolean {
-  if (!sessionRoles?.length) return false;
-  const t = target.trim().toLowerCase();
-  return sessionRoles.some((r) => (r ?? "").toLowerCase() === t);
-}
+// (ยังเก็บ util ไว้ได้ แต่โค้ดนี้ไม่ต้องใช้แล้ว)
+// function hasRole(sessionRoles: string[] | undefined, target: string): boolean {
+//   if (!sessionRoles?.length) return false;
+//   const t = target.trim().toLowerCase();
+//   return sessionRoles.some((r) => (r ?? "").toLowerCase() === t);
+// }
 
 const Navbar: React.FC = () => {
   const router = useRouter();
@@ -40,7 +40,7 @@ const Navbar: React.FC = () => {
     };
   }, [rawUser]);
 
-  // ----- เมนูหลัก + เงื่อนไข Become a Pet Sitter -----
+  // ----- เมนูหลัก (แบบ Simple: แค่ล็อกอินก็เห็น Sitter Page) -----
   const menuItems: MenuItem[] = useMemo(() => {
     if (!navUser) {
       return [
@@ -53,43 +53,13 @@ const Navbar: React.FC = () => {
       { href: "/account/profile",  icon: UserRound, avatarIcon: UserRound, text: "Profile",         avatarText: "Profile" },
       { href: "/account/pet",      icon: Heart,     avatarIcon: Heart,     text: "Your Pet",        avatarText: "Your Pet" },
       { href: "/account/bookings", icon: History,   avatarIcon: History,   text: "Booking History", avatarText: "History" },
+
+      // ✅ โชว์เสมอเมื่อ login แล้ว (ไม่เช็ก role)
+      { href: "/sitter/profile",   icon: User,      avatarIcon: User,      text: "Sitter Page",     avatarText: "Sitter Page" },
+
+      // Logout
+      { href: "#", icon: LogOut, avatarIcon: LogOut, text: "Logout", avatarText: "Log out", isLogout: true },
     ];
-
-    const roles = navUser.roles ?? [];
-    const isOwner  = hasRole(roles, "owner");
-    const isSitter = hasRole(roles, "sitter");
-
-    // ⬇️ เจ้าของที่ยังไม่เป็น sitter → เพิ่มเมนู Become a Pet Sitter
-    if (isOwner && !isSitter) {
-      items.push({
-        href: "/sitter/onboarding",
-        icon: User,
-        avatarIcon: User,
-        text: "Become a Pet Sitter",
-        avatarText: "Become a Pet Sitter",
-      });
-    }
-
-    // ถ้าเป็น sitter แล้ว ให้มีลิงก์ไปโปรไฟล์ sitter
-    if (isSitter) {
-      items.push({
-        href: "/sitter/profile",
-        icon: User,
-        avatarIcon: User,
-        text: "Sitter Profile",
-        avatarText: "Sitter Profile",
-      });
-    }
-
-    // Logout
-    items.push({
-      href: "#",
-      icon: LogOut,
-      avatarIcon: LogOut,
-      text: "Logout",
-      avatarText: "Log out",
-      isLogout: true,
-    });
 
     return items;
   }, [navUser]);
