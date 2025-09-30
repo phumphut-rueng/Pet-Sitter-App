@@ -384,8 +384,8 @@ export default function PetSitterProfilePage() {
 
       <section className="flex-1 min-w-0">
         <PetSitterNavbar
-          avatarUrl="/images/cards/jane-maison.svg"
-          name="Jane Maison"
+          avatarUrl={watch("profileImageUrl") || "/icons/avatar-placeholder.svg"}
+          name={watch("fullName") || ""}
         />
         <form onSubmit={onSubmit} className="mr-auto px-6 py-8">
           <div className="flex justify-between">
