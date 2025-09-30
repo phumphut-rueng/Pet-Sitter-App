@@ -44,7 +44,7 @@ export function SearchInput({
     }
   };
 
-  const handleInputBlur = (e: React.FocusEvent) => {
+  const handleInputBlur = () => {
     setTimeout(() => {
       if (!suggestionsRef.current?.contains(document.activeElement)) {
         setIsFocused(false);

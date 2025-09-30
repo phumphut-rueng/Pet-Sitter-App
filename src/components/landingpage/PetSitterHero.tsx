@@ -16,7 +16,8 @@ const PetSitterHero = () => {
             alt="Blue arch shape"
             width={256}
             height={256}
-            className="pointer-events-none select-none object-contain w-full h-full"
+            className="pointer-events-none select-none object-contain"
+            style={{ width: '100%', height: '100%' }}
           />
         </div>
 
@@ -27,7 +28,8 @@ const PetSitterHero = () => {
             alt="Star and circle"
             width={240}
             height={240}
-            className="pointer-events-none select-none object-contain w-full h-full"
+            className="pointer-events-none select-none object-contain"
+            style={{ width: '100%', height: '100%' }}
           />
         </div>
 
@@ -41,14 +43,14 @@ const PetSitterHero = () => {
           </h1>
 
           {/* Buttons */}
-          <div className="flex flex-col sm:flex-row gap-4 sm:gap-1 justify-center items-center">
+          <div className="flex flex-col sm:flex-row mt-10 sm:mt-2 gap-4 sm:gap-6 justify-center items-center">
             {/* Become A Pet Sitter Button */}
             <Link
               href="/auth/register"
-              aria-label="Go to become a pet sitter page"
+              aria-label="Go to register page"
             >
-              <button className="text-orange-5 font-semibold hover:text-orange-6 transition-colors duration-200 min-w-[200px] sm:min-w-[220px]">
-                Become A Pet Sitter
+              <button className="cursor-pointer text-orange-5 font-semibold hover:text-orange-6 hover:bg-orange-1 transition-all duration-200 min-w-[200px] sm:min-w-[220px] px-6 py-3 rounded-full border-2 border-orange-5 hover:border-orange-6">
+                Register
               </button>
             </Link>
 

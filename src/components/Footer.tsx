@@ -11,16 +11,7 @@ const Footer = () => {
     
     if (router.pathname === '/') {
       // ถ้าอยู่หน้า / อยู่แล้ว ให้เลื่อนไปด้านบนสุดด้วย smooth scroll
-      try {
-        window.scrollTo({ 
-          top: 0, 
-          left: 0, 
-          behavior: 'smooth' 
-        });
-      } catch (error) {
-        // Fallback สำหรับ browser ที่ไม่รองรับ smooth
-        window.scrollTo(0, 0);
-      }
+      window.scrollTo(0, 0);
       
       // วิธีเสริมเพื่อให้แน่ใจ
       document.documentElement.scrollTop = 0;
@@ -44,7 +35,8 @@ const Footer = () => {
                   alt="Logo"
                   width={180}
                   height={100}
-                  className="w-30 md:w-45 object-contain"
+                  className="object-contain"
+                  style={{ width: '120px', height: 'auto' }}
                   priority
                 />
               </div>
