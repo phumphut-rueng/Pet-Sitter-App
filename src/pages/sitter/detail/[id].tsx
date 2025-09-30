@@ -69,64 +69,60 @@ export default function SitterDetailPage() {
       <div className="container-1200 py-8">
         {sitter ? (
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
-            {/* Content */}
-            <div className="lg:col-span-2 space-y-10 min-w-0">
-              <h1 className="text-5xl font-bold">{sitter.title}</h1>
+  {/* Content */}
+  <div className="lg:col-span-2 space-y-10 min-w-0 order-1 lg:order-1">
+    <h1 className="text-5xl font-bold">{sitter.title}</h1>
 
-              <section className="section space-y-3">
-                <h2 className="text-2xl font-bold">Introduction</h2>
-                <p className="text-lg whitespace-pre-line">{sitter.intro}</p>
-              </section>
+    <section className="section space-y-3">
+      <h2 className="text-2xl font-bold">Introduction</h2>
+      <p className="text-lg whitespace-pre-line">{sitter.intro}</p>
+    </section>
 
-              <section className="section space-y-3">
-                <h2 className="text-2xl font-bold">Services</h2>
-                <p className="text-lg whitespace-pre-line">{sitter.services}</p>
-              </section>
+    <section className="section space-y-3">
+      <h2 className="text-2xl font-bold">Services</h2>
+      <p className="text-lg whitespace-pre-line">{sitter.services}</p>
+    </section>
 
-              <section className="section space-y-3">
-                <h2 className="text-2xl font-bold">My Place</h2>
-                <p className="text-lg whitespace-pre-line">{sitter.myplace}</p>
-              </section>
+    <section className="section space-y-3">
+      <h2 className="text-2xl font-bold">My Place</h2>
+      <p className="text-lg whitespace-pre-line">{sitter.myplace}</p>
+    </section>
 
-              <section className="section space-y-3 rounded-tl-[99px] bg-gray-1 p-6">
-                <div className="bg-white rounded-tl-[99px] rounded-bl-[99px] shadow-sm p-6 flex items-start ">
-                  {/* วงกลมซ้ายบน */}
-                  <div className="w-36 h-36 bg-black rounded-[99px] rounded-br-none flex flex-col items-center justify-center text-white">
-                    <span className="text-4xl font-bold">4.5</span>
-                    <span className="text-sm font-medium">27 Reviews</span>
-                  </div>
-
-                  {/* Content ข้างๆ */}
-                  <div className="ml-10 flex-1">
-                    <h2 className="text-2xl font-bold mb-3">
-                      Rating & Reviews
-                    </h2>
-                    <div className="flex flex-wrap gap-2">
-                      <RatingSelect value="All Reviews"/>
-                      {Array.from({ length: 5 }).map((_, index) => (
-                        <RatingSelect key={index} value={5 - index}/>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-
-                <ReviewCard />
-              </section>
-            </div>
-
-            {/* Sidebar */}
-            <div className="lg:col-span-1 min-w-0">
-              <PetSitterProfileCard
-                title={sitter.title}
-                hostName={sitter.name}
-                experience={sitter.experience}
-                location={sitter.location}
-                rating={sitter.rating}
-                tags={["Dog", "Cat", "Rabbit"]}
-                avatarUrl="/images/sitters/test1.svg"
-              />
-            </div>
+    {/* Reviews */}
+    <section className="section space-y-3 rounded-2xl rounded-tl-[99px] bg-gray-1 p-6 order-3 lg:order-2">
+      <div className="bg-white rounded-2xl rounded-tl-[99px] lg:rounded-bl-[99px] shadow-sm p-4 flex flex-col lg:p-6 lg:flex-row lg:items-start ">
+        <div className="w-36 h-36 bg-black rounded-[99px] rounded-br-none flex flex-col items-center justify-center text-white">
+          <span className="text-4xl font-bold">4.5</span>
+          <span className="text-sm font-medium">27 Reviews</span>
+        </div>
+        <div className="lg:ml-10 flex-1">
+          <h2 className="text-2xl font-bold mb-3">Rating & Reviews</h2>
+          <div className="flex flex-wrap gap-2">
+            <RatingSelect value="All Reviews"/>
+            {Array.from({ length: 5 }).map((_, index) => (
+              <RatingSelect key={index} value={5 - index}/>
+            ))}
           </div>
+        </div>
+      </div>
+      <ReviewCard />
+    </section>
+  </div>
+
+  {/* Sidebar / ProfileCard */}
+  <div className="order-2 lg:order-3 lg:col-span-1 min-w-0">
+    <PetSitterProfileCard
+      title={sitter.title}
+      hostName={sitter.name}
+      experience={sitter.experience}
+      location={sitter.location}
+      rating={sitter.rating}
+      tags={["Dog", "Cat", "Rabbit"]}
+      avatarUrl="/images/sitters/test1.svg"
+    />
+  </div>
+</div>
+
         ) : (
           <h1 className="text-2xl font-bold">Sitter not found</h1>
         )}

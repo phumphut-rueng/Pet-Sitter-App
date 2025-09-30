@@ -25,7 +25,7 @@ export default function ReviewsSection() {
   return (
     <div className="divide-y divide-gray-2">
     {reviews.map((review) => (
-      <div key={review.id} className="flex space-x-6 p-6 bg-gray-1">
+      <div key={review.id} className="flex flex-col lg:flex-row space-x-6 p-6 bg-gray-1">
         {/* Left box */}
         <div className="w-56 flex flex-row items-start space-y-2 gap-4">
           {review.avatar ? (
