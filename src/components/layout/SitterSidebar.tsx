@@ -93,16 +93,27 @@ const IconMask: React.FC<{ src: string; className?: string }> = React.memo(
 );
 IconMask.displayName = "IconMask";
 
-const SidebarLogo: React.FC<{ logoSrc: string }> = React.memo(({ logoSrc }) => (
+const SidebarLogo: React.FC<{
+  logoSrc: string;
+  href?: string;           
+  onNavigate?: () => void;  
+}> = React.memo(({ logoSrc, href = "/", onNavigate }) => (
   <div className={STYLES.header}>
-    <Image
-      src={logoSrc}
-      alt="Sitter"
-      width={SIDEBAR_CONFIG.logoWidth}
-      height={SIDEBAR_CONFIG.logoHeight}
-      priority
-      className={`h-auto w-[${SIDEBAR_CONFIG.logoWidth}px]`}
-    />
+    <Link
+      href={href}
+      aria-label="Go to landing page"
+      onClick={onNavigate}
+      className="inline-flex items-center gap-2"
+    >
+      <Image
+        src={logoSrc}
+        alt="Sitter"
+        width={SIDEBAR_CONFIG.logoWidth}
+        height={SIDEBAR_CONFIG.logoHeight}
+        priority
+        style={{ width: SIDEBAR_CONFIG.logoWidth, height: "auto" }}
+      />
+    </Link>
   </div>
 ));
 SidebarLogo.displayName = "SidebarLogo";

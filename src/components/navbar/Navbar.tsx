@@ -8,11 +8,12 @@ import { UserRound, History, LogOut, Heart, User } from "lucide-react";
 import Navigation from "./Navigation";
 import type { MenuItem } from "@/types/navigation.types";
 
-function hasRole(sessionRoles: string[] | undefined, target: string): boolean {
-  if (!sessionRoles?.length) return false;
-  const t = target.trim().toLowerCase();
-  return sessionRoles.some((r) => (r ?? "").toLowerCase() === t);
-}
+// (ยังเก็บ util ไว้ได้ แต่โค้ดนี้ไม่ต้องใช้แล้ว)
+// function hasRole(sessionRoles: string[] | undefined, target: string): boolean {
+//   if (!sessionRoles?.length) return false;
+//   const t = target.trim().toLowerCase();
+//   return sessionRoles.some((r) => (r ?? "").toLowerCase() === t);
+// }
 
 const Navbar: React.FC = () => {
   const router = useRouter();
@@ -21,24 +22,25 @@ const Navbar: React.FC = () => {
   const isLoading = status === "loading";
   const isAuthenticated = status === "authenticated";
 
-  // user จาก NextAuth (อาจไม่มี id ถ้า session ยังโหลดไม่เสร็จ)
+  // user จาก NextAuth (อาจไม่มี id ระหว่างโหลด session)
   const rawUser = (session?.user ?? null) as (DefaultSession["user"] & {
     roles?: string[];
     id?: string;
   }) | null;
 
-
+  // normalize user สำหรับเมนู
   const navUser = useMemo(() => {
-    if (!rawUser || !rawUser.id) return null; 
+    if (!rawUser || !rawUser.id) return null;
     return {
-      id: rawUser.id,                             
-      name: rawUser.name ?? "",                    
+      id: rawUser.id,
+      name: rawUser.name ?? "",
       email: rawUser.email ?? "",
       image: rawUser.image ?? undefined,
       roles: rawUser.roles ?? [],
     };
   }, [rawUser]);
 
+  // ----- เมนูหลัก (แบบ Simple: แค่ล็อกอินก็เห็น Sitter Page) -----
   const menuItems: MenuItem[] = useMemo(() => {
     if (!navUser) {
       return [
@@ -51,31 +53,20 @@ const Navbar: React.FC = () => {
       { href: "/account/profile",  icon: UserRound, avatarIcon: UserRound, text: "Profile",         avatarText: "Profile" },
       { href: "/account/pet",      icon: Heart,     avatarIcon: Heart,     text: "Your Pet",        avatarText: "Your Pet" },
       { href: "/account/bookings", icon: History,   avatarIcon: History,   text: "Booking History", avatarText: "History" },
+
+      //  โชว์เสมอเมื่อ login แล้ว (ไม่เช็ก role)
+      { href: "/sitter/profile",   icon: User,      avatarIcon: User,      text: "Sitter Page",     avatarText: "Sitter Page" },
+
+      // Logout
+      { href: "#", icon: LogOut, avatarIcon: LogOut, text: "Logout", avatarText: "Log out", isLogout: true },
     ];
-
-    if (hasRole(navUser.roles, "sitter")) {
-      items.push({
-        href: "/sitter/profile",
-        icon: User,
-        avatarIcon: User,
-        text: "Sitter Profile",
-        avatarText: "Sitter Profile",
-      });
-    }
-
-    items.push({
-      href: "#",
-      icon: LogOut,
-      avatarIcon: LogOut,
-      text: "Logout",
-      avatarText: "Log out",
-      isLogout: true,
-    });
 
     return items;
   }, [navUser]);
 
-  const handleNavigate = useCallback((path: string) => { router.push(path); }, [router]);
+  const handleNavigate = useCallback((path: string) => {
+    router.push(path);
+  }, [router]);
 
   const handleLogout = useCallback(async () => {
     try {
@@ -91,7 +82,7 @@ const Navbar: React.FC = () => {
         <div className="flex justify-between items-center h-12 py-3 md:h-20">
           {/* Logo */}
           <div className="flex-shrink-0">
-            <Link href="/" className="block hover:opacity-70 transition-opacity duration-200">
+            <Link href="/" className="block hover:opacity-70 transition-opacity duration-200" aria-label="Go to landing page">
               <Image
                 src="/icons/logo.svg"
                 alt="Logo"
@@ -106,11 +97,11 @@ const Navbar: React.FC = () => {
           <Navigation
             isLoading={isLoading}
             isAuthenticated={isAuthenticated}
-            user={navUser} 
+            user={navUser}
             menuItems={menuItems}
             onNavigate={handleNavigate}
             onLogout={handleLogout}
-            />
+          />
         </div>
       </div>
     </nav>
