@@ -1,6 +1,5 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 import { IncomingForm } from "formidable";
-import fs from "fs";
 import { cloudinary } from "@/lib/cloudinary";
 
 export const config = {

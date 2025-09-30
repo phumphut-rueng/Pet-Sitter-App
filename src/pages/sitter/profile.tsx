@@ -347,7 +347,7 @@ export default function PetSitterProfilePage() {
           ...values,
           images: allImageUrls,
         };
-        delete (payload as any).newImageFiles;
+        delete (payload as Record<string, unknown>).newImageFiles;
 
         const res = await fetch("/api/sitter/put-sitter", {
           method: "PUT",
