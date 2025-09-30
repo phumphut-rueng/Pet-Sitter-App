@@ -3,6 +3,7 @@ import { ChevronLeft, ChevronRight, ChevronDown } from "lucide-react"
 interface Props {
     currentMonth: Date
     onMonthChange: (d: Date) => void
+    setView: (v: "date" | "month" | "year") => void
     rules: {
         disablePastMonthNavigation?: boolean
         minDate?: Date
@@ -12,7 +13,12 @@ interface Props {
     }
 }
 
-export default function CalendarHeader({ currentMonth, onMonthChange, rules }: Props) {
+export default function CalendarHeader({
+    currentMonth,
+    onMonthChange,
+    setView,
+    rules
+}: Props) {
     const { disablePastMonthNavigation, minDate, maxDate, maxMonthsAhead, today } = rules
 
     const todayMonth = new Date(today.getFullYear(), today.getMonth(), 1)
@@ -41,11 +47,13 @@ export default function CalendarHeader({ currentMonth, onMonthChange, rules }: P
     return (
         <div className="flex items-center justify-between mb-4 px-2">
             <button
+                onClick={() => setView('month')}
                 className="flex items-center gap-1 
-            font-medium text-[14px] text-black 
-            rounded-md 
-            hover:text-orange-5 px-2 py-1 
-            cursor-pointer">
+                font-medium text-[14px] text-black 
+                rounded-md 
+                hover:text-orange-5 px-2 py-1 
+                cursor-pointer"
+            >
                 {
                     currentMonth.toLocaleString(
                         "default",

@@ -27,6 +27,7 @@ import AccountSidebarMini from "@/components/layout/AccountSidebarMini";
 import BookingSelect from "@/components/modal/BookingSelect";
 import DatePicker from "@/components/date-picker/DatePicker";
 import TimePicker from "@/components/time-picker/TimePicker";
+import DatePickerOld from "@/components/date-picker/DatePickerOld";
 
 // Section Wrapper
 const Section = ({ title, cols = 1, children }: {
@@ -198,6 +199,13 @@ export default function ComponentAll() {
         bgColor="primary"
         textColor="white"
         onClick={() => setIsOpenBookingSelect(true)}
+      />
+
+      <DatePickerOld
+        date={date2}
+        month={month2}
+        onMonthChange={setMonth2}
+        onSelect={setDate2}
       />
 
       <div className=" mx-auto space-y-10">
