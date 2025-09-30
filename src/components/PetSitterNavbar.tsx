@@ -18,12 +18,13 @@ export default function PetSitterNavbar({
       <div className="mx-auto h-12 px-12 flex items-center justify-between">
         {/* Left: avatar + name */}
         <div className="flex items-center gap-2 min-w-0">
-          <div className="w-10 h-10 rounded-full overflow-hidden bg-gray-2">
+          <div className="w-8 h-8 rounded-full overflow-hidden bg-gray-2">
           <Image
             src={avatarUrl}
             alt={name}
-            width={40}
-            height={40}
+            width={30}
+            height={30}
+            unoptimized
             className="w-full h-full object-cover"
           />
           </div>
