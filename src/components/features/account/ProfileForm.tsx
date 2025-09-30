@@ -11,7 +11,7 @@ import InputText from "@/components/input/InputText";
 import AvatarUploader from "@/components/form/AvatarUpload";
 import PrimaryButton from "@/components/buttons/PrimaryButton";
 import { cn } from "@/lib/utils";
-import DatePicker from "@/components/date-time-picker/DatePicker"; // <— ใช้ของเพื่อน
+import DatePicker from "@/components/date-time-picker/DatePicker"; 
 
 export interface ProfileFormProps {
   control: Control<OwnerProfileInput>;
@@ -197,67 +197,90 @@ const IdNumberField: React.FC<{ control: Control<OwnerProfileInput> }> = ({ cont
 );
 
 /** === ใช้ DatePicker ของเพื่อนแทน input type="date" === */
-const DobDatePickerField: React.FC<{ control: Control<OwnerProfileInput> }> = ({
-  control,
-}) => {
+const sameMonth = (a?: Date, b?: Date) =>
+  !!a && !!b && a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth();
+
+const clampDay = (y: number, m: number, d: number) =>
+  Math.min(d, new Date(y, m + 1, 0).getDate());
+
+type DobInnerProps = {
+  value?: string;
+  onChange: (next: string) => void;
+  error?: string;
+};
+
+const DobPickerInner: React.FC<DobInnerProps> = ({ value, onChange, error }) => {
   const [month, setMonth] = React.useState<Date | undefined>(undefined);
 
-  // helper เทียบว่าเป็นเดือนเดียวกันไหม
-  const sameMonth = (a?: Date, b?: Date) =>
-    !!a && !!b && a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth();
+  const selected = React.useMemo(() => parseYmd(value), [value]);
+
+  // sync เดือนกับค่าที่เลือก (เฉพาะเมื่อเปลี่ยนไปเดือนใหม่)
+  React.useEffect(() => {
+    if (!selected) {
+      setMonth((prev) => (prev ? undefined : prev));
+      return;
+    }
+    const m = new Date(selected.getFullYear(), selected.getMonth(), 1);
+    setMonth((prev) => (sameMonth(prev, m) ? prev : m));
+  }, [selected]);
+
+  // เลือกวัน: อัปเดตเฉพาะเมื่อค่าจริงๆ เปลี่ยน
+  const handleSelect = (d?: Date) => {
+    const next = toYmd(d);
+    const prev = value ?? "";
+    if (next !== prev) onChange(next);
+  };
+
+  // เปลี่ยนเดือน/ปีจากเพื่อน: อัปเดตฟอร์มทันทีถ้ามีวันอยู่แล้ว
+  const handleMonthChange = (m?: Date) => {
+    setMonth((prev) => (sameMonth(prev, m) ? prev : m));
+    if (!m || !selected) return;
+
+    const day = clampDay(m.getFullYear(), m.getMonth(), selected.getDate());
+    let nextDate = new Date(m.getFullYear(), m.getMonth(), day);
+
+    // เคารพ maxDate = วันนี้
+    const today = new Date(); today.setHours(0, 0, 0, 0);
+    if (nextDate > today) nextDate = today;
+
+    const nextStr = toYmd(nextDate);
+    const prevStr = value ?? "";
+    if (nextStr !== prevStr) onChange(nextStr);
+  };
 
   return (
-    <FormField control={control} name={"dob"}>
-      {(field, fieldState) => {
-        const selected = parseYmd(field.value as string | undefined);
+    <div className="flex flex-col gap-1">
+      <label htmlFor="date" className="text-sm font-medium text-gray-700">
+        Date of Birth
+      </label>
 
-        // sync month เฉพาะตอน selected เปลี่ยน "ไปเดือนใหม่" เท่านั้น
-        React.useEffect(() => {
-          if (!selected) {
-            if (month) setMonth(undefined);
-            return;
-          }
-          const m = new Date(selected.getFullYear(), selected.getMonth(), 1);
-          setMonth(prev => (sameMonth(prev, m) ? prev : m));
-        }, [selected]); // ไม่ใส่ month ใน deps เพื่อกันลูป
+      <div className="[&_#date]:bg-white [&_#date]:text-black [&_#date]:border-gray-300">
+        <DatePicker
+          date={selected}
+          month={month}
+          onMonthChange={handleMonthChange}
+          onSelect={handleSelect}
+          rules={{ maxDate: new Date() }}
+          width={400}
+        />
+      </div>
 
-        // เรียก onChange เฉพาะเมื่อค่าจริงๆ เปลี่ยน
-        const handleSelect = (d?: Date) => {
-          const next = toYmd(d);
-          const prev = (field.value as string | undefined) ?? "";
-          if (next !== prev) {
-            field.onChange(next);
-          }
-        };
-
-        return (
-          <div className="flex flex-col gap-1">
-            <label htmlFor="date" className="text-sm font-medium text-gray-700">
-              {FORM_CONFIG.fields.dob.label}
-            </label>
-            <div className="[&_#date]:bg-white [&_#date]:text-black [&_#date]:border-gray-300">
-            <DatePicker
-              date={selected}
-              month={month}
-              onMonthChange={(m?: Date) => {
-                // กัน setMonth ซ้ำเดือนเดิม
-                setMonth(prev => (sameMonth(prev, m) ? prev : m));
-              }}
-              onSelect={handleSelect}
-              rules={{ maxDate: new Date() }} // DOB ห้ามเป็นอนาคต
-              width={400}
-            />
-            </div>
-
-            {fieldState.error?.message && (
-              <span className="text-sm text-red-600">{fieldState.error.message}</span>
-            )}
-          </div>
-        );
-      }}
-    </FormField>
+      {error && <span className="text-sm text-red-600">{error}</span>}
+    </div>
   );
 };
+
+const DobDatePickerField: React.FC<{ control: Control<OwnerProfileInput> }> = ({ control }) => (
+  <FormField control={control} name={"dob"}>
+    {(field, fieldState) => (
+      <DobPickerInner
+        value={field.value as string | undefined}
+        onChange={field.onChange}
+        error={fieldState.error?.message}
+      />
+    )}
+  </FormField>
+);
 
 export default function ProfileForm({
   control,
