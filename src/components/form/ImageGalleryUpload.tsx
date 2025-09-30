@@ -59,6 +59,16 @@ export default function ImageGallery({
     });
   }, [items, onChange]);
 
+  useEffect(() => {
+    setItems(
+      initialImageUrls.map((url) => ({
+        id: crypto.randomUUID(),
+        kind: "existingUrl",
+        displayUrl: url,
+      }))
+    );
+  }, [initialImageUrls]);
+
   const openFilePicker = () => fileInputRef.current?.click();
 
   const validateImageFile = (file: File) => {

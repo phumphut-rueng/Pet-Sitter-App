@@ -20,6 +20,7 @@ import {
 } from "@/components/ui/select";
 import Image from "next/image";
 import toast, { Toaster } from "react-hot-toast";
+import { uploadToCloudinary } from "@/utils/uploadToCloudinary";
 
 type SitterFormValues = {
   fullName: string;
@@ -38,6 +39,7 @@ type SitterFormValues = {
   address_post_code: string;
   profileImageUrl: string;
   images: string[];
+  newImageFiles: File[];
 };
 
 type GetSitterResponse = {
@@ -176,6 +178,7 @@ export default function PetSitterProfilePage() {
       address_post_code: "",
       profileImageUrl: "",
       images: [],
+      newImageFiles: [],
     },
     mode: "onBlur",
     shouldUnregister: false,
@@ -329,16 +332,41 @@ export default function PetSitterProfilePage() {
   const onSubmit = handleSubmit(async (values) => {
     await toast.promise(
       (async () => {
+        const uploadedUrls: string[] = [];
+
+        if (values.newImageFiles && values.newImageFiles.length > 0) {
+          for (const file of values.newImageFiles) {
+            const url = await uploadToCloudinary(file);
+            uploadedUrls.push(url);
+          }
+        }
+
+        const allImageUrls = [...values.images, ...uploadedUrls];
+
+        const payload = {
+          ...values,
+          images: allImageUrls,
+        };
+        delete (payload as any).newImageFiles;
+
         const res = await fetch("/api/sitter/put-sitter", {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(values),
+          body: JSON.stringify(payload),
         });
         if (!res.ok) {
           const data = await res.json().catch(() => ({}));
           throw new Error(data?.message || "Failed to update sitter");
         }
         await update();
+
+        const res2 = await fetch("/api/sitter/get-profile-sitter");
+        if (res2.ok) {
+          const data = await res2.json();
+          const latestImages = data.sitter?.images || [];
+          setValue("images", latestImages);
+          setInitialGallery(latestImages);
+        }
       })(),
       {
         loading: "Saving profile...",
@@ -384,8 +412,12 @@ export default function PetSitterProfilePage() {
               <div className="pb-4 col-span-1">
                 <p className="pb-4 font-medium text-black">Profile Image</p>
                 <AvatarUploader
-                  onChange={() => {
-                    // preview เท่านั้น;
+                  imageUrl={watch("profileImageUrl")}
+                  onChange={async (file) => {
+                    if (file) {
+                      const url = await uploadToCloudinary(file);
+                      setValue("profileImageUrl", url, { shouldDirty: true });
+                    }
                   }}
                 />
               </div>
@@ -613,6 +645,9 @@ export default function PetSitterProfilePage() {
                   initialImageUrls={initialGallery}
                   onChange={(state) => {
                     setValue("images", state.existingImageUrls, {
+                      shouldDirty: true,
+                    });
+                    setValue("newImageFiles", state.newImageFiles, {
                       shouldDirty: true,
                     });
                   }}
