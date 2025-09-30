@@ -8,6 +8,7 @@ import { UserRound, History, LogOut, Heart, User } from "lucide-react";
 import Navigation from "./Navigation";
 import type { MenuItem } from "@/types/navigation.types";
 
+// util เช็ก role
 function hasRole(sessionRoles: string[] | undefined, target: string): boolean {
   if (!sessionRoles?.length) return false;
   const t = target.trim().toLowerCase();
@@ -21,24 +22,25 @@ const Navbar: React.FC = () => {
   const isLoading = status === "loading";
   const isAuthenticated = status === "authenticated";
 
-  // user จาก NextAuth (อาจไม่มี id ถ้า session ยังโหลดไม่เสร็จ)
+  // user จาก NextAuth (อาจไม่มี id ระหว่างโหลด session)
   const rawUser = (session?.user ?? null) as (DefaultSession["user"] & {
     roles?: string[];
     id?: string;
   }) | null;
 
-
+  // normalize user สำหรับเมนู
   const navUser = useMemo(() => {
-    if (!rawUser || !rawUser.id) return null; 
+    if (!rawUser || !rawUser.id) return null;
     return {
-      id: rawUser.id,                             
-      name: rawUser.name ?? "",                    
+      id: rawUser.id,
+      name: rawUser.name ?? "",
       email: rawUser.email ?? "",
       image: rawUser.image ?? undefined,
       roles: rawUser.roles ?? [],
     };
   }, [rawUser]);
 
+  // ----- เมนูหลัก + เงื่อนไข Become a Pet Sitter -----
   const menuItems: MenuItem[] = useMemo(() => {
     if (!navUser) {
       return [
@@ -53,7 +55,23 @@ const Navbar: React.FC = () => {
       { href: "/account/bookings", icon: History,   avatarIcon: History,   text: "Booking History", avatarText: "History" },
     ];
 
-    if (hasRole(navUser.roles, "sitter")) {
+    const roles = navUser.roles ?? [];
+    const isOwner  = hasRole(roles, "owner");
+    const isSitter = hasRole(roles, "sitter");
+
+    // ⬇️ เจ้าของที่ยังไม่เป็น sitter → เพิ่มเมนู Become a Pet Sitter
+    if (isOwner && !isSitter) {
+      items.push({
+        href: "/sitter/onboarding",
+        icon: User,
+        avatarIcon: User,
+        text: "Become a Pet Sitter",
+        avatarText: "Become a Pet Sitter",
+      });
+    }
+
+    // ถ้าเป็น sitter แล้ว ให้มีลิงก์ไปโปรไฟล์ sitter
+    if (isSitter) {
       items.push({
         href: "/sitter/profile",
         icon: User,
@@ -63,6 +81,7 @@ const Navbar: React.FC = () => {
       });
     }
 
+    // Logout
     items.push({
       href: "#",
       icon: LogOut,
@@ -75,7 +94,9 @@ const Navbar: React.FC = () => {
     return items;
   }, [navUser]);
 
-  const handleNavigate = useCallback((path: string) => { router.push(path); }, [router]);
+  const handleNavigate = useCallback((path: string) => {
+    router.push(path);
+  }, [router]);
 
   const handleLogout = useCallback(async () => {
     try {
@@ -91,7 +112,7 @@ const Navbar: React.FC = () => {
         <div className="flex justify-between items-center h-12 py-3 md:h-20">
           {/* Logo */}
           <div className="flex-shrink-0">
-            <Link href="/" className="block hover:opacity-70 transition-opacity duration-200">
+            <Link href="/" className="block hover:opacity-70 transition-opacity duration-200" aria-label="Go to landing page">
               <Image
                 src="/icons/logo.svg"
                 alt="Logo"
@@ -106,11 +127,11 @@ const Navbar: React.FC = () => {
           <Navigation
             isLoading={isLoading}
             isAuthenticated={isAuthenticated}
-            user={navUser} 
+            user={navUser}
             menuItems={menuItems}
             onNavigate={handleNavigate}
             onLogout={handleLogout}
-            />
+          />
         </div>
       </div>
     </nav>
