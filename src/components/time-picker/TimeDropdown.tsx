@@ -1,5 +1,5 @@
 // components/TimeDropdown.tsx
-import { parseTimeStringToDate } from "@/utils/time-utils"
+import { parseTimeStringToDate, TimeStatus } from "@/utils/time-utils"
 
 interface TimeDropdownProps {
     timeSlots: string[]
@@ -11,8 +11,8 @@ interface TimeDropdownProps {
         isPastStartTime: boolean
         isPastTime: boolean
     }
-    shouldHideTime: (status: any) => boolean
-    isTimeDisabled: (status: any) => boolean
+    shouldHideTime: (status: TimeStatus) => boolean
+    isTimeDisabled: (status: TimeStatus) => boolean
     onClose: () => void
 }
 

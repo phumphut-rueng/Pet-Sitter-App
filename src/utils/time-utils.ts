@@ -50,3 +50,9 @@ export const generateTimeSlots = (startTime = 8, endTime = 23, interval: 30 | 60
     }
     return times
 }
+
+export interface TimeStatus {
+    isDisabledSlot: boolean
+    isPastStartTime: boolean
+    isPastTime: boolean
+}

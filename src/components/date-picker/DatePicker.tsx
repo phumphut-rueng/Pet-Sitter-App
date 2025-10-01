@@ -56,7 +56,6 @@ function DatePicker({
             })()
             : new Date()
     )
-    console.log("newMaxDate", newDisablePastDates, "\n", newMaxDate, "\n", maxDate);
 
     const startYear = newMinDate.getFullYear()
     const endYear = newMaxDate.getFullYear()

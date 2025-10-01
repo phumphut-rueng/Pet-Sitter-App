@@ -1,7 +1,6 @@
 import { ChevronLeft, ChevronRight } from "lucide-react"
 import { useCallback, useMemo } from "react"
 import { YearProps } from "@/types/date-picker.types"
-import { cn } from "@/lib/utils"
 import { NavigationButton } from "../buttons/NavigationButton"
 
 export default function YearPicker({
@@ -25,13 +24,13 @@ export default function YearPicker({
         return Array.from(
             { length: rangeEnd - yearRangeStart + 1 },
             (_, i) => yearRangeStart + i)
-    }, [yearRangeStart, yearsPerPage, endYear])
+    }, [yearRangeStart, rangeEnd])
 
 
     // สร้าง label แสดง range ของปี เช่น "2000-2011"
     const yearRangeLabel = useMemo(() => {
         return `${yearRangeStart}-${rangeEnd}`
-    }, [yearRangeStart, yearsPerPage, endYear])
+    }, [yearRangeStart, rangeEnd])
 
     // handle
     const handleYearRangeChange = (step: number) => {

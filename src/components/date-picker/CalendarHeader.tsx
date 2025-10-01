@@ -36,7 +36,7 @@ export default function CalendarHeader({
             return currentMonthStart >= startOfMonth(maxDate)
         }
         return false
-    }, [maxDate, currentMonthStart, today])
+    }, [maxDate, currentMonthStart])
 
     const handleMonthChange = useCallback((offset: number) => {
         const newMonth = new Date(currentMonth)
