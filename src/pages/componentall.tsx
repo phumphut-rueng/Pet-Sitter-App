@@ -27,6 +27,8 @@ import AccountSidebarMini from "@/components/layout/AccountSidebarMini";
 import BookingSelect from "@/components/modal/BookingSelect";
 import DatePicker from "@/components/date-picker/DatePicker";
 import TimePicker from "@/components/time-picker/TimePicker";
+import AdminSidebar from "@/components/layout/AdminSidebar";
+import SitterSidebar from "@/components/layout/SitterSidebar";
 // Section Wrapper
 const Section = ({ title, cols = 1, children }: {
   title: string;
@@ -446,6 +448,8 @@ export default function ComponentAll() {
             {/* : <SidebarDemo /> */}
             <SidebarDemo />
             <AccountSidebarMini />
+            <AdminSidebar sticky={false} />
+            <SitterSidebar sticky={false} />
 
             {/* ===================== PET CARDS ===================== */}
             {/* 
