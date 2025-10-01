@@ -3,7 +3,6 @@ import { useRouter } from "next/router";
 import { useEffect, useState } from "react";
 import axios from "axios";
 import { User } from "../../types/user.types";
-import Navbar from "@/components/navbar/Navbar";
 
 // หน้าโปรไฟล์ผู้ดูแลสัตว์ - แสดงข้อมูลจาก session และ database
 export default function SitterProfile() {
@@ -55,7 +54,7 @@ export default function SitterProfile() {
 
   return (
     <div className="container-1200 flex flex-col gap-4">
-<h1 className="text-2xl font-bold">Sitter Profile</h1>
+      <h1 className="text-2xl font-bold">Sitter Profile</h1>
       {/* Session Data */}
       <div className="border-2 border-gray-300 rounded-md p-4">
         <h2 className="text-xl font-bold mb-2">NextAuth Session</h2>

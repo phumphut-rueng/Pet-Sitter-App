@@ -3,7 +3,6 @@ import { useRouter } from "next/router";
 import { useEffect, useState } from "react";
 import axios from "axios";
 import { User } from "../../types/user.types";
-import Navbar from "@/components/navbar/Navbar";
 
 // หน้าโปรไฟล์ผู้ใช้ - แสดงข้อมูลจาก session และ database
 export default function UserProfile() {

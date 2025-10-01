@@ -25,9 +25,8 @@ import BookingCard from "@/components/cards/BookingCard";
 import PetCard from "@/components/cards/PetCard";
 import AccountSidebarMini from "@/components/layout/AccountSidebarMini";
 import BookingSelect from "@/components/modal/BookingSelect";
-import DatePicker from "@/components/date-time-picker/DatePicker";
-import TimePicker from "@/components/date-time-picker/TimePicker";
-
+import DatePicker from "@/components/date-picker/DatePicker";
+import TimePicker from "@/components/time-picker/TimePicker";
 // Section Wrapper
 const Section = ({ title, cols = 1, children }: {
   title: string;
@@ -186,8 +185,10 @@ export default function ComponentAll() {
   const [month4, setMonth4] = useState<Date | undefined>(new Date())
   //=================================================================== 
   //ข้อมูลสำหรับ Time picker
-  const [startTime, setStartTime] = useState("")
-  //=================================================================== 
+  const [startTime, setStartTime] = useState<Date | undefined>(undefined)
+  const [startTime2] = useState<Date | undefined>(undefined)
+  const [endTime2, setendTime2] = useState<Date | undefined>(undefined)
+  //===================================================================
 
   return (
     <div className="min-h-screen text-white p-6">
@@ -196,6 +197,13 @@ export default function ComponentAll() {
         bgColor="primary"
         textColor="white"
         onClick={() => setIsOpenBookingSelect(true)}
+      />
+
+      <DatePicker
+        date={date2}
+        month={month2}
+        onMonthChange={setMonth2}
+        onSelect={setDate2}
       />
 
       <div className=" mx-auto space-y-10">
@@ -717,9 +725,9 @@ export default function ComponentAll() {
             onConfirm={() => console.log("Popup confirmed")}
           />
           <BookingSelect
+            sitterId={1}
             open={isOpenBookingSelect}
             onOpenChange={setIsOpenBookingSelect}
-            onConfirm={() => console.log("Booking Select")}
             disabledDates={disabledDates}
           />
         </Section>
@@ -735,9 +743,7 @@ export default function ComponentAll() {
                 onMonthChange={setMonth1}
                 onSelect={setDate1}
                 rules={{
-                  disablePastDates: true,
-                  disablePastMonthNavigation: true,
-                  maxMonthsAhead: 10
+                  disablePastDates: true
                 }}
               />
             </div>
@@ -761,9 +767,9 @@ export default function ComponentAll() {
                 month={month3}
                 onMonthChange={setMonth3}
                 onSelect={setDate3}
-                yearConfig={{
-                  startYear: 1950,
-                  endYear: new Date().getFullYear()
+                rules={{
+                  minDate: new Date(1950, 1, 1),
+                  maxDate: new Date(2026, 1, 1)
                 }}
               />
             </div>
@@ -774,7 +780,7 @@ export default function ComponentAll() {
                 month={month4}
                 onMonthChange={setMonth4}
                 onSelect={setDate4}
-                disabledDates={disabledDates}
+                disabledDatesSlots={disabledDates}
               />
             </div>
           </SubSection>
@@ -782,12 +788,46 @@ export default function ComponentAll() {
 
         {/* Time picker */}
         <Section title="Time picker">
-          <SubSection title="Time picker">
-            <TimePicker
-              value={startTime}
-              onChange={setStartTime}
-              placeholder="Start time"
-            />
+          <SubSection title="">
+            <div className="w-[250px]">
+              <span className="text-gray-6"> แบบไม่มีเงื่อนไข</span>
+              <TimePicker
+                value={startTime}
+                onChange={setStartTime}
+                placeholder="Start time"
+              />
+            </div>
+            <div className="w-[250px]">
+              <span className="text-gray-6"> ไม่โชว์เวลาที่ผ่านมาแล้ว</span>
+              <TimePicker
+                value={endTime2}
+                onChange={setendTime2}
+                date={new Date()}
+                startDate={startTime2}
+                startTimeValue={startTime2}
+                rules={{
+                  disablePastTime: true,
+                  showDisabledSlots: false,    // ซ่อนเวลาจาก disabledTimeSlots
+                  showPastStartTime: true,     // แสดงเวลาก่อน startTime เป็นสีเทา
+                  showPastTime: false          // ซ่อนเวลาที่ผ่านไปแล้ว
+                }}
+              />
+            </div>
+            <div className="w-[250px]">
+              <span className="text-gray-6">กำหนดเวลาไม่ให้แสดง</span>
+              <TimePicker
+                value={endTime2}
+                onChange={setendTime2}
+                date={new Date()}
+                disabledTimeSlots={[
+                  new Date(new Date().getFullYear(), new Date().getMonth(), new Date().getDate(), 9, 0),
+                  new Date(new Date().getFullYear(), new Date().getMonth(), new Date().getDate(), 10, 0),
+                ]}
+                rules={{
+                  showDisabledSlots: true
+                }}
+              />
+            </div>
           </SubSection>
         </Section>
 

@@ -1,8 +1,8 @@
 import { useState } from "react"
 
 export function useTimePicker() {
-    const [startTime, setStartTime] = useState("")
-    const [endTime, setEndTime] = useState("")
+    const [startTime, setStartTime] = useState<Date | undefined>(undefined)
+    const [endTime, setEndTime] = useState<Date | undefined>(undefined)
 
     // Helper function to validate time range
     const isValidTimeRange = () => {
