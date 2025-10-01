@@ -56,9 +56,14 @@ function DatePicker({
             : new Date()
     )
 
-    const startYear = disablePastDates ? newMinDate.getFullYear() : new Date().getFullYear() - 100
+    console.log("new\n", newMinDate, "\n", newMaxDate, new Date());
+
+
+    console.log("newDisable\n", newDisablePastDates, newMinDate, newMinDate.getFullYear());
+    const startYear = newMinDate.getFullYear()
     const endYear = newMaxDate.getFullYear()
     const yearsPerPage = 12
+    console.log("Year\n", startYear, endYear, yearsPerPage, newMaxDate, newMaxDate.getFullYear());
 
     const today = useMemo(() => {
         const d = new Date()

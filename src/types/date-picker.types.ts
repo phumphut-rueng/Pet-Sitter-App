@@ -8,9 +8,9 @@ export interface DatePickerProps {
     classNameButton?: string
 
     rules?: {
-        disablePastDates?: boolean //ไม่สามารถเลือกวันที่ในอดีตได้ (true = เลือกไม่ได้, false = เลือกได้)
-        minDate?: Date // วันที่เริ่มต้นที่เลือกได้ (default: 100 ก่อน) ถ้าส่งค่า minDate ไป disablePastDates จะไม่ทำงาน
-        maxDate?: Date // วันที่สุดท้ายที่เลือกได้
+        disablePastDates?: boolean //ไม่สามารถเลือกวันที่ในอดีตได้ (true = เลือกไม่ได้, false = เลือกได้) ถ้าส่งค่านี้ไป ไม่ต้องส่ง minDate
+        minDate?: Date // วันที่เริ่มต้นที่เลือกได้ (default: -100 ปี) ถ้าส่งค่า minDate ไป disablePastDates จะไม่ทำงาน
+        maxDate?: Date // วันที่สุดท้ายที่เลือกได้ (default: ปีปัจุบัน)
     }
 }
 

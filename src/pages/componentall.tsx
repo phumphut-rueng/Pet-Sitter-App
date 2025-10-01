@@ -768,8 +768,8 @@ export default function ComponentAll() {
                 onMonthChange={setMonth3}
                 onSelect={setDate3}
                 rules={{
-                  minDate: new Date(new Date().getFullYear() + 1950),
-                  maxDate: new Date(new Date().getFullYear() + 2026)
+                  minDate: new Date(1950, 1, 1),
+                  maxDate: new Date(2026, 1, 1)
                 }}
               />
             </div>
