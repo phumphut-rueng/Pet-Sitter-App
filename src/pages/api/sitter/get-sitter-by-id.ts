@@ -23,6 +23,13 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const sitter = await prisma.sitter.findUnique({
       where: {
         id: sitterId
+      },
+      include: {
+        user: {
+          select: {
+            name: true
+          }
+        }
       }
     });
 

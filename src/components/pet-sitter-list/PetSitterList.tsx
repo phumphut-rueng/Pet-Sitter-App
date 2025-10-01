@@ -51,8 +51,8 @@ export function PetSitterList({
           <div key={sitterData.id} className="mb-4">
             <Link href={`/findpetsitter/${sitterData.id}`}>
               <PetSitterCardLarge
-                title={sitterData.location_description}
-                hostName={sitterData.name}
+                title={sitterData.name}
+                hostName={sitterData.user_name}
                 location={`${sitterData.address_district}, ${sitterData.address_province}`}
                 coverUrl={coverUrl}
                 rating={sitterData.averageRating || 0}

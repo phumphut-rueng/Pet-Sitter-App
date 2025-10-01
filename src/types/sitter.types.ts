@@ -25,6 +25,7 @@ export interface SitterImage {
 export interface Sitter {
   id: number;
   user_sitter_id: number;
+  user_name: string;
   name: string;
   location_description: string;
   phone: string;

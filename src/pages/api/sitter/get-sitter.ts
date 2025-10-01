@@ -31,7 +31,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     if (searchTerm) {
       whereConditions.push(`(
         s.name ILIKE $${paramIndex} OR 
-        s.location_description ILIKE $${paramIndex} OR 
+        u.name ILIKE $${paramIndex} OR 
         s.address_province ILIKE $${paramIndex} OR 
         s.address_district ILIKE $${paramIndex} OR 
         s.address_sub_district ILIKE $${paramIndex}
@@ -93,6 +93,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const countQuery = `
       SELECT COUNT(*) as total_count
       FROM sitter s
+      LEFT JOIN "user" u ON s.user_sitter_id = u.id
       ${whereClause}
     `;
 
@@ -100,6 +101,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const mainQuery = `
       SELECT 
         s.*,
+        u.name as user_name,
         COALESCE((
           SELECT AVG(r.rating)::numeric(3,2)
           FROM review r 
@@ -126,6 +128,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           WHERE spt.sitter_id = s.id
         ) as pet_types
       FROM sitter s
+      LEFT JOIN "user" u ON s.user_sitter_id = u.id
       ${whereClause}
       ORDER BY s.id ASC
       LIMIT $${paramIndex} OFFSET $${paramIndex + 1}
