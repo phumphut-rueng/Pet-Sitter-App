@@ -55,6 +55,7 @@ export function Pagination({ currentPage, totalPages, onClick }: PaginationProps
         <div className="body-sm flex items-center justify-center gap-2">
             {/* Prev */}
             <button
+                type="button"
                 onClick={() => onClick?.(Math.max(1, currentPage - 1))}
                 disabled={currentPage === 1}
                 className={navButtonClass(currentPage === 1)}
@@ -71,6 +72,7 @@ export function Pagination({ currentPage, totalPages, onClick }: PaginationProps
                         </span>
                     ) : (
                         <button
+                            type="button"
                             key={idx}
                             onClick={() => onClick?.(p as number)}
                             className={cn(
@@ -88,6 +90,7 @@ export function Pagination({ currentPage, totalPages, onClick }: PaginationProps
 
             {/* Next */}
             <button
+                type="button"
                 onClick={() => onClick?.(Math.min(totalPages, currentPage + 1))}
                 disabled={currentPage === totalPages}
                 className={navButtonClass(currentPage === totalPages)}

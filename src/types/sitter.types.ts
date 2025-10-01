@@ -1,8 +1,19 @@
+export interface User {
+  id: number;
+  name: string;
+  profile_image: string | null;
+}
+
 export interface Review {
   id: number;
   rating: number;
   comment: string;
-  created_at: Date;
+  created_at: string;
+  user: {
+    id: number;
+    name: string;
+    profile_image: string | null;
+  };
 }
 
 export interface PetType {
@@ -39,8 +50,18 @@ export interface Sitter {
   created_at: string;
   updated_at: string | null;
   experience: number;
+  service_description: string | null;
+  owner: User;
   sitter_image: SitterImage[];
   sitter_pet_type: SitterPetType[];
   reviews: Review[];
   averageRating: number | null;
+
+  reviewPagination?: {
+    page: number;
+    limit: number;
+    totalCount: number;
+    totalPages: number;
+  };
 }
+

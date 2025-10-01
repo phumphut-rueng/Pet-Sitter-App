@@ -9,8 +9,8 @@ import Image from "next/image";
 
 type RatingSelectProps = {
     value?: number | string;
-    selectRating?: number;
-    onChange?: (value: number | string) => void;
+    selectRating?: number | string;
+    onChange?: (value: number | string ) => void;
     className?: string;
     classNameStar?: string;
   };
