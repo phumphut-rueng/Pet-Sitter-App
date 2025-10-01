@@ -11,7 +11,6 @@ import {
 } from "@/components/ui/select";
 
 export default function SearchSitter() {
-  
   const {
     selectedPetTypes,
     rating,
@@ -22,9 +21,8 @@ export default function SearchSitter() {
     setSelectedExperience,
   } = useSearchFilter({
     onSearch: (filters: SearchFilters) => {
-      // Navigate to findpetsitter page with filters as query parameters
       const queryParams = new URLSearchParams();
-      
+
       if (filters.searchTerm) {
         queryParams.append('searchTerm', filters.searchTerm);
       }
@@ -37,18 +35,23 @@ export default function SearchSitter() {
       if (filters.experience !== 'all') {
         queryParams.append('experience', filters.experience);
       }
-      
+
       const queryString = queryParams.toString();
       const targetUrl = `/findpetsitter${queryString ? `?${queryString}` : ''}`;
       console.log('SearchSitter: Navigating to:', targetUrl);
-      
-      // Store filters in sessionStorage to pass to SearchFilter
+
       sessionStorage.setItem('searchFilters', JSON.stringify(filters));
-      
-      // Use window.location.href to navigate to targetUrl (equivalent to <a> tag)
+
       window.location.href = targetUrl;
     }
   });
+
+  // ✅ wrapper ให้ type-safe กับ RatingSelect
+  const handleRatingChangeWrapper = (value: string | number) => {
+    const numberValue = typeof value === 'number' ? value : parseInt(value, 10);
+    handleRatingChange(numberValue);
+  };
+
   return (
     <div className="container mx-auto px-4 sm:px-6 lg:px-0 mb-10">
       <div className="bg-white rounded-xl shadow-md border-1 border-gray-2 overflow-hidden">
@@ -62,7 +65,6 @@ export default function SearchSitter() {
               <PetTypeCheckBox
                 layout="row"
                 onChange={(selected) => {
-                  // Update selected pet types
                   selectedPetTypes.forEach(petType => {
                     if (!selected.includes(petType)) {
                       handlePetTypeChange(petType, false);
@@ -78,7 +80,7 @@ export default function SearchSitter() {
             </div>
           </div>
         </div>
-        
+
         {/* Rating, Experience, and Search Section */}
         <div className="px-5 sm:px-10 py-4 sm:py-5">
           <div className="flex flex-col lg:flex-row lg:items-center gap-4 lg:gap-6">
@@ -88,52 +90,35 @@ export default function SearchSitter() {
                 Rating:
               </label>
               <div className="flex flex-wrap gap-1 sm:gap-2">
-                <RatingSelect
-                  value={5}
-                  selectRating={rating}
-                  onChange={handleRatingChange}
-                />
-                <RatingSelect
-                  value={4}
-                  selectRating={rating}
-                  onChange={handleRatingChange}
-                />
-                <RatingSelect
-                  value={3}
-                  selectRating={rating}
-                  onChange={handleRatingChange}
-                />
-                <RatingSelect
-                  value={2}
-                  selectRating={rating}
-                  onChange={handleRatingChange}
-                />
-                <RatingSelect
-                  value={1}
-                  selectRating={rating}
-                  onChange={handleRatingChange}
-                />
+                {[5, 4, 3, 2, 1].map((value) => (
+                  <RatingSelect
+                    key={value}
+                    value={value}
+                    selectRating={rating}
+                    onChange={handleRatingChangeWrapper} // ใช้ wrapper
+                  />
+                ))}
               </div>
             </div>
-            
+
             {/* Experience Section */}
             <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3">
               <label className="text-sm font-semibold text-gray-7 whitespace-nowrap">
                 Experience:
               </label>
-                <Select value={selectedExperience} onValueChange={setSelectedExperience}>
-                  <SelectTrigger className="w-full sm:w-[180px] hover:cursor-pointer bg-white border-gray-2 focus:border-orange-5 focus:ring-orange-5">
-                    <SelectValue placeholder="All Experience" />
-                  </SelectTrigger>
-                  <SelectContent className="bg-white border border-gray-2">
-                    <SelectItem value="all" className="bg-white hover:bg-gray-1">All Experience</SelectItem>
-                    <SelectItem value="0-2" className="bg-white hover:bg-gray-1">0-2 Years</SelectItem>
-                    <SelectItem value="3-5" className="bg-white hover:bg-gray-1">3-5 Years</SelectItem>
-                    <SelectItem value="5+" className="bg-white hover:bg-gray-1">5+ Years</SelectItem>
-                  </SelectContent>
-                </Select>
+              <Select value={selectedExperience} onValueChange={setSelectedExperience}>
+                <SelectTrigger className="w-full sm:w-[180px] hover:cursor-pointer bg-white border-gray-2 focus:border-orange-5 focus:ring-orange-5">
+                  <SelectValue placeholder="All Experience" />
+                </SelectTrigger>
+                <SelectContent className="bg-white border border-gray-2">
+                  <SelectItem value="all" className="bg-white hover:bg-gray-1">All Experience</SelectItem>
+                  <SelectItem value="0-2" className="bg-white hover:bg-gray-1">0-2 Years</SelectItem>
+                  <SelectItem value="3-5" className="bg-white hover:bg-gray-1">3-5 Years</SelectItem>
+                  <SelectItem value="5+" className="bg-white hover:bg-gray-1">5+ Years</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
-            
+
             {/* Search Button */}
             <div className="flex justify-center lg:justify-end lg:ml-auto">
               <PrimaryButton 

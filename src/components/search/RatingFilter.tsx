@@ -20,6 +20,12 @@ export function RatingFilter({
     vertical: 'flex flex-col gap-2'
   };
 
+  // wrapper ให้ type ตรงกับ RatingSelect
+  const handleChange = (value: string | number) => {
+    const numberValue = typeof value === 'number' ? value : parseInt(value, 10);
+    onRatingChange(numberValue);
+  };
+
   return (
     <div className={className}>
       {label && (
@@ -33,7 +39,7 @@ export function RatingFilter({
             key={value}
             value={value}
             selectRating={rating}
-            onChange={onRatingChange}
+            onChange={handleChange}  // ใช้ wrapper type-safe
             className="w-fit"
             classNameStar="w-4"
           />

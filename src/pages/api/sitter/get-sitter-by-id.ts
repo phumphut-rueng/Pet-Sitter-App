@@ -8,7 +8,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   }
 
   try {
-    const { id } = req.query;
+    const { id, page = "1", limit = "5" } = req.query;
 
     if (!id || isNaN(Number(id))) {
       return res.status(400).json({ 
@@ -18,19 +18,22 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     }
 
     const sitterId = Number(id);
+    const pageNumber = Math.max(1, Number(page));
+    const limitNumber = Math.max(1, Number(limit));
+    const offset = (pageNumber - 1) * limitNumber;
 
     // ดึงข้อมูล sitter พื้นฐานก่อน
     const sitter = await prisma.sitter.findUnique({
-      where: {
-        id: sitterId
+      where: { id: sitterId },
+  include: {
+    user: {
+      select: {
+        id: true,
+        name: true,
+        profile_image: true,
       },
-      include: {
-        user: {
-          select: {
-            name: true
-          }
-        }
-      }
+    },
+  },
     });
 
     if (!sitter) {
@@ -41,7 +44,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     }
 
     // ดึงข้อมูลที่เกี่ยวข้องแยก
-    const [sitterImages, sitterPetTypes, reviews] = await Promise.all([
+    const [sitterImages, sitterPetTypes, reviews, totalReviews] = await Promise.all([
       prisma.sitter_image.findMany({
         where: { sitter_id: sitterId }
       }),
@@ -51,22 +54,42 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       }),
       prisma.review.findMany({
         where: { sitter_id: sitterId },
-        orderBy: { created_at: 'desc' }
+        orderBy: { created_at: "desc" },
+        skip: offset,
+        take: limitNumber,
+        include: {
+          user: {
+            select: { id: true, name: true, profile_image: true }
+          }
+        }
+      }),
+      prisma.review.count({
+        where: { sitter_id: sitterId }
       })
     ]);
 
     // คำนวณคะแนนเฉลี่ย
-    const averageRating = reviews.length > 0 
-      ? reviews.reduce((sum, review) => sum + review.rating, 0) / reviews.length
+    const averageRating = totalReviews > 0 
+      ? (await prisma.review.aggregate({
+          where: { sitter_id: sitterId },
+          _avg: { rating: true }
+        }))._avg.rating || 0
       : 0;
 
     // Format results
     const formattedSitter = {
       ...sitter,
+      owner: sitter.user,
       sitter_image: sitterImages,
       sitter_pet_type: sitterPetTypes,
-      reviews: reviews,
-      averageRating: Number(averageRating.toFixed(1))
+      reviews,
+      averageRating: Number(averageRating.toFixed(1)),
+      reviewPagination: {
+        page: pageNumber,
+        limit: limitNumber,
+        totalCount: totalReviews,
+        totalPages: Math.ceil(totalReviews / limitNumber)
+      }
     };
 
     return res.status(200).json({
