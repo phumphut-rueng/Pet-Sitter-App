@@ -60,13 +60,23 @@ export default function ImageGallery({
   }, [items, onChange]);
 
   useEffect(() => {
-    setItems(
-      initialImageUrls.map((url) => ({
-        id: crypto.randomUUID(),
-        kind: "existingUrl",
-        displayUrl: url,
-      }))
-    );
+    const existingUrls = items
+      .filter((i) => i.kind === "existingUrl")
+      .map((i) => i.displayUrl);
+
+    const isSame =
+      existingUrls.length === initialImageUrls.length &&
+      existingUrls.every((url, index) => url === initialImageUrls[index]);
+
+    if (!isSame) {
+      setItems(
+        initialImageUrls.map((url) => ({
+          id: crypto.randomUUID(),
+          kind: "existingUrl",
+          displayUrl: url,
+        }))
+      );
+    }
   }, [initialImageUrls]);
 
   const openFilePicker = () => fileInputRef.current?.click();
