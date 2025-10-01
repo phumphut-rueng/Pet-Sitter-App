@@ -11,7 +11,15 @@ import InputText from "@/components/input/InputText";
 import AvatarUploader from "@/components/form/AvatarUpload";
 import PrimaryButton from "@/components/buttons/PrimaryButton";
 import { cn } from "@/lib/utils";
-import DatePicker from "@/components/date-picker/DatePicker"; 
+import DatePicker from "@/components/date-picker/DatePicker";
+
+/* ===== helper: file -> dataURL (ให้ RHF เก็บ data URL) ===== */
+const handleFileToDataURL = (file: File): Promise<string> =>
+  new Promise((resolve) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(typeof reader.result === "string" ? reader.result : "");
+    reader.readAsDataURL(file);
+  });
 
 export interface ProfileFormProps {
   control: Control<OwnerProfileInput>;
@@ -92,9 +100,7 @@ const FORM_CONFIG = {
   styles: {
     form: "text-ink space-y-6",
     error: "rounded-md border border-red-300 bg-red-50 px-4 py-3 text-red-700",
-    // ทำให้ container และ label ของ avatar เป็น pointer
     avatarContainer: "w-fit cursor-pointer",
-    avatarHelp: "mt-2 text-xs text-muted-foreground",
     grid: "grid gap-4 md:grid-cols-2",
     buttonContainer: "flex justify-end",
     hiddenSubmit: "sr-only",
@@ -106,7 +112,7 @@ type InputVariant = "default" | "error" | "success";
 const getInputVariant = (hasError: boolean): InputVariant =>
   hasError ? "error" : "default";
 
-/** === Helpers แปลงวันที่ === */
+/* === date helpers === */
 const toYmd = (d?: Date) =>
   d
     ? new Date(d.getTime() - d.getTimezoneOffset() * 60000)
@@ -138,6 +144,7 @@ const ErrorMessage: React.FC<{ message: string }> = ({ message }) => (
   <div className={FORM_CONFIG.styles.error}>{message}</div>
 );
 
+/* ===== Avatar: แปลงไฟล์ -> dataURL ก่อนโยนเข้า RHF ===== */
 const AvatarField: React.FC<{ control: Control<OwnerProfileInput> }> = ({ control }) => (
   <FormField control={control} name={"image"}>
     {(field) => {
@@ -145,7 +152,18 @@ const AvatarField: React.FC<{ control: Control<OwnerProfileInput> }> = ({ contro
       return (
         <div className={FORM_CONFIG.styles.avatarContainer}>
           <div className="inline-block cursor-pointer [&_*]:cursor-pointer [&_svg]:pointer-events-none">
-            <AvatarUploader imageUrl={value} onChange={field.onChange} />
+            <AvatarUploader
+              imageUrl={value}
+              onChange={async (file: File | null) => {
+                if (!file) {
+                  field.onChange(undefined);
+                  return;
+                }
+                const dataURL = await handleFileToDataURL(file);
+                field.onChange(dataURL);
+              }}
+              diameterPx={176}
+            />
           </div>
           <p className="mt-2 text-xs text-muted-foreground cursor-pointer">
             Profile Image (optional)
@@ -198,7 +216,7 @@ const IdNumberField: React.FC<{ control: Control<OwnerProfileInput> }> = ({ cont
   </FormField>
 );
 
-/** === ใช้ DatePicker ของเพื่อนแทน input type="date" === */
+/* ===== DatePicker (คุมไม่ให้เกินวันนี้) ===== */
 const sameMonth = (a?: Date, b?: Date) =>
   !!a && !!b && a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth();
 
@@ -213,7 +231,6 @@ type DobInnerProps = {
 
 const DobPickerInner: React.FC<DobInnerProps> = ({ value, onChange, error }) => {
   const [month, setMonth] = React.useState<Date | undefined>(undefined);
-
   const selected = React.useMemo(() => parseYmd(value), [value]);
 
   React.useEffect(() => {
@@ -251,8 +268,6 @@ const DobPickerInner: React.FC<DobInnerProps> = ({ value, onChange, error }) => 
       <label htmlFor="date" className="text-sm font-medium text-gray-700">
         Date of Birth
       </label>
-
-
       <div className="[&_#date]:bg-white [&_#date]:text-black [&_#date]:border-gray-300 [&_button]:cursor-pointer">
         <DatePicker
           date={selected}
@@ -263,7 +278,6 @@ const DobPickerInner: React.FC<DobInnerProps> = ({ value, onChange, error }) => 
           width={400}
         />
       </div>
-
       {error && <span className="text-sm text-red-600">{error}</span>}
     </div>
   );
