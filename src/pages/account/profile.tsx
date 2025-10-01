@@ -1,103 +1,127 @@
-import React, { useEffect, useState } from "react";
-import { useOwnerProfileForm } from "@/hooks/useOwnerProfileForm";
+import * as React from "react";
+import { useEffect, useState } from "react";
+import type { GetServerSideProps, NextPage } from "next";
+import toast from "react-hot-toast";
+import { getServerSession } from "next-auth/next";
+
 import AccountPageShell from "@/components/layout/AccountPageShell";
 import ProfileForm from "@/components/features/account/ProfileForm";
-import Navbar from "@/components/navbar/Navbar";
-import toast, { Toaster } from "react-hot-toast"; 
+import PageToaster from "@/components/ui/PageToaster";
+import { useOwnerProfileForm } from "@/hooks/useOwnerProfileForm";
+import { authOptions } from "@/pages/api/auth/[...nextauth]";
+import type { OwnerProfileInput } from "@/lib/validators/account";
 
-function getErrorMessage(e: unknown, fallback: string): string {
-  return e instanceof Error ? e.message : fallback;
-}
+const ERROR_MESSAGES = {
+  loadFailed: "Failed to load profile.",
+  saveFailed: "Something went wrong. Please try again.",
+  fixFields: "Please fix the highlighted fields.",
+  unknown: "Something went wrong.",
+} as const;
 
-export default function AccountProfilePage() {
-  const { form, load, save } = useOwnerProfileForm();
-  const [loading, setLoading] = useState(true);
+const SUCCESS_MESSAGES = {
+  profileUpdated: "Profile updated!",
+} as const;
+
+const getErrorMessage = (error: unknown): string => {
+  if (typeof error === "string") return error;
+  if (error instanceof Error) return error.message;
+  try {
+    return JSON.stringify(error);
+  } catch {
+    return "Unknown error";
+  }
+};
+
+const useProfileLoader = (loadProfileFn: () => Promise<void>) => {
+  useEffect(() => {
+    let isMounted = true;
+
+    const loadProfile = async () => {
+      try {
+        await loadProfileFn();
+      } catch (error) {
+        if (!isMounted) return;
+        console.error("Profile load error:", error);
+        toast.error(ERROR_MESSAGES.loadFailed);
+      }
+    };
+
+    loadProfile();
+    return () => {
+      isMounted = false;
+    };
+  }, [loadProfileFn]);
+};
+
+const useProfileSubmission = (
+  saveProfileFn: (values: OwnerProfileInput) => Promise<boolean>
+) => {
+  const [saving, setSaving] = useState(false);
   const [serverError, setServerError] = useState<string | null>(null);
 
-  useEffect(() => {
-    const token = typeof window !== "undefined" ? localStorage.getItem("token") : null;
-    if (!token) {
-      window.location.replace("/login");
-      return;
-    }
-    (async () => {
-      try {
-        await load();
-      } catch (e: unknown) {
-        const msg = getErrorMessage(e, "Failed to load profile");
-        setServerError(msg);
-        toast.error(msg);
-      } finally {
-        setLoading(false);
-      }
-    })();
-  }, [load]);
-
-  const onSubmit = form.handleSubmit(async (values) => {
+  const submitProfile = async (values: OwnerProfileInput) => {
     setServerError(null);
-    const t = toast.loading("Updating profile…");
+    setSaving(true);
+
     try {
-      await save(values);
-      toast.success("Profile updated!", { id: t });
-    } catch (e: unknown) {
-      const msg = getErrorMessage(e, "Failed to save");
-      setServerError(msg);
-      toast.error(msg, { id: t });
+      const success = await saveProfileFn(values);
+      if (success) {
+        toast.success(SUCCESS_MESSAGES.profileUpdated);
+      } else {
+        toast.error(ERROR_MESSAGES.fixFields);
+      }
+    } catch (error) {
+      console.error("Profile save error:", error);
+      const errorMessage = getErrorMessage(error);
+      setServerError(errorMessage || ERROR_MESSAGES.unknown);
+      toast.error(ERROR_MESSAGES.saveFailed);
+    } finally {
+      setSaving(false);
     }
-  });
+  };
+
+  return {
+    saving,
+    serverError,
+    submitProfile,
+  };
+};
+
+const AccountProfilePage: NextPage = () => {
+  const { form, load, save } = useOwnerProfileForm();
+  const { saving, serverError, submitProfile } = useProfileSubmission(save);
+
+  useProfileLoader(load);
+
+  const handleSubmit = form.handleSubmit(submitProfile);
 
   return (
-    <>
-      <Navbar />
-      <AccountPageShell title="Profile">
-        {loading ? (
-          <p className="text-slate-500">Loading…</p>
-        ) : (
-          <ProfileForm
-            control={form.control}
-            onSubmit={onSubmit}
-            saving={form.formState.isSubmitting}
-            serverError={serverError}
-          />
-        )}
-      </AccountPageShell>
-
-   
-      <Toaster
-  position="top-right"
-  containerStyle={{ zIndex: 2147483647 }}
-  toastOptions={{
-    style: {
-      background: "var(--brand)",
-      color: "var(--on-brand)",
-    },
-    className: "toast-brand",
-    success: {
-
-      iconTheme: {
-        primary: "var(--brand)",
-        secondary: "var(--on-brand)",
-      },
- 
-      className: "toast-brand",
-      style: {
-        background: "var(--brand)",
-        color: "var(--on-brand)",
-      },
-    },
-    error: {
-      iconTheme: {
-        primary: "var(--brand)",
-        secondary: "var(--on-brand)",
-      },
-      className: "toast-brand",
-      style: {
-        background: "var(--brand)",
-        color: "var(--on-brand)",
-      },
-    },
-  }}
-/>
-    </>
+    <AccountPageShell title="Profile" showTitle>
+      <PageToaster />
+      <ProfileForm
+        control={form.control}
+        saving={saving}
+        serverError={serverError}
+        onSubmit={handleSubmit}
+      />
+    </AccountPageShell>
   );
-}
+};
+
+export default AccountProfilePage;
+
+export const getServerSideProps: GetServerSideProps = async (context) => {
+  const session = await getServerSession(context.req, context.res, authOptions);
+
+  if (!session) {
+    const callbackUrl = encodeURIComponent(context.resolvedUrl || "/account/profile");
+    return {
+      redirect: {
+        destination: `/api/auth/signin?callbackUrl=${callbackUrl}`,
+        permanent: false, // 302
+      },
+    };
+  }
+
+  return { props: {} };
+};

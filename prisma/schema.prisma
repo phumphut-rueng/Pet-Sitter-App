@@ -9,7 +9,8 @@ datasource db {
 
 model pet_type {
   id              Int               @id @default(autoincrement())
-  pet_type_name   String            @db.VarChar(100)
+  pet_type_name   String            @unique @db.VarChar(100)
+  pets            pet[]
   sitter_pet_type sitter_pet_type[]
 }
 
@@ -20,25 +21,35 @@ model role {
 }
 
 model sitter {
-  id                   Int               @id @default(autoincrement())
+  id                   Int                       @id @default(autoincrement())
   user_sitter_id       Int
-  name                 String            @db.VarChar(100)
-  location_description String?           @db.VarChar(255)
-  phone                String?           @db.VarChar(20)
+  name                 String                    @db.VarChar(100)
+  location_description String?                   @db.VarChar(255)
+  phone                String?                   @db.VarChar(20)
   introduction         String?
   address_detail       String?
-  address_province     String?           @db.VarChar(100)
-  address_district     String?           @db.VarChar(100)
-  address_sub_district String?           @db.VarChar(100)
-  address_post_code    String?           @db.VarChar(10)
-  base_price           Decimal?          @db.Decimal(10, 2)
-  created_at           DateTime          @default(now()) @db.Timestamp(6)
-  updated_at           DateTime?         @db.Timestamp(6)
+  address_province     String?                   @db.VarChar(100)
+  address_district     String?                   @db.VarChar(100)
+  address_sub_district String?                   @db.VarChar(100)
+  address_post_code    String?                   @db.VarChar(10)
+  base_price           Decimal?                  @db.Decimal(10, 2)
+  created_at           DateTime                  @default(now()) @db.Timestamp(6)
+  updated_at           DateTime?                 @db.Timestamp(6)
   experience           Int?
+  service_description  String?                   @db.VarChar(1000)
+  approval_status_id   Int                       @default(1)
+  status_updated_at    DateTime?                 @db.Timestamp(6)
+  admin_note           String?                   @db.VarChar(1000)
+  approval_status      sitter_approval_status    @relation(fields: [approval_status_id], references: [id], onUpdate: NoAction)
+  user                 user                      @relation(fields: [user_sitter_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
   reviews              review[]
-  user                 user              @relation(fields: [user_sitter_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
   sitter_image         sitter_image[]
   sitter_pet_type      sitter_pet_type[]
+  approval_history     sitter_approval_history[]
+  @@index([user_sitter_id], map: "idx_sitter_user_id")
+  @@index([approval_status_id], map: "idx_sitter_approval_status")
+  @@index([status_updated_at], map: "idx_sitter_status_updated_at")
+  @@index([address_province, address_district], map: "idx_sitter_location")
 }
 
 model sitter_image {
@@ -49,20 +60,23 @@ model sitter_image {
 }
 
 model user {
-  id            Int         @id @default(autoincrement())
-  name          String      @db.VarChar(100)
-  email         String      @unique @db.VarChar(100)
-  password      String      @db.VarChar(255)
-  phone         String?     @db.VarChar(20)
-  profile_image String?     @db.VarChar(255)
-  dob           DateTime?   @db.Date
-  bank_name     String?     @db.VarChar(100)
-  bank_number   String?     @db.VarChar(50)
-  created_at    DateTime    @default(now()) @db.Timestamp(6)
-  updated_at    DateTime?   @db.Timestamp(6)
-  reviews       review[]
-  sitter        sitter[]
-  user_role     user_role[]
+  id                      Int         @id @default(autoincrement())
+  name                    String?     @db.VarChar(100)
+  email                   String      @unique @db.VarChar(100)
+  password                String      @db.VarChar(255)
+  phone                   String?     @db.VarChar(20)
+  profile_image           String?     @db.VarChar(255)
+  profile_image_public_id String?     @db.VarChar(255)
+  dob                     DateTime?   @db.Date
+  bank_name               String?     @db.VarChar(100)
+  bank_number             String?     @db.VarChar(50)
+  created_at              DateTime    @default(now()) @db.Timestamp(6)
+  updated_at              DateTime?   @db.Timestamp(6)
+  pets                    pet[]
+  reviews                 review[]
+  sitter                  sitter[]
+  user_role               user_role[]
+  admin                   admin?
 }
 
 model user_role {
@@ -91,4 +105,65 @@ model review {
   created_at DateTime @default(now())
   sitter     sitter   @relation(fields: [sitter_id], references: [id], onDelete: Cascade)
   user       user     @relation(fields: [user_id], references: [id], onDelete: Cascade)
+}
+
+model pet {
+  id              Int       @id @default(autoincrement())
+  owner_id        Int
+  pet_type_id     Int
+  name            String    @db.VarChar(100)
+  breed           String    @db.VarChar(100)
+  sex             String    @db.VarChar(10)
+  age_month       Int
+  color           String    @db.VarChar(100)
+  weight_kg       Decimal   @db.Decimal(6, 2)
+  about           String?   @db.VarChar(1000)
+  image_url       String?   @db.VarChar(255)
+  image_public_id String?   @db.VarChar(255)
+  created_at      DateTime  @default(now()) @db.Timestamp(6)
+  updated_at      DateTime? @db.Timestamp(6)
+  owner           user      @relation(fields: [owner_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  pet_type        pet_type  @relation(fields: [pet_type_id], references: [id], onUpdate: NoAction)
+
+  @@index([name], map: "idx_pet_name")
+  @@index([owner_id], map: "idx_pet_owner_id")
+  @@index([pet_type_id], map: "idx_pet_pet_type_id")
+}
+
+model admin {
+  id         Int      @id @default(autoincrement())
+  user_id    Int      @unique
+  is_active  Boolean  @default(true)
+  created_at DateTime @default(now()) @db.Timestamp(6)
+  updated_at DateTime @updatedAt @db.Timestamp(6)
+
+  user                     user                      @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  approval_history_actions sitter_approval_history[] @relation("ApprovalHistoryAdmin")
+
+  @@index([user_id], map: "idx_admin_user_id")
+  @@index([is_active], map: "idx_admin_is_active")
+}
+
+model sitter_approval_status {
+  id          Int      @id @default(autoincrement())
+  status_name String   @unique @db.VarChar(50) 
+  description String?  @db.VarChar(255)
+  created_at  DateTime @default(now()) @db.Timestamp(6)
+
+  sitters sitter[]
+}
+
+model sitter_approval_history {
+  id         Int      @id @default(autoincrement())
+  sitter_id  Int
+  status_id  Int
+  admin_id   Int?
+  admin_note String?  @db.VarChar(1000)
+  changed_at DateTime @default(now()) @db.Timestamp(6)
+  sitter     sitter   @relation(fields: [sitter_id], references: [id], onDelete: Cascade)
+  admin      admin?   @relation("ApprovalHistoryAdmin", fields: [admin_id], references: [id], onDelete: SetNull)
+
+  @@index([sitter_id], map: "idx_approval_history_sitter")
+  @@index([admin_id], map: "idx_approval_history_admin")
+  @@index([changed_at], map: "idx_approval_history_date")
 }

@@ -24,7 +24,8 @@ async function safePost<T>(url: string, body: unknown): Promise<T | null> {
 // Email Validator
 export async function validateEmail(
     value: string,
-    role_ids: number,
+    role_ids?: number,
+    checkConflict = false,
 ): Promise<FieldValidation> {
     if (!value.trim())
         return result("Please input your Email");
@@ -33,24 +34,26 @@ export async function validateEmail(
     if (!emailRegex.test(value))
         return result("Invalid email format");
 
-    try {
-        const data = await safePost<{
-            exists: boolean;
-            data: { user_role: UserRole[] }
-        }>(
-            "/api/user/get-email",
-            { email: value }
-        );
+    if (checkConflict) {
+        try {
+            const data = await safePost<{
+                exists: boolean;
+                data: { user_role: UserRole[] }
+            }>(
+                "/api/user/get-email",
+                { email: value }
+            );
 
-        if (data?.exists) {
-            const hasRole = data.data.user_role.some((ur: UserRole) => ur.role_id === role_ids)
-            const msg = "This email is already registered";
-            return hasRole
-                ? result(msg, "Conflict", data)
-                : result(msg, undefined, data);
+            if (data?.exists && role_ids) {
+                const hasRole = data.data.user_role.some((ur: UserRole) => ur.role_id === role_ids)
+                const msg = "This email is already registered";
+                return hasRole
+                    ? result(msg, "Conflict", data)
+                    : result(msg, undefined, data);
+            }
+        } catch (e) {
+            console.error("Email check failed:", e);
         }
-    } catch (e) {
-        console.error("Email check failed:", e);
     }
 
     return { message: "" };

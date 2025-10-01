@@ -45,11 +45,6 @@ export default function AvatarUploader({
     onChange?.(file);
   };
 
-  const removeAvatar = () => {
-    setSelectedFile(null);
-    onChange?.(null);
-  };
-
   return (
     <div className="relative inline-block">
       <div
@@ -81,7 +76,7 @@ export default function AvatarUploader({
       <button
         type="button"
         onClick={openFilePicker}
-        className="absolute -bottom-1 right-1 h-11 w-11 rounded-full bg-orange-1 hover:bg-orange-2 text-orange-5 text-2xl"
+        className="absolute -bottom-1 right-1 h-11 w-11 rounded-full bg-orange-1 hover:bg-orange-2 text-orange-5 text-2xl cursor-pointer"
         title="upload image"
       >
         +

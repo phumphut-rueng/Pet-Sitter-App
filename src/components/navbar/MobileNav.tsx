@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { Bell, MessageSquare, Menu, X } from "lucide-react";
 import IconButton from "./IconButton";
-import PrimaryButton from "@/components/buttons/primaryButton";
+import PrimaryButton from "@/components/buttons/PrimaryButton";
 import { NavigationProps, MenuItem } from "@/types/navigation.types";
 
 const MobileNav: React.FC<NavigationProps> = ({
@@ -13,11 +13,21 @@ const MobileNav: React.FC<NavigationProps> = ({
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   const toggleMobileMenu = () => {
-    setIsMobileMenuOpen(!isMobileMenuOpen);
+    const newState = !isMobileMenuOpen;
+    setIsMobileMenuOpen(newState);
+
+    // Prevent body scrolling when menu is open
+    if (newState) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
   };
 
   const closeMobileMenu = () => {
     setIsMobileMenuOpen(false);
+    // Restore body scrolling
+    document.body.style.overflow = '';
   };
 
   useEffect(() => {
@@ -28,13 +38,17 @@ const MobileNav: React.FC<NavigationProps> = ({
     };
 
     window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
+    return () => {
+      window.removeEventListener('resize', handleResize);
+      // Cleanup: restore body scrolling on unmount
+      document.body.style.overflow = '';
+    };
   }, []);
 
-  const handleMobileMenuItemClick = (item: MenuItem) => {
+  const handleMobileMenuItemClick = async (item: MenuItem) => {
     closeMobileMenu();
     if (item.isLogout) {
-      onLogout();
+      await onLogout();
     } else {
       onNavigate(item.href);
     }
@@ -42,7 +56,7 @@ const MobileNav: React.FC<NavigationProps> = ({
 
   const handleFindPetSitterClick = () => {
     closeMobileMenu();
-    onNavigate('/find-a-pet-sitter');
+    onNavigate('/findpetsitter');
   };
 
   return (
@@ -77,8 +91,8 @@ const MobileNav: React.FC<NavigationProps> = ({
 
       {/* Mobile Menu Overlay */}
       {isMobileMenuOpen && (
-        <nav className="fixed inset-0 top-12 md:top-20 z-50 bg-white scrollbar-hide">
-          <div className="px-4 py-10 flex flex-col">
+        <nav className="fixed left-0 right-0 top-12 md:top-20 bottom-0 z-50 bg-white">
+          <div className="px-4 py-10 flex flex-col h-full overflow-y-auto">
             {menuItems.map((item, index) => (
               <React.Fragment key={index}>
                 {item.isLogout && (

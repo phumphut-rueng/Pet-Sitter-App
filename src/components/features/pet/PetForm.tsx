@@ -1,5 +1,5 @@
 import * as React from "react";
-import Image from "next/image";
+import AvatarUploader from "@/components/form/AvatarUpload";
 
 export type PetFormValues = {
   name: string;
@@ -10,7 +10,7 @@ export type PetFormValues = {
   color: string;
   weightKg: string;
   about: string;
-  image: string; // เก็บเป็น URL / data URL
+  image: string;
 };
 
 type PetFormProps = {
@@ -20,10 +20,22 @@ type PetFormProps = {
   serverError?: string | null;
   onSubmit: (values: PetFormValues) => void;
   onCancel: () => void;
-  onDelete?: () => void; // โชว์ปุ่มลบเมื่อมี
+  onDelete?: () => void;
 };
 
-const emptyValues: PetFormValues = {
+type FieldConfig = {
+  name: keyof PetFormValues;
+  label: string;
+  placeholder: string;
+  inputMode?: "text" | "numeric" | "decimal";
+};
+
+type SelectOption = {
+  value: string;
+  label: string;
+};
+
+const EMPTY_VALUES: PetFormValues = {
   name: "",
   type: "",
   breed: "",
@@ -35,6 +47,189 @@ const emptyValues: PetFormValues = {
   image: "",
 };
 
+const FORM_CONFIG = {
+  fields: {
+    name: { name: "name", label: "Pet Name*", placeholder: "Your pet name" },
+    breed: { name: "breed", label: "Breed*", placeholder: "Breed of your pet" },
+    ageMonth: { name: "ageMonth", label: "Age (Month)*", placeholder: "e.g., 6", inputMode: "numeric" },
+    color: { name: "color", label: "Color*", placeholder: "Describe color of your pet" },
+    weightKg: { name: "weightKg", label: "Weight (Kilogram)*", placeholder: "e.g., 3.5", inputMode: "decimal" },
+  } as const,
+  petTypeOptions: [
+    { value: "", label: "Select your pet type" },
+    { value: "Dog", label: "Dog" },
+    { value: "Cat", label: "Cat" },
+    { value: "Bird", label: "Bird" },
+    { value: "Rabbit", label: "Rabbit" },
+  ] as SelectOption[],
+  sexOptions: [
+    { value: "", label: "Select sex of your pet" },
+    { value: "Male", label: "Male" },
+    { value: "Female", label: "Female" },
+  ] as SelectOption[],
+  styles: {
+    form: "space-y-6",
+    error: "rounded-lg bg-pink/10 p-3 text-[14px] text-pink ring-1 ring-pink/30",
+    grid: {
+      main: "grid gap-6 md:grid-cols-[240px,1fr]",
+      fields: "grid gap-4 md:grid-cols-2",
+      buttons: {
+        mobile: "mt-3 grid grid-cols-2 gap-3 md:hidden",
+        desktop: "mt-3 hidden md:grid grid-cols-2 gap-3",
+      },
+    },
+    // ใส่ cursor-pointer ตั้งแต่ container (สืบทอดไปยังลูก)
+    imageContainer: "w-fit cursor-pointer",
+    imageLabel: "text-[14px] font-medium text-muted-text mb-3 block cursor-pointer",
+    input: {
+      base: "mt-1 h-10 w-full rounded-md border border-border bg-white px-3 text-[14px] text-ink placeholder:text-muted-text focus:outline-none focus:ring-2 focus:ring-brand ring-offset-2 ring-offset-bg",
+      textarea: "mt-1 w-full rounded-md border border-border bg-white p-3 text-[14px] text-ink placeholder:text-muted-text focus:outline-none focus:ring-2 focus:ring-brand ring-offset-2 ring-offset-bg",
+    },
+    button: {
+      cancel: "h-11 rounded-full bg-orange-1/40 text-orange-6 font-semibold hover:bg-orange-1/60 transition cursor-pointer disabled:cursor-not-allowed",
+      submit: "h-11 rounded-full bg-brand text-white font-bold hover:brightness-95 hover:shadow disabled:opacity-50 transition cursor-pointer disabled:cursor-not-allowed",
+      delete: "inline-flex items-center gap-2 text-orange-600 font-semibold hover:text-orange-700 cursor-pointer",
+    },
+    label: "text-[14px] font-medium text-muted-text",
+  },
+};
+
+const handleFileToDataURL = (file: File): Promise<string> =>
+  new Promise((resolve) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(typeof reader.result === "string" ? reader.result : "");
+    reader.readAsDataURL(file);
+  });
+
+const ErrorMessage: React.FC<{ message: string }> = ({ message }) => (
+  <div className={FORM_CONFIG.styles.error}>{message}</div>
+);
+
+const FormLabel: React.FC<{ children: React.ReactNode }> = ({ children }) => (
+  <label className={FORM_CONFIG.styles.label}>{children}</label>
+);
+
+
+const PetImageField: React.FC<{
+  imageUrl: string;
+  onChange: (file: File | null) => void;
+}> = ({ imageUrl, onChange }) => {
+  return (
+    <div className={`${FORM_CONFIG.styles.imageContainer} cursor-pointer`}>
+      <label className={`${FORM_CONFIG.styles.imageLabel} cursor-pointer`}>Pet Image</label>
+
+
+      <div className="inline-block cursor-pointer [&_button]:cursor-pointer [&_button]:outline-none">
+        <AvatarUploader imageUrl={imageUrl} onChange={onChange} diameterPx={176} />
+      </div>
+    </div>
+  );
+};
+
+const TextInputField: React.FC<{
+  config: FieldConfig;
+  value: string;
+  onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+}> = ({ config, value, onChange }) => (
+  <div>
+    <FormLabel>{config.label}</FormLabel>
+    <input
+      name={config.name}
+      value={value}
+      onChange={onChange}
+      placeholder={config.placeholder}
+      inputMode={config.inputMode}
+      className={FORM_CONFIG.styles.input.base}
+    />
+  </div>
+);
+
+
+const SelectField: React.FC<{
+  name: string;
+  label: string;
+  value: string;
+  options: SelectOption[];
+  onChange: (e: React.ChangeEvent<HTMLSelectElement>) => void;
+}> = ({ name, label, value, options, onChange }) => (
+  <div>
+    <FormLabel>{label}</FormLabel>
+    <select
+      name={name}
+      value={value}
+      onChange={onChange}
+      className={`${FORM_CONFIG.styles.input.base} cursor-pointer`}
+    >
+      {options.map((option) => (
+        <option key={option.value} value={option.value}>
+          {option.label}
+        </option>
+      ))}
+    </select>
+  </div>
+);
+
+const TextAreaField: React.FC<{
+  value: string;
+  onChange: (e: React.ChangeEvent<HTMLTextAreaElement>) => void;
+}> = ({ value, onChange }) => (
+  <div>
+    <FormLabel>About</FormLabel>
+    <textarea
+      name="about"
+      value={value}
+      onChange={onChange}
+      placeholder="Describe more about your pet..."
+      rows={4}
+      className={FORM_CONFIG.styles.input.textarea}
+    />
+  </div>
+);
+
+const DeleteButton: React.FC<{ onDelete: () => void }> = ({ onDelete }) => (
+  <div className="mt-2 flex justify-center md:justify-start">
+    <button type="button" onClick={onDelete} className={FORM_CONFIG.styles.button.delete}>
+      <svg aria-hidden="true" className="h-4 w-4" viewBox="0 0 24 24" fill="currentColor">
+        <path d="M9 3h6a1 1 0 0 1 1 1v1h4v2H4V5h4V4a1 1 0 0 1 1-1Zm2 4h2v12h-2V7ZM7 7h2v12H7V7Zm8 0h2v12h-2V7Z" />
+      </svg>
+      Delete Pet
+    </button>
+  </div>
+);
+
+const ActionButtons: React.FC<{
+  mode: "create" | "edit";
+  loading: boolean;
+  onCancel: () => void;
+  isMobile?: boolean;
+}> = ({ mode, loading, onCancel, isMobile = false }) => {
+  const submitLabel = mode === "edit" ? "Update Pet" : "Create Pet";
+  const loadingLabel = loading ? "Saving..." : submitLabel;
+  const gridClass = isMobile ? FORM_CONFIG.styles.grid.buttons.mobile : FORM_CONFIG.styles.grid.buttons.desktop;
+  const buttonSpacing = isMobile ? "" : "px-6";
+  const cancelClass = isMobile ? "" : "justify-self-start";
+  const submitClass = isMobile ? "" : "justify-self-end";
+  
+  return (
+    <div className={gridClass}>
+      <button 
+        type="button" 
+        onClick={onCancel} 
+        className={`${FORM_CONFIG.styles.button.cancel} ${buttonSpacing} ${cancelClass}`}
+      >
+        Cancel
+      </button>
+      <button 
+        type="submit" 
+        disabled={loading} 
+        className={`${FORM_CONFIG.styles.button.submit} ${buttonSpacing} ${submitClass}`}
+      >
+        {loadingLabel}
+      </button>
+    </div>
+  );
+};
+
 export default function PetForm({
   mode,
   initialValues,
@@ -44,204 +239,95 @@ export default function PetForm({
   onCancel,
   onDelete,
 }: PetFormProps) {
-  const [values, setValues] = React.useState<PetFormValues>({
-    ...emptyValues,
-    ...initialValues,
-  });
+  const [values, setValues] = React.useState<PetFormValues>({ ...EMPTY_VALUES, ...initialValues });
 
-  const [preview, setPreview] = React.useState<string>(initialValues?.image ?? "");
+  React.useEffect(() => {
+    if (!initialValues) return;
+    setValues((prev) => ({ ...prev, ...initialValues }));
+  }, [initialValues]);
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+  const handleInputChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
+  ) => {
     const { name, value } = e.target;
-    setValues((v) => ({ ...v, [name]: value }));
+    setValues((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleImageFile = async (file?: File) => {
+  const handleImageChange = async (file: File | null) => {
     if (!file) {
-      setValues((v) => ({ ...v, image: "" }));
-      setPreview("");
+      setValues((prev) => ({ ...prev, image: "" }));
       return;
     }
-
-    const reader = new FileReader();
-    reader.onload = () => {
-      const url = typeof reader.result === "string" ? reader.result : "";
-      setPreview(url);
-      setValues((v) => ({ ...v, image: url }));
-    };
-    reader.readAsDataURL(file);
+    const dataURL = await handleFileToDataURL(file);
+    setValues((prev) => ({ ...prev, image: dataURL }));
   };
 
-  const submitForm = (e: React.FormEvent) => {
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     onSubmit(values);
   };
 
+  const isEdit = mode === "edit";
+  const showDelete = onDelete && isEdit;
+
   return (
-    <form onSubmit={submitForm} className="space-y-6">
+    <form onSubmit={handleSubmit} className={FORM_CONFIG.styles.form} aria-label="Pet form">
+      {serverError && <ErrorMessage message={serverError} />}
 
-      <div className="flex items-center justify-between">
-        <h2 className="text-[18px] font-bold text-ink">{mode === "edit" ? "Edit Pet" : "Create Pet"}</h2>
-        <div className="flex items-center gap-2">
-          {onDelete && mode === "edit" && (
-            <button
-              type="button"
-              onClick={onDelete}
-              className="h-10 rounded-full bg-orange-1/40 px-4 text-[14px] font-medium text-orange-6 hover:bg-orange-1/60 transition"
-            >
-              Delete
-            </button>
-          )}
-          <button
-            type="button"
-            onClick={onCancel}
-            className="h-10 rounded-full border border-border bg-white px-4 text-[14px] font-medium text-ink hover:bg-muted/40 transition"
-          >
-            Cancel
-          </button>
-          <button
-            type="submit"
-            disabled={loading}
-            className="h-10 rounded-full bg-brand px-5 text-[14px] font-bold text-white hover:brightness-95 hover:shadow disabled:opacity-50 transition"
-          >
-            {loading ? "Saving..." : mode === "edit" ? "Save Changes" : "Create"}
-          </button>
-        </div>
-      </div>
-
-      {serverError && (
-        <div className="rounded-lg bg-pink/10 p-3 text-[14px] text-pink ring-1 ring-pink/30">{serverError}</div>
-      )}
-
-
-      <div className="grid gap-6 md:grid-cols-[220px,1fr]">
-
-        <div className="space-y-3">
-          <div className="text-[14px] font-medium text-muted-text">Pet Image</div>
-
-
-          <div className="relative h-24 w-24 overflow-hidden rounded-md bg-muted ring-1 ring-border">
-            {preview ? (
-              <Image src={preview} alt="Pet preview" fill sizes="96px" className="object-cover" />
-            ) : (
-              <div className="grid h-full w-full place-items-center text-[12px] text-muted-text">No image</div>
-            )}
-          </div>
-
-          <label className="inline-flex cursor-pointer items-center justify-center rounded-full border border-border px-3 py-2 text-[13px] font-medium text-ink hover:bg-muted/40 transition">
-            <input
-              type="file"
-              accept="image/*"
-              className="hidden"
-              onChange={(e) => handleImageFile(e.target.files?.[0])}
-            />
-            Upload Image
-          </label>
-        </div>
-
+      <div className={FORM_CONFIG.styles.grid.main}>
+        <PetImageField imageUrl={values.image} onChange={handleImageChange} />
 
         <div className="grid gap-4">
-          <div className="grid gap-4 md:grid-cols-2">
-            <div>
-              <label className="text-[14px] font-medium text-muted-text">Name</label>
-              <input
-                name="name"
-                value={values.name}
-                onChange={handleChange}
-                placeholder="Your pet name"
-                className="mt-1 h-10 w-full rounded-md border border-border bg-white px-3 text-[14px] text-ink placeholder:text-muted-text focus:outline-none focus:ring-2 focus:ring-brand ring-offset-2 ring-offset-bg"
-              />
-            </div>
-
-            <div>
-              <label className="text-[14px] font-medium text-muted-text">Type</label>
-              <select
-                name="type"
-                value={values.type}
-                onChange={handleChange}
-                className="mt-1 h-10 w-full rounded-md border border-border bg-white px-3 text-[14px] text-ink focus:outline-none focus:ring-2 focus:ring-brand ring-offset-2 ring-offset-bg"
-              >
-                <option value="">Select type</option>
-                <option value="Dog">Dog</option>
-                <option value="Cat">Cat</option>
-                <option value="Bird">Bird</option>
-                <option value="Rabbit">Rabbit</option>
-                <option value="Other">Other</option>
-              </select>
-            </div>
-
-            <div>
-              <label className="text-[14px] font-medium text-muted-text">Breed</label>
-              <input
-                name="breed"
-                value={values.breed}
-                onChange={handleChange}
-                placeholder="e.g., Pomeranian"
-                className="mt-1 h-10 w-full rounded-md border border-border bg-white px-3 text-[14px] text-ink placeholder:text-muted-text focus:outline-none focus:ring-2 focus:ring-brand ring-offset-2 ring-offset-bg"
-              />
-            </div>
-
-            <div>
-              <label className="text-[14px] font-medium text-muted-text">Sex</label>
-              <select
-                name="sex"
-                value={values.sex}
-                onChange={handleChange}
-                className="mt-1 h-10 w-full rounded-md border border-border bg-white px-3 text-[14px] text-ink focus:outline-none focus:ring-2 focus:ring-brand ring-offset-2 ring-offset-bg"
-              >
-                <option value="">Select sex</option>
-                <option value="Male">Male</option>
-                <option value="Female">Female</option>
-              </select>
-            </div>
-
-            <div>
-              <label className="text-[14px] font-medium text-muted-text">Age (months)</label>
-              <input
-                name="ageMonth"
-                value={values.ageMonth}
-                onChange={handleChange}
-                placeholder="e.g., 6"
-                inputMode="numeric"
-                className="mt-1 h-10 w-full rounded-md border border-border bg-white px-3 text-[14px] text-ink placeholder:text-muted-text focus:outline-none focus:ring-2 focus:ring-brand ring-offset-2 ring-offset-bg"
-              />
-            </div>
-
-            <div>
-              <label className="text-[14px] font-medium text-muted-text">Color</label>
-              <input
-                name="color"
-                value={values.color}
-                onChange={handleChange}
-                placeholder="e.g., Brown"
-                className="mt-1 h-10 w-full rounded-md border border-border bg-white px-3 text-[14px] text-ink placeholder:text-muted-text focus:outline-none focus:ring-2 focus:ring-brand ring-offset-2 ring-offset-bg"
-              />
-            </div>
-
-            <div>
-              <label className="text-[14px] font-medium text-muted-text">Weight (kg)</label>
-              <input
-                name="weightKg"
-                value={values.weightKg}
-                onChange={handleChange}
-                placeholder="e.g., 3.5"
-                inputMode="decimal"
-                className="mt-1 h-10 w-full rounded-md border border-border bg-white px-3 text-[14px] text-ink placeholder:text-muted-text focus:outline-none focus:ring-2 focus:ring-brand ring-offset-2 ring-offset-bg"
-              />
-            </div>
-          </div>
-
-          <div>
-            <label className="text-[14px] font-medium text-muted-text">About</label>
-            <textarea
-              name="about"
-              value={values.about}
-              onChange={handleChange}
-              placeholder="Short description, habits, etc."
-              rows={4}
-              className="mt-1 w-full rounded-md border border-border bg-white p-3 text-[14px] text-ink placeholder:text-muted-text focus:outline-none focus:ring-2 focus:ring-brand ring-offset-2 ring-offset-bg"
+          <div className={FORM_CONFIG.styles.grid.fields}>
+            <TextInputField 
+              config={FORM_CONFIG.fields.name} 
+              value={values.name} 
+              onChange={handleInputChange} 
+            />
+            <TextInputField 
+              config={FORM_CONFIG.fields.breed} 
+              value={values.breed} 
+              onChange={handleInputChange} 
+            />
+            <TextInputField 
+              config={FORM_CONFIG.fields.ageMonth} 
+              value={values.ageMonth} 
+              onChange={handleInputChange} 
+            />
+            <TextInputField 
+              config={FORM_CONFIG.fields.color} 
+              value={values.color} 
+              onChange={handleInputChange} 
+            />
+            <TextInputField 
+              config={FORM_CONFIG.fields.weightKg} 
+              value={values.weightKg} 
+              onChange={handleInputChange} 
+            />
+            
+            <SelectField 
+              name="type"
+              label="Pet Type*" 
+              value={values.type}
+              options={FORM_CONFIG.petTypeOptions} 
+              onChange={handleInputChange}
+            />
+            
+            <SelectField 
+              name="sex"
+              label="Sex*" 
+              value={values.sex}
+              options={FORM_CONFIG.sexOptions} 
+              onChange={handleInputChange}
             />
           </div>
+
+          <TextAreaField value={values.about} onChange={handleInputChange} />
+
+          {showDelete && <DeleteButton onDelete={onDelete} />}
+
+          <ActionButtons mode={mode} loading={loading} onCancel={onCancel} isMobile />
+          <ActionButtons mode={mode} loading={loading} onCancel={onCancel} />
         </div>
       </div>
     </form>

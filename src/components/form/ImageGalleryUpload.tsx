@@ -34,6 +34,20 @@ export default function ImageGallery({
     }))
   );
 
+  const itemsRef = useRef<GalleryItem[]>([]);
+
+  useEffect(() => {
+    itemsRef.current = items
+  }, [items]);
+
+  useEffect(() => {
+    return () => {
+      itemsRef.current.forEach((i) => {
+        if (i.kind === "newFile") URL.revokeObjectURL(i.displayUrl);
+      });
+    };
+  }, []);
+
   useEffect(() => {
     onChange?.({
       existingImageUrls: items
@@ -44,6 +58,26 @@ export default function ImageGallery({
       ),
     });
   }, [items, onChange]);
+
+  useEffect(() => {
+    setItems((prevItems) => {
+      const prevUrls = prevItems
+        .filter((i) => i.kind === "existingUrl")
+        .map((i) => i.displayUrl);
+  
+      const isSame =
+        prevUrls.length === initialImageUrls.length &&
+        prevUrls.every((url, index) => url === initialImageUrls[index]);
+  
+      if (isSame) return prevItems;
+  
+      return initialImageUrls.map((url) => ({
+        id: crypto.randomUUID(),
+        kind: "existingUrl",
+        displayUrl: url,
+      }));
+    });
+  }, [initialImageUrls]);
 
   const openFilePicker = () => fileInputRef.current?.click();
 
@@ -93,14 +127,6 @@ export default function ImageGallery({
     });
   };
 
-  useEffect(() => {
-    return () => {
-      items.forEach(
-        (i) => i.kind === "newFile" && URL.revokeObjectURL(i.displayUrl)
-      );
-    };
-  }, []);
-
   return (
     <div>
       <div className="flex flex-wrap gap-4">
@@ -108,7 +134,7 @@ export default function ImageGallery({
           type="button"
           onClick={openFilePicker}
           className="w-42 h-42 rounded-md bg-orange-1 text-orange-5
-                     grid place-items-center hover:bg-orange-2 transition"
+                     grid place-items-center hover:bg-orange-2 transition cursor-pointer"
           title="Upload image"
         >
           <div className="grid place-items-center gap-4">

@@ -1,14 +1,20 @@
+// src/lib/prisma.ts
 import { PrismaClient } from "@prisma/client";
 
-declare global {
-  // เพิ่ม property prisma ให้ NodeJS global object
-  var prisma: PrismaClient | undefined;
-}
+// เก็บ prisma ไว้บน globalThis แบบ type-safe
+const globalForPrisma = globalThis as unknown as {
+  prisma?: PrismaClient;
+};
 
+// สร้าง singleton
 export const prisma =
-  global.prisma ||
+  globalForPrisma.prisma ??
   new PrismaClient({
-    log: ["query"], // optional ดู query ที่รัน
+    // เปิด log ตอน dev เท่านั้น
+    log: process.env.NODE_ENV === "development" ? ["query", "warn", "error"] : ["error"],
   });
 
-if (process.env.NODE_ENV !== "production") global.prisma = prisma;
+// กันสร้างซ้ำตอน dev/hot-reload
+if (process.env.NODE_ENV !== "production") {
+  globalForPrisma.prisma = prisma;
+}

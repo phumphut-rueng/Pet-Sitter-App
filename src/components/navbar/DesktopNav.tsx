@@ -3,7 +3,7 @@ import Link from "next/link";
 import { Bell, MessageSquare } from "lucide-react";
 import IconButton from "./IconButton";
 import AvatarDropdown from "./AvatarDropdown";
-import PrimaryButton from "@/components/buttons/primaryButton";
+import PrimaryButton from "@/components/buttons/PrimaryButton";
 import { NavigationProps } from "@/types/navigation.types";
 
 const DesktopNav: React.FC<NavigationProps> = ({
@@ -52,7 +52,7 @@ const DesktopNav: React.FC<NavigationProps> = ({
         </>
       )}
 
-      <Link href="/find-a-pet-sitter">
+      <Link href="/findpetsitter">
         <PrimaryButton
           text="Find a Pet Sitter"
           textColor="white"

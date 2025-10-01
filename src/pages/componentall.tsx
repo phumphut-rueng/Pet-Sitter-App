@@ -5,7 +5,7 @@ import ProgressStep from "@/components/progress-step/ProgressStep";
 import BookingConfirmation from "@/components/modal/BookingConfirmation";
 import RejectConfirmation from "@/components/modal/RejectConfirmation";
 import RatingSelect from "@/components/ratingStar";
-import PrimaryButton from "@/components/buttons/primaryButton";
+import PrimaryButton from "@/components/buttons/PrimaryButton";
 import InputText from "@/components/input/InputText";
 import InputTextArea from "@/components/input/InputTextArea";
 import { PetTypeBadge } from "@/components/badges/PetTypeBadge";
@@ -17,15 +17,16 @@ import PinSelection from "@/components/PinSelection";
 import ChatList from "@/components/chat/ChatList";
 import ChatContainer from "@/components/chat/ChatContainer";
 import PetTypeCheckBox from "@/components/petTypeCheckBox";
-import CashButton from "@/components/buttons/cashButton";
-import IconButton from "@/components/buttons/iconButton";
+import CashButton from "@/components/buttons/CashButton";
+import IconButton from "@/components/buttons/IconButton";
 import Sidebar from "@/components/layout/SitterSidebar";
 import { PetSitterCard, PetSitterCardLarge, PetSitterCardSmall } from "@/components/cards/PetSitterCard";
 import BookingCard from "@/components/cards/BookingCard";
 import PetCard from "@/components/cards/PetCard";
 import AccountSidebarMini from "@/components/layout/AccountSidebarMini";
-
-
+import BookingSelect from "@/components/modal/BookingSelect";
+import DatePicker from "@/components/date-picker/DatePicker";
+import TimePicker from "@/components/time-picker/TimePicker";
 // Section Wrapper
 const Section = ({ title, cols = 1, children }: {
   title: string;
@@ -65,9 +66,6 @@ const COVER = "/images/cards/pet-sitter-cover.svg";
 const AVATAR = "/images/cards/jane-maison.svg";
 const PETIMG = "/images/cards/pet-cat-mr-hem-card.svg";
 
-
-
-
 // mock สำหรับ PetCard grid
 const pets = [
   { id: 1, name: "Mr. Ham", selected: false },
@@ -77,8 +75,7 @@ const pets = [
 ];
 
 // grid แสดง PetCard
-
-function PetCardGrid () {
+function PetCardGrid() {
   return (
     <div className="space-y-10">
       {/* ---------- ชุดที่ 1: ไซส์ใหญ่ 207×240 (4×2 ใบ) ---------- */}
@@ -152,13 +149,63 @@ const bookingBase = {
 const on = (k: string) => () => console.log(k);
 //===================================================================
 
+//ข้อมูลสำหรับ modal BookingSelect
+const disabledDates = [
+  new Date(2025, 9, 10),  // 10 ตุลาคม 2025 (เดือนเริ่มที่ 0)
+  new Date(2025, 9, 16),  // 16 ตุลาคม 2025
+  new Date(2025, 9, 20),  // 20 ตุลาคม 2025
+]
+//=================================================================== 
+
 export default function ComponentAll() {
+  //ใช้สำหรับ modal
   const [isOpenBooking, setIsOpenBooking] = useState(false);
   const [isOpenReject, setIsOpenReject] = useState(false);
   const [isOpenPopup, setIsOpenPopup] = useState(false);
+  const [isOpenBookingSelect, setIsOpenBookingSelect] = useState(false);
+  //=================================================================== 
+  //ข้อมูลสำหรับ datepicker
+  // ตัวอย่างที่ 1: การใช้งานแบบพื้นฐาน
+  const [date1, setDate1] = useState<Date | undefined>()
+  const [month1, setMonth1] = useState<Date | undefined>(new Date())
+
+  // ตัวอย่างที่ 2: กำหนด min/max date
+  const [date2, setDate2] = useState<Date | undefined>()
+  const [month2, setMonth2] = useState<Date | undefined>(new Date())
+  const minDate = new Date()
+  const maxDate = new Date()
+  maxDate.setDate(maxDate.getDate() + 30)
+
+  // ตัวอย่างที่ 3: ปิดการ disable วันในอดีต
+  const [date3, setDate3] = useState<Date | undefined>()
+  const [month3, setMonth3] = useState<Date | undefined>(new Date())
+
+  // ตัวอย่างที่ 4: กำหนดวันที่ต้องการ disable
+  const [date4, setDate4] = useState<Date | undefined>()
+  const [month4, setMonth4] = useState<Date | undefined>(new Date())
+  //=================================================================== 
+  //ข้อมูลสำหรับ Time picker
+  const [startTime, setStartTime] = useState<Date | undefined>(undefined)
+  const [startTime2] = useState<Date | undefined>(undefined)
+  const [endTime2, setendTime2] = useState<Date | undefined>(undefined)
+  //===================================================================
 
   return (
     <div className="min-h-screen text-white p-6">
+      <PrimaryButton
+        text="Booking Select  Click!!"
+        bgColor="primary"
+        textColor="white"
+        onClick={() => setIsOpenBookingSelect(true)}
+      />
+
+      <DatePicker
+        date={date2}
+        month={month2}
+        onMonthChange={setMonth2}
+        onSelect={setDate2}
+      />
+
       <div className=" mx-auto space-y-10">
         {/* Rating */}
         <Section title="Selection">
@@ -448,7 +495,6 @@ export default function ComponentAll() {
     */}
             <div className="space-y-3 rounded-2xl border border-dashed border-purple-300 p-5">
               <h3 className="text-lg font-semibold text-ink/90">Pet Sitter – Large</h3>
-              <p className="text-gray-500 text-sm -mt-1">ขาดขนาดรูป large ต้องแก้</p>
 
               {/* Desktop: รูปซ้าย (ปกติ + มีกรอบส้ม) */}
               <div className="hidden md:block w-[848px] mx-auto space-y-4">
@@ -467,143 +513,143 @@ export default function ComponentAll() {
               </div>
             </div>
 
-        {/* ===================== SMALL PET SITTER CARDS ===================== */}
-        <div className="w-full max-w-[848px] mx-auto space-y-3 rounded-2xl border border-dashed border-purple-300 p-5">
-          <h3 className="text-lg font-semibold text-ink/90">Pet Sitter – Small</h3>
-          <div className="w-full flex justify-center">
-            <div className="grid gap-8 justify-items-center grid-cols-1 md:[grid-template-columns:471px_330px]">
-              <PetSitterCardSmall {...sitterCommon} rating={5} smPreset="wide" tags={["Dog","Cat","Bird","Rabbit"]} />
-              <PetSitterCardSmall {...sitterCommon} rating={5} smPreset="compact" tags={["Dog","Cat","Bird","Rabbit"]} />
-              <PetSitterCardSmall {...sitterCommon} rating={5} smPreset="wide" className="border-[1px] border-orange-6" tags={["Dog","Cat","Bird","Rabbit"]} />
-              <PetSitterCardSmall {...sitterCommon} rating={5} smPreset="compact" className="border-[1px] border-orange-6" tags={["Dog","Cat","Bird","Rabbit"]} />
+            {/* ===================== SMALL PET SITTER CARDS ===================== */}
+            <div className="w-full max-w-[848px] mx-auto space-y-3 rounded-2xl border border-dashed border-purple-300 p-5">
+              <h3 className="text-lg font-semibold text-ink/90">Pet Sitter – Small</h3>
+              <div className="w-full flex justify-center">
+                <div className="grid gap-8 justify-items-center grid-cols-1 md:[grid-template-columns:471px_330px]">
+                  <PetSitterCardSmall {...sitterCommon} rating={5} smPreset="wide" tags={["Dog", "Cat", "Bird", "Rabbit"]} />
+                  <PetSitterCardSmall {...sitterCommon} rating={5} smPreset="compact" tags={["Dog", "Cat", "Bird", "Rabbit"]} />
+                  <PetSitterCardSmall {...sitterCommon} rating={5} smPreset="wide" className="border-[1px] border-orange-6" tags={["Dog", "Cat", "Bird", "Rabbit"]} />
+                  <PetSitterCardSmall {...sitterCommon} rating={5} smPreset="compact" className="border-[1px] border-orange-6" tags={["Dog", "Cat", "Bird", "Rabbit"]} />
+                </div>
+              </div>
             </div>
-          </div>
-        </div>
-{/* =========================================================
+            {/* =========================================================
           BOOKING CARDS (Desktop 4 + Mobile 4)
       ========================================================= */}
-      <div className="mx-auto space-y-3 rounded-2xl border border-dashed border-purple-300 p-5">
-        <h3 className="text-lg font-semibold text-ink/90">Booking Cards</h3>
-        <p className="text-gray-500 text-sm -mt-1">
-        </p>
+            <div className="mx-auto space-y-3 rounded-2xl border border-dashed border-purple-300 p-5">
+              <h3 className="text-lg font-semibold text-ink/90">Booking Cards</h3>
+              <p className="text-gray-500 text-sm -mt-1">
+              </p>
 
-        {/* ---------- Desktop (WIDE) : 4 แบบ ---------- */}
-        <div className="space-y-4">
-          <BookingCard
-            {...bookingBase}
-            status="waiting"
-            layout="wide"
-            note="Waiting Pet Sitter for confirm booking"
-            actions={[
-              { key: "message", label: "Send Message", onClick: on("message") },
-              { key: "change", label: "Change", onClick: on("change") },
-              { key: "call", label: "Call", onClick: on("call") },
-            ]}
-          />
+              {/* ---------- Desktop (WIDE) : 4 แบบ ---------- */}
+              <div className="space-y-4">
+                <BookingCard
+                  {...bookingBase}
+                  status="waiting"
+                  layout="wide"
+                  note="Waiting Pet Sitter for confirm booking"
+                  actions={[
+                    { key: "message", label: "Send Message", onClick: on("message") },
+                    { key: "change", label: "Change", onClick: on("change") },
+                    { key: "call", label: "Call", onClick: on("call") },
+                  ]}
+                />
 
-            
-          <BookingCard
-            {...bookingBase}
-            status="in_service"
-            layout="wide"
-            note="Your pet is already in Pet Sitter care!"
-            actions={[
-              { key: "message", onClick: on("message") },
-              { key: "call", onClick: on("call") },
-            ]}
-          />
 
-          <BookingCard
-            {...bookingBase}
-            status="success"
-            layout="wide"
-            successDate="Tue, 25 Oct 2022  |  11:03 AM"
-            actions={[
-              { key: "report", label: "Report", onClick: on("report") },
-              { key: "review", label: "Review", onClick: on("review") },
-              { key: "call", onClick: on("call") },
-            ]}
-          />
+                <BookingCard
+                  {...bookingBase}
+                  status="in_service"
+                  layout="wide"
+                  note="Your pet is already in Pet Sitter care!"
+                  actions={[
+                    { key: "message", onClick: on("message") },
+                    { key: "call", onClick: on("call") },
+                  ]}
+                />
 
-          <BookingCard
-            {...bookingBase}
-            status="success"
-            layout="wide"
-            successDate="Tue, 25 Oct 2022  |  11:03 AM"
-            actions={[
-              { key: "report", label: "Report", onClick: on("report") },
-              { key: "review", label: "Your Review", onClick: on("review") },
-              { key: "call", onClick: on("call") },
-            ]}
-          />
-        </div>
+                <BookingCard
+                  {...bookingBase}
+                  status="success"
+                  layout="wide"
+                  successDate="Tue, 25 Oct 2022  |  11:03 AM"
+                  actions={[
+                    { key: "report", label: "Report", onClick: on("report") },
+                    { key: "review", label: "Review", onClick: on("review") },
+                    { key: "call", onClick: on("call") },
+                  ]}
+                />
 
-        {/* ---------- Mobile (COMPACT) : 4 แบบ ---------- */}
-        {/* TIP: ตั้งกรอบ 375px เพื่อให้การ์ด mobile ตรงตาม Figma */}
-        <div className="mt-6 flex flex-wrap gap-4">
-          <div className="w-[375px]">
-            <BookingCard
-              {...bookingBase}
-              layout="compact"
-              status="waiting"
-              note="Waiting Pet Sitter for confirm booking"
-              actions={[
-                { key: "message", label: "Send Message", onClick: on("message") },
-                { key: "change", label: "Change", onClick: on("change") },
-                { key: "call", label: "Call", onClick: on("call") },
-              ]}
-            />
-          </div>
+                <BookingCard
+                  {...bookingBase}
+                  status="success"
+                  layout="wide"
+                  successDate="Tue, 25 Oct 2022  |  11:03 AM"
+                  actions={[
+                    { key: "report", label: "Report", onClick: on("report") },
+                    { key: "review", label: "Your Review", onClick: on("review") },
+                    { key: "call", onClick: on("call") },
+                  ]}
+                />
+              </div>
 
-          <div className="w-[375px]">
-            <BookingCard
-              {...bookingBase}
-              layout="compact"
-              status="in_service"
-              note="Your pet is already in Pet Sitter care!"
-              actions={[
-                { key: "message", onClick: on("message") },
-                { key: "call", onClick: on("call") },
-              ]}
-            />
-          </div>
+              {/* ---------- Mobile (COMPACT) : 4 แบบ ---------- */}
+              {/* TIP: ตั้งกรอบ 375px เพื่อให้การ์ด mobile ตรงตาม Figma */}
+              <div className="mt-6 flex flex-wrap gap-4">
+                <div className="w-[375px]">
+                  <BookingCard
+                    {...bookingBase}
+                    layout="compact"
+                    status="waiting"
+                    note="Waiting Pet Sitter for confirm booking"
+                    actions={[
+                      { key: "message", label: "Send Message", onClick: on("message") },
+                      { key: "change", label: "Change", onClick: on("change") },
+                      { key: "call", label: "Call", onClick: on("call") },
+                    ]}
+                  />
+                </div>
 
-          <div className="w-[375px]">
-            <BookingCard
-              {...bookingBase}
-              layout="compact"
-              status="success"
-              successDate="Tue, 25 Oct 2022  |  11:03 AM"
-              actions={[
-                { key: "report", label: "Report", onClick: on("report") },
-                { key: "review", label: "Review", onClick: on("review") },
-                { key: "call", onClick: on("call") },
-              ]}
-            />
-          </div>
+                <div className="w-[375px]">
+                  <BookingCard
+                    {...bookingBase}
+                    layout="compact"
+                    status="in_service"
+                    note="Your pet is already in Pet Sitter care!"
+                    actions={[
+                      { key: "message", onClick: on("message") },
+                      { key: "call", onClick: on("call") },
+                    ]}
+                  />
+                </div>
 
-          
+                <div className="w-[375px]">
+                  <BookingCard
+                    {...bookingBase}
+                    layout="compact"
+                    status="success"
+                    successDate="Tue, 25 Oct 2022  |  11:03 AM"
+                    actions={[
+                      { key: "report", label: "Report", onClick: on("report") },
+                      { key: "review", label: "Review", onClick: on("review") },
+                      { key: "call", onClick: on("call") },
+                    ]}
+                  />
+                </div>
 
-          <div className="w-[375px]">
-            <BookingCard
-              {...bookingBase}
-              layout="compact"
-              status="success"
-              successDate="Tue, 25 Oct 2022  |  11:03 AM"
-              actions={[
-                { key: "report", label: "Report", onClick: on("report") },
-                { key: "review", label: "Your Review", onClick: on("review") },
-                { key: "call", onClick: on("call") },
-              ]}
-            />
-          </div>
-        </div>
-  
-  
-  </div>
-  </SubSection>
-  </Section>
-  
+
+
+                <div className="w-[375px]">
+                  <BookingCard
+                    {...bookingBase}
+                    layout="compact"
+                    status="success"
+                    successDate="Tue, 25 Oct 2022  |  11:03 AM"
+                    actions={[
+                      { key: "report", label: "Report", onClick: on("report") },
+                      { key: "review", label: "Your Review", onClick: on("review") },
+                      { key: "call", onClick: on("call") },
+                    ]}
+                  />
+                </div>
+              </div>
+
+
+            </div>
+          </SubSection>
+        </Section>
+
 
         {/* Pagination */}
         <Section title="Pagination">
@@ -644,6 +690,12 @@ export default function ComponentAll() {
               textColor="orange"
               onClick={() => setIsOpenPopup(true)}
             />
+            <PrimaryButton
+              text="Booking Select  Click!!"
+              bgColor="primary"
+              textColor="white"
+              onClick={() => setIsOpenBookingSelect(true)}
+            />
           </SubSection>
 
           {/* 
@@ -672,6 +724,111 @@ export default function ComponentAll() {
             onOpenChange={setIsOpenPopup}
             onConfirm={() => console.log("Popup confirmed")}
           />
+          <BookingSelect
+            sitterId={1}
+            open={isOpenBookingSelect}
+            onOpenChange={setIsOpenBookingSelect}
+            disabledDates={disabledDates}
+          />
+        </Section>
+
+        {/* Date Picker */}
+        <Section title="Date Picker">
+          <SubSection title="">
+            <div className="w-[250px]">
+              <span className="text-gray-6 w-[300px]"> เลือกวันก่อนหน้าไม่ได้ และเลือกได้ไม่เกิน 10 เดือนข้างหน้า</span>
+              <DatePicker
+                date={date1}
+                month={month1}
+                onMonthChange={setMonth1}
+                onSelect={setDate1}
+                rules={{
+                  disablePastDates: true
+                }}
+              />
+            </div>
+            <div className="w-[250px]">
+              <span className="text-gray-6"> กำหนด min/max date</span>
+              <DatePicker
+                date={date2}
+                month={month2}
+                onMonthChange={setMonth2}
+                onSelect={setDate2}
+                rules={{
+                  minDate: minDate,
+                  maxDate: maxDate,
+                }}
+              />
+            </div>
+            <div className="w-[250px]">
+              <span className="text-gray-6"> กำหนด ปีที่เริ่ม-สิ้นสุด</span>
+              <DatePicker
+                date={date3}
+                month={month3}
+                onMonthChange={setMonth3}
+                onSelect={setDate3}
+                rules={{
+                  minDate: new Date(1950, 1, 1),
+                  maxDate: new Date(2026, 1, 1)
+                }}
+              />
+            </div>
+            <div className="w-[250px]">
+              <span className="text-gray-6"> กำหนดวันที่ต้องการ disable</span>
+              <DatePicker
+                date={date4}
+                month={month4}
+                onMonthChange={setMonth4}
+                onSelect={setDate4}
+                disabledDatesSlots={disabledDates}
+              />
+            </div>
+          </SubSection>
+        </Section>
+
+        {/* Time picker */}
+        <Section title="Time picker">
+          <SubSection title="">
+            <div className="w-[250px]">
+              <span className="text-gray-6"> แบบไม่มีเงื่อนไข</span>
+              <TimePicker
+                value={startTime}
+                onChange={setStartTime}
+                placeholder="Start time"
+              />
+            </div>
+            <div className="w-[250px]">
+              <span className="text-gray-6"> ไม่โชว์เวลาที่ผ่านมาแล้ว</span>
+              <TimePicker
+                value={endTime2}
+                onChange={setendTime2}
+                date={new Date()}
+                startDate={startTime2}
+                startTimeValue={startTime2}
+                rules={{
+                  disablePastTime: true,
+                  showDisabledSlots: false,    // ซ่อนเวลาจาก disabledTimeSlots
+                  showPastStartTime: true,     // แสดงเวลาก่อน startTime เป็นสีเทา
+                  showPastTime: false          // ซ่อนเวลาที่ผ่านไปแล้ว
+                }}
+              />
+            </div>
+            <div className="w-[250px]">
+              <span className="text-gray-6">กำหนดเวลาไม่ให้แสดง</span>
+              <TimePicker
+                value={endTime2}
+                onChange={setendTime2}
+                date={new Date()}
+                disabledTimeSlots={[
+                  new Date(new Date().getFullYear(), new Date().getMonth(), new Date().getDate(), 9, 0),
+                  new Date(new Date().getFullYear(), new Date().getMonth(), new Date().getDate(), 10, 0),
+                ]}
+                rules={{
+                  showDisabledSlots: true
+                }}
+              />
+            </div>
+          </SubSection>
         </Section>
 
         {/* Chat */}
@@ -685,6 +842,6 @@ export default function ComponentAll() {
         </Section>
       </div>
     </div>
-    
+
   );
 }

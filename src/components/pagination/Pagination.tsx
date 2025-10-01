@@ -1,5 +1,6 @@
 import { cn } from "@/lib/utils"
 import { ChevronLeft, ChevronRight } from "lucide-react"
+import { useMemo } from "react"
 
 interface PaginationProps {
     currentPage: number
@@ -17,39 +18,44 @@ const navButtonClass = (disabled: boolean) => {
 }
 
 export function Pagination({ currentPage, totalPages, onClick }: PaginationProps) {
-    const pages: (number | string)[] = [];
+    const pages = useMemo(() => {
+        const pagesArray: (number | string)[] = [];
 
-    if (totalPages <= 5) {
-        for (let i = 1; i <= totalPages; i++) {
-            pages.push(i)
-        }
-    } else {
-        if (currentPage <= 3) {
-            pages.push(
-                1, 2, 3,
-                "...",
-                totalPages)
-        } else if (currentPage >= totalPages - 2) {
-            pages.push(1,
-                "...",
-                totalPages - 2,
-                totalPages - 1,
-                totalPages)
+        if (totalPages <= 5) {
+            for (let i = 1; i <= totalPages; i++) {
+                pagesArray.push(i)
+            }
         } else {
-            pages.push(1,
-                "...",
-                currentPage - 1,
-                currentPage,
-                currentPage + 1,
-                "...",
-                totalPages)
+            if (currentPage <= 3) {
+                pagesArray.push(
+                    1, 2, 3,
+                    "...",
+                    totalPages)
+            } else if (currentPage >= totalPages - 2) {
+                pagesArray.push(1,
+                    "...",
+                    totalPages - 2,
+                    totalPages - 1,
+                    totalPages)
+            } else {
+                pagesArray.push(1,
+                    "...",
+                    currentPage - 1,
+                    currentPage,
+                    currentPage + 1,
+                    "...",
+                    totalPages)
+            }
         }
-    }
+
+        return pagesArray;
+    }, [currentPage, totalPages]);
 
     return (
         <div className="body-sm flex items-center justify-center gap-2">
             {/* Prev */}
             <button
+                type="button"
                 onClick={() => onClick?.(Math.max(1, currentPage - 1))}
                 disabled={currentPage === 1}
                 className={navButtonClass(currentPage === 1)}
@@ -66,6 +72,7 @@ export function Pagination({ currentPage, totalPages, onClick }: PaginationProps
                         </span>
                     ) : (
                         <button
+                            type="button"
                             key={idx}
                             onClick={() => onClick?.(p as number)}
                             className={cn(
@@ -83,6 +90,7 @@ export function Pagination({ currentPage, totalPages, onClick }: PaginationProps
 
             {/* Next */}
             <button
+                type="button"
                 onClick={() => onClick?.(Math.min(totalPages, currentPage + 1))}
                 disabled={currentPage === totalPages}
                 className={navButtonClass(currentPage === totalPages)}

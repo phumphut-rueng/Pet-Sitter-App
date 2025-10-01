@@ -6,15 +6,20 @@ import Image from "next/image";
         selectRating ใช้เป็นตัวแปรที่เก็บค่า rating ที่ถูกเลือกเพื่อให้เวลากดแล้วสีปุ่มเปลี่ยน
         เก็บค่า rating ไว้ใน state
 */}
+
 type RatingSelectProps = {
-    value?: number;
-    selectRating?: number;
-    onChange?: (value: number) => void;
+    value?: number | string;
+    selectRating?: number | string;
+    onChange?: (value: number | string ) => void;
+    className?: string;
+    classNameStar?: string;
   };
 export default function RatingSelect({ 
   value = 0,
   selectRating,
   onChange,
+  className,
+  classNameStar,
 }: RatingSelectProps) {
   const handleClick = () => {
     if(!onChange) return;
@@ -25,7 +30,7 @@ export default function RatingSelect({
       <button 
         type="button"
         onClick={handleClick}
-        className={`group flex items-center h-9 gap-2 bg-background px-3 py-2 rounded-sm border ${
+        className={`group flex items-center h-9 gap-2 bg-background px-3 py-2 rounded-sm border ${className} ${
           isSelected ? "border-orange-5" : "border-border"
         } hover:border-orange-5 hover:cursor-pointer`}>
         <span
@@ -35,13 +40,16 @@ export default function RatingSelect({
       >
           {value}
         </span>
-        {Array.from({ length: value }).map((_, i) => (
+
+        {typeof value === "number" && 
+        Array.from({ length: value }).map((_, i) => (
           <Image
             key={i}
             src="/icons/Rating-Star.svg"
             alt="Star"
             width={16}
             height={16}
+            className={classNameStar}
           />
         ))}
       </button>

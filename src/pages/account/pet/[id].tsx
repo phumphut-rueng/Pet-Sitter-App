@@ -1,76 +1,152 @@
 import * as React from "react";
 import { useRouter } from "next/router";
+import toast from "react-hot-toast";
 import AccountPageShell from "@/components/layout/AccountPageShell";
 import PetForm from "@/components/features/pet/PetForm";
-import type { PetFormValues } from "@/types/pet.types";
-import AlertConfirm from "@/components/modal/AlertConfirm";
+import PageToaster from "@/components/ui/PageToaster";
+import { usePetsApi } from "@/hooks/usePets";
+import {
+  AlertDialog,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import {
+  PetFormValues,
+  ROUTES,
+  SUCCESS_MESSAGES,
+  getErrorMessage,
+  parsePetId,
+  petResponseToFormValues,
+  formValuesToPayload,
+  petService,
+} from "@/lib/pet-utils";
 
-const MOCK: Record<string, PetFormValues> = {
-  "1": { name: "Bubba", type: "Dog", breed: "Pit Bull", sex: "Male", ageMonth: "12", color: "Gray", weightKg: "25", about: "", image: "/images/demo/bubba.svg" },
-  "2": { name: "Daisy", type: "Dog", breed: "Beagle", sex: "Female", ageMonth: "0.6", color: "White, black and brown", weightKg: "2", about: "", image: "/images/demo/daisy.svg" },
-  "3": { name: "I Som", type: "Cat", breed: "Ginger", sex: "Male", ageMonth: "18", color: "Orange", weightKg: "4.5", about: "", image: "/images/demo/isom.svg" },
-  "4": { name: "Noodle Birb", type: "Bird", breed: "Parakeet", sex: "Female", ageMonth: "10", color: "Green", weightKg: "0.2", about: "", image: "/images/demo/bird.svg" },
-};
-
-export default function PetDetailPage() {
+export default function EditPetPage() {
   const router = useRouter();
-  const ready = router.isReady;
-  const id = ready ? (router.query.id as string) : undefined;
+  const { getPetTypes } = usePetsApi();
 
-  const initial = React.useMemo(
-    () => (id ? MOCK[id] : undefined),
-    [id]
-  );
+  const petId = React.useMemo(() => parsePetId(router.query.id), [router.query.id]);
 
-  const [confirmOpen, setConfirmOpen] = React.useState(false);
+  const [loading, setLoading] = React.useState(true);
+  const [serverError, setServerError] = React.useState<string | null>(null);
+  const [initialValues, setInitialValues] = React.useState<PetFormValues | null>(null);
+  const [showDeleteDialog, setShowDeleteDialog] = React.useState(false);
 
-  if (!ready) return null;
+  React.useEffect(() => {
+    if (!petId) return;
+    let active = true;
+    (async () => {
+      try {
+        setLoading(true);
+        setServerError(null);
+        const pet = await petService.fetchPet(petId);
+        if (!active) return;
+        setInitialValues(petResponseToFormValues(pet));
+      } catch (error) {
+        if (!active) return;
+        const msg = getErrorMessage(error);
+        setServerError(msg);
+        toast.error(msg);
+      } finally {
+        if (active) setLoading(false);
+      }
+    })();
+    return () => { active = false; };
+  }, [petId]);
 
+  const handleSubmit = async (values: PetFormValues) => {
+    if (!petId) return;
+    try {
+      const payload = await formValuesToPayload(values, getPetTypes); 
+      await petService.updatePet(petId, payload);
+      toast.success(SUCCESS_MESSAGES.petUpdated);
+      router.push(ROUTES.petList);
+    } catch (error) {
+      const msg = getErrorMessage(error);
+      toast.error(msg);
+      console.error("Update pet failed:", error);
+    }
+  };
 
-  const description = (
-    <div className="space-y-4">
-      <p className="text-slate-600">Are you sure to delete this pet?</p>
-      <div className="flex items-center justify-end gap-3 pt-1">
-        <button
-          onClick={() => setConfirmOpen(false)}
-          className="rounded-full bg-orange-50 px-4 py-2 text-sm font-medium text-orange-600"
-        >
-          Cancel
-        </button>
-        <button
-          onClick={async () => {
-            console.log("delete", id);
-            setConfirmOpen(false);
-            router.push("/account/pet");
-          }}
-          className="rounded-full bg-orange-500 px-4 py-2 text-sm font-semibold text-white hover:bg-orange-600"
-        >
-          Delete
-        </button>
-      </div>
-    </div>
-  );
+  const handleDelete = async () => {
+    if (!petId) return;
+    try {
+      await petService.deletePet(petId);
+      toast.success(SUCCESS_MESSAGES.petDeleted);
+      router.push(ROUTES.petList);
+    } catch (error) {
+      const msg = getErrorMessage(error);
+      toast.error(msg);
+      console.error("Delete pet failed:", error);
+    } finally {
+      setShowDeleteDialog(false);
+    }
+  };
+
+  const handleCancel = () => router.push(ROUTES.petList);
 
   return (
     <AccountPageShell title="Your Pet">
-      <PetForm
-        mode="edit"
-        initialValues={initial}    
-        onSubmit={async (values) => {
-            console.log("update", id, values);
-            router.push("/account/pet");
-        }}
-        onCancel={() => router.push("/account/pet")}
-        onDelete={() => setConfirmOpen(true)}
-      />
+      <PageToaster />
 
-      <AlertConfirm
-        open={confirmOpen}
-        onOpenChange={setConfirmOpen}
-        title="Delete Confirmation"
-        width={400}
-        description={description}
-      />
+      <div className="mb-4 flex items-center gap-2">
+        <button
+          type="button"
+          onClick={() => router.back()}
+          className="inline-flex h-8 w-8 items-center justify-center rounded-full hover:bg-muted/60"
+          aria-label="Go back"
+          title="Back"
+        >
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+            <path d="M15 19L8 12L15 5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+          </svg>
+        </button>
+        <h1 className="text-2xl font-bold text-ink">Your Pet</h1>
+      </div>
+
+      {loading ? (
+        <div className="text-slate-600">Loading...</div>
+      ) : (
+        <>
+          <PetForm
+            mode="edit"
+            initialValues={initialValues ?? undefined}
+            serverError={serverError}
+            onSubmit={handleSubmit}
+            onCancel={handleCancel}
+            onDelete={() => setShowDeleteDialog(true)}
+          />
+
+          <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+            <AlertDialogContent className="p-0 rounded-2xl font-[700] border-transparent w-[90vw] max-w-[400px]">
+              <div className="p-3 pl-5 flex justify-between items-center border-b border-gray-2">
+                <AlertDialogTitle className="text-black text-[20px]">
+                  Delete Confirmation
+                </AlertDialogTitle>
+                <AlertDialogCancel className="text-gray-4 border-transparent shadow-transparent hover:text-gray-9 text-[17px]">
+                  ✕
+                </AlertDialogCancel>
+              </div>
+              <div className="pl-5 pr-4 pt-4 pb-2 text-[16px] font-normal text-ink/80">
+                Are you sure to delete this pet?
+              </div>
+              <div className="px-4 pb-4 pt-2 grid grid-cols-2 gap-3">
+                <AlertDialogCancel className="h-11 rounded-full bg-orange-1/40 text-orange-6 font-semibold hover:bg-orange-1/60 transition">
+                  Cancel
+                </AlertDialogCancel>
+                <button
+                  type="button"
+                  onClick={handleDelete}
+                  className="h-11 rounded-full bg-brand text-white font-bold hover:brightness-95 transition"
+                >
+                  Delete
+                </button>
+              </div>
+            </AlertDialogContent>
+          </AlertDialog>
+        </>
+      )}
     </AccountPageShell>
   );
 }

@@ -47,7 +47,8 @@ const ServicesSection = () => {
                 alt={`${service.title} icon`}
                 width={24}
                 height={24}
-                className="w-6 h-6"
+                className="object-contain"
+                style={{ width: '24px', height: '24px' }}
               />
             </div>
             
