@@ -7,6 +7,7 @@ import { useDatePicker } from "@/hooks/useDatePicker"
 import { useTimePicker } from "@/hooks/useTimePicker"
 import DatePicker from "../date-picker/DatePicker"
 import { Calendar, Clock } from 'lucide-react';
+import TimePicker from "../time-picker/TimePicker"
 
 interface BookingSelectProps {
     sitterId: number
