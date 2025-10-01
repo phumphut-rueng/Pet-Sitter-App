@@ -1,9 +1,9 @@
 import type { NextRouter } from "next/router";
 import type { PetInput } from "@/lib/validators/pet";
 import { Pet, PetFormValues, PetType } from "@/types/pet.types";
+import { uploadToCloudinary } from "@/utils/uploadToCloudinary";
 
 export type { Pet, PetFormValues, PetType };
-
 
 export const ROUTES = {
   petList: "/account/pet",
@@ -27,7 +27,6 @@ export const SUCCESS_MESSAGES = {
 } as const;
 
 export const NAVIGATION_DELAY = 900;
-
 
 export const getErrorMessage = (error: unknown): string => {
   if (typeof error === "string") return error;
@@ -63,7 +62,9 @@ export const delayedNavigation = (
   }, delay);
 };
 
-
+/* =========================
+ * Pet response -> form values
+ * ========================= */
 function toFormSex(value: unknown): PetFormValues["sex"] {
   return value === "Male" || value === "Female"
     ? (value as PetFormValues["sex"])
@@ -82,7 +83,9 @@ export const petResponseToFormValues = (pet: Pet): PetFormValues => ({
   image: validateImageUrl(pet.imageUrl),
 });
 
-
+/* =========================
+ * Pet type resolve
+ * ========================= */
 const norm = (s: string) =>
   s
     .normalize("NFKC")
@@ -96,6 +99,8 @@ const PET_TYPE_ALIASES: Record<string, string[]> = {
   cat: ["cat", "cats", "feline", "แมว"],
   bird: ["bird", "birds", "นก"],
   rabbit: ["rabbit", "rabbits", "กระต่าย"],
+  // ถ้าโปรเจ็กต์มี type "Other" ให้เพิ่ม:
+  // other: ["other", "อื่นๆ", "etc"],
 };
 
 function resolvePetTypeId(input: string, types: PetType[]): number | null {
@@ -103,10 +108,8 @@ function resolvePetTypeId(input: string, types: PetType[]): number | null {
   const k = norm(input);
   if (!k) return null;
 
-
   const exact = types.find((t) => norm(t.name) === k);
   if (exact) return exact.id;
-
 
   const loose = types.find((t) => {
     const tn = norm(t.name);
@@ -114,7 +117,6 @@ function resolvePetTypeId(input: string, types: PetType[]): number | null {
   });
   if (loose) return loose.id;
 
- 
   const aliasKey = Object.keys(PET_TYPE_ALIASES).find((key) =>
     PET_TYPE_ALIASES[key].includes(k)
   );
@@ -127,11 +129,24 @@ function resolvePetTypeId(input: string, types: PetType[]): number | null {
   }
 
 
-  const other = types.find((t) => PET_TYPE_ALIASES.other.some((a) => norm(t.name) === a));
-  return other?.id ?? null;
+  return null;
 }
 
+/* =========================
+ * Image helpers (upload to Cloudinary)
+ * ========================= */
+const isDataUrl = (s?: string) => !!s && /^data:image\/[a-zA-Z]+;base64,/.test(s);
 
+async function dataUrlToFile(dataUrl: string, filename = "pet.png"): Promise<File> {
+  const res = await fetch(dataUrl);
+  const blob = await res.blob();
+  return new File([blob], filename, { type: blob.type || "image/png" });
+}
+
+/* =========================
+ * Form -> API payload
+ * (Upload image to folder "pet_profile" if needed)
+ * ========================= */
 export const formValuesToPayload = async (
   values: PetFormValues,
   getPetTypes: () => Promise<PetType[]>
@@ -143,6 +158,15 @@ export const formValuesToPayload = async (
     throw new Error(ERROR_MESSAGES.invalidPetType);
   }
 
+  // รูปจากฟอร์ม (อาจเป็น data URL / URL / path)
+  let imageUrl = (values.image ?? "").trim();
+
+  // ถ้าเป็น data URL ให้อัปขึ้น Cloudinary โฟลเดอร์ pet-profile
+  if (isDataUrl(imageUrl)) {
+    const file = await dataUrlToFile(imageUrl, "pet.png");
+    imageUrl = await uploadToCloudinary(file, { folder: "pet-profile" });
+  }
+
   return {
     petTypeId,
     name: values.name.trim(),
@@ -152,14 +176,15 @@ export const formValuesToPayload = async (
     color: values.color.trim(),
     weightKg: Number(values.weightKg || 0),
     about: values.about?.trim() || "",
-    imageUrl: (values.image ?? "").trim(),
+    imageUrl, // ใช้คีย์เดิมของโปรเจ็กต์คุณ
   };
 };
 
-
 const API_BASE = process.env.NEXT_PUBLIC_API_BASE ?? "";
 
-
+/* =========================
+ * API error parse
+ * ========================= */
 function parseApiErrorMessage(payload: unknown): string | null {
   if (typeof payload !== "object" || payload === null) return null;
   const rec = payload as Record<string, unknown>;
@@ -170,6 +195,9 @@ function parseApiErrorMessage(payload: unknown): string | null {
   return null;
 }
 
+/* =========================
+ * petService
+ * ========================= */
 export const petService = {
   async fetchPet(id: number): Promise<Pet> {
     const res = await fetch(`${API_BASE}/api/pets/${id}`, {

@@ -2,6 +2,7 @@ import { useCallback, useRef } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { ownerProfileSchema, type OwnerProfileInput } from "@/lib/validators/account";
+import { uploadToCloudinary } from "@/utils/uploadToCloudinary";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_BASE ?? "";
 
@@ -39,7 +40,11 @@ type OwnerProfile = {
 type UniqueCheckResponse = { unique: boolean };
 type ValidationField = "name" | "email" | "phone";
 
-/** utils */
+/* utils */
+type UnknownRecord = Record<string, unknown>;
+const isRecord = (v: unknown): v is UnknownRecord =>
+  typeof v === "object" && v !== null;
+
 const formatDate = {
   toYmd: (input?: string | null): string | undefined => {
     if (!input) return undefined;
@@ -72,7 +77,16 @@ const getErrorMessage = (error: unknown): string => {
   try { return JSON.stringify(error); } catch { return ERROR_MESSAGES.unknown; }
 };
 
-/** API */
+/* image helpers */
+const isHttpUrl = (s?: string) => !!s && /^https?:\/\//i.test(s);
+const isDataUrl = (s?: string) => !!s && /^data:image\/[a-zA-Z]+;base64,/.test(s);
+async function dataUrlToFile(dataUrl: string, filename = "profile.png"): Promise<File> {
+  const res = await fetch(dataUrl);
+  const blob = await res.blob();
+  return new File([blob], filename, { type: blob.type || "image/png" });
+}
+
+/* API */
 const api = {
   request: async <T>(path: string, init?: RequestInit): Promise<T> => {
     const res = await fetch(`${API_BASE}${path}`, {
@@ -85,11 +99,11 @@ const api = {
       let message = `HTTP ${res.status}`;
       try {
         const contentType = res.headers.get("content-type") || "";
-        const body = contentType.includes("json") ? await res.json() : await res.text();
-        if (typeof body === "string") message = body || message;
-        else if (body?.error) message = body.error;
-        else if (body?.message) message = body.message;
-      } catch {}
+        const bodyRaw: unknown = contentType.includes("json") ? await res.json() : await res.text();
+        if (typeof bodyRaw === "string") message = bodyRaw || message;
+        else if (isRecord(bodyRaw) && typeof bodyRaw.error === "string") message = bodyRaw.error;
+        else if (isRecord(bodyRaw) && typeof bodyRaw.message === "string") message = bodyRaw.message;
+      } catch { /* ignore */ }
       throw new Error(message);
     }
 
@@ -107,39 +121,35 @@ const api = {
   },
 };
 
-const validateUniqueness = {
-  name: async (name?: string | null) => {
-    const v = sanitize.trimString(name);
-    if (!v) return;
-    await api.checkUnique("name", v);
-  },
-  email: async (email?: string | null) => {
-    const v = sanitize.trimString(email);
-    if (!v) return;
-    await api.checkUnique("email", v);
-  },
-  phone: async (phone?: string | null) => {
-    const v = sanitize.onlyDigits(phone);
-    if (!v) return;
-    await api.checkUnique("phone", v);
-  },
-};
-
-/** แปลงข้อมูลเข้า/ออก + กันกรณี name เป็นอีเมล */
+/* map in/out */
 const transformData = {
-  fromApiToForm: (profile: OwnerProfile): OwnerProfileInput => {
-    const email = profile?.email ?? "";
-    const rawName = profile?.name ?? "";
-    const cleanName =
-      !rawName || rawName.includes("@") || rawName === email ? "" : rawName;
+  fromApiToForm: (profile: OwnerProfile | UnknownRecord): OwnerProfileInput => {
+    const email = (profile as OwnerProfile)?.email ?? "";
+    const rawName = (profile as OwnerProfile)?.name ?? "";
+    const cleanName = !rawName || rawName.includes("@") || rawName === email ? "" : rawName;
+
+    const imageUrl =
+      (profile as UnknownRecord)["profileImage"] ??
+      (profile as UnknownRecord)["profile_image"] ??
+      (profile as UnknownRecord)["profileImageUrl"] ??
+      (profile as UnknownRecord)["image_url"] ??
+      (profile as UnknownRecord)["imageUrl"] ??
+      (profile as UnknownRecord)["image"] ??
+      "";
 
     return {
       name: cleanName,
       email,
-      phone: profile?.phone ?? "",
-      idNumber: profile?.idNumber ?? "",
-      dob: profile?.dob ?? "",
-      image: profile?.profileImage ?? undefined,
+      phone: (profile as OwnerProfile)?.phone ?? "",
+      idNumber:
+        (profile as UnknownRecord)["idNumber"]?.toString() ??
+        (profile as UnknownRecord)["id_number"]?.toString() ??
+        "",
+      dob:
+        (profile as UnknownRecord)["dob"]?.toString() ??
+        (profile as UnknownRecord)["date_of_birth"]?.toString() ??
+        "",
+      image: typeof imageUrl === "string" && imageUrl ? imageUrl : undefined,
     };
   },
 
@@ -148,10 +158,6 @@ const transformData = {
     email: sanitize.trimString(values.email) || undefined,
     phone: sanitize.onlyDigits(values.phone),
     dob: formatDate.toYmd(values.dob),
-    profileImage:
-      typeof values.image === "string"
-        ? sanitize.trimString(values.image) || undefined
-        : undefined,
   }),
 
   toStorageFormat: (v: OwnerProfileInput): OwnerProfile => ({
@@ -160,8 +166,7 @@ const transformData = {
     phone: sanitize.onlyDigits(v.phone) ?? "",
     idNumber: sanitize.trimString(v.idNumber),
     dob: formatDate.toYmd(v.dob) ?? "",
-    profileImage:
-      typeof v.image === "string" ? sanitize.trimString(v.image) : "",
+    profileImage: typeof v.image === "string" ? sanitize.trimString(v.image) : "",
   }),
 };
 
@@ -175,7 +180,10 @@ export function useOwnerProfileForm() {
   });
 
   const load = useCallback(async () => {
-    const profile = await api.request<OwnerProfile>(API_ENDPOINTS.profile);
+    const profile = await api.request<OwnerProfile>(API_ENDPOINTS.profile, {
+      method: "GET",
+      cache: "no-store",
+    });
     const formData = transformData.fromApiToForm(profile);
     initialRef.current = transformData.toStorageFormat(formData);
     form.reset(formData);
@@ -195,9 +203,9 @@ export function useOwnerProfileForm() {
   const validateUniqueFields = useCallback(async (values: OwnerProfileInput) => {
     const ch = checkChanges(values);
     const tasks: Promise<void>[] = [
-      ch.name ? validateUniqueness.name(values.name) : Promise.resolve(),
-      ch.email ? validateUniqueness.email(values.email) : Promise.resolve(),
-      ch.phone ? validateUniqueness.phone(values.phone) : Promise.resolve(),
+      ch.name ? api.checkUnique("name", sanitize.trimString(values.name)) : Promise.resolve(),
+      ch.email ? api.checkUnique("email", sanitize.trimString(values.email)) : Promise.resolve(),
+      ch.phone ? api.checkUnique("phone", sanitize.onlyDigits(values.phone)!) : Promise.resolve(),
     ];
     const [r1, r2, r3] = await Promise.allSettled(tasks);
     let ok = true;
@@ -212,12 +220,32 @@ export function useOwnerProfileForm() {
     if (!isUnique) return false;
 
     try {
-      const payload = transformData.fromFormToApi(values);
+      let uploadedUrl: string | undefined;
+      if (typeof values.image === "string") {
+        const s = values.image.trim();
+        if (isDataUrl(s)) {
+          const file = await dataUrlToFile(s, "profile.png");
+          uploadedUrl = await uploadToCloudinary(file, { folder: "owner-profile" });
+        } else if (isHttpUrl(s) || s.startsWith("/")) {
+          uploadedUrl = s;
+        }
+      }
+
+      const base = transformData.fromFormToApi(values);
+      const body: Record<string, unknown> = {
+        name: base.name,
+        email: base.email,
+        phone: base.phone,
+        dob: base.dob,
+        profileImage: uploadedUrl ?? undefined,
+      };
+
       await api.request<unknown>(API_ENDPOINTS.profile, {
         method: "PUT",
-        body: JSON.stringify(payload),
+        body: JSON.stringify(body),
       });
-      initialRef.current = transformData.toStorageFormat(values);
+
+      await load(); // reload to reflect server truth
       return true;
     } catch (err) {
       const message = getErrorMessage(err);
@@ -226,19 +254,19 @@ export function useOwnerProfileForm() {
       if (message.startsWith("HTTP 400")) { form.setError("dob", { message: ERROR_MESSAGES.invalidDate }); return false; }
       throw err;
     }
-  }, [form, validateUniqueFields]);
+  }, [form, validateUniqueFields, load]);
 
   const checkEmailUnique = async (email: string) => {
     const v = sanitize.trimString(email);
     if (!v) return true as const;
-    try { await validateUniqueness.email(v); return true as const; }
+    try { await api.checkUnique("email", v); return true as const; }
     catch { return ERROR_MESSAGES.emailTaken; }
   };
 
   const checkPhoneUnique = async (phone: string) => {
     const v = sanitize.onlyDigits(phone);
     if (!v) return true as const;
-    try { await validateUniqueness.phone(v); return true as const; }
+    try { await api.checkUnique("phone", v); return true as const; }
     catch { return ERROR_MESSAGES.phoneTaken; }
   };
 
