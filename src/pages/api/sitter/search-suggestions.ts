@@ -15,7 +15,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     const searchTerm = q.trim().toLowerCase();
 
-    // ค้นหาจากชื่อ pet sitter, location description, และ address
+    // ค้นหาจากชื่อ pet sitter, user name, location description, และ address
     const suggestions = await prisma.sitter.findMany({
       where: {
         OR: [
@@ -26,9 +26,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             },
           },
           {
-            location_description: {
-              contains: searchTerm,
-              mode: 'insensitive',
+            user: {
+              name: {
+                contains: searchTerm,
+                mode: 'insensitive',
+              },
             },
           },
           {
@@ -47,12 +49,15 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       },
       select: {
         name: true,
-        location_description: true,
         address_district: true,
         address_province: true,
+        user: {
+          select: {
+            name: true,
+          },
+        },
       },
-      take: 5,
-      distinct: ['name'],
+      take: 10,
     });
 
     // แปลงข้อมูลเป็น suggestions
@@ -61,13 +66,14 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       if (sitter.name.toLowerCase().includes(searchTerm)) {
         return sitter.name;
       }
-      if (sitter.location_description?.toLowerCase().includes(searchTerm)) {
-        return sitter.location_description;
+      if (sitter.user?.name && sitter.user.name.toLowerCase().includes(searchTerm)) {
+        return sitter.user.name;
       }
-      if (sitter.address_district?.toLowerCase().includes(searchTerm)) {
-        return `${sitter.address_district}, ${sitter.address_province}`;
+      if (sitter.address_district && sitter.address_district.toLowerCase().includes(searchTerm)) {
+        const province = sitter.address_province || '';
+        return province ? `${sitter.address_district}, ${province}` : sitter.address_district;
       }
-      if (sitter.address_province?.toLowerCase().includes(searchTerm)) {
+      if (sitter.address_province && sitter.address_province.toLowerCase().includes(searchTerm)) {
         return sitter.address_province;
       }
       return sitter.name;

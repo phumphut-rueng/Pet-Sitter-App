@@ -31,7 +31,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     if (searchTerm) {
       whereConditions.push(`(
         s.name ILIKE $${paramIndex} OR 
-        s.location_description ILIKE $${paramIndex} OR 
+        u.name ILIKE $${paramIndex} OR 
         s.address_province ILIKE $${paramIndex} OR 
         s.address_district ILIKE $${paramIndex} OR 
         s.address_sub_district ILIKE $${paramIndex}
@@ -93,6 +93,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const countQuery = `
       SELECT COUNT(*) as total_count
       FROM sitter s
+      LEFT JOIN "user" u ON s.user_sitter_id = u.id
       ${whereClause}
     `;
 
