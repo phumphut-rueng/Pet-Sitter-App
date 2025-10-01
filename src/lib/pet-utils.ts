@@ -1,9 +1,9 @@
 import type { NextRouter } from "next/router";
 import type { PetInput } from "@/lib/validators/pet";
 import { Pet, PetFormValues, PetType } from "@/types/pet.types";
+import { uploadToCloudinary } from "@/utils/uploadToCloudinary";
 
 export type { Pet, PetFormValues, PetType };
-
 
 export const ROUTES = {
   petList: "/account/pet",
@@ -27,7 +27,6 @@ export const SUCCESS_MESSAGES = {
 } as const;
 
 export const NAVIGATION_DELAY = 900;
-
 
 export const getErrorMessage = (error: unknown): string => {
   if (typeof error === "string") return error;
@@ -63,7 +62,6 @@ export const delayedNavigation = (
   }, delay);
 };
 
-
 function toFormSex(value: unknown): PetFormValues["sex"] {
   return value === "Male" || value === "Female"
     ? (value as PetFormValues["sex"])
@@ -82,6 +80,15 @@ export const petResponseToFormValues = (pet: Pet): PetFormValues => ({
   image: validateImageUrl(pet.imageUrl),
 });
 
+// ---------- ADD: helpers สำหรับตรวจชนิด URL และแปลง data URL -> File ----------
+const isHttpUrl = (s?: string) => !!s && /^https?:\/\//i.test(s);
+const isDataUrl = (s?: string) => !!s && /^data:image\/[a-zA-Z]+;base64,/.test(s);
+
+async function dataUrlToFile(dataUrl: string, filename = "upload.png"): Promise<File> {
+  const res = await fetch(dataUrl);
+  const blob = await res.blob();
+  return new File([blob], filename, { type: blob.type || "image/png" });
+}
 
 const norm = (s: string) =>
   s
@@ -96,6 +103,7 @@ const PET_TYPE_ALIASES: Record<string, string[]> = {
   cat: ["cat", "cats", "feline", "แมว"],
   bird: ["bird", "birds", "นก"],
   rabbit: ["rabbit", "rabbits", "กระต่าย"],
+
 };
 
 function resolvePetTypeId(input: string, types: PetType[]): number | null {
@@ -103,10 +111,8 @@ function resolvePetTypeId(input: string, types: PetType[]): number | null {
   const k = norm(input);
   if (!k) return null;
 
-
   const exact = types.find((t) => norm(t.name) === k);
   if (exact) return exact.id;
-
 
   const loose = types.find((t) => {
     const tn = norm(t.name);
@@ -114,7 +120,6 @@ function resolvePetTypeId(input: string, types: PetType[]): number | null {
   });
   if (loose) return loose.id;
 
- 
   const aliasKey = Object.keys(PET_TYPE_ALIASES).find((key) =>
     PET_TYPE_ALIASES[key].includes(k)
   );
@@ -126,12 +131,10 @@ function resolvePetTypeId(input: string, types: PetType[]): number | null {
     if (byCap) return byCap.id;
   }
 
-
-  const other = types.find((t) => PET_TYPE_ALIASES.other.some((a) => norm(t.name) === a));
-  return other?.id ?? null;
+  return null;
 }
 
-
+// ---------- CHANGE: formValuesToPayload ให้จัดการอัปโหลดขึ้น Cloudinary ----------
 export const formValuesToPayload = async (
   values: PetFormValues,
   getPetTypes: () => Promise<PetType[]>
@@ -143,6 +146,22 @@ export const formValuesToPayload = async (
     throw new Error(ERROR_MESSAGES.invalidPetType);
   }
 
+  // NEW: ตัดสินใจ imageUrl
+  let imageUrl: string | undefined;
+  const img = (values.image ?? "").trim();
+
+  if (!img) {
+    imageUrl = undefined;
+  } else if (isDataUrl(img)) {
+    const file = await dataUrlToFile(img, "pet.png");
+    imageUrl = await uploadToCloudinary(file); // ใช้ data.url ของเพื่อน
+  } else if (isHttpUrl(img) || img.startsWith("/")) {
+    imageUrl = img; // URL เดิม (http/https/relative) ใช้ต่อ
+  } else {
+    // กรณีสตริงอื่นๆ ที่ไม่ใช่ data/http ให้ตัดทิ้งเป็น undefined
+    imageUrl = undefined;
+  }
+
   return {
     petTypeId,
     name: values.name.trim(),
@@ -152,13 +171,12 @@ export const formValuesToPayload = async (
     color: values.color.trim(),
     weightKg: Number(values.weightKg || 0),
     about: values.about?.trim() || "",
-    imageUrl: (values.image ?? "").trim(),
-  };
+    // ถ้า schema ของ PetInput กำหนด optional, การไม่ส่งดีกว่าส่งสตริงว่าง
+    ...(imageUrl ? { imageUrl } : {}),
+  } as PetInput;
 };
 
-
 const API_BASE = process.env.NEXT_PUBLIC_API_BASE ?? "";
-
 
 function parseApiErrorMessage(payload: unknown): string | null {
   if (typeof payload !== "object" || payload === null) return null;
