@@ -24,6 +24,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const queryParams: (string | number)[] = [];
     let paramIndex = 1;
 
+    // ไม่แสดงข้อมูล Pending submission
+    whereConditions.push(`sas.status_name != 'Pending submission'`);
+
     // 1) Search term (เฉพาะ pet sitter name)
     if (searchTerm) {
       whereConditions.push(`s.name ILIKE $${paramIndex}`);

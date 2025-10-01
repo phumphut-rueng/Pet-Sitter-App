@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Search } from 'lucide-react';
+import { StatusBadge, StatusKey } from '@/components/badges/StatusBadge';
+import Link from 'next/link';
 import axios from 'axios';
 
 interface SitterData {
@@ -75,19 +77,17 @@ export default function AdminPetSitterPage() {
     setPagination(prev => ({ ...prev, page }));
   };
 
-  // ฟังก์ชันสำหรับแสดงสถานะ
-  const getStatusDisplay = (status: string) => {
+  // ฟังก์ชันสำหรับแปลงสถานะเป็น StatusKey
+  const getStatusKey = (status: string): StatusKey => {
     switch (status) {
-      case 'Pending submission':
-        return { text: 'Pending submission', color: 'bg-yellow-500' };
       case 'Waiting for approve':
-        return { text: 'Waiting for approve', color: 'bg-pink-500' };
+        return 'waitingApprove';
       case 'Approved':
-        return { text: 'Approved', color: 'bg-green-500' };
+        return 'approved';
       case 'Rejected':
-        return { text: 'Rejected', color: 'bg-red-500' };
+        return 'rejected';
       default:
-        return { text: status, color: 'bg-gray-500' };
+        return 'waitingApprove'; // fallback เป็น waitingApprove
     }
   };
 
@@ -118,12 +118,11 @@ export default function AdminPetSitterPage() {
               <SelectTrigger className="w-40 h-10">
                 <SelectValue placeholder="All status" />
               </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All status</SelectItem>
-                <SelectItem value="pending">Pending submission</SelectItem>
-                <SelectItem value="waiting">Waiting for approve</SelectItem>
-                <SelectItem value="approved">Approved</SelectItem>
-                <SelectItem value="rejected">Rejected</SelectItem>
+              <SelectContent className="bg-white">
+                <SelectItem value="all" className="hover:bg-gray-1">All status</SelectItem>
+                <SelectItem value="waiting" className="hover:bg-gray-1">Waiting for approve</SelectItem>
+                <SelectItem value="approved" className="hover:bg-gray-1">Approved</SelectItem>
+                <SelectItem value="rejected" className="hover:bg-gray-1">Rejected</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -153,7 +152,7 @@ export default function AdminPetSitterPage() {
               </div>
             ) : (
               sitters.map((sitter) => {
-                const statusDisplay = getStatusDisplay(sitter.approval_status);
+                const statusKey = getStatusKey(sitter.approval_status);
                 const initials = sitter.user_name
                   .split(' ')
                   .map(name => name.charAt(0))
@@ -162,7 +161,11 @@ export default function AdminPetSitterPage() {
                   .slice(0, 2);
 
                 return (
-                  <div key={sitter.id} className="px-8 py-6 hover:bg-gray-50 transition-colors duration-200">
+                  <Link 
+                    key={sitter.id} 
+                    href={`/admin/petsitter/${sitter.id}`}
+                    className="block px-8 py-6 hover:bg-gray-50 transition-colors duration-200 cursor-pointer"
+                  >
                     <div className="grid grid-cols-4 gap-6 items-center">
                       {/* Full Name with Avatar */}
                       <div className="flex items-center gap-4">
@@ -179,12 +182,11 @@ export default function AdminPetSitterPage() {
                       <div className="text-gray-600 text-lg">{sitter.user_email}</div>
 
                       {/* Status */}
-                      <div className="flex items-center gap-3">
-                        <div className={`w-3 h-3 rounded-full ${statusDisplay.color} shadow-sm`}></div>
-                        <span className="text-gray-700 font-medium text-lg">{statusDisplay.text}</span>
+                      <div className="flex items-center">
+                        <StatusBadge status={statusKey} className="text-lg" />
                       </div>
                     </div>
-                  </div>
+                  </Link>
                 );
               })
             )}
