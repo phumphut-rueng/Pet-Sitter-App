@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import axios from 'axios';
 import { Sitter, Review } from '@/types/sitter.types';
+import { AxiosError } from 'axios';
 
 interface ReviewPagination {
   page: number;
@@ -39,9 +40,10 @@ export function useSitterDetail(id?: string | string[]) {
         totalCount: 0,
         totalPages: 0
       });
-    } catch (err: any) {
-      console.error(err);
-      setError(err.response?.data?.message || 'เกิดข้อผิดพลาด');
+    } catch (err) {
+      const error = err as AxiosError<{ message: string }>;
+      console.error(error);
+      setError(error.response?.data?.message || 'เกิดข้อผิดพลาด');
     } finally {
       setLoading(false);
     }

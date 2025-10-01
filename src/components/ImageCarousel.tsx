@@ -2,6 +2,9 @@ import { useRef, useEffect } from "react";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Navigation } from "swiper/modules";
 import Image from "next/image";
+import type { Swiper as SwiperType } from "swiper";
+import type { NavigationOptions } from "swiper/types";
+
 
 import "swiper/css";
 import "swiper/css/navigation";
@@ -13,20 +16,23 @@ interface ImageCarouselProps {
 export default function ImageCarousel({ images }: ImageCarouselProps) {
   const prevRef = useRef<HTMLButtonElement | null>(null);
   const nextRef = useRef<HTMLButtonElement | null>(null);
-  const swiperRef = useRef<any>(null);
+  const swiperRef = useRef<SwiperType | null>(null);
 
   useEffect(() => {
-    if (
-      swiperRef.current &&
-      swiperRef.current.params &&
-      swiperRef.current.params.navigation
-    ) {
-      swiperRef.current.params.navigation.prevEl = prevRef.current;
-      swiperRef.current.params.navigation.nextEl = nextRef.current;
+    if (!swiperRef.current) return;
 
-      swiperRef.current.navigation.destroy();
-      swiperRef.current.navigation.init();
-      swiperRef.current.navigation.update();
+    const swiper = swiperRef.current;
+
+    // เช็คว่า navigation เป็น object ไม่ใช่ boolean
+    if (typeof swiper.params.navigation !== "boolean") {
+      const navigation = swiper.params.navigation as NavigationOptions;
+
+      navigation.prevEl = prevRef.current;
+      navigation.nextEl = nextRef.current;
+
+      swiper.navigation.destroy();
+      swiper.navigation.init();
+      swiper.navigation.update();
     }
   }, []);
 
