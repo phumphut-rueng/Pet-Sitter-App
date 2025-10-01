@@ -16,7 +16,6 @@ export function useDatePicker() {
     }
 
     function handleSelect(d?: Date) {
-        console.log("d", d);
         setDate(d)
         if (d) setValue(formatDate(d))
     }

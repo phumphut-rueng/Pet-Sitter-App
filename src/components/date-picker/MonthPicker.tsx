@@ -49,7 +49,6 @@ export default function MonthPicker({
             {/* Grid แสดงเดือนทั้งหมด (3 คอลัมน์) */}
             <div className="grid grid-cols-3 gap-2">
                 {months.map((m, idx) => {
-                    console.log(disablePastDates);
 
                     const isCurrentYear = currentMonth.getFullYear() === new Date().getFullYear()
                     const isPastMonth = disablePastDates &&
