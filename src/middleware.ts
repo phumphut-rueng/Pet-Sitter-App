@@ -3,7 +3,16 @@ import { NextResponse } from "next/server";
 import { getToken } from "next-auth/jwt";
 
 // หน้า public ที่ให้เข้าตรงๆ ได้
-const PUBLIC_PREFIXES = ["/", "/auth", "/api/auth", "/_next", "/icons", "/images", "/favicon.ico", "/static"];
+const PUBLIC_PREFIXES = [
+  "/", 
+  "/auth", 
+  "/api/auth", 
+  "/_next", 
+  "/icons", 
+  "/images", 
+  "/favicon.ico", 
+  "/static" ,
+  "/componentall"];
 
 function isPublic(pathname: string) {
   const p = pathname.endsWith("/") && pathname !== "/" ? pathname.slice(0, -1) : pathname;
