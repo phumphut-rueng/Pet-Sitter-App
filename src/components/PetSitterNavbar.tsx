@@ -18,13 +18,16 @@ export default function PetSitterNavbar({
       <div className="mx-auto h-12 px-12 flex items-center justify-between">
         {/* Left: avatar + name */}
         <div className="flex items-center gap-2 min-w-0">
+          <div className="w-8 h-8 rounded-full overflow-hidden bg-gray-2">
           <Image
             src={avatarUrl}
             alt={name}
             width={30}
             height={30}
-            className="rounded-full bg-gray-2 media-fluid"
+            unoptimized
+            className="w-full h-full object-cover"
           />
+          </div>
           <span className="font-medium text-gray-9">{name}</span>
         </div>
 
@@ -35,13 +38,13 @@ export default function PetSitterNavbar({
           className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-gray-1
                      hover:bg-gray-2"
         >
-            <Image
+          <Image
             src="/icons/Messages.svg"
             alt="Messages"
             width={10}
             height={10}
             className="h-4 w-4 media-fluid"
-            />
+          />
         </Link>
       </div>
     </header>

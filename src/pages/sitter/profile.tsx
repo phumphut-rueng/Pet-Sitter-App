@@ -20,6 +20,7 @@ import {
 } from "@/components/ui/select";
 import Image from "next/image";
 import toast, { Toaster } from "react-hot-toast";
+import { uploadToCloudinary } from "@/utils/uploadToCloudinary";
 
 type SitterFormValues = {
   fullName: string;
@@ -38,6 +39,7 @@ type SitterFormValues = {
   address_post_code: string;
   profileImageUrl: string;
   images: string[];
+  newImageFiles: File[];
 };
 
 type GetSitterResponse = {
@@ -176,6 +178,7 @@ export default function PetSitterProfilePage() {
       address_post_code: "",
       profileImageUrl: "",
       images: [],
+      newImageFiles: [],
     },
     mode: "onBlur",
     shouldUnregister: false,
@@ -329,16 +332,41 @@ export default function PetSitterProfilePage() {
   const onSubmit = handleSubmit(async (values) => {
     await toast.promise(
       (async () => {
+        const uploadedUrls: string[] = [];
+
+        if (values.newImageFiles && values.newImageFiles.length > 0) {
+          for (const file of values.newImageFiles) {
+            const url = await uploadToCloudinary(file);
+            uploadedUrls.push(url);
+          }
+        }
+
+        const allImageUrls = [...values.images, ...uploadedUrls];
+
+        const payload = {
+          ...values,
+          images: allImageUrls,
+        };
+        delete (payload as Record<string, unknown>).newImageFiles;
+
         const res = await fetch("/api/sitter/put-sitter", {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(values),
+          body: JSON.stringify(payload),
         });
         if (!res.ok) {
           const data = await res.json().catch(() => ({}));
           throw new Error(data?.message || "Failed to update sitter");
         }
         await update();
+
+        const res2 = await fetch("/api/sitter/get-profile-sitter");
+        if (res2.ok) {
+          const data = await res2.json();
+          const latestImages = data.sitter?.images || [];
+          setValue("images", latestImages);
+          setInitialGallery(latestImages);
+        }
       })(),
       {
         loading: "Saving profile...",
@@ -356,8 +384,10 @@ export default function PetSitterProfilePage() {
 
       <section className="flex-1 min-w-0">
         <PetSitterNavbar
-          avatarUrl="/images/cards/jane-maison.svg"
-          name="Jane Maison"
+          avatarUrl={
+            watch("profileImageUrl") || "/icons/avatar-placeholder.svg"
+          }
+          name={watch("fullName") || ""}
         />
         <form onSubmit={onSubmit} className="mr-auto px-6 py-8">
           <div className="flex justify-between">
@@ -384,8 +414,12 @@ export default function PetSitterProfilePage() {
               <div className="pb-4 col-span-1">
                 <p className="pb-4 font-medium text-black">Profile Image</p>
                 <AvatarUploader
-                  onChange={() => {
-                    // preview เท่านั้น;
+                  imageUrl={watch("profileImageUrl")}
+                  onChange={async (file) => {
+                    if (file) {
+                      const url = await uploadToCloudinary(file);
+                      setValue("profileImageUrl", url, { shouldDirty: true });
+                    }
                   }}
                 />
               </div>
@@ -615,6 +649,9 @@ export default function PetSitterProfilePage() {
                     setValue("images", state.existingImageUrls, {
                       shouldDirty: true,
                     });
+                    setValue("newImageFiles", state.newImageFiles, {
+                      shouldDirty: true,
+                    });
                   }}
                 />
               </div>
@@ -631,9 +668,16 @@ export default function PetSitterProfilePage() {
                   placeholder=""
                   label="Address detail*"
                   type="text"
-                  variant="default"
-                  {...register("address_detail")}
+                  variant={errors.address_detail ? "error" : "default"}
+                  {...register("address_detail", {
+                    required: "Please enter your address detail.",
+                  })}
                 />
+                {errors.address_detail && (
+                  <p className="mt-1 text-sm text-red">
+                    {errors.address_detail.message}
+                  </p>
+                )}
               </div>
 
               {/* Province */}
@@ -642,6 +686,7 @@ export default function PetSitterProfilePage() {
                 <Controller
                   name="address_province"
                   control={control}
+                  rules={{ required: "Please select a province." }}
                   render={({ field }) => (
                     <Select
                       value={field.value || ""}
@@ -652,7 +697,13 @@ export default function PetSitterProfilePage() {
                         }
                       }}
                     >
-                      <SelectTrigger className="!h-12 w-full rounded-xl border border-gray-2 px-4 text-left">
+                      <SelectTrigger
+                        className={`!h-12 w-full rounded-xl border px-4 text-left ${
+                          errors.address_province
+                            ? "!border-red focus:ring-red"
+                            : "border-gray-2"
+                        }`}
+                      >
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent className="bg-white border border-gray-2 max-h-72 overflow-auto">
@@ -665,6 +716,11 @@ export default function PetSitterProfilePage() {
                     </Select>
                   )}
                 />
+                {errors.address_province && (
+                  <p className="mt-1 text-sm text-red">
+                    {errors.address_province.message}
+                  </p>
+                )}
               </div>
 
               {/* District */}
@@ -673,6 +729,7 @@ export default function PetSitterProfilePage() {
                 <Controller
                   name="address_district"
                   control={control}
+                  rules={{ required: "Please select a district." }}
                   render={({ field }) => (
                     <Select
                       value={field.value || ""}
@@ -683,7 +740,13 @@ export default function PetSitterProfilePage() {
                         }
                       }}
                     >
-                      <SelectTrigger className="!h-12 w-full rounded-xl border border-gray-2 px-4 text-left">
+                      <SelectTrigger
+                        className={`!h-12 w-full rounded-xl border px-4 text-left ${
+                          errors.address_district
+                            ? "!border-red focus:ring-red"
+                            : "border-gray-2"
+                        }`}
+                      >
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent className="bg-white border border-gray-2 max-h-72 overflow-auto">
@@ -696,6 +759,11 @@ export default function PetSitterProfilePage() {
                     </Select>
                   )}
                 />
+                {errors.address_district && (
+                  <p className="mt-1 text-sm text-red">
+                    {errors.address_district.message}
+                  </p>
+                )}
               </div>
 
               {/* Sub-district */}
@@ -704,6 +772,7 @@ export default function PetSitterProfilePage() {
                 <Controller
                   name="address_sub_district"
                   control={control}
+                  rules={{ required: "Please select a sub-district." }}
                   render={({ field }) => (
                     <Select
                       value={field.value}
@@ -712,7 +781,13 @@ export default function PetSitterProfilePage() {
                         onSubdistrictChange(val);
                       }}
                     >
-                      <SelectTrigger className="!h-12 w-full rounded-xl border border-gray-2 px-4 text-left">
+                      <SelectTrigger
+                        className={`!h-12 w-full rounded-xl border px-4 text-left ${
+                          errors.address_sub_district
+                            ? "!border-red focus:ring-red"
+                            : "border-gray-2"
+                        }`}
+                      >
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent className="bg-white border border-gray-2 max-h-72 overflow-auto">
@@ -725,6 +800,11 @@ export default function PetSitterProfilePage() {
                     </Select>
                   )}
                 />
+                {errors.address_sub_district && (
+                  <p className="mt-1 text-sm text-red">
+                    {errors.address_sub_district.message}
+                  </p>
+                )}
               </div>
 
               <div>
@@ -734,10 +814,18 @@ export default function PetSitterProfilePage() {
                   type="text"
                   inputMode="numeric"
                   pattern="[0-9]*"
-                  variant="default"
+                  variant={errors.address_post_code ? "error" : "default"}
                   readOnly
-                  {...register("address_post_code")}
+                  {...register("address_post_code", {
+                    required:
+                      "Please select a sub-district to get the postcode.",
+                  })}
                 />
+                {errors.address_post_code && (
+                  <p className="mt-1 text-sm text-red">
+                    {errors.address_post_code.message}
+                  </p>
+                )}
               </div>
 
               <div className="md:col-span-2">
