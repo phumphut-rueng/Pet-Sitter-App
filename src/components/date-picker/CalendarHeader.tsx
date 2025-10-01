@@ -30,8 +30,6 @@ export default function CalendarHeader({
     }, [disablePastDates, minDate, currentMonthStart, todayMonth])
 
     const isNextDisabled = useMemo(() => {
-        console.log("maxDate", maxDate, currentMonthStart);
-
         if (maxDate) {
             return currentMonthStart >= startOfMonth(maxDate)
         }
