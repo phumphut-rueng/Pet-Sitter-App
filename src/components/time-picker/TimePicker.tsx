@@ -1,5 +1,5 @@
 // components/TimePicker.tsx
-import { useState } from "react"
+import { useCallback, useMemo, useState } from "react"
 import { ChevronDown } from "lucide-react"
 import TimeDropdown from "./TimeDropdown"
 import { formatDateToTimeString, generateTimeSlots, timeToMinutes, dateToMinutes, parseTimeStringToDate } from "@/utils/time-utils"
@@ -46,11 +46,17 @@ export default function TimePicker({
         interval = 30
     } = TimeConfig
 
-    const displayValue = formatDateToTimeString(value)
-    const timeSlots = generateTimeSlots(startTime, endTime, interval)
+    const displayValue = useMemo(
+        () => formatDateToTimeString(value),
+        [value]
+    )
+    const timeSlots = useMemo(
+        () => generateTimeSlots(startTime, endTime, interval),
+        [startTime, endTime, interval]
+    )
 
     // ✅ logic เดิม check disable
-    const checkTimeDisableStatus = (timeStr: string) => {
+    const checkTimeDisableStatus = useCallback((timeStr: string) => {
         const status = {
             isDisabledSlot: false,
             isPastStartTime: false,
@@ -61,13 +67,11 @@ export default function TimePicker({
 
         const currentMinutes = timeToMinutes(timeStr)
 
-        console.log("disabledTimeSlots", disabledTimeSlots, date);
         // เช็คว่าเวลาตรงกับ disabledTimeSlots หรือไม่
         if (disabledTimeSlots.length > 0 && date) {
             const currentTimeDate = parseTimeStringToDate(timeStr, date)
 
             // simplified matching
-            console.log("currentTimeDate", currentTimeDate);
             const isInDisabledList = disabledTimeSlots.some(disabledDate =>
                 disabledDate.getFullYear() === currentTimeDate.getFullYear() &&
                 disabledDate.getMonth() === currentTimeDate.getMonth() &&
@@ -76,7 +80,6 @@ export default function TimePicker({
                 disabledDate.getMinutes() === currentTimeDate.getMinutes()
             )
 
-            console.log("isInDisabledList", isInDisabledList);
             if (isInDisabledList)
                 status.isDisabledSlot = true
         }
@@ -105,19 +108,22 @@ export default function TimePicker({
         }
 
         return status
-    }
+    }, [disabled, disabledTimeSlots, date, disablePastTime, startDate, startTimeValue])
 
-    const shouldHideTime = (status: ReturnType<typeof checkTimeDisableStatus>): boolean => {
+    const shouldHideTime = useCallback((
+        status: ReturnType<typeof checkTimeDisableStatus>
+    ): boolean => {
         if (status.isDisabledSlot && !showDisabledSlots) return true
         if (status.isPastStartTime && !showPastStartTime) return true
         if (status.isPastTime && !showPastTime) return true
         return false
-    }
+    }, [showDisabledSlots, showPastStartTime, showPastTime])
 
-    const isTimeDisabled = (
-        status: ReturnType<typeof checkTimeDisableStatus>
-    ): boolean =>
-        status.isDisabledSlot || status.isPastStartTime || status.isPastTime
+    const isTimeDisabled = useCallback(
+        (status: ReturnType<typeof checkTimeDisableStatus>) =>
+            status.isDisabledSlot || status.isPastStartTime || status.isPastTime,
+        []
+    )
 
     return (
         <div className="relative flex-1">

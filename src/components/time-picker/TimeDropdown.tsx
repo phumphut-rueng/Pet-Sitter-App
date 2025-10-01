@@ -26,6 +26,16 @@ export default function TimeDropdown({
     isTimeDisabled,
     onClose
 }: TimeDropdownProps) {
+    const visibleSlots = timeSlots.filter(
+        (time) => !shouldHideTime(checkStatus(time))
+    )
+
+    const handleSelect = (time: string, disabled: boolean) => {
+        if (disabled) return
+        const newDate = parseTimeStringToDate(time, date)
+        onSelect(newDate)
+        onClose()
+    }
     return (
         <>
             {/* ปิด dropdown เมื่อคลิกข้างนอก */}
@@ -36,26 +46,22 @@ export default function TimeDropdown({
 
             {/* รายการเวลา */}
             <div className="absolute mt-2 bg-white border border-gray-2 rounded-xl shadow-lg z-40 max-h-60 overflow-y-auto w-full">
-                {timeSlots.filter(t => !shouldHideTime(checkStatus(t))).length === 0 ? (
+                {visibleSlots.length === 0 ? (
                     <div className="px-4 py-3 text-center text-gray-4 text-[14px]">
                         No available time slots
                     </div>
                 ) : (
-                    timeSlots.map((time) => {
+                    visibleSlots.map((time) => {
                         const status = checkStatus(time)
-                        // ซ่อนเวลาที่ไม่ต้องการ
-                        if (shouldHideTime(status)) return null
                         const disabled = isTimeDisabled(status)
+                        const isSelected = displayValue === time
 
                         return (
                             <button
                                 key={time}
                                 type="button"
                                 onClick={() => {
-                                    if (disabled) return
-                                    const newDate = parseTimeStringToDate(time, date)
-                                    onSelect(newDate)
-                                    onClose()
+                                    handleSelect(time, disabled)
                                 }}
                                 disabled={disabled}
                                 className={`
@@ -63,7 +69,7 @@ export default function TimeDropdown({
                                     text-left text-[14px] font-[500]
                                     ${disabled
                                         ? "bg-gray-1 text-gray-4 cursor-not-allowed"
-                                        : displayValue === time
+                                        : isSelected
                                             ? "bg-orange-5 text-white"
                                             : "text-gray-9 hover:bg-orange-1 cursor-pointer"}
                                 `}

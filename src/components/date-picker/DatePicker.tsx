@@ -27,12 +27,13 @@ function DatePicker({
     }, [month])
 
     const {
-        disablePastDates,
+        disablePastDates = true,
         minDate,
         maxDate,
     } = rules
 
-    // ถ้า minDate ถูกส่งเข้ามา ให้ disablePastDates = false
+    // ถ้า minDate ถูกส่งเข้ามา ให้ disablePastDates = false 
+    // (true = เลือกไม่ได้, false = เลือกได้)
     const newDisablePastDates =
         (minDate !== undefined) ? false : disablePastDates;
 
@@ -55,6 +56,7 @@ function DatePicker({
             })()
             : new Date()
     )
+    console.log("newMaxDate", newDisablePastDates, "\n", newMaxDate, "\n", maxDate);
 
     const startYear = newMinDate.getFullYear()
     const endYear = newMaxDate.getFullYear()
@@ -155,8 +157,13 @@ function DatePicker({
         setPickerView('year')
     }, [currentMonth, startYear, yearsPerPage])
 
+    const handleOpen = useCallback((open: boolean) => {
+        setPickerView('date')
+        setIsOpen(open)
+    }, [setPickerView, setIsOpen])
+
     return (
-        <Popover open={isOpen} onOpenChange={(o) => setIsOpen(o)}>
+        <Popover open={isOpen} onOpenChange={(open) => handleOpen(open)}>
             <PopoverTrigger asChild>
                 <button
                     id="date"
@@ -190,8 +197,8 @@ function DatePicker({
                                 onMonthChange={onMonthChange}
                                 rules={{
                                     disablePastDates: newDisablePastDates,
-                                    minDate,
-                                    maxDate,
+                                    minDate: newMinDate,
+                                    maxDate: newMaxDate,
                                     today
                                 }}
                             />
