@@ -134,7 +134,7 @@ export default function PetSitterProfilePage() {
   const [userId, setUserId] = useState<number | null>(null);
   const { status, update } = useSession();
   const [initialGallery, setInitialGallery] = useState<string[]>([]);
-  const [userData, setUserData] = useState<GetSitterResponse['user'] | null>(null);
+  const [approvalStatus, setApprovalStatus] = useState<string>('');
 
   type Province = {
     code: string;
@@ -228,8 +228,8 @@ export default function PetSitterProfilePage() {
           return;
         }
         const data: GetSitterResponse = await res.json();
-        setUserData(data.user);
         setUserId(data.user.id);
+        setApprovalStatus(data.user.sitter_approval_status?.status_name || 'Waiting for approve');
 
         initialAddrRef.current = {
           province: data.sitter?.address_province || "",
@@ -349,6 +349,115 @@ export default function PetSitterProfilePage() {
     setValue("address_post_code", s?.postalCode ?? "", { shouldDirty: true });
   };
 
+  // ฟังก์ชันตรวจสอบข้อมูลพื้นฐานที่จำเป็นสำหรับ Request for Approval
+  const validateBasicFields = () => {
+    const values = getValues();
+    const basicErrors: string[] = [];
+
+    // ตรวจสอบเฉพาะฟิลด์พื้นฐาน
+    if (!values.fullName || values.fullName.trim() === '') {
+      basicErrors.push('Full name is required');
+    }
+
+    if (!values.experience || values.experience === '') {
+      basicErrors.push('Experience is required');
+    }
+
+    if (!values.phone || values.phone.trim() === '') {
+      basicErrors.push('Phone number is required');
+    } else if (!phonePattern.test(values.phone)) {
+      basicErrors.push('Phone number must be in format 0XXXXXXXXX (10 digits starting with 0)');
+    }
+
+    if (!values.email || values.email.trim() === '') {
+      basicErrors.push('Email is required');
+    } else if (!emailPattern.test(values.email)) {
+      basicErrors.push('Email format is invalid');
+    }
+
+    if (!values.introduction || values.introduction.trim() === '') {
+      basicErrors.push('Introduction is required');
+    }
+
+    return basicErrors;
+  };
+
+  // ฟังก์ชันสำหรับ Request for Approval
+  const handleRequestApproval = async () => {
+    // ตรวจสอบข้อมูลพื้นฐานที่จำเป็นก่อน
+    const basicErrors = validateBasicFields();
+    
+    if (basicErrors.length > 0) {
+      toast.error('Please complete and verify all required information.', {
+        duration: 5000,
+        style: {
+          maxWidth: '400px',
+          fontSize: '14px'
+        }
+      });
+      return;
+    }
+
+    try {
+      const values = getValues();
+      console.log("📤 Sending data:", {
+        fullName: values.fullName,
+        experience: values.experience,
+        phone: values.phone,
+        email: values.email,
+        introduction: values.introduction,
+      });
+      
+      const response = await fetch('/api/sitter/request-approval', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          fullName: values.fullName,
+          experience: values.experience,
+          phone: values.phone,
+          email: values.email,
+          introduction: values.introduction,
+        }),
+      });
+
+      if (response.ok) {
+        const result = await response.json();
+        console.log("✅ Success response:", result);
+        
+        // แสดง toast แจ้งเตือนสำเร็จ (2 วินาที)
+        toast.success('Request for approval submitted successfully!', {
+          duration: 3000
+        });
+        
+        // แสดง toast บอกว่าจะ refresh (2 วินาที)
+        setTimeout(() => {
+          toast('Refreshing page to update status...', {
+            duration: 3000,
+            style: {
+              background: '#3b82f6',
+              color: 'white'
+            }
+          });
+        }, 1000);
+        
+        // รีเฟรชหน้าหลังจาก 4 วินาที
+        setTimeout(() => {
+          window.location.reload();
+        }, 4000);
+        
+      } else {
+        const errorData = await response.json();
+        console.error("❌ Error response:", errorData);
+        toast.error(`Failed to submit request for approval: ${errorData.message || 'Unknown error'}`);
+      }
+    } catch (error) {
+      console.error('Error requesting approval:', error);
+      toast.error('An error occurred while submitting request');
+    }
+  };
+
   const onSubmit = handleSubmit(async (values) => {
     await toast.promise(
       (async () => {
@@ -415,14 +524,24 @@ export default function PetSitterProfilePage() {
               <h3 className="text-gray-9 font-semibold text-2xl">
                 Pet Sitter Profile
               </h3>
-              <StatusBadge status={getStatusKey(userData?.sitter_approval_status?.status_name || 'Waiting for approve')} className="font-medium" />
+              <StatusBadge status={getStatusKey(approvalStatus)} className="font-medium" />
             </div>
-            <PrimaryButton
-              text={isSubmitting ? "Saving..." : "Update"}
-              type="submit"
-              bgColor="primary"
-              textColor="white"
-            />
+            {approvalStatus === 'Approved' ? (
+              <PrimaryButton
+                text={isSubmitting ? "Saving..." : "Update"}
+                type="submit"
+                bgColor="primary"
+                textColor="white"
+              />
+            ) : (
+              <PrimaryButton
+                text="Request for Approval"
+                type="button"
+                bgColor="primary"
+                textColor="white"
+                onClick={handleRequestApproval}
+              />
+            )}
           </div>
 
           {/* Basic Information */}
@@ -596,8 +715,9 @@ export default function PetSitterProfilePage() {
             </div>
           </section>
 
-          {/* Pet Sitter */}
-          <section className="bg-white rounded-xl py-4 px-12 mt-4 pb-7">
+          {/* Pet Sitter - แสดงเฉพาะเมื่อสถานะเป็น Approved */}
+          {approvalStatus === 'Approved' && (
+            <section className="bg-white rounded-xl py-4 px-12 mt-4 pb-7">
             <h4 className="text-gray-4 font-bold text-xl py-4">Pet Sitter</h4>
 
             <div className="grid grid-cols-2 gap-4">
@@ -677,9 +797,11 @@ export default function PetSitterProfilePage() {
               </div>
             </div>
           </section>
+          )}
 
-          {/* Address */}
-          <section className="bg-white rounded-xl py-4 px-12 mt-4 pb-7">
+          {/* Address - แสดงเฉพาะเมื่อสถานะเป็น Approved */}
+          {approvalStatus === 'Approved' && (
+            <section className="bg-white rounded-xl py-4 px-12 mt-4 pb-7">
             <h4 className="text-gray-4 font-bold text-xl pt-4">Address</h4>
 
             <div className="mt-4 grid gap-4 md:grid-cols-2">
@@ -861,6 +983,7 @@ export default function PetSitterProfilePage() {
               </div>
             </div>
           </section>
+          )}
         </form>
       </section>
       <Toaster position="top-right" />

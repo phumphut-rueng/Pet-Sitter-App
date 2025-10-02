@@ -88,7 +88,7 @@ model role {
 model sitter {
   id                      Int                       @id @default(autoincrement())
   user_sitter_id          Int
-  name                    String                    @db.VarChar(100)
+  name                    String?                   @db.VarChar(100)
   location_description    String?                   @db.VarChar(255)
   phone                   String?                   @db.VarChar(20)
   introduction            String?
