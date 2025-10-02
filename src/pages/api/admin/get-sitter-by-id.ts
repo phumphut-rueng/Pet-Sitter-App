@@ -20,8 +20,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const mainQuery = `
       SELECT 
         s.*,
+        s.service_description,
         u.name as user_name,
         u.email as user_email,
+        u.dob as user_dob,
+        u.profile_image as user_profile_image,
         s.approval_status_id,
         sas.status_name as approval_status,
         sas.description as status_description,

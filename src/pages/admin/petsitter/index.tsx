@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Search } from 'lucide-react';
 import { StatusBadge, StatusKey } from '@/components/badges/StatusBadge';
+import { PetPawLoading } from '@/components/loading/PetPawLoading';
 import Link from 'next/link';
 import axios from 'axios';
 
@@ -113,6 +114,10 @@ export default function AdminPetSitterPage() {
     }
   };
 
+  if (loading) {
+    return <PetPawLoading message="Loading Pet Sitters" size="lg" />;
+  }
+
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="container mx-auto p-6">
@@ -164,11 +169,7 @@ export default function AdminPetSitterPage() {
 
           {/* Table Body */}
           <div className="divide-y divide-gray-100">
-            {loading ? (
-              <div className="px-8 py-12 text-center text-gray-500 text-lg">
-                Loading...
-              </div>
-            ) : sitters.length === 0 ? (
+            {sitters.length === 0 ? (
               <div className="px-8 py-12 text-center text-gray-500 text-lg">
                 ไม่พบข้อมูล Pet Sitter
               </div>
