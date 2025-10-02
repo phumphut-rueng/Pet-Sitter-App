@@ -8,12 +8,34 @@ import axios from 'axios';
 interface SitterData {
   id: number;
   name: string;
+  phone: string;
+  experience: string;
+  introduction: string;
+  location_description: string;
+  service_description: string;
+  address_detail: string;
+  address_province: string;
+  address_district: string;
+  address_sub_district: string;
+  address_post_code: string;
+  approval_status_id: number;
+  approval_status: string;
+  status_description: string;
+  average_rating: number;
   user_name: string;
   user_email: string;
-  approval_status: string;
-  approval_status_id: number;
-  status_updated_at: string;
+  user_dob: string;
+  sitter_image: Array<{
+    id: number;
+    image_url: string;
+  }>;
+  sitter_pet_type: Array<{
+    pet_type: {
+      pet_type_name: string;
+    };
+  }>;
   created_at: string;
+  status_updated_at: string;
 }
 
 interface ApiResponse {
@@ -154,11 +176,13 @@ export default function AdminPetSitterPage() {
               sitters.map((sitter) => {
                 const statusKey = getStatusKey(sitter.approval_status);
                 const initials = sitter.user_name
-                  .split(' ')
-                  .map(name => name.charAt(0))
-                  .join('')
-                  .toUpperCase()
-                  .slice(0, 2);
+                  ? sitter.user_name
+                      .split(' ')
+                      .map(name => name.charAt(0))
+                      .join('')
+                      .toUpperCase()
+                      .slice(0, 2)
+                  : sitter.user_email.charAt(0).toUpperCase();
 
                 return (
                   <Link 
@@ -172,11 +196,13 @@ export default function AdminPetSitterPage() {
                         <div className="w-12 h-12 bg-gradient-to-br from-blue-400 to-purple-500 rounded-full flex items-center justify-center shadow-md">
                           <span className="text-white font-semibold text-lg">{initials}</span>
                         </div>
-                        <span className="text-gray-900 font-medium text-lg">{sitter.user_name}</span>
+                        <span className="text-gray-900 font-medium text-lg">{sitter.user_name || sitter.user_email}</span>
                       </div>
 
                       {/* Pet Sitter Name */}
-                      <div className="text-gray-900 font-medium text-lg">{sitter.name}</div>
+                      <div className="text-gray-900 font-medium text-lg">
+                        {sitter.name || 'No sitter name'}
+                      </div>
 
                       {/* Email */}
                       <div className="text-gray-600 text-lg">{sitter.user_email}</div>

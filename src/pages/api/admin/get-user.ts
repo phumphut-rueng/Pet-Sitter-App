@@ -9,7 +9,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
   try {
     const {
-      searchTerm,      // ค้นหาเฉพาะ pet sitter name
+      searchTerm,      // คำค้นหาทั่วไป
       status,          // สถานะ approval เช่น "waiting", "approved", "rejected"
       page = 1,        // หน้าปัจจุบัน
       limit = 8,      // จำนวนรายการต่อหน้า
@@ -27,9 +27,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     // ไม่แสดงข้อมูล Pending submission
     whereConditions.push(`sas.status_name != 'Pending submission'`);
 
-    // 1) Search term (เฉพาะ pet sitter name)
+    // 1) Search term (เฉพาะ user name)
     if (searchTerm) {
-      whereConditions.push(`s.name ILIKE $${paramIndex}`);
+      whereConditions.push(`u.name ILIKE $${paramIndex}`);
       queryParams.push(`%${searchTerm}%`);
       paramIndex++;
     }
@@ -66,57 +66,55 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     // Query สำหรับนับจำนวนทั้งหมด
     const countQuery = `
       SELECT COUNT(*) as total_count
-      FROM sitter s
-      LEFT JOIN "user" u ON s.user_sitter_id = u.id
-      LEFT JOIN sitter_approval_status sas ON s.approval_status_id = sas.id
+      FROM "user" u
+      LEFT JOIN sitter_approval_status sas ON u.approval_status_id = sas.id
       ${whereClause}
     `;
 
     // Query หลักสำหรับดึงข้อมูล
     const mainQuery = `
       SELECT 
-        s.*,
-        u.name as user_name,
-        u.email as user_email,
-        u.dob as user_dob,
-        s.approval_status_id,
+        u.*,
         sas.status_name as approval_status,
         sas.description as status_description,
         COALESCE((
           SELECT AVG(r.rating)::numeric(3,2)
           FROM review r 
-          WHERE r.sitter_id = s.id
+          JOIN sitter s ON r.sitter_id = s.id
+          WHERE s.user_sitter_id = u.id
         ), 0) as average_rating,
         (
           SELECT json_agg(
             json_build_object(
-              'id', si.id,
-              'image_url', si.image_url
+              'id', s.id,
+              'name', s.name,
+              'address_province', s.address_province,
+              'address_district', s.address_district
             )
           )
-          FROM sitter_image si 
-          WHERE si.sitter_id = s.id
-        ) as sitter_images,
+          FROM sitter s 
+          WHERE s.user_sitter_id = u.id
+        ) as sitter_profiles,
         (
           SELECT json_agg(
             json_build_object(
               'pet_type_name', pt.pet_type_name
             )
           )
-          FROM sitter_pet_type spt
+          FROM sitter s
+          JOIN sitter_pet_type spt ON s.id = spt.sitter_id
           JOIN pet_type pt ON spt.pet_type_id = pt.id
-          WHERE spt.sitter_id = s.id
+          WHERE s.user_sitter_id = u.id
         ) as pet_types
-      FROM sitter s
-      LEFT JOIN "user" u ON s.user_sitter_id = u.id
-      LEFT JOIN sitter_approval_status sas ON s.approval_status_id = sas.id
+      FROM "user" u
+      LEFT JOIN sitter_approval_status sas ON u.approval_status_id = sas.id
       ${whereClause}
-      ORDER BY s.status_updated_at DESC NULLS LAST, s.created_at DESC
+      ORDER BY u.status_updated_at DESC NULLS LAST, u.created_at DESC
       LIMIT $${paramIndex} OFFSET $${paramIndex + 1}
     `;
 
     // Execute queries
-    const [countResult, sittersResult] = await Promise.all([
+    const [countResult, usersResult] = await Promise.all([
       prisma.$queryRawUnsafe(countQuery, ...queryParams),
       prisma.$queryRawUnsafe(mainQuery, ...queryParams, limitNumber, offset)
     ]);
@@ -125,13 +123,13 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const totalPages = Math.ceil(totalCount / limitNumber);
 
     // Format results
-    const formattedResults = (sittersResult as Record<string, unknown>[]).map((sitter: Record<string, unknown>) => ({
-      ...sitter,
-      sitter_image: sitter.sitter_images || [],
-      sitter_pet_type: ((sitter.pet_types as Record<string, unknown>[]) || []).map((pt: Record<string, unknown>) => ({
+    const formattedResults = (usersResult as Record<string, unknown>[]).map((user: Record<string, unknown>) => ({
+      ...user,
+      sitter_profiles: user.sitter_profiles || [],
+      pet_types: ((user.pet_types as Record<string, unknown>[]) || []).map((pt: Record<string, unknown>) => ({
         pet_type: { pet_type_name: pt.pet_type_name }
       })),
-      averageRating: Number(sitter.average_rating) || 0
+      averageRating: Number(user.average_rating) || 0
     }));
 
     if (formattedResults.length === 0) {
@@ -157,7 +155,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       }
     });
   } catch (error) {
-    console.error("❌ Error fetching admin sitters:", error);
-    return res.status(500).json({ message: "Error fetching admin sitters" });
+    console.error("❌ Error fetching users:", error);
+    return res.status(500).json({ message: "Error fetching users" });
   }
 }

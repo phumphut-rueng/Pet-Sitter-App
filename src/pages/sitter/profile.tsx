@@ -3,7 +3,7 @@ import { useSession } from "next-auth/react";
 import { useForm, Controller } from "react-hook-form";
 import Sidebar from "@/components/layout/SitterSidebar";
 import PetSitterNavbar from "@/components/PetSitterNavbar";
-import { StatusBadge } from "@/components/badges/StatusBadge";
+import { StatusBadge, StatusKey } from "@/components/badges/StatusBadge";
 import PrimaryButton from "@/components/buttons/PrimaryButton";
 import AvatarUploader from "@/components/form/AvatarUpload";
 import InputText from "@/components/input/InputText";
@@ -50,6 +50,9 @@ type GetSitterResponse = {
     phone: string | null;
     name: string;
     profile_image: string | null;
+    sitter_approval_status?: {
+      status_name: string;
+    };
   };
   sitter: null | {
     id: number;
@@ -71,6 +74,21 @@ type GetSitterResponse = {
 
 const phonePattern = /^0\d{9}$/;
 const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+function getStatusKey(status: string): StatusKey {
+  switch (status) {
+    case 'Pending submission':
+      return 'pendingSubmission';
+    case 'Waiting for approve':
+      return 'waitingApprove';
+    case 'Approved':
+      return 'approved';
+    case 'Rejected':
+      return 'rejected';
+    default:
+      return 'waitingApprove'; // fallback
+  }
+}
 
 async function checkPhoneDuplicate(
   phone: string,
@@ -116,6 +134,7 @@ export default function PetSitterProfilePage() {
   const [userId, setUserId] = useState<number | null>(null);
   const { status, update } = useSession();
   const [initialGallery, setInitialGallery] = useState<string[]>([]);
+  const [userData, setUserData] = useState<GetSitterResponse['user'] | null>(null);
 
   type Province = {
     code: string;
@@ -209,6 +228,7 @@ export default function PetSitterProfilePage() {
           return;
         }
         const data: GetSitterResponse = await res.json();
+        setUserData(data.user);
         setUserId(data.user.id);
 
         initialAddrRef.current = {
@@ -395,7 +415,7 @@ export default function PetSitterProfilePage() {
               <h3 className="text-gray-9 font-semibold text-2xl">
                 Pet Sitter Profile
               </h3>
-              <StatusBadge status="approved" className="font-medium" />
+              <StatusBadge status={getStatusKey(userData?.sitter_approval_status?.status_name || 'Waiting for approve')} className="font-medium" />
             </div>
             <PrimaryButton
               text={isSubmitting ? "Saving..." : "Update"}

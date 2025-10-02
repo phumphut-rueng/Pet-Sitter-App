@@ -12,7 +12,19 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     const user = await prisma.user.findUnique({
       where: { email: session.user.email },
-      select: { id: true, email: true, phone: true, name: true, profile_image: true },
+      select: { 
+        id: true, 
+        email: true, 
+        phone: true, 
+        name: true, 
+        profile_image: true,
+        approval_status_id: true,
+        sitter_approval_status: {
+          select: {
+            status_name: true
+          }
+        }
+      },
     });
     if (!user) return res.status(404).json({ message: "User not found" });
 
@@ -21,11 +33,19 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       include: {
         sitter_image: true,
         sitter_pet_type: { include: { pet_type: true } },
+        sitter_approval_status: true,
       },
     });
 
     if (!sitter) {
-      return res.status(200).json({ exists: false, user, sitter: null });
+      return res.status(200).json({ 
+        exists: false, 
+        user: {
+          ...user,
+          sitter_approval_status: user.sitter_approval_status
+        }, 
+        sitter: null 
+      });
     }
 
     return res.status(200).json({
