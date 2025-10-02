@@ -14,6 +14,26 @@ export interface DatePickerProps {
     }
 }
 
+export interface CalendarHeaderProps {
+    currentMonth: Date //วันที่ที่เลือกไว้
+    onMonthChange: (d: Date) => void //callback เมือเลือกเดือน
+    setView: (v: "date" | "month" | "year") => void
+    rules: {
+        disablePastDates?: boolean
+        minDate?: Date
+        maxDate?: Date
+        today: Date
+    }
+}
+
+export interface CalendarTableProps {
+    weeks: { day: number; isCurrentMonth: boolean }[][]
+    isDisabled: (day: number) => boolean
+    isSelected: (day: number) => boolean
+    isToday: (day: number) => boolean
+    onDayClick: (day: number) => void
+}
+
 export interface MonthProps {
     currentMonth: Date //วันที่ที่เลือกไว้
     openYearPicker: () => void //callback เมือเลือกปี

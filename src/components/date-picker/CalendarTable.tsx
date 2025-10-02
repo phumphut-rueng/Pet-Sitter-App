@@ -1,10 +1,4 @@
-interface Props {
-    weeks: { day: number; isCurrentMonth: boolean }[][]
-    isDisabled: (day: number) => boolean
-    isSelected: (day: number) => boolean
-    isToday: (day: number) => boolean
-    onDayClick: (day: number) => void
-}
+import { CalendarTableProps } from "@/types/date-picker.types"
 
 {/* ตารางปฏิทิน */ }
 export default function CalendarTable({
@@ -13,7 +7,7 @@ export default function CalendarTable({
     isSelected,
     isToday,
     onDayClick
-}: Props) {
+}: CalendarTableProps) {
     const weekDays = ["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"]
 
     return (

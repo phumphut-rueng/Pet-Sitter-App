@@ -172,15 +172,8 @@ export default function ComponentAll() {
   // ตัวอย่างที่ 2: กำหนด min/max date
   const [date2, setDate2] = useState<Date | undefined>()
   const [month2, setMonth2] = useState<Date | undefined>(new Date())
-  const minDate = new Date()
-  const maxDate = new Date()
-  maxDate.setDate(maxDate.getDate() + 30)
 
-  // ตัวอย่างที่ 3: ปิดการ disable วันในอดีต
-  const [date3, setDate3] = useState<Date | undefined>()
-  const [month3, setMonth3] = useState<Date | undefined>(new Date())
-
-  // ตัวอย่างที่ 4: กำหนดวันที่ต้องการ disable
+  // ตัวอย่างที่ 3: กำหนดวันที่ต้องการ disable
   const [date4, setDate4] = useState<Date | undefined>()
   const [month4, setMonth4] = useState<Date | undefined>(new Date())
   //=================================================================== 
@@ -736,15 +729,12 @@ export default function ComponentAll() {
         <Section title="Date Picker">
           <SubSection title="">
             <div className="w-[250px]">
-              <span className="text-gray-6 w-[300px]"> เลือกวันก่อนหน้าไม่ได้ และเลือกได้ไม่เกิน 10 เดือนข้างหน้า</span>
+              <span className="text-gray-6 w-[300px]"> แบบไม่มีเงื่อนไข</span>
               <DatePicker
                 date={date1}
                 month={month1}
                 onMonthChange={setMonth1}
                 onSelect={setDate1}
-                rules={{
-                  disablePastDates: true
-                }}
               />
             </div>
             <div className="w-[250px]">
@@ -754,19 +744,6 @@ export default function ComponentAll() {
                 month={month2}
                 onMonthChange={setMonth2}
                 onSelect={setDate2}
-                rules={{
-                  minDate: minDate,
-                  maxDate: maxDate,
-                }}
-              />
-            </div>
-            <div className="w-[250px]">
-              <span className="text-gray-6"> กำหนด ปีที่เริ่ม-สิ้นสุด</span>
-              <DatePicker
-                date={date3}
-                month={month3}
-                onMonthChange={setMonth3}
-                onSelect={setDate3}
                 rules={{
                   minDate: new Date(1950, 1, 1),
                   maxDate: new Date(2026, 1, 1)
