@@ -1,7 +1,7 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "../auth/[...nextauth]";
-import { prisma } from "@/lib/prisma";
+import { prisma } from "@/lib/prisma/prisma";
 
 // API สำหรับจัดการข้อมูลโปรไฟล์ผู้ดูแลสัตว์
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {

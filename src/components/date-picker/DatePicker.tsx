@@ -1,7 +1,7 @@
 import { useState, useMemo, useCallback } from "react"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { formatDate } from "@/utils/date-utils"
-import { cn } from "@/lib/utils"
+import { cn } from "@/lib/utils/utils"
 import { getDaysInMonth, getFirstDayOfMonth } from "@/utils/date-utils"
 import { DatePickerProps } from "@/types/date-picker.types"
 import CalendarHeader from "./CalendarHeader"

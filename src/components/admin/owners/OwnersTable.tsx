@@ -1,17 +1,14 @@
-import Image from "next/image"
-import { cn } from "@/lib/utils"
-import type { OwnerRow } from "@/types/admin/owners"
-
+import Link from "next/link";
+import { cn } from "@/lib/utils/utils";
+import type { OwnerRow } from "@/types/admin/owners";
+import CloudAvatar from "./CloudAvatar";
 
 function StatusDot({ ok = true }: { ok?: boolean }) {
   return (
     <span
-      className={cn(
-        "inline-block size-2 rounded-full",
-        ok ? "bg-green" : "bg-red"
-      )}
+      className={cn("inline-block size-2 rounded-full", ok ? "bg-green" : "bg-red")}
     />
-  )
+  );
 }
 
 export default function OwnersTable({ rows }: { rows: OwnerRow[] }) {
@@ -31,34 +28,31 @@ export default function OwnersTable({ rows }: { rows: OwnerRow[] }) {
         <tbody>
           {rows.length === 0 ? (
             <tr>
-              <td className="px-5 py-8 text-center text-gray-500 body-sm" colSpan={5}>
+              <td colSpan={5} className="px-5 py-8 text-center text-gray-500 body-sm">
                 No data
               </td>
             </tr>
           ) : (
             rows.map((r) => (
               <tr key={r.id} className="border-t last:border-b hover:bg-gray-50">
-                {/* Pet Owner */}
                 <td className="px-5 py-4">
                   <div className="flex items-center gap-3 min-w-0">
-                    <div className="relative h-10 w-10 shrink-0 overflow-hidden rounded-full ring-1 ring-gray-200">
-                      <Image
-                        src={
-                          r.profile_image ??
-                          "/images/avatar-default.png" 
-                        }
-                        alt={r.name ?? r.email}
-                        width={40}
-                        height={40}
-                        sizes="40px"
-                        className="h-full w-full object-cover"
-                      />
-                    </div>
-
+                    <CloudAvatar
+                      publicId={r.profile_image_public_id ?? undefined}
+                      legacyUrl={r.profile_image ?? undefined}
+                      alt={r.name || r.email}
+                      size={40}
+                      className="shrink-0"
+                    />
                     <div className="min-w-0">
-                      <div className="body-sm text-ink/90 truncate">
-                        {r.name || "(no name)"}
-                      </div>
+                      <Link
+                        href={`/admin/owner/${r.id}`}
+                        className="block max-w-[220px] truncate hover:underline"
+                      >
+                        <div className="body-sm text-ink/90 truncate">
+                          {r.name || "(no name)"}
+                        </div>
+                      </Link>
                     </div>
                   </div>
                 </td>
@@ -85,5 +79,5 @@ export default function OwnersTable({ rows }: { rows: OwnerRow[] }) {
         </tbody>
       </table>
     </div>
-  )
+  );
 }

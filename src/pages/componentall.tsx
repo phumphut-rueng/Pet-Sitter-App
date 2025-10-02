@@ -12,7 +12,7 @@ import { PetTypeBadge } from "@/components/badges/PetTypeBadge";
 import { StatusBadge } from "@/components/badges/StatusBadge";
 import ImageGallery from "@/components/form/ImageGalleryUpload";
 import AvatarUploader from "@/components/form/AvatarUpload";
-import { cn } from "@/lib/utils";
+import { cn } from "@/lib/utils/utils";
 import PinSelection from "@/components/PinSelection";
 import ChatList from "@/components/chat/ChatList";
 import ChatContainer from "@/components/chat/ChatContainer";

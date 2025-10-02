@@ -1,7 +1,7 @@
 import * as React from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { usePathname, useRouter } from "next/navigation";
+import { useRouter } from "next/router";     
 import { signOut } from "next-auth/react";
 
 type SidebarItem = {
@@ -18,6 +18,8 @@ export type AdminSidebarProps = {
   onLogout?: () => Promise<void> | void;
   logoSrc?: string;
   sticky?: boolean;
+  /** ปลายทางเมื่อคลิกโลโก้ (default: "/") */
+  landingHref?: string;
 };
 
 const CONFIG = {
@@ -28,19 +30,19 @@ const CONFIG = {
 } as const;
 
 const ADMIN_ITEMS: readonly SidebarItem[] = [
-  { id: "owner",   label: "Pet Owner", href: "/admin/owner",  iconSrc: "/icons/ic-user.svg" },
-  { id: "sitter", label: "Pet Sitter", href: "/admin/petsitter",  iconSrc: "/icons/ic-paw.svg" },
-  { id: "report", label: "Report",     href: "/admin/reports",    iconSrc: "/icons/ic-report.svg" },
+  { id: "owner",  label: "Pet Owner",  href: "/admin/owner",    iconSrc: "/icons/ic-user.svg" },
+  { id: "sitter", label: "Pet Sitter", href: "/admin/petsitter", iconSrc: "/icons/ic-paw.svg" },
+  { id: "report", label: "Report",     href: "/admin/reports",   iconSrc: "/icons/ic-report.svg" },
 ] as const;
 
 const LOGOUT = { id: "logout", label: "Log Out", iconSrc: "/icons/ic-logout.svg" } as const;
 
-/** ---------- helpers ---------- */
 const cn = (...c: (string | false | null | undefined)[]) => c.filter(Boolean).join(" ");
+
+
 const isActive = (pathname: string, href: string) =>
   pathname === href || (href !== "/" && pathname.startsWith(href));
 
-/** ---------- small atoms ---------- */
 const IconMask: React.FC<{ src: string; className?: string }> = React.memo(
   ({ src, className = "w-5 h-5" }) => (
     <span
@@ -68,28 +70,27 @@ const NotificationBadge: React.FC = React.memo(() => (
 ));
 NotificationBadge.displayName = "NotificationBadge";
 
-/** ---------- main ---------- */
 export default function AdminSidebar({
   className = "",
   onNavigate,
   onLogout,
   logoSrc = CONFIG.defaultLogoSrc,
   sticky = true,
+  landingHref = "/",      
 }: AdminSidebarProps) {
-  const pathname = usePathname() || "";
   const router = useRouter();
+  const pathname = router.asPath || "";      
+
   const [pending, setPending] = React.useState(false);
 
   const doDefaultLogout = React.useCallback(async () => {
     setPending(true);
     try {
       await signOut({ redirect: true, callbackUrl: "/" });
-    } catch {
-      router.push("/");
     } finally {
       setPending(false);
     }
-  }, [router]);
+  }, []);
 
   const handleLogout = React.useCallback(() => {
     if (onLogout) return void onLogout();
@@ -113,9 +114,13 @@ export default function AdminSidebar({
       )}
       style={{ width: CONFIG.width }}
     >
-      {/* header / logo */}
+
       <div className="px-5 pt-8 pb-6 border-b border-neutral-800">
-        <Link href="/admin" aria-label="Go to admin home" className="inline-flex items-center gap-2">
+        <Link
+          href={landingHref}
+          aria-label="Go to landing page"
+          className="inline-flex items-center gap-2"
+        >
           <Image
             src={logoSrc}
             alt="Sitter Admin"
@@ -126,10 +131,13 @@ export default function AdminSidebar({
           />
           <span className="sr-only">Admin Panel</span>
         </Link>
-        <div className="mt-2 italic font-medium leading-4 text-[16px] text-[#7B7E8F]">Admin Panel</div>
+
+        <div className="mt-2 italic font-medium leading-4 text-[16px] text-[#7B7E8F]">
+          Admin Panel
+        </div>
       </div>
 
-      {/* nav list */}
+
       <nav className="flex-1 overflow-y-auto px-2 py-4">
         <ul className="space-y-0.5">
           {ADMIN_ITEMS.map((item) => {
@@ -153,7 +161,7 @@ export default function AdminSidebar({
         </ul>
       </nav>
 
-      {/* logout */}
+
       <div className="mt-auto border-t border-neutral-800">
         <button
           className={cn(

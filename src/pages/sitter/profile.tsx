@@ -10,7 +10,7 @@ import InputText from "@/components/input/InputText";
 import InputTextArea from "@/components/input/InputTextArea";
 import ImageGallery from "@/components/form/ImageGalleryUpload";
 import PetTypeSelect, { PetType } from "@/components/fields/PetTypeSelect";
-import { numberToLabel } from "@/lib/experience";
+import { numberToLabel } from "@/lib/utils/experience";
 import {
   Select,
   SelectContent,

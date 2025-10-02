@@ -1,6 +1,6 @@
 import React from "react";
 import { Textarea } from "../ui/textarea";
-import { cn } from "@/lib/utils";
+import { cn } from "@/lib/utils/utils";
 
 interface InputTextAreaProps extends Omit<React.ComponentProps<typeof Textarea>, 'variant'> {
   label: string;
