@@ -44,6 +44,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         address_district: sitter.address_district,
         address_sub_district: sitter.address_sub_district,
         address_post_code: sitter.address_post_code,
+        latitude: sitter.latitude,
+        longitude: sitter.longitude,
         images: sitter.sitter_image.map((i) => i.image_url),
         petTypes: sitter.sitter_pet_type.map((sp) => ({
           id: sp.pet_type_id,
