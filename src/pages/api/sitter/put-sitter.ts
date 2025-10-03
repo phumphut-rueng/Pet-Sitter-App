@@ -1,4 +1,3 @@
-// src/pages/api/sitter/put-sitter.ts
 import type { NextApiRequest, NextApiResponse } from "next";
 import { getServerSession } from "next-auth";
 import { prisma } from "@/lib/prisma/prisma";
@@ -26,6 +25,8 @@ type Body = {
   address_post_code?: string;
   profileImageUrl?: string;
   images?: string[];
+  latitude?: number | null;
+  longitude?: number | null;
 };
 
 export default async function handler(
@@ -52,6 +53,8 @@ export default async function handler(
     const fullName = b.fullName?.trim();
     const tradeName = b.tradeName?.trim();
     const profileImageUrl = b.profileImageUrl?.trim();
+    const hasLatitude = b.latitude !== undefined;
+    const hasLongtitude = b.longitude !== undefined;
 
     const hasImages = Array.isArray(b.images);
     const gallery = hasImages
@@ -88,6 +91,21 @@ export default async function handler(
       if (dup) return res.status(409).json({ message: "Email already exists" });
     }
 
+    //ตรวจสอบความถูกต้องของ latitude/longitude
+    if (hasLatitude && b.latitude !== null) {
+      const v = Number(b.latitude);
+      if (Number.isNaN(v) || v < -90 || v > 90) {
+        return res.status(400).json({message: "Invalid latitude" })
+      }
+    }
+
+    if (hasLongtitude && b.longitude !== null) {
+      const v = Number(b.longitude);
+      if (Number.isNaN(v) || v < -180 || v > 180) {
+        return res.status(400).json({ message: "Invalid longitude" });
+      }
+    }
+
     const result = await prisma.$transaction(async (tx) => {
       await tx.user.update({
         where: { id: me.id },
@@ -118,6 +136,8 @@ export default async function handler(
         ...(b.address_district !== undefined ? { address_district: b.address_district ?? null } : {}),
         ...(b.address_sub_district !== undefined ? { address_sub_district: b.address_sub_district ?? null } : {}),
         ...(b.address_post_code !== undefined ? { address_post_code: b.address_post_code ?? null } : {}),
+        ...(hasLatitude ? { latitude: b.latitude ?? null } : {}),
+        ...(hasLongtitude ? { longitude: b.longitude ?? null } : {}),
         updated_at: new Date(),
       };
 
@@ -133,6 +153,8 @@ export default async function handler(
         ...(b.address_district !== undefined ? { address_district: b.address_district || null } : {}),
         ...(b.address_sub_district !== undefined ? { address_sub_district: b.address_sub_district || null } : {}),
         ...(b.address_post_code !== undefined ? { address_post_code: b.address_post_code || null } : {}),
+        ...(hasLatitude ? { latitude: b.latitude ?? null } : {}),
+        ...(hasLongtitude ? { longitude: b.longitude ?? null } : {}),
         updated_at: new Date(),
       };
 

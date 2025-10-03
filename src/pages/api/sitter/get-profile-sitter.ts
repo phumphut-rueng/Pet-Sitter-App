@@ -2,6 +2,7 @@ import type { NextApiRequest, NextApiResponse } from "next";
 import { getServerSession } from "next-auth";
 import { prisma } from "@/lib/prisma/prisma";
 import { authOptions } from "../auth/[...nextauth]";
+import { Prisma } from "@prisma/client";
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   try {
@@ -33,9 +34,14 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       include: {
         sitter_image: true,
         sitter_pet_type: { include: { pet_type: true } },
-        sitter_approval_status: true,
+        approval_status: true,
       },
-    });
+    }) as Prisma.sitterGetPayload<{
+      include: {
+        sitter_image: true;
+        sitter_pet_type: { include: { pet_type: true } };
+      };
+    }>;
 
     if (!sitter) {
       return res.status(200).json({ 
@@ -65,6 +71,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         address_sub_district: sitter.address_sub_district,
         address_post_code: sitter.address_post_code,
         admin_note: sitter.admin_note,
+        latitude: sitter.latitude,
+        longitude: sitter.longitude,
         images: sitter.sitter_image.map((i) => i.image_url),
         petTypes: sitter.sitter_pet_type.map((sp) => ({
           id: sp.pet_type_id,
