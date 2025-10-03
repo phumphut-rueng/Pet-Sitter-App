@@ -2,7 +2,7 @@ import { useRouter } from "next/router";
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { ChevronLeft } from "lucide-react";
+import { ChevronLeft, X } from "lucide-react";
 import { StatusBadge, StatusKey } from "@/components/badges/StatusBadge";
 import { PetTypeBadge, PetTypeKey } from "@/components/badges/PetTypeBadge";
 import { PetPawLoading } from "@/components/loading/PetPawLoading";
@@ -48,9 +48,11 @@ export default function PetSitterDetailPage() {
   const { id } = router.query;
   const [sitter, setSitter] = useState<SitterDetail | null>(null);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<"profile" | "booking" | "reviews">(
+  const [activeTab, setActiveTab] = useState<"profile" | "booking" | "reviews" | "history">(
     "profile"
   );
+  const [showRejectModal, setShowRejectModal] = useState(false);
+  const [rejectReason, setRejectReason] = useState("");
 
   useEffect(() => {
     if (id) {
@@ -161,14 +163,17 @@ export default function PetSitterDetailPage() {
                 </div>
               </div>
             </div>
-            <div className="flex items-center gap-3">
-              <button className="px-4 py-2 text-orange-500 bg-white border border-orange-200 rounded-lg hover:bg-orange-50 transition-colors">
-                Reject
-              </button>
-              <button className="px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-colors">
-                Approve
-              </button>
-            </div>
+             <div className="flex items-center gap-4">
+               <button 
+                 onClick={() => setShowRejectModal(true)}
+                 className="px-6 py-3 text-orange-500 bg-orange-50 border-0 rounded-full font-medium hover:bg-orange-100 hover:shadow-md hover:scale-105 transition-all duration-200 ease-in-out cursor-pointer"
+               >
+                 Reject
+               </button>
+               <button className="px-6 py-3 bg-orange-500 text-white border-0 rounded-full font-medium hover:bg-orange-600 hover:shadow-md hover:scale-105 transition-all duration-200 ease-in-out cursor-pointer">
+                 Approve
+               </button>
+             </div>
           </div>
         </div>
 
@@ -195,16 +200,26 @@ export default function PetSitterDetailPage() {
             >
               Booking
             </button>
-            <button
-              onClick={() => setActiveTab("reviews")}
-              className={`px-6 py-4 font-medium rounded-t-lg transition-colors cursor-pointer ${
-                activeTab === "reviews"
-                  ? "text-orange-500 bg-white"
-                  : "text-gray-400 bg-gray-200 hover:bg-gray-300"
-              }`}
-            >
-              Reviews
-            </button>
+             <button
+               onClick={() => setActiveTab("reviews")}
+               className={`px-6 py-4 font-medium rounded-t-lg transition-colors cursor-pointer ${
+                 activeTab === "reviews"
+                   ? "text-orange-500 bg-white"
+                   : "text-gray-400 bg-gray-200 hover:bg-gray-300"
+               }`}
+             >
+               Reviews
+             </button>
+             <button
+               onClick={() => setActiveTab("history")}
+               className={`px-6 py-4 font-medium rounded-t-lg transition-colors cursor-pointer ${
+                 activeTab === "history"
+                   ? "text-orange-500 bg-white"
+                   : "text-gray-400 bg-gray-200 hover:bg-gray-300"
+               }`}
+             >
+               History
+             </button>
           </div>
         </div>
 
@@ -468,18 +483,107 @@ export default function PetSitterDetailPage() {
             </div>
           )}
 
-          {activeTab === "reviews" && (
-            <div className="text-center py-12">
-              <h3 className="text-xl font-semibold text-gray-900 mb-2">
-                Reviews
-              </h3>
-              <p className="text-gray-600">
-                Customer reviews will be displayed here.
-              </p>
-            </div>
-          )}
-        </div>
-      </div>
-    </div>
-  );
-}
+           {activeTab === "reviews" && (
+             <div className="text-center py-12">
+               <h3 className="text-xl font-semibold text-gray-900 mb-2">
+                 Reviews
+               </h3>
+               <p className="text-gray-600">
+                 Customer reviews will be displayed here.
+               </p>
+             </div>
+           )}
+
+           {activeTab === "history" && (
+             <div className="text-center py-12">
+               <h3 className="text-xl font-semibold text-gray-900 mb-2">
+                 History
+               </h3>
+               <p className="text-gray-600">
+                 Approval and status change history will be displayed here.
+               </p>
+             </div>
+           )}
+         </div>
+       </div>
+
+       {/* Reject Confirmation Modal */}
+       {showRejectModal && (
+         <div 
+           className="fixed inset-0 flex items-center justify-center z-50"
+           style={{ backgroundColor: 'rgba(0, 0, 0, 0.4)' }}
+         >
+           <div className="bg-white rounded-lg shadow-xl w-full max-w-lg mx-4 opacity-100">
+             {/* Header */}
+             <div className="flex items-center justify-between p-6 border-b border-gray-200">
+               <h2 className="text-xl font-semibold text-gray-900">
+                 Reject Confirmation
+               </h2>
+               <button
+                 onClick={() => setShowRejectModal(false)}
+                 className="text-gray-400 hover:text-gray-600 transition-colors cursor-pointer"
+               >
+                 <X className="w-5 h-5" />
+               </button>
+             </div>
+
+             {/* Content */}
+             <div className="p-6">
+               <div className="space-y-4">
+                 <div className="flex items-center justify-between">
+                   <label className="block text-sm font-medium text-gray-700">
+                     Reason and suggestion
+                   </label>
+                 </div>
+                 <textarea
+                   value={rejectReason}
+                   onChange={(e) => {
+                     if (e.target.value.length <= 200) {
+                       setRejectReason(e.target.value);
+                     }
+                   }}
+                   placeholder="Admin's suggestion here"
+                   className="w-full h-32 px-3 py-2 border border-gray-300 rounded-md resize-none focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                 />
+               </div>
+               <div className="mt-3 flex justify-end">
+                 <div className={`inline-flex items-center gap-1 text-xs px-3 py-1.5 rounded-full shadow-sm border ${
+                   rejectReason.length >= 180 
+                     ? 'text-red-600 bg-red-50 border-red-200' 
+                     : rejectReason.length >= 100 
+                       ? 'text-yellow-600 bg-yellow-50 border-yellow-200' 
+                       : 'text-gray-500 bg-gray-50 border-gray-200'
+                 }`}>
+                   <span className="font-medium">{rejectReason.length}</span>
+                   <span className={rejectReason.length >= 180 ? 'text-red-400' : rejectReason.length >= 100 ? 'text-yellow-400' : 'text-gray-400'}>/</span>
+                   <span className="font-medium">200</span>
+                 </div>
+               </div>
+             </div>
+
+             {/* Footer */}
+             <div className="flex justify-end gap-3 p-6 border-t border-gray-200">
+               <button
+                 onClick={() => setShowRejectModal(false)}
+                 className="px-4 py-2 text-orange-500 bg-orange-50 rounded-full font-medium hover:bg-orange-100 transition-colors cursor-pointer"
+               >
+                 Cancel
+               </button>
+               <button
+                 onClick={() => {
+                   // Handle reject logic here
+                   console.log("Reject reason:", rejectReason);
+                   setShowRejectModal(false);
+                   setRejectReason("");
+                 }}
+                 className="px-4 py-2 bg-orange-500 text-white rounded-full font-medium hover:bg-orange-600 transition-colors cursor-pointer"
+               >
+                 Reject
+               </button>
+             </div>
+           </div>
+         </div>
+       )}
+     </div>
+   );
+ }
