@@ -135,6 +135,7 @@ export default function PetSitterProfilePage() {
   const { status, update } = useSession();
   const [initialGallery, setInitialGallery] = useState<string[]>([]);
   const [approvalStatus, setApprovalStatus] = useState<string>('');
+  const [sitterData, setSitterData] = useState<any>(null);
 
   type Province = {
     code: string;
@@ -230,6 +231,7 @@ export default function PetSitterProfilePage() {
         const data: GetSitterResponse = await res.json();
         setUserId(data.user.id);
         setApprovalStatus(data.user.sitter_approval_status?.status_name || 'Waiting for approve');
+        setSitterData(data.sitter);
 
         initialAddrRef.current = {
           province: data.sitter?.address_province || "",
@@ -543,6 +545,24 @@ export default function PetSitterProfilePage() {
               />
             )}
           </div>
+
+          {/* Rejected Status Banner */}
+          {approvalStatus === "Rejected" && sitterData?.admin_note && (
+            <div className="mt-4 p-4 bg-gray-200 border-l-4 border-red rounded-r-md">
+              <div className="flex items-start gap-3">
+                <div className="text-red flex-shrink-0 mt-0.5">
+                  <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                  </svg>
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm text-red font-medium break-words">
+                    <span className="font-medium">Your request has not been approved:</span> '{sitterData.admin_note}'
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
 
           {/* Basic Information */}
           <section className="bg-white rounded-xl pt-4 pb-7 px-12 mt-4">

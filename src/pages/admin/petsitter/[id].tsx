@@ -6,7 +6,9 @@ import { ChevronLeft, X } from "lucide-react";
 import { StatusBadge, StatusKey } from "@/components/badges/StatusBadge";
 import { PetTypeBadge, PetTypeKey } from "@/components/badges/PetTypeBadge";
 import { PetPawLoading } from "@/components/loading/PetPawLoading";
+import { PetPawLoadingSmall } from "@/components/loading/PetPawLoadingSmall";
 import axios from "axios";
+import toast, { Toaster } from "react-hot-toast";
 
 interface SitterDetail {
   id: number;
@@ -53,12 +55,20 @@ export default function PetSitterDetailPage() {
   );
   const [showRejectModal, setShowRejectModal] = useState(false);
   const [rejectReason, setRejectReason] = useState("");
+  const [historyData, setHistoryData] = useState([]);
+  const [loadingHistory, setLoadingHistory] = useState(false);
 
   useEffect(() => {
     if (id) {
       fetchSitterDetail();
     }
   }, [id]);
+
+  useEffect(() => {
+    if (activeTab === "history" && id) {
+      fetchHistory();
+    }
+  }, [activeTab, id]);
 
   const fetchSitterDetail = async () => {
     try {
@@ -69,6 +79,20 @@ export default function PetSitterDetailPage() {
       console.error("Error fetching sitter detail:", error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchHistory = async () => {
+    try {
+      setLoadingHistory(true);
+      const response = await axios.get(`/api/admin/history?sitterId=${id}`);
+      if (response.status === 200) {
+        setHistoryData(response.data.data);
+      }
+    } catch (error) {
+      console.error("Error fetching history:", error);
+    } finally {
+      setLoadingHistory(false);
     }
   };
 
@@ -143,9 +167,24 @@ export default function PetSitterDetailPage() {
 
   return (
     <div className="min-h-screen bg-gray-100">
+      {/* Toast Notifications */}
+      <Toaster 
+        position="top-right"
+        toastOptions={{
+          duration: 3000,
+          style: {
+            borderRadius: '12px',
+            padding: '12px 16px',
+            fontSize: '14px',
+            fontWeight: '500',
+            boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)'
+          }
+        }}
+      />
+      
       <div className="container mx-auto p-6">
         {/* Header Section */}
-        <div className="p-6 mb-6">
+        <div className="p-6">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
               <Link
@@ -164,18 +203,82 @@ export default function PetSitterDetailPage() {
               </div>
             </div>
              <div className="flex items-center gap-4">
-               <button 
-                 onClick={() => setShowRejectModal(true)}
-                 className="px-6 py-3 text-orange-500 bg-orange-50 border-0 rounded-full font-medium hover:bg-orange-100 hover:shadow-md hover:scale-105 transition-all duration-200 ease-in-out cursor-pointer"
-               >
-                 Reject
-               </button>
-               <button className="px-6 py-3 bg-orange-500 text-white border-0 rounded-full font-medium hover:bg-orange-600 hover:shadow-md hover:scale-105 transition-all duration-200 ease-in-out cursor-pointer">
-                 Approve
-               </button>
+               {sitter.approval_status === "Approved" ? (
+                 <button 
+                   onClick={() => setShowRejectModal(true)}
+                   className="px-6 py-3 text-orange-500 bg-orange-50 border-0 rounded-full font-medium hover:bg-orange-100 hover:shadow-md hover:scale-105 transition-all duration-200 ease-in-out cursor-pointer"
+                 >
+                   Reject
+                 </button>
+               ) : (
+                 <>
+                   <button 
+                     onClick={() => setShowRejectModal(true)}
+                     className="px-6 py-3 text-orange-500 bg-orange-50 border-0 rounded-full font-medium hover:bg-orange-100 hover:shadow-md hover:scale-105 transition-all duration-200 ease-in-out cursor-pointer"
+                   >
+                     Reject
+                   </button>
+                   <button 
+                     onClick={async () => {
+                       try {
+                         const response = await axios.put("/api/admin/approve", {
+                           sitterId: sitter.id
+                         });
+
+                         if (response.status === 200) {
+                           toast.success("Pet Sitter approved successfully", {
+                             duration: 2000,
+                             style: {
+                               background: '#10B981',
+                               color: '#fff',
+                               fontWeight: '500'
+                             }
+                           });
+                           
+                           // Refresh after 2 seconds
+                           setTimeout(() => {
+                             window.location.reload();
+                           }, 2000);
+                         }
+                       } catch (error) {
+                         console.error("Error approving sitter:", error);
+                         toast.error("Failed to approve pet sitter. Please try again.", {
+                           duration: 3000,
+                           style: {
+                             background: '#EF4444',
+                             color: '#fff',
+                             fontWeight: '500'
+                           }
+                         });
+                       }
+                     }}
+                     className="px-6 py-3 bg-orange-500 text-white border-0 rounded-full font-medium hover:bg-orange-600 hover:shadow-md hover:scale-105 transition-all duration-200 ease-in-out cursor-pointer"
+                   >
+                     Approve
+                   </button>
+                 </>
+               )}
              </div>
           </div>
         </div>
+
+         {/* Rejected Status Banner */}
+         {sitter.approval_status === "Rejected" && sitter.admin_note && (
+             <div className="mb-6 p-4 bg-gray-200 border-l-4 border-red rounded-r-md">
+               <div className="flex items-start gap-3">
+                 <div className="text-red flex-shrink-0 mt-0.5">
+                   <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                     <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                   </svg>
+                 </div>
+                 <div className="flex-1 min-w-0">
+                   <p className="text-sm text-red font-medium break-words">
+                     <span className="font-medium">Their request has not been approved:</span> '{sitter.admin_note}'
+                   </p>
+                 </div>
+               </div>
+             </div>
+           )}
 
         {/* Tab Navigation */}
         <div>
@@ -225,6 +328,7 @@ export default function PetSitterDetailPage() {
 
         {/* Main Content */}
         <div className="bg-white rounded-tr-xl rounded-br-xl rounded-bl-xl p-8">
+
           {activeTab === "profile" && (
             <div className="flex flex-col gap-6">
               <div className="flex gap-10">
@@ -495,13 +599,81 @@ export default function PetSitterDetailPage() {
            )}
 
            {activeTab === "history" && (
-             <div className="text-center py-12">
-               <h3 className="text-xl font-semibold text-gray-900 mb-2">
-                 History
+             <div className="space-y-6">
+               <h3 className="text-xl font-semibold text-gray-900 mb-4">
+                 Approval History
                </h3>
-               <p className="text-gray-600">
-                 Approval and status change history will be displayed here.
-               </p>
+               
+               {loadingHistory ? (
+                 <div className="flex justify-center py-8">
+                   <PetPawLoadingSmall message="Loading History" />
+                 </div>
+               ) : historyData.length > 0 ? (
+                 <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+                   <div className="overflow-x-auto">
+                     <table className="min-w-full divide-y divide-gray-200">
+                       <thead className="bg-gray-50">
+                         <tr>
+                           <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                             Status
+                           </th>
+                           <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                             Approved By
+                           </th>
+                           <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                             Note
+                           </th>
+                           <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                             Date
+                           </th>
+                         </tr>
+                       </thead>
+                       <tbody className="bg-white divide-y divide-gray-200">
+                         {historyData.map((record: any, index: number) => (
+                           <tr key={record.id} className={index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
+                             <td className="px-6 py-4 whitespace-nowrap">
+                               <StatusBadge status={getStatusKey(record.statusName)} />
+                             </td>
+                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                               {record.adminName || 'System'}
+                             </td>
+                             <td className="px-6 py-4 text-sm text-gray-900">
+                               <div className="max-w-md">
+                                 <p className="text-sm text-gray-600 break-words">
+                                   {record.adminNote || 'No note provided'}
+                                 </p>
+                               </div>
+                             </td>
+                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                               {new Date(record.changedAt).toLocaleDateString('en-US', {
+                                 year: 'numeric',
+                                 month: 'short',
+                                 day: 'numeric',
+                                 hour: '2-digit',
+                                 minute: '2-digit'
+                               })}
+                             </td>
+                           </tr>
+                         ))}
+                       </tbody>
+                     </table>
+                   </div>
+                 </div>
+               ) : (
+                 <div className="text-center py-12">
+                   <div className="text-gray-400 mb-4">
+                     <svg className="mx-auto h-12 w-12" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                     </svg>
+                   </div>
+                   <h3 className="text-lg font-medium text-gray-900 mb-2">
+                     No History Found
+                   </h3>
+                   <p className="text-gray-600">
+                     No approval history available for this pet sitter.
+                   </p>
+                 </div>
+               )}
              </div>
            )}
          </div>
@@ -570,12 +742,49 @@ export default function PetSitterDetailPage() {
                  Cancel
                </button>
                <button
-                 onClick={() => {
-                   // Handle reject logic here
-                   console.log("Reject reason:", rejectReason);
-                   setShowRejectModal(false);
-                   setRejectReason("");
-                 }}
+              onClick={async () => {
+                try {
+                  if (!rejectReason.trim()) {
+                    toast.error("Please provide a reason for rejection");
+                    return;
+                  }
+
+                  const response = await axios.put("/api/admin/reject", {
+                    sitterId: sitter.id,
+                    adminNote: rejectReason
+                  });
+
+                  if (response.status === 200) {
+                    toast.success("Pet Sitter rejected successfully", {
+                      duration: 2000,
+                      style: {
+                        background: '#10B981',
+                        color: '#fff',
+                        fontWeight: '500'
+                      }
+                    });
+                    
+                    // Close modal first
+                    setShowRejectModal(false);
+                    setRejectReason("");
+                    
+                    // Refresh after 2 seconds
+                    setTimeout(() => {
+                      window.location.reload();
+                    }, 2000);
+                  }
+                } catch (error) {
+                  console.error("Error rejecting sitter:", error);
+                  toast.error("Failed to reject pet sitter. Please try again.", {
+                    duration: 3000,
+                    style: {
+                      background: '#EF4444',
+                      color: '#fff',
+                      fontWeight: '500'
+                    }
+                  });
+                }
+              }}
                  className="px-4 py-2 bg-orange-500 text-white rounded-full font-medium hover:bg-orange-600 transition-colors cursor-pointer"
                >
                  Reject
