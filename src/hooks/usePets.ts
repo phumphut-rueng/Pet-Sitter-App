@@ -1,6 +1,6 @@
 import { useCallback } from "react";
-import type { Pet, PetType } from "@/lib/pet-utils";
-import { petService } from "@/lib/pet-utils";
+import type { Pet, PetType } from "@/lib/pet/pet-utils";
+import { petService } from "@/lib/pet/pet-utils";
 
 export function usePetsApi() {
   const listPets = useCallback(async (): Promise<Pet[]> => {

@@ -12,7 +12,7 @@ import {
   getErrorMessage,
   formValuesToPayload,
   petService,
-} from "@/lib/pet-utils";
+} from "@/lib/pet/pet-utils";
 
 export default function CreatePetPage() {
   const router = useRouter();

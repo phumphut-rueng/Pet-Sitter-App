@@ -6,7 +6,7 @@ import PageToaster from "@/components/ui/PageToaster";
 import PetCard from "@/components/cards/PetCard";
 import CreateNewPetCard from "@/components/cards/CreateNewPetCard";
 import { usePetsApi } from "@/hooks/usePets";
-import { Pet, ROUTES, getErrorMessage, validateImageUrl } from "@/lib/pet-utils";
+import { Pet, ROUTES, getErrorMessage, validateImageUrl } from "@/lib/pet/pet-utils";
 
 export default function PetListPage() {
   const router = useRouter();

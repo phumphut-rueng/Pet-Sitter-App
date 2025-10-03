@@ -5,7 +5,7 @@ import toast from "react-hot-toast";
 import { getServerSession } from "next-auth/next";
 
 import AccountPageShell from "@/components/layout/AccountPageShell";
-import ProfileForm from "@/components/features/account/ProfileForm";
+import ProfileForm from "@/components/features/account/profile/components/ProfileForm";
 import PageToaster from "@/components/ui/PageToaster";
 import { useOwnerProfileForm } from "@/hooks/useOwnerProfileForm";
 import { authOptions } from "@/pages/api/auth/[...nextauth]";

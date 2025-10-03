@@ -1,9 +1,9 @@
 // src/pages/api/sitter/put-sitter.ts
 import type { NextApiRequest, NextApiResponse } from "next";
 import { getServerSession } from "next-auth";
-import { prisma } from "@/lib/prisma";
+import { prisma } from "@/lib/prisma/prisma";
 import { authOptions } from "../auth/[...nextauth]";
-import { labelToNumber } from "@/lib/experience";
+import { labelToNumber } from "@/lib/utils/experience";
 import type { Prisma } from "@prisma/client";
 
 const phoneRe = /^0\d{9}$/;

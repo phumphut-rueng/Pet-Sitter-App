@@ -12,7 +12,7 @@ import { PetTypeBadge } from "@/components/badges/PetTypeBadge";
 import { StatusBadge } from "@/components/badges/StatusBadge";
 import ImageGallery from "@/components/form/ImageGalleryUpload";
 import AvatarUploader from "@/components/form/AvatarUpload";
-import { cn } from "@/lib/utils";
+import { cn } from "@/lib/utils/utils";
 import PinSelection from "@/components/PinSelection";
 import ChatList from "@/components/chat/ChatList";
 import ChatContainer from "@/components/chat/ChatContainer";
@@ -27,6 +27,8 @@ import AccountSidebarMini from "@/components/layout/AccountSidebarMini";
 import BookingSelect from "@/components/modal/BookingSelect";
 import DatePicker from "@/components/date-picker/DatePicker";
 import TimePicker from "@/components/time-picker/TimePicker";
+import AdminSidebar from "@/components/layout/AdminSidebar";
+import SitterSidebar from "@/components/layout/SitterSidebar";
 // Section Wrapper
 const Section = ({ title, cols = 1, children }: {
   title: string;
@@ -446,6 +448,8 @@ export default function ComponentAll() {
             {/* : <SidebarDemo /> */}
             <SidebarDemo />
             <AccountSidebarMini />
+            <AdminSidebar sticky={false} />
+            <SitterSidebar sticky={false} />
 
             {/* ===================== PET CARDS ===================== */}
             {/* 

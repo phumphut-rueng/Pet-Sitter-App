@@ -1,13 +1,14 @@
 import NextAuth, { type NextAuthOptions, type User } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
 import bcrypt from "bcryptjs";
-import { prisma } from "@/lib/prisma";
 import type { JWT } from "next-auth/jwt";
+import { prisma } from "@/lib/prisma/prisma";
 
 type UserWithRoles = User & { roles?: string[] };
 
 export const authOptions: NextAuthOptions = {
   secret: process.env.NEXTAUTH_SECRET,
+
   providers: [
     CredentialsProvider({
       name: "credentials",
@@ -18,18 +19,13 @@ export const authOptions: NextAuthOptions = {
       async authorize(
         credentials: Record<"email" | "password", string> | undefined
       ) {
-        if (!credentials?.email || !credentials?.password) {
-          return null;
-        }
+        if (!credentials?.email || !credentials?.password) return null;
 
         try {
           const user = await prisma.user.findUnique({
             where: { email: credentials.email },
-            include: {
-              user_role: { include: { role: true } },
-            },
+            include: { user_role: { include: { role: true } } },
           });
-
           if (!user) return null;
 
           const isValid = await bcrypt.compare(credentials.password, user.password);
@@ -46,7 +42,6 @@ export const authOptions: NextAuthOptions = {
             image: user.profile_image || undefined,
             roles,
           };
-
           return result;
         } catch {
           return null;
@@ -61,6 +56,7 @@ export const authOptions: NextAuthOptions = {
   },
 
   callbacks: {
+    // เก็บ roles ลง JWT ตอน sign-in และ sync ตอน session.update()
     async jwt({
       token,
       user,
@@ -70,13 +66,9 @@ export const authOptions: NextAuthOptions = {
       user?: User | undefined;
       trigger?: "signIn" | "update" | "signUp" | undefined;
     }): Promise<JWT> {
-      // หลัง sign-in: ดึง roles จาก user → token
       const u = user as UserWithRoles | undefined;
-      if (u?.roles) {
-        token.roles = u.roles;
-      }
+      if (u?.roles) token.roles = u.roles;
 
-      // รองรับ session.update()
       if (trigger === "update" && token.sub) {
         try {
           const userId = parseInt(token.sub);
@@ -84,9 +76,7 @@ export const authOptions: NextAuthOptions = {
 
           const updatedUser = await prisma.user.findUnique({
             where: { id: userId },
-            include: {
-              user_role: { include: { role: true } },
-            },
+            include: { user_role: { include: { role: true } } },
           });
 
           if (updatedUser) {
@@ -121,12 +111,24 @@ export const authOptions: NextAuthOptions = {
       }
       return session;
     },
+
+    // ✅ default redirect หลังล็อกอิน (เมื่อไม่มี callbackUrl)
+    async redirect({ url, baseUrl }) {
+      // มี callbackUrl แบบ internal → ตามนั้นก่อน
+      if (url.startsWith("/")) return `${baseUrl}${url}`;
+      // อยู่โดเมนเดียวกัน → ตามนั้น
+      try {
+        if (new URL(url).origin === baseUrl) return url;
+      } catch { /* ignore */ }
+      // ไม่มี callbackUrl → ไป /admin
+      return `${baseUrl}/admin`;
+    },
   },
 
   pages: {
     signIn: "/auth/login",
-    signOut: "/",        // ออกจากระบบ  หน้าแรก
-    error: "/auth/login" // error  กลับหน้า login
+    signOut: "/",
+    error: "/auth/login",
   },
 
   debug: process.env.NODE_ENV === "development",
