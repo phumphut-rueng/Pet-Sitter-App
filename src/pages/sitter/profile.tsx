@@ -55,6 +55,7 @@ type GetSitterResponse = {
 const phonePattern = /^0\d{9}$/;
 const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
+//ตรวจสอบเบอร์โทรซ้ำ
 async function checkPhoneDuplicate(
   phone: string,
   excludeUserId?: number
@@ -75,6 +76,7 @@ async function checkPhoneDuplicate(
   }
 }
 
+//ตรวจสอบอีเมลซ้ำ
 async function checkEmailDuplicate(
   email: string,
   excludeUserId?: number
@@ -98,7 +100,7 @@ async function checkEmailDuplicate(
 export default function PetSitterProfilePage() {
   const [userId, setUserId] = useState<number | null>(null);
   const { status, update } = useSession();
-  const [initialGallery, setInitialGallery] = useState<string[]>([]);
+  const [initialGallery, setInitialGallery] = useState<string[]>([]); //รูปที่โหลดมาจาก database
 
   const {
     register,
@@ -179,8 +181,8 @@ export default function PetSitterProfilePage() {
   const onSubmit = handleSubmit(async (values) => {
     await toast.promise(
       (async () => {
+        //อัปโหลดรูปหม่ไป cloudinary
         const uploadedUrls: string[] = [];
-
         if (values.newImageFiles && values.newImageFiles.length > 0) {
           for (const file of values.newImageFiles) {
             const url = await uploadToCloudinary(file);
@@ -188,6 +190,7 @@ export default function PetSitterProfilePage() {
           }
         }
 
+        //รวมรูปเก่ากับรูปใหม่
         const allImageUrls = [...values.images, ...uploadedUrls];
 
         const payload = {
@@ -207,8 +210,9 @@ export default function PetSitterProfilePage() {
           const data = await res.json().catch(() => ({}));
           throw new Error(data?.message || "Failed to update sitter");
         }
-        await update();
 
+        //โหลดภาพล่าสุดมาแสดง
+        await update();
         const res2 = await fetch("/api/sitter/get-profile-sitter");
         if (res2.ok) {
           const data = await res2.json();

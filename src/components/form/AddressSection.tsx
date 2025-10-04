@@ -61,11 +61,6 @@ export default function AddressSection({
   const [districtOpts, setDistrictOpts] = useState<District[]>([]);
   const [subdistrictOpts, setSubdistrictOpts] = useState<Subdistrict[]>([]);
   const [latLng, setLatLng] = useState({ lat: 13.736717, lng: 100.523186 }); // BKK default
-  const initialAddrRef = useRef<{
-    province?: string;
-    district?: string;
-    subdistrict?: string;
-  }>({});
 
   const watchProvince = watch("address_province");
   const watchDistrict = watch("address_district");
@@ -168,7 +163,7 @@ export default function AddressSection({
         </div>
 
         {/* Province */}
-        <div className="flex flex-col gap-1">
+        <div className="flex flex-col gap-1 relative z-0">
           <label className="font-medium text-black">Province*</label>
           <Controller
             name="address_province"
@@ -188,7 +183,8 @@ export default function AddressSection({
                 >
                   <SelectValue placeholder="Select province" />
                 </SelectTrigger>
-                <SelectContent className="bg-white border border-gray-2 max-h-72 overflow-auto">
+                <SelectContent 
+                className="bg-white border border-gray-2 max-h-72 overflow-auto">
                   {provinceOpts.map((p) => (
                     <SelectItem key={p.code} value={p.name}>
                       {p.name}
@@ -206,7 +202,7 @@ export default function AddressSection({
         </div>
 
         {/* District */}
-        <div className="flex flex-col gap-1">
+        <div className="flex flex-col gap-1 relative z-0">
           <label className="font-medium text-black">District*</label>
           <Controller
             name="address_district"
@@ -244,7 +240,7 @@ export default function AddressSection({
         </div>
 
         {/* Sub-district */}
-        <div className="flex flex-col gap-1">
+        <div className="flex flex-col gap-1 relative z-0">
           <label className="font-medium text-black">Sub-district*</label>
           <Controller
             name="address_sub_district"
@@ -304,7 +300,7 @@ export default function AddressSection({
 
         {/* Map */}
         <div className="md:col-span-2 z-0">
-          <LeafletMap lat={latLng.lat} lng={latLng.lng} />
+          <LeafletMap latitude={latLng.lat} longitude={latLng.lng} />
         </div>
       </div>
     </section>

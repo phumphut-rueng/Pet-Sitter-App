@@ -5,15 +5,17 @@ import { renderToStaticMarkup } from 'react-dom/server';
 import PinSelection from '@/components/PinSelection';
 
 export function makePinIcon(isSelected: boolean) {
+  //แปลง jsx -> HTML string
   const html = renderToStaticMarkup(
     <PinSelection defaultSelected={isSelected} className="pointer-events-none" />
   );
 
+  //สร้าง leaflet marker
   return L.divIcon({
     html,
     className: 'custom-pin', 
-    iconSize: [72, 84],        // ขนาดจาก SVG ของคุณ
-    iconAnchor: [36, 84],      // กลางล่าง = [width/2, height]
+    iconSize: [72, 84],        
+    iconAnchor: [36, 84],      
     popupAnchor: [0, -84],
   });
 }
