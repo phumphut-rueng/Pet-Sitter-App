@@ -63,7 +63,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     // แปลงข้อมูลเป็น suggestions
     const formattedSuggestions = suggestions.map((sitter) => {
       // ตรวจสอบว่า searchTerm อยู่ใน field ไหน
-      if (sitter.name.toLowerCase().includes(searchTerm)) {
+      if (sitter.name && sitter.name.toLowerCase().includes(searchTerm)) {
         return sitter.name;
       }
       if (sitter.user?.name && sitter.user.name.toLowerCase().includes(searchTerm)) {
