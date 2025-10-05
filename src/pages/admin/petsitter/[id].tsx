@@ -130,14 +130,14 @@ export default function PetSitterDetailPage() {
 
   if (!sitter) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-muted flex items-center justify-center">
         <div className="text-center">
-          <h1 className="text-2xl font-bold text-gray-900 mb-4">
+          <h1 className="text-2xl font-bold text-ink mb-4">
             Pet Sitter Not Found
           </h1>
           <Link
             href="/admin/petsitter"
-            className="inline-flex items-center gap-2 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
+            className="inline-flex items-center gap-2 px-4 py-2 bg-brand text-brand-text rounded-lg hover:bg-brand-dark transition-colors"
           >
             <ChevronLeft className="w-4 h-4" />
             Back to Pet Sitters
@@ -166,7 +166,7 @@ export default function PetSitterDetailPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-100">
+    <div className="min-h-screen bg-muted">
       {/* Toast Notifications */}
       <Toaster 
         position="top-right"
@@ -189,12 +189,12 @@ export default function PetSitterDetailPage() {
             <div className="flex items-center gap-4">
               <Link
                 href="/admin/petsitter"
-                className="inline-flex items-center gap-2 text-gray-600 hover:text-gray-800 group"
+                className="inline-flex items-center gap-2 text-muted-text hover:text-ink group"
               >
                 <ChevronLeft className="w-5 h-5 transition-transform duration-200 group-hover:-translate-x-1" />
               </Link>
               <div className="flex gap-6">
-                <h1 className="text-2xl font-bold text-gray-900">
+                <h1 className="text-2xl font-bold text-ink">
                   {sitter.user_name}
                 </h1>
                 <div className="flex items-center gap-2 mt-1">
@@ -206,7 +206,7 @@ export default function PetSitterDetailPage() {
                {sitter.approval_status === "Approved" ? (
                  <button 
                    onClick={() => setShowRejectModal(true)}
-                   className="px-6 py-3 text-orange-500 bg-orange-50 border-0 rounded-full font-medium hover:bg-orange-100 hover:shadow-md hover:scale-105 transition-all duration-200 ease-in-out cursor-pointer"
+                   className="px-6 py-3 text-brand bg-brand-bg border-0 rounded-full font-medium hover:bg-orange-2 hover:shadow-md hover:scale-105 transition-all duration-200 ease-in-out cursor-pointer"
                  >
                    Reject
                  </button>
@@ -214,7 +214,7 @@ export default function PetSitterDetailPage() {
                  <>
                    <button 
                      onClick={() => setShowRejectModal(true)}
-                     className="px-6 py-3 text-orange-500 bg-orange-50 border-0 rounded-full font-medium hover:bg-orange-100 hover:shadow-md hover:scale-105 transition-all duration-200 ease-in-out cursor-pointer"
+                     className="px-6 py-3 text-brand bg-brand-bg border-0 rounded-full font-medium hover:bg-orange-2 hover:shadow-md hover:scale-105 transition-all duration-200 ease-in-out cursor-pointer"
                    >
                      Reject
                    </button>
@@ -252,7 +252,7 @@ export default function PetSitterDetailPage() {
                          });
                        }
                      }}
-                     className="px-6 py-3 bg-orange-500 text-white border-0 rounded-full font-medium hover:bg-orange-600 hover:shadow-md hover:scale-105 transition-all duration-200 ease-in-out cursor-pointer"
+                     className="px-6 py-3 bg-brand text-brand-text border-0 rounded-full font-medium hover:bg-brand-dark hover:shadow-md hover:scale-105 transition-all duration-200 ease-in-out cursor-pointer"
                    >
                      Approve
                    </button>
@@ -264,7 +264,7 @@ export default function PetSitterDetailPage() {
 
          {/* Rejected Status Banner */}
          {sitter.approval_status === "Rejected" && sitter.admin_note && (
-             <div className="mb-6 p-4 bg-gray-200 border-l-4 border-red rounded-r-md">
+             <div className="mb-6 p-4 bg-muted border-l-4 border-red rounded-r-md">
                <div className="flex items-start gap-3">
                  <div className="text-red flex-shrink-0 mt-0.5">
                    <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
@@ -287,8 +287,8 @@ export default function PetSitterDetailPage() {
               onClick={() => setActiveTab("profile")}
               className={`px-6 py-4 font-medium rounded-t-lg transition-colors cursor-pointer ${
                 activeTab === "profile"
-                  ? "text-orange-500 bg-white"
-                  : "text-gray-400 bg-gray-200 hover:bg-gray-300"
+                  ? "text-brand bg-white"
+                  : "text-muted-text bg-muted hover:bg-gray-2"
               }`}
             >
               Profile
@@ -297,8 +297,8 @@ export default function PetSitterDetailPage() {
               onClick={() => setActiveTab("booking")}
               className={`px-6 py-4 font-medium rounded-t-lg transition-colors cursor-pointer ${
                 activeTab === "booking"
-                  ? "text-orange-500 bg-white"
-                  : "text-gray-400 bg-gray-200 hover:bg-gray-300"
+                  ? "text-brand bg-white"
+                  : "text-muted-text bg-muted hover:bg-gray-2"
               }`}
             >
               Booking
@@ -307,8 +307,8 @@ export default function PetSitterDetailPage() {
                onClick={() => setActiveTab("reviews")}
                className={`px-6 py-4 font-medium rounded-t-lg transition-colors cursor-pointer ${
                  activeTab === "reviews"
-                   ? "text-orange-500 bg-white"
-                   : "text-gray-400 bg-gray-200 hover:bg-gray-300"
+                   ? "text-brand bg-white"
+                   : "text-muted-text bg-muted hover:bg-gray-2"
                }`}
              >
                Reviews
@@ -317,8 +317,8 @@ export default function PetSitterDetailPage() {
                onClick={() => setActiveTab("history")}
                className={`px-6 py-4 font-medium rounded-t-lg transition-colors cursor-pointer ${
                  activeTab === "history"
-                   ? "text-orange-500 bg-white"
-                   : "text-gray-400 bg-gray-200 hover:bg-gray-300"
+                   ? "text-brand bg-white"
+                   : "text-muted-text bg-muted hover:bg-gray-2"
                }`}
              >
                History
@@ -334,7 +334,7 @@ export default function PetSitterDetailPage() {
               <div className="flex gap-10">
                 {/* Left Column - Profile Image */}
                 <div className="w-64 flex-shrink-0">
-                  <div className="w-64 h-64 rounded-full overflow-hidden bg-gray-200">
+                  <div className="w-64 h-64 rounded-full overflow-hidden bg-muted">
                     {sitter.user_profile_image ? (
                       <img
                         src={sitter.user_profile_image}
@@ -342,8 +342,8 @@ export default function PetSitterDetailPage() {
                         className="w-full h-full object-cover"
                       />
                     ) : (
-                      <div className="w-full h-full flex items-center justify-center bg-gray-200">
-                        <span className="text-4xl font-bold text-gray-500">
+                      <div className="w-full h-full flex items-center justify-center bg-muted">
+                        <span className="text-4xl font-bold text-muted-text">
                           {sitter.user_name.charAt(0).toUpperCase()}
                         </span>
                       </div>
@@ -352,10 +352,10 @@ export default function PetSitterDetailPage() {
                 </div>
 
                 {/* Right Column - Details */}
-                <div className="flex-1 rounded-md bg-[#FAFAFB]">
+                <div className="flex-1 rounded-md bg-muted">
                   <div className="space-y-10 py-5 px-8">
                     <div>
-                      <label className="h4 font-medium text-gray-400">
+                      <label className="h4 font-medium text-muted-text">
                         Full Name
                       </label>
                       <p className="text-xl font-medium mt-1">
@@ -364,7 +364,7 @@ export default function PetSitterDetailPage() {
                     </div>
 
                     <div>
-                      <label className="h4 font-medium text-gray-400">
+                      <label className="h4 font-medium text-muted-text">
                         Experience
                       </label>
                       <p className="text-xl font-medium mt-1">
@@ -373,7 +373,7 @@ export default function PetSitterDetailPage() {
                     </div>
 
                     <div>
-                      <label className="h4 font-medium text-gray-400">
+                      <label className="h4 font-medium text-muted-text">
                         Phone
                       </label>
                       {sitter.phone ? (
@@ -381,14 +381,14 @@ export default function PetSitterDetailPage() {
                           {sitter.phone}
                         </p>
                       ) : (
-                        <div className="text-center py-8 text-gray-500">
+                        <div className="text-center py-8 text-muted-text">
                           No phone provided
                         </div>
                       )}
                     </div>
 
                     <div>
-                      <label className="h4 font-medium text-gray-400">
+                      <label className="h4 font-medium text-muted-text">
                         Date of Birth
                       </label>
                       {formatDateOfBirth(sitter.user_dob) ? (
@@ -396,14 +396,14 @@ export default function PetSitterDetailPage() {
                           {formatDateOfBirth(sitter.user_dob)}
                         </p>
                       ) : (
-                        <div className="text-center py-8 text-gray-500">
+                        <div className="text-center py-8 text-muted-text">
                           No date of birth provided
                         </div>
                       )}
                     </div>
 
                     <div>
-                      <label className="h4 font-medium text-gray-400">
+                      <label className="h4 font-medium text-muted-text">
                         Introduction
                       </label>
                       {sitter.introduction ? (
@@ -411,7 +411,7 @@ export default function PetSitterDetailPage() {
                           {sitter.introduction}
                         </p>
                       ) : (
-                        <div className="text-center py-8 text-gray-500">
+                        <div className="text-center py-8 text-muted-text">
                           No introduction provided
                         </div>
                       )}
@@ -420,18 +420,18 @@ export default function PetSitterDetailPage() {
                 </div>
               </div>
 
-              <div className="space-y-10 py-9 px-8 rounded-md bg-[#FAFAFB]">
+              <div className="space-y-10 py-9 px-8 rounded-md bg-muted">
                 {/* Pet Sitter Name */}
                 <div className="space-y-2">
-                  <h3 className="text-lg font-medium text-gray-500">
+                  <h3 className="text-lg font-medium text-muted-text">
                     Pet sitter name (Trade Name)
                   </h3>
                   {sitter.name ? (
-                    <p className="text-xl font-bold text-gray-900">
+                    <p className="text-xl font-bold text-ink">
                       {sitter.name}
                     </p>
                   ) : (
-                    <div className="text-center py-8 text-gray-500">
+                    <div className="text-center py-8 text-muted-text">
                       No trade name available
                     </div>
                   )}
@@ -439,7 +439,7 @@ export default function PetSitterDetailPage() {
 
                 {/* Pet Type */}
                 <div className="space-y-3">
-                  <h3 className="text-lg font-medium text-gray-500">
+                  <h3 className="text-lg font-medium text-muted-text">
                     Pet type
                   </h3>
                   {sitter.sitter_pet_type &&
@@ -455,7 +455,7 @@ export default function PetSitterDetailPage() {
                       ))}
                     </div>
                   ) : (
-                    <div className="text-center py-8 text-gray-500">
+                    <div className="text-center py-8 text-muted-text">
                       No pet types available
                     </div>
                   )}
@@ -463,15 +463,15 @@ export default function PetSitterDetailPage() {
 
                 {/* Services */}
                 <div className="space-y-4">
-                  <h3 className="text-lg font-medium text-gray-500">
+                  <h3 className="text-lg font-medium text-muted-text">
                     Services
                   </h3>
                   {sitter.service_description ? (
-                    <div className="text-gray-700 leading-relaxed whitespace-pre-line">
+                    <div className="text-gray-7 leading-relaxed whitespace-pre-line">
                       {sitter.service_description}
                     </div>
                   ) : (
-                    <div className="text-center py-8 text-gray-500">
+                    <div className="text-center py-8 text-muted-text">
                       No services available
                     </div>
                   )}
@@ -479,15 +479,15 @@ export default function PetSitterDetailPage() {
 
                 {/* My Place */}
                 <div className="space-y-3">
-                  <h3 className="text-lg font-medium text-gray-500">
+                  <h3 className="text-lg font-medium text-muted-text">
                     My Place
                   </h3>
                   {sitter.location_description ? (
-                    <p className="text-gray-700 leading-relaxed">
+                    <p className="text-gray-7 leading-relaxed">
                       {sitter.location_description}
                     </p>
                   ) : (
-                    <div className="text-center py-8 text-gray-500">
+                    <div className="text-center py-8 text-muted-text">
                       No place description provided
                     </div>
                   )}
@@ -495,7 +495,7 @@ export default function PetSitterDetailPage() {
 
                 {/* Image Gallery */}
                 <div className="space-y-4">
-                  <h3 className="text-lg font-medium text-gray-500">
+                  <h3 className="text-lg font-medium text-muted-text">
                     Image Gallery
                   </h3>
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -503,7 +503,7 @@ export default function PetSitterDetailPage() {
                       sitter.sitter_image.map((image, index) => (
                         <div
                           key={index}
-                          className="relative w-full h-64 rounded-lg overflow-hidden bg-gray-200"
+                          className="relative w-full h-64 rounded-lg overflow-hidden bg-muted"
                         >
                           <Image
                             src={image.image_url}
@@ -519,7 +519,7 @@ export default function PetSitterDetailPage() {
                         </div>
                       ))
                     ) : (
-                      <div className="col-span-3 text-center py-8 text-gray-500">
+                      <div className="col-span-3 text-center py-8 text-muted-text">
                         No images available
                       </div>
                     )}
@@ -527,14 +527,14 @@ export default function PetSitterDetailPage() {
                 </div>
               </div>
 
-              <div className="space-y-8 py-9 px-8 rounded-md bg-[#FAFAFB]">
+              <div className="space-y-8 py-9 px-8 rounded-md bg-muted">
                 {/* Address */}
               <div className="space-y-2">
-                <h3 className="text-lg font-medium text-gray-500">
+                <h3 className="text-lg font-medium text-muted-text">
                   Address
                 </h3>
                 {sitter.address_detail || sitter.address_province || sitter.address_district || sitter.address_sub_district || sitter.address_post_code ? (
-                  <div className="text-gray-700 leading-relaxed">
+                  <div className="text-gray-7 leading-relaxed">
                     {sitter.address_detail && (
                       <div>{sitter.address_detail}</div>
                     )}
@@ -547,7 +547,7 @@ export default function PetSitterDetailPage() {
                     )}
                   </div>
                 ) : (
-                  <div className="text-center py-8 text-gray-500">
+                  <div className="text-center py-8 text-muted-text">
                     No address available
                   </div>
                 )}
@@ -555,19 +555,19 @@ export default function PetSitterDetailPage() {
 
               {/* Location Map */}
               <div className="space-y-4">
-                <h3 className="text-lg font-medium text-gray-500">
+                <h3 className="text-lg font-medium text-muted-text">
                   Location Map
                 </h3>
                 {sitter.address_detail || sitter.address_province || sitter.address_district || sitter.address_sub_district || sitter.address_post_code ? (
-                  <div className="w-full h-64 bg-gray-200 rounded-lg flex items-center justify-center">
-                    <div className="text-center text-gray-500">
+                  <div className="w-full h-64 bg-muted rounded-lg flex items-center justify-center">
+                    <div className="text-center text-muted-text">
                       <div className="text-4xl mb-2">📍</div>
                       <div>Location Map</div>
                       <div className="text-sm mt-1">(Mock Image)</div>
                     </div>
                   </div>
                 ) : (
-                  <div className="text-center py-8 text-gray-500">
+                  <div className="text-center py-8 text-muted-text">
                     No location available
                   </div>
                 )}
@@ -578,10 +578,10 @@ export default function PetSitterDetailPage() {
 
           {activeTab === "booking" && (
             <div className="text-center py-12">
-              <h3 className="text-xl font-semibold text-gray-900 mb-2">
+              <h3 className="text-xl font-semibold text-ink mb-2">
                 Booking Information
               </h3>
-              <p className="text-gray-600">
+              <p className="text-muted-text">
                 Booking details will be displayed here.
               </p>
             </div>
@@ -589,10 +589,10 @@ export default function PetSitterDetailPage() {
 
            {activeTab === "reviews" && (
              <div className="text-center py-12">
-               <h3 className="text-xl font-semibold text-gray-900 mb-2">
+               <h3 className="text-xl font-semibold text-ink mb-2">
                  Reviews
                </h3>
-               <p className="text-gray-600">
+               <p className="text-muted-text">
                  Customer reviews will be displayed here.
                </p>
              </div>
@@ -600,7 +600,7 @@ export default function PetSitterDetailPage() {
 
            {activeTab === "history" && (
              <div className="space-y-6">
-               <h3 className="text-xl font-semibold text-gray-900 mb-4">
+               <h3 className="text-xl font-semibold text-ink mb-4">
                  Approval History
                </h3>
                
@@ -609,42 +609,42 @@ export default function PetSitterDetailPage() {
                    <PetPawLoadingSmall message="Loading History" />
                  </div>
                ) : historyData.length > 0 ? (
-                 <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+                 <div className="bg-white rounded-lg shadow-sm border border-border overflow-hidden">
                    <div className="overflow-x-auto">
-                     <table className="min-w-full divide-y divide-gray-200">
-                       <thead className="bg-gray-50">
+                     <table className="min-w-full divide-y divide-border">
+                       <thead className="bg-muted">
                          <tr>
-                           <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                           <th className="px-6 py-3 text-left text-xs font-medium text-muted-text uppercase tracking-wider">
                              Status
                            </th>
-                           <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                           <th className="px-6 py-3 text-left text-xs font-medium text-muted-text uppercase tracking-wider">
                              Approved By
                            </th>
-                           <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                           <th className="px-6 py-3 text-left text-xs font-medium text-muted-text uppercase tracking-wider">
                              Note
                            </th>
-                           <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                           <th className="px-6 py-3 text-left text-xs font-medium text-muted-text uppercase tracking-wider">
                              Date
                            </th>
                          </tr>
                        </thead>
-                       <tbody className="bg-white divide-y divide-gray-200">
+                       <tbody className="bg-white divide-y divide-border">
                          {historyData.map((record: any, index: number) => (
-                           <tr key={record.id} className={index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
+                           <tr key={record.id} className={index % 2 === 0 ? 'bg-white' : 'bg-muted'}>
                              <td className="px-6 py-4 whitespace-nowrap">
                                <StatusBadge status={getStatusKey(record.statusName)} />
                              </td>
-                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                             <td className="px-6 py-4 whitespace-nowrap text-sm text-ink">
                                {record.adminName || 'System'}
                              </td>
-                             <td className="px-6 py-4 text-sm text-gray-900">
+                             <td className="px-6 py-4 text-sm text-ink">
                                <div className="max-w-md">
-                                 <p className="text-sm text-gray-600 break-words">
+                                 <p className="text-sm text-muted-text break-words">
                                    {record.adminNote || 'No note provided'}
                                  </p>
                                </div>
                              </td>
-                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                             <td className="px-6 py-4 whitespace-nowrap text-sm text-muted-text">
                                {new Date(record.changedAt).toLocaleDateString('en-US', {
                                  year: 'numeric',
                                  month: 'short',
@@ -661,15 +661,15 @@ export default function PetSitterDetailPage() {
                  </div>
                ) : (
                  <div className="text-center py-12">
-                   <div className="text-gray-400 mb-4">
+                   <div className="text-muted-text mb-4">
                      <svg className="mx-auto h-12 w-12" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
                      </svg>
                    </div>
-                   <h3 className="text-lg font-medium text-gray-900 mb-2">
+                   <h3 className="text-lg font-medium text-ink mb-2">
                      No History Found
                    </h3>
-                   <p className="text-gray-600">
+                   <p className="text-muted-text">
                      No approval history available for this pet sitter.
                    </p>
                  </div>
@@ -687,13 +687,13 @@ export default function PetSitterDetailPage() {
          >
            <div className="bg-white rounded-lg shadow-xl w-full max-w-lg mx-4 opacity-100">
              {/* Header */}
-             <div className="flex items-center justify-between p-6 border-b border-gray-200">
-               <h2 className="text-xl font-semibold text-gray-900">
+             <div className="flex items-center justify-between p-6 border-b border-border">
+               <h2 className="text-xl font-semibold text-ink">
                  Reject Confirmation
                </h2>
                <button
                  onClick={() => setShowRejectModal(false)}
-                 className="text-gray-400 hover:text-gray-600 transition-colors cursor-pointer"
+                 className="text-muted-text hover:text-ink transition-colors cursor-pointer"
                >
                  <X className="w-5 h-5" />
                </button>
@@ -703,7 +703,7 @@ export default function PetSitterDetailPage() {
              <div className="p-6">
                <div className="space-y-4">
                  <div className="flex items-center justify-between">
-                   <label className="block text-sm font-medium text-gray-700">
+                   <label className="block text-sm font-medium text-ink">
                      Reason and suggestion
                    </label>
                  </div>
@@ -715,29 +715,29 @@ export default function PetSitterDetailPage() {
                      }
                    }}
                    placeholder="Admin's suggestion here"
-                   className="w-full h-32 px-3 py-2 border border-gray-300 rounded-md resize-none focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                   className="w-full h-32 px-3 py-2 border border-border rounded-md resize-none focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent"
                  />
                </div>
                <div className="mt-3 flex justify-end">
                  <div className={`inline-flex items-center gap-1 text-xs px-3 py-1.5 rounded-full shadow-sm border ${
                    rejectReason.length >= 180 
-                     ? 'text-red-600 bg-red-50 border-red-200' 
+                     ? 'text-red bg-red-50 border-red-200' 
                      : rejectReason.length >= 100 
-                       ? 'text-yellow-600 bg-yellow-50 border-yellow-200' 
-                       : 'text-gray-500 bg-gray-50 border-gray-200'
+                       ? 'text-yellow bg-yellow-50 border-yellow-200' 
+                       : 'text-muted-text bg-muted border-border'
                  }`}>
                    <span className="font-medium">{rejectReason.length}</span>
-                   <span className={rejectReason.length >= 180 ? 'text-red-400' : rejectReason.length >= 100 ? 'text-yellow-400' : 'text-gray-400'}>/</span>
+                   <span className={rejectReason.length >= 180 ? 'text-red' : rejectReason.length >= 100 ? 'text-yellow' : 'text-muted-text'}>/</span>
                    <span className="font-medium">200</span>
                  </div>
                </div>
              </div>
 
              {/* Footer */}
-             <div className="flex justify-end gap-3 p-6 border-t border-gray-200">
+             <div className="flex justify-end gap-3 p-6 border-t border-border">
                <button
                  onClick={() => setShowRejectModal(false)}
-                 className="px-4 py-2 text-orange-500 bg-orange-50 rounded-full font-medium hover:bg-orange-100 transition-colors cursor-pointer"
+                 className="px-4 py-2 text-brand bg-brand-bg rounded-full font-medium hover:bg-orange-2 transition-colors cursor-pointer"
                >
                  Cancel
                </button>
@@ -785,7 +785,7 @@ export default function PetSitterDetailPage() {
                   });
                 }
               }}
-                 className="px-4 py-2 bg-orange-500 text-white rounded-full font-medium hover:bg-orange-600 transition-colors cursor-pointer"
+                 className="px-4 py-2 bg-brand text-brand-text rounded-full font-medium hover:bg-brand-dark transition-colors cursor-pointer"
                >
                  Reject
                </button>

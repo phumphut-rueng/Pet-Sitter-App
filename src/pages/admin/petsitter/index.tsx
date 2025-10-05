@@ -1,8 +1,9 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Search } from 'lucide-react';
 import { StatusBadge, StatusKey } from '@/components/badges/StatusBadge';
-import { PetPawLoading } from '@/components/loading/PetPawLoading';
+import { PetPawLoadingSmall } from '@/components/loading/PetPawLoadingSmall';
+import { Pagination } from '@/components/pagination/Pagination';
 import Link from 'next/link';
 import axios from 'axios';
 
@@ -26,6 +27,7 @@ interface SitterData {
   user_name: string;
   user_email: string;
   user_dob: string;
+  user_profile_image: string;
   sitter_image: Array<{
     id: number;
     image_url: string;
@@ -51,7 +53,9 @@ interface ApiResponse {
 
 export default function AdminPetSitterPage() {
   const [searchTerm, setSearchTerm] = useState('');
+  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
+  const [sortOrder, setSortOrder] = useState('newest'); // newest หรือ oldest
   const [sitters, setSitters] = useState<SitterData[]>([]);
   const [loading, setLoading] = useState(true);
   const [pagination, setPagination] = useState({
@@ -62,7 +66,7 @@ export default function AdminPetSitterPage() {
   });
 
   // ฟังก์ชันดึงข้อมูลจาก API
-  const fetchSitters = async () => {
+  const fetchSitters = useCallback(async () => {
     try {
       setLoading(true);
       const params = new URLSearchParams({
@@ -70,11 +74,14 @@ export default function AdminPetSitterPage() {
         limit: pagination.limit.toString()
       });
 
-      if (searchTerm) {
-        params.append('searchTerm', searchTerm);
+      if (debouncedSearchTerm) {
+        params.append('searchTerm', debouncedSearchTerm);
       }
       if (statusFilter && statusFilter !== 'all') {
         params.append('status', statusFilter);
+      }
+      if (sortOrder) {
+        params.append('sortOrder', sortOrder);
       }
 
       const response = await axios.get(`/api/admin/get-sitter?${params.toString()}`);
@@ -88,12 +95,28 @@ export default function AdminPetSitterPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [debouncedSearchTerm, statusFilter, sortOrder, pagination.page, pagination.limit]);
+
+  // Debounce search term - หน่วงเวลา 500ms ก่อนเรียก API
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearchTerm(searchTerm);
+    }, 500);
+
+    return () => clearTimeout(timer);
+  }, [searchTerm]);
+
+  // Reset pagination เมื่อ search term หรือ sort order เปลี่ยน
+  useEffect(() => {
+    if (debouncedSearchTerm !== searchTerm || sortOrder) {
+      setPagination(prev => ({ ...prev, page: 1 }));
+    }
+  }, [debouncedSearchTerm, searchTerm, sortOrder]);
 
   // ดึงข้อมูลเมื่อ component mount หรือ filter เปลี่ยน
   useEffect(() => {
     fetchSitters();
-  }, [searchTerm, statusFilter, pagination.page]);
+  }, [fetchSitters]);
 
   // ฟังก์ชันสำหรับเปลี่ยนหน้า
   const handlePageChange = (page: number) => {
@@ -114,17 +137,13 @@ export default function AdminPetSitterPage() {
     }
   };
 
-  if (loading) {
-    return <PetPawLoading message="Loading Pet Sitters" size="lg" />;
-  }
-
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-muted">
       <div className="container mx-auto p-6">
         {/* Header and Search/Filter Bar */}
         <div className="flex items-center justify-between mb-6">
           {/* Header */}
-          <h1 className="text-2xl font-bold text-gray-900">Pet Sitter</h1>
+          <h1 className="text-2xl font-bold text-ink">Pet Sitter</h1>
 
           {/* Search and Filter */}
           <div className="flex items-center space-x-4">
@@ -135,10 +154,21 @@ export default function AdminPetSitterPage() {
                 placeholder="Search..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-64 h-10 px-3 py-2 text-sm border border-gray-300 rounded-md bg-white placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent pr-10"
+                className="w-64 h-10 px-3 py-2 text-sm border border-border rounded-md bg-white placeholder:text-muted-text focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent pr-10"
               />
-              <Search className="absolute right-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+              <Search className="absolute right-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-text" />
             </div>
+
+            {/* Sort Order Select */}
+            <Select value={sortOrder} onValueChange={setSortOrder}>
+              <SelectTrigger className="w-32 h-10">
+                <SelectValue placeholder="Sort by" />
+              </SelectTrigger>
+              <SelectContent className="bg-white">
+                <SelectItem value="newest" className="hover:bg-muted">Newest</SelectItem>
+                <SelectItem value="oldest" className="hover:bg-muted">Oldest</SelectItem>
+              </SelectContent>
+            </Select>
 
             {/* Status Select */}
             <Select value={statusFilter} onValueChange={setStatusFilter}>
@@ -146,19 +176,19 @@ export default function AdminPetSitterPage() {
                 <SelectValue placeholder="All status" />
               </SelectTrigger>
               <SelectContent className="bg-white">
-                <SelectItem value="all" className="hover:bg-gray-1">All status</SelectItem>
-                <SelectItem value="waiting" className="hover:bg-gray-1">Waiting for approve</SelectItem>
-                <SelectItem value="approved" className="hover:bg-gray-1">Approved</SelectItem>
-                <SelectItem value="rejected" className="hover:bg-gray-1">Rejected</SelectItem>
+                <SelectItem value="all" className="hover:bg-muted">All status</SelectItem>
+                <SelectItem value="waiting" className="hover:bg-muted">Waiting for approve</SelectItem>
+                <SelectItem value="approved" className="hover:bg-muted">Approved</SelectItem>
+                <SelectItem value="rejected" className="hover:bg-muted">Rejected</SelectItem>
               </SelectContent>
             </Select>
           </div>
         </div>
 
         {/* Table */}
-        <div className="bg-white rounded-xl shadow-lg border border-gray-200 overflow-hidden">
+        <div className="bg-white rounded-xl shadow-lg border border-border overflow-hidden">
           {/* Table Header */}
-          <div className="bg-black text-white">
+          <div className="bg-ink text-white">
             <div className="grid grid-cols-4 gap-6 px-8 py-5">
               <div className="font-semibold text-lg">Full Name</div>
               <div className="font-semibold text-lg">Pet Sitter Name</div>
@@ -168,9 +198,13 @@ export default function AdminPetSitterPage() {
           </div>
 
           {/* Table Body */}
-          <div className="divide-y divide-gray-100">
-            {sitters.length === 0 ? (
-              <div className="px-8 py-12 text-center text-gray-500 text-lg">
+          <div className="divide-y divide-border">
+            {loading ? (
+              <div className="flex justify-center py-12">
+                <PetPawLoadingSmall message="Loading Pet Sitters" />
+              </div>
+            ) : sitters.length === 0 ? (
+              <div className="px-8 py-12 text-center text-muted-text text-lg">
                 ไม่พบข้อมูล Pet Sitter
               </div>
             ) : (
@@ -189,24 +223,34 @@ export default function AdminPetSitterPage() {
                   <Link 
                     key={sitter.id} 
                     href={`/admin/petsitter/${sitter.id}`}
-                    className="block px-8 py-6 hover:bg-gray-50 transition-colors duration-200 cursor-pointer"
+                    className="block px-8 py-6 hover:bg-muted transition-colors duration-200 cursor-pointer"
                   >
                     <div className="grid grid-cols-4 gap-6 items-center">
                       {/* Full Name with Avatar */}
                       <div className="flex items-center gap-4">
-                        <div className="w-12 h-12 bg-gradient-to-br from-blue-400 to-purple-500 rounded-full flex items-center justify-center shadow-md">
-                          <span className="text-white font-semibold text-lg">{initials}</span>
-                        </div>
-                        <span className="text-gray-900 font-medium text-lg">{sitter.user_name || sitter.user_email}</span>
+                        {sitter.user_profile_image ? (
+                          <div className="w-12 h-12 rounded-full overflow-hidden shadow-md">
+                            <img
+                              src={sitter.user_profile_image}
+                              alt={sitter.user_name || sitter.user_email}
+                              className="w-full h-full object-cover"
+                            />
+                          </div>
+                        ) : (
+                          <div className="w-12 h-12 bg-gradient-to-br from-blue-400 to-purple-500 rounded-full flex items-center justify-center shadow-md">
+                            <span className="text-white font-semibold text-lg">{initials}</span>
+                          </div>
+                        )}
+                        <span className="text-ink font-medium text-lg">{sitter.user_name || sitter.user_email}</span>
                       </div>
 
                       {/* Pet Sitter Name */}
-                      <div className="text-gray-900 font-medium text-lg">
+                      <div className="text-ink font-medium text-lg line-clamp-2 overflow-hidden">
                         {sitter.name || 'No sitter name'}
                       </div>
 
                       {/* Email */}
-                      <div className="text-gray-600 text-lg">{sitter.user_email}</div>
+                      <div className="text-muted-text text-lg">{sitter.user_email}</div>
 
                       {/* Status */}
                       <div className="flex items-center">
@@ -219,6 +263,17 @@ export default function AdminPetSitterPage() {
             )}
           </div>
         </div>
+
+        {/* Pagination */}
+        {!loading && sitters.length > 0 && (
+          <div className="mt-6 flex justify-center">
+            <Pagination
+              currentPage={pagination.page}
+              totalPages={pagination.totalPages}
+              onClick={handlePageChange}
+            />
+          </div>
+        )}
       </div>
     </div>
   );

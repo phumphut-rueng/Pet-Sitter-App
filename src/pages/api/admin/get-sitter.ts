@@ -11,6 +11,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const {
       searchTerm,      // ค้นหาเฉพาะ pet sitter name
       status,          // สถานะ approval เช่น "waiting", "approved", "rejected"
+      sortOrder = 'newest', // เรียงลำดับ newest หรือ oldest
       page = 1,        // หน้าปัจจุบัน
       limit = 8,      // จำนวนรายการต่อหน้า
     } = req.query;
@@ -60,6 +61,14 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       paramIndex++;
     }
 
+    // สร้าง ORDER BY clause
+    let orderByClause = '';
+    if (sortOrder === 'oldest') {
+      orderByClause = 'ORDER BY s.created_at ASC, s.status_updated_at ASC';
+    } else {
+      orderByClause = 'ORDER BY s.status_updated_at DESC NULLS LAST, s.created_at DESC';
+    }
+
     // สร้าง WHERE clause
     const whereClause = whereConditions.length > 0 ? `WHERE ${whereConditions.join(' AND ')}` : '';
 
@@ -80,6 +89,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         u.name as user_name,
         u.email as user_email,
         u.dob as user_dob,
+        u.profile_image as user_profile_image,
         s.approval_status_id,
         sas.status_name as approval_status,
         sas.description as status_description,
@@ -112,7 +122,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       LEFT JOIN "user" u ON s.user_sitter_id = u.id
       LEFT JOIN sitter_approval_status sas ON s.approval_status_id = sas.id
       ${whereClause}
-      ORDER BY s.status_updated_at DESC NULLS LAST, s.created_at DESC
+      ${orderByClause}
       LIMIT $${paramIndex} OFFSET $${paramIndex + 1}
     `;
 
