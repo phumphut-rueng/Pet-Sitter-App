@@ -331,6 +331,7 @@ export default function PetSitterDetailPage() {
 
           {activeTab === "profile" && (
             <div className="flex flex-col gap-6">
+              {/* ส่วน Profile (Full Name - Introduction) - แสดงทุกสถานะ */}
               <div className="flex gap-10">
                 {/* Left Column - Profile Image */}
                 <div className="w-64 flex-shrink-0">
@@ -420,159 +421,166 @@ export default function PetSitterDetailPage() {
                 </div>
               </div>
 
-              <div className="space-y-10 py-9 px-8 rounded-md bg-muted">
-                {/* Pet Sitter Name */}
-                <div className="space-y-2">
-                  <h3 className="h4 font-medium text-muted-text">
-                    Pet sitter name (Trade Name)
-                  </h3>
-                  {sitter.name ? (
-                    <p className="text-xl font-bold text-ink">
-                      {sitter.name}
-                    </p>
-                  ) : (
-                    <div className="text-center py-8 text-muted-text">
-                      No trade name available
-                    </div>
-                  )}
-                </div>
-
-                {/* Pet Type */}
-                <div className="space-y-3">
-                  <div className="h4 font-medium text-muted-text">
-                    Pet type
-                  </div>
-                  {sitter.sitter_pet_type &&
-                  sitter.sitter_pet_type.length > 0 ? (
-                    <div className="flex flex-wrap gap-2">
-                      {sitter.sitter_pet_type.map((petType, index) => (
-                        <PetTypeBadge
-                          key={index}
-                          typeKey={getPetTypeKey(
-                            petType.pet_type.pet_type_name
-                          )}
-                        />
-                      ))}
-                    </div>
-                  ) : (
-                    <div className="text-center py-8 text-muted-text">
-                      No pet types available
-                    </div>
-                  )}
-                </div>
-
-                {/* Services */}
-                <div className="space-y-4">
-                  <div className="h4 font-medium text-muted-text">
-                    Services
-                  </div>
-                  {sitter.service_description ? (
-                    <div className="text-xl font-medium leading-relaxed whitespace-pre-line">
-                      {sitter.service_description}
-                    </div>
-                  ) : (
-                    <div className="text-center py-8 text-muted-text">
-                      No services available
-                    </div>
-                  )}
-                </div>
-
-                {/* My Place */}
-                <div className="space-y-3">
-                  <div className="h4 font-medium text-muted-text">
-                    My Place
-                  </div>
-                  {sitter.location_description ? (
-                    <p className="text-xl font-medium leading-relaxed">
-                      {sitter.location_description}
-                    </p>
-                  ) : (
-                    <div className="text-center py-8 text-muted-text">
-                      No place description provided
-                    </div>
-                  )}
-                </div>
-
-                {/* Image Gallery */}
-                <div className="space-y-4">
-                  <div className="h4 font-medium text-muted-text">
-                    Image Gallery
-                  </div>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    {sitter.sitter_image && sitter.sitter_image.length > 0 ? (
-                      sitter.sitter_image.map((image, index) => (
-                        <div
-                          key={index}
-                          className="relative w-full h-64 rounded-lg overflow-hidden bg-muted"
-                        >
-                          <Image
-                            src={image.image_url}
-                            alt={`Sitter image ${index + 1}`}
-                            width={300}
-                            height={256}
-                            className="object-cover"
-                            style={{
-                              width: "100%",
-                              height: "100%",
-                            }}
-                          />
+              {/* ส่วน Pet Sitter + Address - แสดงเฉพาะเมื่อสถานะเป็น Approved */}
+              {sitter.approval_status === "Approved" && (
+                <>
+                  {/* Pet Sitter Details */}
+                  <div className="space-y-10 py-9 px-8 rounded-md bg-muted">
+                    {/* Pet Sitter Name */}
+                    <div className="space-y-2">
+                      <h3 className="h4 font-medium text-muted-text">
+                        Pet sitter name (Trade Name)
+                      </h3>
+                      {sitter.name ? (
+                        <p className="text-xl font-bold text-ink">
+                          {sitter.name}
+                        </p>
+                      ) : (
+                        <div className="text-center py-8 text-muted-text">
+                          No trade name available
                         </div>
-                      ))
-                    ) : (
-                      <div className="col-span-3 text-center py-8 text-muted-text">
-                        No images available
-                      </div>
-                    )}
-                  </div>
-                </div>
-              </div>
+                      )}
+                    </div>
 
-              <div className="space-y-8 py-9 px-8 rounded-md bg-muted">
-                {/* Address */}
-              <div className="space-y-2">
-                <div className="h4 font-medium text-muted-text">
-                  Address
-                </div>
-                {sitter.address_detail || sitter.address_province || sitter.address_district || sitter.address_sub_district || sitter.address_post_code ? (
-                  <div className="text-xl font-medium leading-relaxed">
-                    {sitter.address_detail && (
-                      <div>{sitter.address_detail}</div>
-                    )}
-                    {(sitter.address_sub_district || sitter.address_district || sitter.address_province || sitter.address_post_code) && (
-                      <div>
-                        {[sitter.address_sub_district, sitter.address_district, sitter.address_province, sitter.address_post_code]
-                          .filter(Boolean)
-                          .join(", ")}
+                    {/* Pet Type */}
+                    <div className="space-y-3">
+                      <div className="h4 font-medium text-muted-text">
+                        Pet type
                       </div>
-                    )}
-                  </div>
-                ) : (
-                  <div className="text-center py-8 text-muted-text">
-                    No address available
-                  </div>
-                )}
-              </div>
+                      {sitter.sitter_pet_type &&
+                      sitter.sitter_pet_type.length > 0 ? (
+                        <div className="flex flex-wrap gap-2">
+                          {sitter.sitter_pet_type.map((petType, index) => (
+                            <PetTypeBadge
+                              key={index}
+                              typeKey={getPetTypeKey(
+                                petType.pet_type.pet_type_name
+                              )}
+                            />
+                          ))}
+                        </div>
+                      ) : (
+                        <div className="text-center py-8 text-muted-text">
+                          No pet types available
+                        </div>
+                      )}
+                    </div>
 
-              {/* Location Map */}
-              <div className="space-y-4">
-                <div className="h4 font-medium text-muted-text">
-                  Location Map
-                </div>
-                {sitter.address_detail || sitter.address_province || sitter.address_district || sitter.address_sub_district || sitter.address_post_code ? (
-                  <div className="w-full h-64 bg-muted rounded-lg flex items-center justify-center">
-                    <div className="text-center text-muted-text">
-                      <div className="text-4xl mb-2">📍</div>
-                      <div>Location Map</div>
-                      <div className="text-sm mt-1">(Mock Image)</div>
+                    {/* Services */}
+                    <div className="space-y-4">
+                      <div className="h4 font-medium text-muted-text">
+                        Services
+                      </div>
+                      {sitter.service_description ? (
+                        <div className="text-xl font-medium leading-relaxed whitespace-pre-line">
+                          {sitter.service_description}
+                        </div>
+                      ) : (
+                        <div className="text-center py-8 text-muted-text">
+                          No services available
+                        </div>
+                      )}
+                    </div>
+
+                    {/* My Place */}
+                    <div className="space-y-3">
+                      <div className="h4 font-medium text-muted-text">
+                        My Place
+                      </div>
+                      {sitter.location_description ? (
+                        <p className="text-xl font-medium leading-relaxed">
+                          {sitter.location_description}
+                        </p>
+                      ) : (
+                        <div className="text-center py-8 text-muted-text">
+                          No place description provided
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Image Gallery */}
+                    <div className="space-y-4">
+                      <div className="h4 font-medium text-muted-text">
+                        Image Gallery
+                      </div>
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        {sitter.sitter_image && sitter.sitter_image.length > 0 ? (
+                          sitter.sitter_image.map((image, index) => (
+                            <div
+                              key={index}
+                              className="relative w-full h-64 rounded-lg overflow-hidden bg-muted"
+                            >
+                              <Image
+                                src={image.image_url}
+                                alt={`Sitter image ${index + 1}`}
+                                width={300}
+                                height={256}
+                                className="object-cover"
+                                style={{
+                                  width: "100%",
+                                  height: "100%",
+                                }}
+                              />
+                            </div>
+                          ))
+                        ) : (
+                          <div className="col-span-3 text-center py-8 text-muted-text">
+                            No images available
+                          </div>
+                        )}
+                      </div>
                     </div>
                   </div>
-                ) : (
-                  <div className="text-center py-8 text-muted-text">
-                    No location available
+
+                  {/* Address and Location Map */}
+                  <div className="space-y-8 py-9 px-8 rounded-md bg-muted">
+                    {/* Address */}
+                    <div className="space-y-2">
+                      <div className="h4 font-medium text-muted-text">
+                        Address
+                      </div>
+                      {sitter.address_detail || sitter.address_province || sitter.address_district || sitter.address_sub_district || sitter.address_post_code ? (
+                        <div className="text-xl font-medium leading-relaxed">
+                          {sitter.address_detail && (
+                            <div>{sitter.address_detail}</div>
+                          )}
+                          {(sitter.address_sub_district || sitter.address_district || sitter.address_province || sitter.address_post_code) && (
+                            <div>
+                              {[sitter.address_sub_district, sitter.address_district, sitter.address_province, sitter.address_post_code]
+                                .filter(Boolean)
+                                .join(", ")}
+                            </div>
+                          )}
+                        </div>
+                      ) : (
+                        <div className="text-center py-8 text-muted-text">
+                          No address available
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Location Map */}
+                    <div className="space-y-4">
+                      <div className="h4 font-medium text-muted-text">
+                        Location Map
+                      </div>
+                      {sitter.address_detail || sitter.address_province || sitter.address_district || sitter.address_sub_district || sitter.address_post_code ? (
+                        <div className="w-full h-64 bg-muted rounded-lg flex items-center justify-center">
+                          <div className="text-center text-muted-text">
+                            <div className="text-4xl mb-2">📍</div>
+                            <div>Location Map</div>
+                            <div className="text-sm mt-1">(Mock Image)</div>
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="text-center py-8 text-muted-text">
+                          No location available
+                        </div>
+                      )}
+                    </div>
                   </div>
-                )}
-              </div>
-              </div>
+                </>
+              )}
             </div>
           )}
 
