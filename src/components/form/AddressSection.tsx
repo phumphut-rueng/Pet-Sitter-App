@@ -120,7 +120,7 @@ export default function AddressSection({
       setValue("address_sub_district", "");
       setValue("address_post_code", "");
     }
-  }, [addr, watchProvince, setValue]);
+  }, [addr, watchProvince, initialProvince, setValue]);
 
   // district -> subdistricts
   useEffect(() => {
@@ -135,7 +135,7 @@ export default function AddressSection({
       setValue("address_sub_district", "");
       setValue("address_post_code", "");
     }
-  }, [addr, watchProvince, watchDistrict, setValue]);
+  }, [addr, watchProvince, watchDistrict, initialDistrict, setValue]);
 
   // subdistrict -> postcode
   useEffect(() => {
@@ -145,20 +145,16 @@ export default function AddressSection({
   }, [watchSubdistrict, subdistrictOpts, setValue]);
 
   // full address string (สำหรับ geocoding)
-  const fullAddress = useMemo(() => {
-    const d = watch("address_detail");
-    const sd = watch("address_sub_district");
-    const dt = watch("address_district");
-    const pv = watch("address_province");
-    const pc = watch("address_post_code");
-    return [d, sd, dt, pv, pc].filter(Boolean).join(", ");
-  }, [
-    watch("address_detail"),
-    watch("address_sub_district"),
-    watch("address_district"),
-    watch("address_province"),
-    watch("address_post_code"),
-  ]);
+    const addressDetail = watch("address_detail");
+    const subDistrict = watch("address_sub_district");
+    const district = watch("address_district");
+    const province = watch("address_province");
+    const postCode = watch("address_post_code");
+    const fullAddress = useMemo(() => {
+      return [addressDetail, subDistrict, district, province, postCode]
+        .filter(Boolean)
+        .join(", ");
+    }, [addressDetail, subDistrict, district, province, postCode]);
 
   // debounce geocoding เมื่อ address เปลี่ยน (ต้องมี province+district อย่างน้อย)
   useEffect(() => {
@@ -170,7 +166,9 @@ export default function AddressSection({
         setLatLng({ lat, lng });
         setValue("latitude", lat, { shouldDirty: true });
         setValue("longitude", lng, { shouldDirty: true });
-      } catch (e) {}
+      } catch (err) {
+        console.error("Geocoding error:", err);
+      }
     }, 700);
     return () => clearTimeout(t);
   }, [fullAddress, watchProvince, watchDistrict, setValue]);
