@@ -65,6 +65,34 @@ export default function AdminPetSitterPage() {
     totalPages: 0
   });
 
+  // Auto-complete states
+  const [suggestions, setSuggestions] = useState<Array<{
+    sitterName: string;
+    userName: string;
+    type: string;
+  }>>([]);
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const [selectedSuggestion, setSelectedSuggestion] = useState<string>('');
+
+  // ฟังก์ชันดึงข้อมูล suggestions
+  const fetchSuggestions = useCallback(async (query: string) => {
+    if (query.length < 2) {
+      setSuggestions([]);
+      setShowSuggestions(false);
+      return;
+    }
+
+    try {
+      const response = await axios.get(`/api/admin/search-suggestions?query=${encodeURIComponent(query)}`);
+      setSuggestions(response.data.suggestions || []);
+      setShowSuggestions(true);
+    } catch (error) {
+      console.error('Error fetching suggestions:', error);
+      setSuggestions([]);
+      setShowSuggestions(false);
+    }
+  }, []);
+
   // ฟังก์ชันดึงข้อมูลจาก API
   const fetchSitters = useCallback(async () => {
     try {
@@ -106,6 +134,21 @@ export default function AdminPetSitterPage() {
     return () => clearTimeout(timer);
   }, [searchTerm]);
 
+  // Fetch suggestions เมื่อ searchTerm เปลี่ยน
+  useEffect(() => {
+    if (searchTerm && !selectedSuggestion) {
+      const timer = setTimeout(() => {
+        fetchSuggestions(searchTerm);
+      }, 300); // หน่วงเวลาน้อยกว่า debounce เพื่อให้ suggestions แสดงก่อน
+
+      return () => clearTimeout(timer);
+    } else if (!searchTerm) {
+      setSuggestions([]);
+      setShowSuggestions(false);
+      setSelectedSuggestion('');
+    }
+  }, [searchTerm, fetchSuggestions, selectedSuggestion]);
+
   // Reset pagination เมื่อ search term หรือ sort order เปลี่ยน
   useEffect(() => {
     if (debouncedSearchTerm !== searchTerm || sortOrder) {
@@ -118,9 +161,44 @@ export default function AdminPetSitterPage() {
     fetchSitters();
   }, [fetchSitters]);
 
+  // ปิด suggestions เมื่อคลิกข้างนอก
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as HTMLElement;
+      if (!target.closest('.search-container')) {
+        setShowSuggestions(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
   // ฟังก์ชันสำหรับเปลี่ยนหน้า
   const handlePageChange = (page: number) => {
     setPagination(prev => ({ ...prev, page }));
+  };
+
+  // ฟังก์ชันสำหรับจัดการ suggestions
+  const handleSuggestionClick = (suggestion: { sitterName: string; userName: string; type: string }) => {
+    const selectedName = suggestion.type === 'sitter' ? suggestion.sitterName : suggestion.userName;
+    setSearchTerm(selectedName);
+    setSelectedSuggestion(selectedName);
+    setShowSuggestions(false);
+    setSuggestions([]);
+  };
+
+  const handleClearSearch = () => {
+    setSearchTerm('');
+    setSelectedSuggestion('');
+    setShowSuggestions(false);
+    setSuggestions([]);
+  };
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setSearchTerm(value);
+    setSelectedSuggestion(''); // รีเซ็ตเมื่อพิมพ์ใหม่
   };
 
   // ฟังก์ชันสำหรับแปลงสถานะเป็น StatusKey
@@ -147,16 +225,45 @@ export default function AdminPetSitterPage() {
 
           {/* Search and Filter */}
           <div className="flex items-center space-x-4">
-            {/* Search Input */}
-            <div className="relative">
+            {/* Search Input with Auto-complete */}
+            <div className="relative search-container">
               <input
                 type="text"
-                placeholder="Search..."
+                placeholder="Search by name..."
                 value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
+                onChange={handleInputChange}
                 className="w-64 h-10 px-3 py-2 text-sm border border-border rounded-md bg-white placeholder:text-muted-text focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent pr-10"
               />
+              {searchTerm && (
+                <button
+                  onClick={handleClearSearch}
+                  className="absolute right-8 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-text hover:text-ink flex items-center justify-center"
+                >
+                  ×
+                </button>
+              )}
               <Search className="absolute right-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-text" />
+              
+              {/* Suggestions Dropdown */}
+              {showSuggestions && suggestions.length > 0 && (
+                <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-border rounded-md shadow-lg z-50 max-h-60 overflow-y-auto">
+                  {suggestions.map((suggestion, index) => {
+                    const displayName = suggestion.type === 'sitter' ? suggestion.sitterName : suggestion.userName;
+                    const typeLabel = suggestion.type === 'sitter' ? 'Pet Sitter' : 'Full Name';
+                    
+                    return (
+                      <div
+                        key={index}
+                        onClick={() => handleSuggestionClick(suggestion)}
+                        className="px-3 py-2 text-sm cursor-pointer hover:bg-muted border-b border-border last:border-b-0"
+                      >
+                        <div className="font-medium text-ink">{displayName}</div>
+                        <div className="text-xs text-muted-text">{typeLabel}</div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
             </div>
 
             {/* Sort Order Select */}

@@ -9,7 +9,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
   try {
     const {
-      searchTerm,      // ค้นหาเฉพาะ pet sitter name
+      searchTerm,      // ค้นหาทั้ง pet sitter name และ full name
       status,          // สถานะ approval เช่น "waiting", "approved", "rejected"
       sortOrder = 'newest', // เรียงลำดับ newest หรือ oldest
       page = 1,        // หน้าปัจจุบัน
@@ -28,11 +28,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     // ไม่แสดงข้อมูล Pending submission
     whereConditions.push(`sas.status_name != 'Pending submission'`);
 
-    // 1) Search term (เฉพาะ pet sitter name)
+    // 1) Search term (ค้นหาทั้ง pet sitter name และ full name)
     if (searchTerm) {
-      whereConditions.push(`s.name ILIKE $${paramIndex}`);
+      whereConditions.push(`(s.name ILIKE $${paramIndex} OR u.name ILIKE $${paramIndex + 1})`);
       queryParams.push(`%${searchTerm}%`);
-      paramIndex++;
+      queryParams.push(`%${searchTerm}%`);
+      paramIndex += 2;
     }
 
     // 2) Status filter
