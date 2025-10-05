@@ -1,7 +1,7 @@
 "use client";
 
 import dynamic from "next/dynamic";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import InputText from "@/components/input/InputText";
 import {
   Select,
@@ -62,6 +62,10 @@ export default function AddressSection({
   const [subdistrictOpts, setSubdistrictOpts] = useState<Subdistrict[]>([]);
   const [latLng, setLatLng] = useState({ lat: 13.736717, lng: 100.523186 }); // BKK default
 
+  const [initialProvince] = useState(watch("address_province"));
+  const [initialDistrict] = useState(watch("address_district"));
+  const [initialSubdistrict] = useState(watch("address_sub_district"));
+
   const watchProvince = watch("address_province");
   const watchDistrict = watch("address_district");
   const watchSubdistrict = watch("address_sub_district");
@@ -76,16 +80,46 @@ export default function AddressSection({
       .catch((e) => console.error("load th-address.json failed:", e));
   }, []);
 
+  //preload districts/subdistricts จากค่า initial ที่มาจาก DB
+  useEffect(() => {
+    if (!addr || !initialProvince) return;
+
+    const p = addr.provinces.find((x) => x.name === initialProvince);
+    if (p) {
+      const dList = addr.districtsByProvince[p.code] ?? [];
+      setDistrictOpts(dList);
+
+      if (initialDistrict) {
+        const d = dList.find((x) => x.name === initialDistrict);
+        if (d) {
+          const subs = addr.subdistrictsByDistrict[d.code] ?? [];
+          setSubdistrictOpts(subs);
+
+          if (initialSubdistrict) {
+            const s = subs.find((x) => x.name === initialSubdistrict);
+            if (s) {
+              setValue("address_post_code", s.postalCode ?? "", {
+                shouldDirty: false,
+              });
+            }
+          }
+        }
+      }
+    }
+  }, [addr, initialProvince, initialDistrict, initialSubdistrict, setValue]);
+
   // province -> districts
   useEffect(() => {
     if (!addr || !watchProvince) return;
     const p = addr.provinces.find((x) => x.name === watchProvince);
     const dList = p ? addr.districtsByProvince[p.code] ?? [] : [];
     setDistrictOpts(dList);
-    // reset dependent
-    setValue("address_district", "", { shouldDirty: true });
-    setValue("address_sub_district", "", { shouldDirty: true });
-    setValue("address_post_code", "", { shouldDirty: true });
+    // reset เฉพาะตอน user เปลี่ยน province จากค่า initial
+    if (watchProvince !== initialProvince) {
+      setValue("address_district", "");
+      setValue("address_sub_district", "");
+      setValue("address_post_code", "");
+    }
   }, [addr, watchProvince, setValue]);
 
   // district -> subdistricts
@@ -96,9 +130,11 @@ export default function AddressSection({
     const d = dList.find((x) => x.name === watchDistrict);
     const subs = d ? addr.subdistrictsByDistrict[d.code] ?? [] : [];
     setSubdistrictOpts(subs);
-    // reset dependent
-    setValue("address_sub_district", "", { shouldDirty: true });
-    setValue("address_post_code", "", { shouldDirty: true });
+    // reset เฉพาะตอน user เปลี่ยน district จากค่า initial
+    if (watchDistrict !== initialDistrict) {
+      setValue("address_sub_district", "");
+      setValue("address_post_code", "");
+    }
   }, [addr, watchProvince, watchDistrict, setValue]);
 
   // subdistrict -> postcode
@@ -183,8 +219,7 @@ export default function AddressSection({
                 >
                   <SelectValue placeholder="Select province" />
                 </SelectTrigger>
-                <SelectContent 
-                className="bg-white border border-gray-2 max-h-72 overflow-auto">
+                <SelectContent className="bg-white border border-gray-2 max-h-72 overflow-auto">
                   {provinceOpts.map((p) => (
                     <SelectItem key={p.code} value={p.name}>
                       {p.name}

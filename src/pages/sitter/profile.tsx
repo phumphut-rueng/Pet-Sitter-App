@@ -117,7 +117,8 @@ async function checkEmailDuplicate(
 export default function PetSitterProfilePage() {
   const [userId, setUserId] = useState<number | null>(null);
   const { status, update } = useSession();
-  const [initialGallery, setInitialGallery] = useState<string[]>([]);
+  const [initialGallery, setInitialGallery] = useState<string[]>([]); //รูปที่โหลดมาจาก database
+  const [isProfileLoaded, setIsProfileLoaded] = useState(false);
   const [approvalStatus, setApprovalStatus] = useState<string>('');
   const [sitterData, setSitterData] = useState<{
     id: number;
@@ -213,6 +214,7 @@ export default function PetSitterProfilePage() {
           images: data.sitter?.images || [],
         });
         setInitialGallery(data.sitter?.images || []);
+        setIsProfileLoaded(true);
       } catch (error) {
         console.error("load profile error:", error);
       }
@@ -381,7 +383,7 @@ export default function PetSitterProfilePage() {
 
   return (
     <main className="flex container-1200 !px-0 bg-gray-1">
-        <Sidebar className="min-w-0" />
+      <Sidebar className="min-w-0" />
       <section className="flex-1 min-w-0">
         <PetSitterNavbar
           avatarUrl={
@@ -690,14 +692,15 @@ export default function PetSitterProfilePage() {
 
           {/* Address - แสดงเฉพาะเมื่อสถานะเป็น Approved */}
           {approvalStatus === 'Approved' && (
-          <AddressSection
-          control={control}
+            <AddressSection 
+            control={control}
             register={register}
             errors={errors}
             watch={watch}
             setValue={setValue}
             />
           )}
+          
         </form>
       </section>
       <Toaster position="top-right" />
