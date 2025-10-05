@@ -287,8 +287,8 @@ export default function PetSitterDetailPage() {
               onClick={() => setActiveTab("profile")}
               className={`px-6 py-4 font-medium rounded-t-lg transition-colors cursor-pointer ${
                 activeTab === "profile"
-                  ? "text-brand bg-white"
-                  : "text-muted-text bg-muted hover:bg-gray-2"
+                  ? "text-brand bg-white border-l-4 border-brand"
+                  : "text-gray-6 bg-muted hover:bg-gray-2"
               }`}
             >
               Profile
@@ -297,8 +297,8 @@ export default function PetSitterDetailPage() {
               onClick={() => setActiveTab("booking")}
               className={`px-6 py-4 font-medium rounded-t-lg transition-colors cursor-pointer ${
                 activeTab === "booking"
-                  ? "text-brand bg-white"
-                  : "text-muted-text bg-muted hover:bg-gray-2"
+                  ? "text-brand bg-white border-l-4 border-brand"
+                  : "text-gray-6 bg-muted hover:bg-gray-2"
               }`}
             >
               Booking
@@ -307,8 +307,8 @@ export default function PetSitterDetailPage() {
                onClick={() => setActiveTab("reviews")}
                className={`px-6 py-4 font-medium rounded-t-lg transition-colors cursor-pointer ${
                  activeTab === "reviews"
-                   ? "text-brand bg-white"
-                   : "text-muted-text bg-muted hover:bg-gray-2"
+                   ? "text-brand bg-white border-l-4 border-brand"
+                   : "text-gray-6 bg-muted hover:bg-gray-2"
                }`}
              >
                Reviews
@@ -317,8 +317,8 @@ export default function PetSitterDetailPage() {
                onClick={() => setActiveTab("history")}
                className={`px-6 py-4 font-medium rounded-t-lg transition-colors cursor-pointer ${
                  activeTab === "history"
-                   ? "text-brand bg-white"
-                   : "text-muted-text bg-muted hover:bg-gray-2"
+                   ? "text-brand bg-white border-l-4 border-brand"
+                   : "text-gray-6 bg-muted hover:bg-gray-2"
                }`}
              >
                History
@@ -423,7 +423,7 @@ export default function PetSitterDetailPage() {
               <div className="space-y-10 py-9 px-8 rounded-md bg-muted">
                 {/* Pet Sitter Name */}
                 <div className="space-y-2">
-                  <h3 className="text-lg font-medium text-muted-text">
+                  <h3 className="h4 font-medium text-muted-text">
                     Pet sitter name (Trade Name)
                   </h3>
                   {sitter.name ? (
@@ -439,9 +439,9 @@ export default function PetSitterDetailPage() {
 
                 {/* Pet Type */}
                 <div className="space-y-3">
-                  <h3 className="text-lg font-medium text-muted-text">
+                  <div className="h4 font-medium text-muted-text">
                     Pet type
-                  </h3>
+                  </div>
                   {sitter.sitter_pet_type &&
                   sitter.sitter_pet_type.length > 0 ? (
                     <div className="flex flex-wrap gap-2">
@@ -463,11 +463,11 @@ export default function PetSitterDetailPage() {
 
                 {/* Services */}
                 <div className="space-y-4">
-                  <h3 className="text-lg font-medium text-muted-text">
+                  <div className="h4 font-medium text-muted-text">
                     Services
-                  </h3>
+                  </div>
                   {sitter.service_description ? (
-                    <div className="text-gray-7 leading-relaxed whitespace-pre-line">
+                    <div className="text-xl font-medium leading-relaxed whitespace-pre-line">
                       {sitter.service_description}
                     </div>
                   ) : (
@@ -479,11 +479,11 @@ export default function PetSitterDetailPage() {
 
                 {/* My Place */}
                 <div className="space-y-3">
-                  <h3 className="text-lg font-medium text-muted-text">
+                  <div className="h4 font-medium text-muted-text">
                     My Place
-                  </h3>
+                  </div>
                   {sitter.location_description ? (
-                    <p className="text-gray-7 leading-relaxed">
+                    <p className="text-xl font-medium leading-relaxed">
                       {sitter.location_description}
                     </p>
                   ) : (
@@ -495,9 +495,9 @@ export default function PetSitterDetailPage() {
 
                 {/* Image Gallery */}
                 <div className="space-y-4">
-                  <h3 className="text-lg font-medium text-muted-text">
+                  <div className="h4 font-medium text-muted-text">
                     Image Gallery
-                  </h3>
+                  </div>
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     {sitter.sitter_image && sitter.sitter_image.length > 0 ? (
                       sitter.sitter_image.map((image, index) => (
@@ -530,11 +530,11 @@ export default function PetSitterDetailPage() {
               <div className="space-y-8 py-9 px-8 rounded-md bg-muted">
                 {/* Address */}
               <div className="space-y-2">
-                <h3 className="text-lg font-medium text-muted-text">
+                <div className="h4 font-medium text-muted-text">
                   Address
-                </h3>
+                </div>
                 {sitter.address_detail || sitter.address_province || sitter.address_district || sitter.address_sub_district || sitter.address_post_code ? (
-                  <div className="text-gray-7 leading-relaxed">
+                  <div className="text-xl font-medium leading-relaxed">
                     {sitter.address_detail && (
                       <div>{sitter.address_detail}</div>
                     )}
@@ -555,9 +555,9 @@ export default function PetSitterDetailPage() {
 
               {/* Location Map */}
               <div className="space-y-4">
-                <h3 className="text-lg font-medium text-muted-text">
+                <div className="h4 font-medium text-muted-text">
                   Location Map
-                </h3>
+                </div>
                 {sitter.address_detail || sitter.address_province || sitter.address_district || sitter.address_sub_district || sitter.address_post_code ? (
                   <div className="w-full h-64 bg-muted rounded-lg flex items-center justify-center">
                     <div className="text-center text-muted-text">
