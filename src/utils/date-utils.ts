@@ -13,3 +13,19 @@ export const getDaysInMonth = (date: Date) =>
 // หาว่าวันแรกของเดือนตรงกับวันอะไรในสัปดาห์
 export const getFirstDayOfMonth = (date: Date) =>
     new Date(date.getFullYear(), date.getMonth(), 1).getDay()
+
+// แปลงเวลาเป็น timezone thai
+export const formatToThaiTimeAD = (isoString: string | undefined | string[]) => {
+    if (typeof isoString === "string") {
+        const date = new Date(isoString);
+        return date.toLocaleString("en-GB", {
+            timeZone: "Asia/Bangkok",
+            year: "numeric",
+            month: "2-digit",
+            day: "2-digit",
+            hour: "2-digit",
+            minute: "2-digit",
+        });
+    }
+}
+
