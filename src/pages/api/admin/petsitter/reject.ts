@@ -1,7 +1,7 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 import { prisma } from "@/lib/prisma/prisma";
 import { getServerSession } from "next-auth";
-import { authOptions } from "../auth/[...nextauth]";
+import { authOptions } from "../../auth/[...nextauth]";
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== "PUT") {
@@ -38,12 +38,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       return res.status(403).json({ message: "Access denied - Admin role required" });
     }
 
-    const { sitterId } = req.body;
+    const { sitterId, adminNote } = req.body;
 
     // Validate required fields
-    if (!sitterId) {
+    if (!sitterId || !adminNote) {
       return res.status(400).json({ 
-        message: "Missing required field: sitterId is required" 
+        message: "Missing required fields: sitterId and adminNote are required" 
       });
     }
 
@@ -57,12 +57,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       return res.status(404).json({ message: "Pet Sitter not found" });
     }
 
-    // Update sitter status to Approved (status_id: 2)
+    // Update sitter approval status to 3 (Rejected) and add admin note
     const updatedSitter = await prisma.sitter.update({
       where: { id: parseInt(sitterId) },
       data: {
-        approval_status_id: 4, // Status ID 2 for Approved
-        admin_note: null, // Clear any previous admin note
+        approval_status_id: 3, // Status ID 3 for Rejected
+        admin_note: adminNote,
         status_updated_at: new Date()
       },
       include: {
@@ -86,27 +86,28 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     await prisma.sitter_approval_history.create({
       data: {
         sitter_id: parseInt(sitterId),
-        status_id: 4, // Approved status
+        status_id: 3, // Rejected status
         admin_id: adminRecord?.id || null,
-        admin_note: null, // No note needed for approval
+        admin_note: adminNote,
         changed_at: new Date()
       }
     });
 
     return res.status(200).json({
-      message: "Pet Sitter approved successfully",
+      message: "Pet Sitter rejected successfully",
       data: {
         sitterId: updatedSitter.id,
         status: updatedSitter.sitter_approval_status.status_name,
-        approvedBy: user.name || user.email,
+        adminNote: updatedSitter.admin_note,
+        rejectedBy: user.name || user.email,
         updatedAt: updatedSitter.status_updated_at
       }
     });
 
   } catch (error) {
-    console.error("❌ Error approving pet sitter:", error);
+    console.error("❌ Error rejecting pet sitter:", error);
     return res.status(500).json({ 
-      message: "Error approving pet sitter",
+      message: "Error rejecting pet sitter",
       error: process.env.NODE_ENV === "development" ? error : undefined
     });
   }

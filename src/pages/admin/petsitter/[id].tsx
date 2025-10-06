@@ -81,7 +81,7 @@ export default function PetSitterDetailPage() {
   const fetchSitterDetail = async () => {
     try {
       setLoading(true);
-      const response = await axios.get(`/api/admin/get-sitter-by-id?id=${id}`);
+      const response = await axios.get(`/api/admin/petsitter/get-sitter-by-id?id=${id}`);
       setSitter(response.data);
     } catch (error) {
       console.error("Error fetching sitter detail:", error);
@@ -93,7 +93,7 @@ export default function PetSitterDetailPage() {
   const fetchHistory = async (page = 1) => {
     try {
       setLoadingHistory(true);
-      const response = await axios.get(`/api/admin/history?sitterId=${id}&page=${page}&limit=${itemsPerPage}`);
+      const response = await axios.get(`/api/admin/petsitter/history?sitterId=${id}&page=${page}&limit=${itemsPerPage}`);
       if (response.status === 200) {
         setHistoryData(response.data.data);
         setTotalHistoryCount(response.data.pagination.totalRecords);
@@ -157,12 +157,6 @@ export default function PetSitterDetailPage() {
     );
   }
 
-  const initials = sitter.user_name
-    .split(" ")
-    .map((name) => name.charAt(0))
-    .join("")
-    .toUpperCase()
-    .slice(0, 2);
 
   const statusKey = getStatusKey(sitter.approval_status);
 
@@ -243,7 +237,7 @@ export default function PetSitterDetailPage() {
                         onClick={async () => {
                           try {
                             const response = await axios.put(
-                              "/api/admin/approve",
+                              "/api/admin/petsitter/approve",
                               {
                                 sitterId: sitter.id,
                               }
@@ -869,7 +863,7 @@ export default function PetSitterDetailPage() {
                           }
 
                           const response = await axios.put(
-                            "/api/admin/reject",
+                            "/api/admin/petsitter/reject",
                             {
                               sitterId: sitter.id,
                               adminNote: rejectReason,

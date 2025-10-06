@@ -93,7 +93,7 @@ export default function AdminPetSitterPage() {
 
     try {
       const response = await axios.get(
-        `/api/admin/search-suggestions?query=${encodeURIComponent(query)}`
+        `/api/admin/petsitter/search-suggestions?query=${encodeURIComponent(query)}`
       );
       setSuggestions(response.data.suggestions || []);
       setShowSuggestions(true);
@@ -124,7 +124,7 @@ export default function AdminPetSitterPage() {
       }
 
       const response = await axios.get(
-        `/api/admin/get-sitter?${params.toString()}`
+        `/api/admin/petsitter/get-sitter?${params.toString()}`
       );
       const data: ApiResponse = response.data;
 
