@@ -21,33 +21,33 @@ model role {
 }
 
 model sitter {
-  id                   Int                       @id @default(autoincrement())
-  user_sitter_id       Int
-  name                 String?                   @db.VarChar(100)
-  location_description String?                   @db.VarChar(255)
-  phone                String?                   @db.VarChar(20)
-  introduction         String?
-  address_detail       String?
-  address_province     String?                   @db.VarChar(100)
-  address_district     String?                   @db.VarChar(100)
-  address_sub_district String?                   @db.VarChar(100)
-  address_post_code    String?                   @db.VarChar(10)
-  base_price           Decimal?                  @db.Decimal(10, 2)
-  created_at           DateTime                  @default(now()) @db.Timestamp(6)
-  updated_at           DateTime?                 @db.Timestamp(6)
-  experience           Int?
-  service_description  String?                   @db.VarChar(1000)
-  approval_status_id   Int                       @default(1)
-  status_updated_at    DateTime?                 @db.Timestamp(6)
-  admin_note           String?                   @db.VarChar(1000)
-  latitude             Float?
-  longitude            Float?
-  reviews              review[]
-  sitter_approval_status    @relation(fields: [approval_status_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  user                      @relation(fields: [user_sitter_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
-  sitter_approval_history[]
-  sitter_image         sitter_image[]
-  sitter_pet_type      sitter_pet_type[]
+  id                      Int                       @id @default(autoincrement())
+  user_sitter_id          Int
+  name                    String?                   @db.VarChar(100)
+  location_description    String?                   @db.VarChar(255)
+  phone                   String?                   @db.VarChar(20)
+  introduction            String?
+  address_detail          String?
+  address_province        String?                   @db.VarChar(100)
+  address_district        String?                   @db.VarChar(100)
+  address_sub_district    String?                   @db.VarChar(100)
+  address_post_code       String?                   @db.VarChar(10)
+  base_price              Decimal?                  @db.Decimal(10, 2)
+  created_at              DateTime                  @default(now()) @db.Timestamp(6)
+  updated_at              DateTime?                 @db.Timestamp(6)
+  experience              Int?
+  service_description     String?                   @db.VarChar(1000)
+  approval_status_id      Int                       @default(1)
+  status_updated_at       DateTime?                 @db.Timestamp(6)
+  admin_note              String?                   @db.VarChar(1000)
+  latitude                Float?
+  longitude               Float?
+  reviews                 review[]
+  sitter_approval_status  sitter_approval_status    @relation(fields: [approval_status_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  user                    user                      @relation(fields: [user_sitter_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  sitter_approval_history sitter_approval_history[]
+  sitter_image            sitter_image[]
+  sitter_pet_type         sitter_pet_type[]
 }
 
 model sitter_image {

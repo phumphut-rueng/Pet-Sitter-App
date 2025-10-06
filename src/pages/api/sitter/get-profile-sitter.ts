@@ -34,7 +34,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       include: {
         sitter_image: true,
         sitter_pet_type: { include: { pet_type: true } },
-        approval_status: true,
+        sitter_approval_status: true,
       },
     }) as Prisma.sitterGetPayload<{
       include: {
