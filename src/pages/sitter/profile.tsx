@@ -3,7 +3,7 @@ import { useSession } from "next-auth/react";
 import { useForm, Controller } from "react-hook-form";
 import Sidebar from "@/components/layout/SitterSidebar";
 import PetSitterNavbar from "@/components/PetSitterNavbar";
-import { StatusBadge } from "@/components/badges/StatusBadge";
+import { StatusBadge, StatusKey } from "@/components/badges/StatusBadge";
 import PrimaryButton from "@/components/buttons/PrimaryButton";
 import AvatarUploader from "@/components/form/AvatarUpload";
 import InputText from "@/components/input/InputText";
@@ -50,6 +50,9 @@ type GetSitterResponse = {
     phone: string | null;
     name: string;
     profile_image: string | null;
+    sitter_approval_status?: {
+      status_name: string;
+    };
   };
   sitter: null | {
     id: number;
@@ -71,6 +74,21 @@ type GetSitterResponse = {
 
 const phonePattern = /^0\d{9}$/;
 const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+function getStatusKey(status: string): StatusKey {
+  switch (status) {
+    case 'Pending submission':
+      return 'pendingSubmission';
+    case 'Waiting for approve':
+      return 'waitingApprove';
+    case 'Approved':
+      return 'approved';
+    case 'Rejected':
+      return 'rejected';
+    default:
+      return 'waitingApprove'; // fallback
+  }
+}
 
 async function checkPhoneDuplicate(
   phone: string,
@@ -116,6 +134,27 @@ export default function PetSitterProfilePage() {
   const [userId, setUserId] = useState<number | null>(null);
   const { status, update } = useSession();
   const [initialGallery, setInitialGallery] = useState<string[]>([]);
+  const [approvalStatus, setApprovalStatus] = useState<string>('');
+  const [sitterData, setSitterData] = useState<{
+    id: number;
+    name: string | null;
+    location_description: string | null;
+    phone: string | null;
+    introduction: string | null;
+    address_detail: string | null;
+    address_province: string | null;
+    address_district: string | null;
+    address_sub_district: string | null;
+    address_post_code: string | null;
+    base_price: string | null;
+    experience: number | null;
+    service_description: string | null;
+    approval_status_id: number;
+    admin_note?: string | null;
+    sitter_image?: Array<{ id: number; image_url: string }>;
+    sitter_pet_type?: Array<{ pet_type: { pet_type_name: string } }>;
+    petTypes?: Array<{ pet_type: { pet_type_name: string } }>;
+  } | null>(null);
 
   type Province = {
     code: string;
@@ -210,6 +249,8 @@ export default function PetSitterProfilePage() {
         }
         const data: GetSitterResponse = await res.json();
         setUserId(data.user.id);
+        setApprovalStatus(data.user.sitter_approval_status?.status_name || 'Waiting for approve');
+        setSitterData(data.sitter as typeof sitterData);
 
         initialAddrRef.current = {
           province: data.sitter?.address_province || "",
@@ -329,6 +370,115 @@ export default function PetSitterProfilePage() {
     setValue("address_post_code", s?.postalCode ?? "", { shouldDirty: true });
   };
 
+  // ฟังก์ชันตรวจสอบข้อมูลพื้นฐานที่จำเป็นสำหรับ Request for Approval
+  const validateBasicFields = () => {
+    const values = getValues();
+    const basicErrors: string[] = [];
+
+    // ตรวจสอบเฉพาะฟิลด์พื้นฐาน
+    if (!values.fullName || values.fullName.trim() === '') {
+      basicErrors.push('Full name is required');
+    }
+
+    if (!values.experience || values.experience === '') {
+      basicErrors.push('Experience is required');
+    }
+
+    if (!values.phone || values.phone.trim() === '') {
+      basicErrors.push('Phone number is required');
+    } else if (!phonePattern.test(values.phone)) {
+      basicErrors.push('Phone number must be in format 0XXXXXXXXX (10 digits starting with 0)');
+    }
+
+    if (!values.email || values.email.trim() === '') {
+      basicErrors.push('Email is required');
+    } else if (!emailPattern.test(values.email)) {
+      basicErrors.push('Email format is invalid');
+    }
+
+    if (!values.introduction || values.introduction.trim() === '') {
+      basicErrors.push('Introduction is required');
+    }
+
+    return basicErrors;
+  };
+
+  // ฟังก์ชันสำหรับ Request for Approval
+  const handleRequestApproval = async () => {
+    // ตรวจสอบข้อมูลพื้นฐานที่จำเป็นก่อน
+    const basicErrors = validateBasicFields();
+    
+    if (basicErrors.length > 0) {
+      toast.error('Please complete and verify all required information.', {
+        duration: 5000,
+        style: {
+          maxWidth: '400px',
+          fontSize: '14px'
+        }
+      });
+      return;
+    }
+
+    try {
+      const values = getValues();
+      console.log("📤 Sending data:", {
+        fullName: values.fullName,
+        experience: values.experience,
+        phone: values.phone,
+        email: values.email,
+        introduction: values.introduction,
+      });
+      
+      const response = await fetch('/api/sitter/request-approval', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          fullName: values.fullName,
+          experience: values.experience,
+          phone: values.phone,
+          email: values.email,
+          introduction: values.introduction,
+        }),
+      });
+
+      if (response.ok) {
+        const result = await response.json();
+        console.log("✅ Success response:", result);
+        
+        // แสดง toast แจ้งเตือนสำเร็จ (2 วินาที)
+        toast.success('Request for approval submitted successfully!', {
+          duration: 3000
+        });
+        
+        // แสดง toast บอกว่าจะ refresh (2 วินาที)
+        setTimeout(() => {
+          toast('Refreshing page to update status...', {
+            duration: 3000,
+            style: {
+              background: '#3b82f6',
+              color: 'white'
+            }
+          });
+        }, 1000);
+        
+        // รีเฟรชหน้าหลังจาก 4 วินาที
+        setTimeout(() => {
+          window.location.reload();
+        }, 4000);
+        
+      } else {
+        const errorData = await response.json();
+        console.error("❌ Error response:", errorData);
+        toast.error(`Failed to submit request for approval: ${errorData.message || 'Unknown error'}`);
+      }
+    } catch (error) {
+      console.error('Error requesting approval:', error);
+      toast.error('An error occurred while submitting request');
+    }
+  };
+
   const onSubmit = handleSubmit(async (values) => {
     await toast.promise(
       (async () => {
@@ -395,15 +545,43 @@ export default function PetSitterProfilePage() {
               <h3 className="text-gray-9 font-semibold text-2xl">
                 Pet Sitter Profile
               </h3>
-              <StatusBadge status="approved" className="font-medium" />
+              <StatusBadge status={getStatusKey(approvalStatus)} className="font-medium" />
             </div>
-            <PrimaryButton
-              text={isSubmitting ? "Saving..." : "Update"}
-              type="submit"
-              bgColor="primary"
-              textColor="white"
-            />
+            {approvalStatus === 'Approved' ? (
+              <PrimaryButton
+                text={isSubmitting ? "Saving..." : "Update"}
+                type="submit"
+                bgColor="primary"
+                textColor="white"
+              />
+            ) : (
+              <PrimaryButton
+                text="Request for Approval"
+                type="button"
+                bgColor="primary"
+                textColor="white"
+                onClick={handleRequestApproval}
+              />
+            )}
           </div>
+
+          {/* Rejected Status Banner */}
+          {approvalStatus === "Rejected" && sitterData?.admin_note && (
+            <div className="mt-4 p-4 bg-gray-200 border-l-4 border-red rounded-r-md">
+              <div className="flex items-start gap-3">
+                <div className="text-red flex-shrink-0 mt-0.5">
+                  <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                  </svg>
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm text-red font-medium break-words">
+                    <span className="font-medium">Your request has not been approved:</span> &apos;{sitterData.admin_note}&apos;
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
 
           {/* Basic Information */}
           <section className="bg-white rounded-xl pt-4 pb-7 px-12 mt-4">
@@ -576,8 +754,9 @@ export default function PetSitterProfilePage() {
             </div>
           </section>
 
-          {/* Pet Sitter */}
-          <section className="bg-white rounded-xl py-4 px-12 mt-4 pb-7">
+          {/* Pet Sitter - แสดงเฉพาะเมื่อสถานะเป็น Approved */}
+          {approvalStatus === 'Approved' && (
+            <section className="bg-white rounded-xl py-4 px-12 mt-4 pb-7">
             <h4 className="text-gray-4 font-bold text-xl py-4">Pet Sitter</h4>
 
             <div className="grid grid-cols-2 gap-4">
@@ -657,9 +836,11 @@ export default function PetSitterProfilePage() {
               </div>
             </div>
           </section>
+          )}
 
-          {/* Address */}
-          <section className="bg-white rounded-xl py-4 px-12 mt-4 pb-7">
+          {/* Address - แสดงเฉพาะเมื่อสถานะเป็น Approved */}
+          {approvalStatus === 'Approved' && (
+            <section className="bg-white rounded-xl py-4 px-12 mt-4 pb-7">
             <h4 className="text-gray-4 font-bold text-xl pt-4">Address</h4>
 
             <div className="mt-4 grid gap-4 md:grid-cols-2">
@@ -841,6 +1022,7 @@ export default function PetSitterProfilePage() {
               </div>
             </div>
           </section>
+          )}
         </form>
       </section>
       <Toaster position="top-right" />
