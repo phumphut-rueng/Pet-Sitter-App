@@ -1,9 +1,10 @@
 import { useEffect, useState } from "react";
 import type { OwnerRow, OwnerListResponse } from "@/types/admin/owners";
 
-type Params = { page?: number; limit?: number; q?: string };
+type StatusFilter = "all" | "ACTIVE" | "SUSPENDED";
+type Params = { page?: number; limit?: number; q?: string; status?: StatusFilter };
 
-// ช่วยแปลง unknown → string อย่างปลอดภัย (เลี่ยง any)
+// unknown -> message อย่างปลอดภัย
 function toErrorMessage(e: unknown): string {
   if (e instanceof Error) return e.message;
   if (typeof e === "string") return e;
@@ -14,7 +15,7 @@ function toErrorMessage(e: unknown): string {
   }
 }
 
-export function useOwnersQuery({ page = 1, limit = 10, q = "" }: Params) {
+export function useOwnersQuery({ page = 1, limit = 10, q = "", status = "all" }: Params) {
   const [data, setData] = useState<OwnerListResponse | null>(null);
   const [items, setItems] = useState<OwnerRow[]>([]);
   const [total, setTotal] = useState(0);
@@ -33,12 +34,14 @@ export function useOwnersQuery({ page = 1, limit = 10, q = "" }: Params) {
           page: String(page),
           limit: String(limit),
           q: q.trim(),
+          status, // ✅ เพิ่มสถานะลง query string
         });
+
         const res = await fetch(`/api/admin/owners/get-owners?${params.toString()}`, {
           signal: controller.signal,
         });
+
         if (!res.ok) {
-          // พยายามอ่านข้อความจากเซิร์ฟเวอร์มาเป็น error
           const text = await res.text().catch(() => "");
           throw new Error(text || `HTTP ${res.status}`);
         }
@@ -61,7 +64,8 @@ export function useOwnersQuery({ page = 1, limit = 10, q = "" }: Params) {
       cancelled = true;
       controller.abort();
     };
-  }, [page, limit, q]);
+    // ✅ ดึงใหม่เมื่อ status เปลี่ยน
+  }, [page, limit, q, status]);
 
   return {
     data,

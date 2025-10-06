@@ -13,31 +13,46 @@ export default function OwnerDetailPage() {
   const router = useRouter();
   const id = router.query.id as string | undefined;
 
-  const { loading, error, owner, tab, setTab } = useOwnerDetail(id);
+  // ✅ ดึง refetch + isSuspended จาก hook เวอร์ชันล่าสุด
+  const { loading, error, owner, tab, setTab, refetch, isSuspended } = useOwnerDetail(id);
 
-  const [banOpen, setBanOpen] = React.useState(false);
-  const [banLoading, setBanLoading] = React.useState(false);
+  // Dialog (confirm)
+  const [dialogOpen, setDialogOpen] = React.useState(false);
+  const [dialogLoading, setDialogLoading] = React.useState(false);
+  const [mode, setMode] = React.useState<"ban" | "unban">("ban");
 
-  const handleBan = async () => {
-    if (!owner) return;
-    setBanLoading(true);
+  async function handleBanUnban() {
+    if (!id) return;
+    setDialogLoading(true);
     try {
-      const res = await fetch("/api/admin/owners/ban-user", {
+      const res = await fetch(`/api/admin/owners/${id}/ban`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ id: owner.id }),
+        headers: {
+          "Content-Type": "application/json",
+          // ถ้า backend ยังต้องใช้ใน dev: ใส่ x-user-id เป็น user_id ที่เป็น admin
+          // "x-user-id": "1",
+        },
+        body: JSON.stringify({
+          action: mode,                             // "ban" | "unban"
+          reason: mode === "ban" ? "Violated policy" : undefined,
+          cascadePets: mode === "ban",
+        }),
       });
       if (!res.ok) throw new Error(await res.text());
-      toast.success("User banned");
-      setBanOpen(false);
-      // router.push("/admin/owner");
-    } catch (e: unknown) {
-      const message = e instanceof Error ? e.message : "Ban failed";
-      toast.error(message);
+
+      // ปิด dialog + toast
+      setDialogOpen(false);
+      toast.success(mode === "ban" ? "User banned" : "User unbanned");
+
+      // ✅ โหลดข้อมูลใหม่จากเซิร์ฟเวอร์ให้ status/ข้อมูลตรงกัน
+      await refetch();
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : "Action failed";
+      toast.error(msg);
     } finally {
-      setBanLoading(false);
+      setDialogLoading(false);
     }
-  };
+  }
 
   return (
     <>
@@ -58,15 +73,23 @@ export default function OwnerDetailPage() {
             {!loading && !error && !owner && <div className="py-16 text-center text-gray-500">Not found</div>}
 
             {!loading && owner && (
-              <section className="rounded-tr-2xl rounded-br-2xl rounded-bl-2xl bg-white overflow-hidden">
+              <section>
                 <OwnerHeader
                   title={owner.name || owner.email}
                   tab={tab}
                   onTabChange={setTab}
+                  owner={owner}   // ✅ โชว์ avatar + status badge บนหัวข้อ
                 />
 
                 {tab === "profile" && (
-                  <OwnerProfileCard owner={owner} onClickBan={() => setBanOpen(true)} />
+                  <OwnerProfileCard
+                    owner={owner}
+                    isSuspended={isSuspended}   // ✅ ใช้จาก hook
+                    onClickBan={() => {
+                      setMode(isSuspended ? "unban" : "ban");
+                      setDialogOpen(true);
+                    }}
+                  />
                 )}
 
                 {tab === "pets" && <OwnerPetsList pets={owner.pets} />}
@@ -81,10 +104,11 @@ export default function OwnerDetailPage() {
       </div>
 
       <BanConfirm
-        open={banOpen}
-        loading={banLoading}
-        onOpenChange={setBanOpen}
-        onConfirm={handleBan}
+        open={dialogOpen}
+        loading={dialogLoading}
+        mode={mode}
+        onOpenChange={setDialogOpen}
+        onConfirm={handleBanUnban}
       />
     </>
   );

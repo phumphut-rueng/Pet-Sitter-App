@@ -1,20 +1,29 @@
+
+// ใช้ชนิดสถานะเดียวทั้งโปรเจกต์
+export type UserStatus = "ACTIVE" | "SUSPENDED";
+
+/* ---------- LIST TYPES ---------- */
+
 export type OwnerRow = {
-  id: number
-  name: string | null
-  email: string
-  phone: string | null
-  created_at: string
-  pet_count: number
-  profile_image?: string | null;              
-  profile_image_public_id?: string | null;    
-}
+  id: number;
+  name: string | null;
+  email: string;
+  phone: string | null;
+  created_at: string;
+  pet_count: number;
+  profile_image?: string | null;
+  profile_image_public_id?: string | null;
+  status: UserStatus; //  จำเป็นสำหรับหน้า list (badge/ฟิลเตอร์)
+};
 
 export type OwnerListResponse = {
-  items: OwnerRow[]
-  total: number
-  page: number
-  limit: number
-}
+  items: OwnerRow[];
+  total: number;
+  page: number;
+  limit: number;
+};
+
+/* ---------- DETAIL TYPE ---------- */
 
 export type OwnerDetail = {
   id: number;
@@ -22,10 +31,19 @@ export type OwnerDetail = {
   email: string;
   phone: string | null;
   profile_image: string | null;                 // legacy
-  profile_image_public_id?: string | null;      // ✅ new
-  id_number?: string | null;                    // ✅ new
-  dob?: string | null;                          // ✅ "YYYY-MM-DD"
+  profile_image_public_id?: string | null;
+
+  // optional fields
+  id_number?: string | null;
+  dob?: string | null;
+
   created_at: string;
+
+  // ✅ ใช้ชนิดเดียวกันกับ list
+  status?: UserStatus;
+  suspended_at?: string | null;
+  suspend_reason?: string | null;
+
   pets: Array<{
     id: number;
     name: string | null;
@@ -35,5 +53,7 @@ export type OwnerDetail = {
     color: string | null;
     image_url: string | null;
     created_at: string;
+    is_banned?: boolean | null; // สำหรับปุ่ม Ban/Unban pet
+    pet_type_name?: string; 
   }>;
 };

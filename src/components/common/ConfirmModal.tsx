@@ -1,53 +1,46 @@
+// src/components/common/ConfirmModal.tsx
 import * as React from "react";
 import {
   AlertDialog,
-  AlertDialogCancel,
   AlertDialogContent,
+  AlertDialogHeader,
   AlertDialogTitle,
+  AlertDialogDescription,
+  AlertDialogFooter,
 } from "@/components/ui/alert-dialog";
 
-type Props = {
-  title: string;
+type ConfirmModalProps = {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  width?: number;
-  children?: React.ReactNode; // description
-  footer?: React.ReactNode;   // custom actions
+  title: React.ReactNode;
+  /** ปุ่มแอคชันต่าง ๆ (Cancel/Confirm) */
+  footer?: React.ReactNode;
+  /** ข้อความอธิบาย — จะถูกใส่ใน AlertDialogDescription เสมอ */
+  children?: React.ReactNode;
+  /** ใช้ id เองได้ ถ้าอยากควบคุม aria-describedby เอง */
+  descriptionId?: string;
 };
 
 export default function ConfirmModal({
-  title,
   open,
   onOpenChange,
-  width = 520,
-  children,
+  title,
   footer,
-}: Props) {
+  children,
+  descriptionId,
+}: ConfirmModalProps) {
+  const contentProps = descriptionId ? { "aria-describedby": descriptionId } : {};
   return (
     <AlertDialog open={open} onOpenChange={onOpenChange}>
-      <AlertDialogContent
-        style={{ width }}
-        className="p-0 rounded-2xl border-0 shadow-xl"
-      >
-        {/* header */}
-        <div className="flex items-center justify-between gap-4 px-6 py-4 border-b border-gray-200">
-          <AlertDialogTitle className="text-[22px] font-semibold text-black">
-            {title}
-          </AlertDialogTitle>
-          <AlertDialogCancel className="text-gray-500 hover:text-gray-900 border-0 shadow-none">
-            ✕
-          </AlertDialogCancel>
-        </div>
-
-        {/* body */}
-        <div className="px-6 pt-6 pb-2 text-[18px] text-gray-500">
-          {children}
-        </div>
-
-        {/* footer (actions) */}
-        <div className="flex items-center justify-end gap-4 px-6 py-6">
-          {footer}
-        </div>
+      <AlertDialogContent {...contentProps}>
+        <AlertDialogHeader>
+          <AlertDialogTitle>{title}</AlertDialogTitle>
+          {/* ✅ ใส่ Description เสมอ เพื่อให้ Radix ไม่เตือน */}
+          <AlertDialogDescription id={descriptionId}>
+            {children ?? "This action requires confirmation."}
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>{footer}</AlertDialogFooter>
       </AlertDialogContent>
     </AlertDialog>
   );

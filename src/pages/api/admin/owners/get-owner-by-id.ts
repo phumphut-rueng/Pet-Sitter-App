@@ -1,10 +1,10 @@
+// src/pages/api/admin/owners/get-owner-by-id.ts
 import type { NextApiRequest, NextApiResponse } from "next";
 import { prisma } from "@/lib/prisma/prisma";
 import type { OwnerDetail } from "@/types/admin/owners";
 
 const OWNER_ROLE_NAMES = ["Owner", "pet_owner", "OWNER", "PET_OWNER"] as const;
 
-// unknown  string ที่อ่านง่าย
 const toErr = (e: unknown) =>
   e instanceof Error ? e.message : typeof e === "string" ? e : "Internal Server Error";
 
@@ -33,10 +33,15 @@ export default async function handler(
         email: true,
         phone: true,
         created_at: true,
-        profile_image: true,             // legacy url
-        profile_image_public_id: true,   // ถ้าไม่มีคอลัมน์นี้ในสคีมา ให้คอมเมนต์ทิ้ง
-        // id_number: true,               // ถ้า schema มี ค่อยเปิด
-        // dob: true,                     // ถ้า schema มี ค่อยเปิด
+        profile_image: true,           // legacy url
+        profile_image_public_id: true, // ถ้า schema ไม่มี ให้คอมเมนต์ทิ้ง
+
+        // ✅ ฟิลด์สถานะ Owner
+        status: true,                  // "ACTIVE" | "SUSPENDED"
+        suspended_at: true,
+        suspend_reason: true,
+
+        // ✅ รายการสัตว์ของ owner
         pets: {
           select: {
             id: true,
@@ -47,6 +52,8 @@ export default async function handler(
             color: true,
             image_url: true,
             created_at: true,
+            is_banned: true,
+            banned_at: true, // เพิ่ม field นี้เพื่อใช้ใน UI
           },
           orderBy: { created_at: "desc" },
         },
@@ -55,30 +62,25 @@ export default async function handler(
 
     if (!user) return res.status(404).json({ error: "Owner not found" });
 
-    // แคบชนิดแบบปลอดภัยสำหรับฟิลด์ที่ "อาจ" ไม่มีใน select/สคีมา
-    type MaybeExtra = Partial<{
-      profile_image_public_id: string | null;
-      id_number: string | null;
-      dob: string | Date | null;
-    }>;
-
-    const u = user as typeof user & MaybeExtra;
-
+    // ✅ map ออกเป็น OwnerDetail (แนบ field ที่จำเป็นทั้งหมด)
     const payload: OwnerDetail = {
       id: user.id,
       name: user.name,
       email: user.email,
       phone: user.phone,
       created_at: user.created_at.toISOString(),
-      profile_image_public_id: u.profile_image_public_id ?? null, // ถ้ามีใช้เลย ไม่มีก็ null
-      profile_image: user.profile_image,                          // legacy url
-      id_number: u.id_number ?? null,
-      dob:
-        typeof u.dob === "string"
-          ? u.dob
-          : u.dob instanceof Date
-          ? u.dob.toISOString()
-          : null,
+
+      profile_image: user.profile_image,
+      profile_image_public_id: user.profile_image_public_id ?? null,
+
+      // ถ้า schema ยังไม่มี id_number/dob → ส่ง null ไว้ก่อน (type รองรับ)
+      id_number: null,
+      dob: null,
+
+      status: user.status as OwnerDetail["status"], // คุม type ให้ตรง
+      suspended_at: user.suspended_at ? user.suspended_at.toISOString() : null,
+      suspend_reason: user.suspend_reason ?? null,
+
       pets: user.pets.map((p) => ({
         id: p.id,
         name: p.name,
@@ -88,6 +90,9 @@ export default async function handler(
         color: p.color,
         image_url: p.image_url,
         created_at: p.created_at.toISOString(),
+        is_banned: p.is_banned ?? null,
+        // เผื่ออยากใช้ใน UI ต่อไป:
+        // banned_at: p.banned_at ? p.banned_at.toISOString() : null,
       })),
     };
 

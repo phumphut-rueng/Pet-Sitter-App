@@ -150,6 +150,20 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
+button:not([disabled]),
+a[href],
+[role="button"],
+input[type="button"]:not([disabled]),
+input[type="submit"]:not([disabled]),
+summary,
+label[for] {
+  cursor: pointer;
+}
+
+
+.cursor-pointer { cursor: pointer; }
+.cursor-default { cursor: default; }
+
 /* กันสื่อทุกชนิดล้นกรอบแม้ลืมใส่คลาส */
 img, video, canvas, svg, iframe { max-width: 100%; height: auto; }
 

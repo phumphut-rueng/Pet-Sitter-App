@@ -1,4 +1,3 @@
-// ./src/pages/api/user/profile.ts
 import type { NextApiRequest, NextApiResponse } from "next";
 import { getServerSession } from "next-auth";
 import { Prisma } from "@prisma/client";

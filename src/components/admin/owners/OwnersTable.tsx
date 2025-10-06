@@ -6,7 +6,11 @@ import CloudAvatar from "./CloudAvatar";
 function StatusDot({ ok = true }: { ok?: boolean }) {
   return (
     <span
-      className={cn("inline-block size-2 rounded-full", ok ? "bg-green" : "bg-red")}
+      className={cn(
+        "inline-block size-2 rounded-full align-middle",
+        ok ? "bg-green" : "bg-red"
+      )}
+      aria-hidden="true"
     />
   );
 }
@@ -33,48 +37,54 @@ export default function OwnersTable({ rows }: { rows: OwnerRow[] }) {
               </td>
             </tr>
           ) : (
-            rows.map((r) => (
-              <tr key={r.id} className="border-t last:border-b hover:bg-gray-50">
-                <td className="px-5 py-4">
-                  <div className="flex items-center gap-3 min-w-0">
-                    <CloudAvatar
-                      publicId={r.profile_image_public_id ?? undefined}
-                      legacyUrl={r.profile_image ?? undefined}
-                      alt={r.name || r.email}
-                      size={40}
-                      className="shrink-0"
-                    />
-                    <div className="min-w-0">
-                      <Link
-                        href={`/admin/owner/${r.id}`}
-                        className="block max-w-[220px] truncate hover:underline"
-                      >
-                        <div className="body-sm text-ink/90 truncate">
-                          {r.name || "(no name)"}
-                        </div>
-                      </Link>
+            rows.map((r) => {
+              const isActive = r.status === "ACTIVE";
+              return (
+                <tr key={r.id} className="border-t last:border-b hover:bg-gray-50">
+                  <td className="px-5 py-4">
+                    <div className="flex items-center gap-3 min-w-0">
+                      <CloudAvatar
+                        publicId={r.profile_image_public_id ?? undefined}
+                        legacyUrl={r.profile_image ?? undefined}
+                        alt={r.name || r.email}
+                        size={40}
+                        className="shrink-0"
+                      />
+                      <div className="min-w-0">
+                        <Link
+                          href={`/admin/owner/${r.id}`}
+                          className="block max-w-[220px] truncate hover:underline"
+                        >
+                          <div className="body-sm text-ink/90 truncate">
+                            {r.name || "(no name)"}
+                          </div>
+                        </Link>
+                      </div>
                     </div>
-                  </div>
-                </td>
+                  </td>
 
-                {/* Phone */}
-                <td className="px-5 py-4 body-sm text-ink/80">{r.phone ?? "-"}</td>
+                  {/* Phone */}
+                  <td className="px-5 py-4 body-sm text-ink/80">{r.phone ?? "-"}</td>
 
-                {/* Email */}
-                <td className="px-5 py-4 body-sm text-ink/80">{r.email}</td>
+                  {/* Email */}
+                  <td className="px-5 py-4 body-sm text-ink/80">{r.email}</td>
 
-                {/* Pet(s) */}
-                <td className="px-5 py-4 body-sm text-ink/80">{r.pet_count ?? 0}</td>
+                  {/* Pet(s) */}
+                  <td className="px-5 py-4 body-sm text-ink/80">{r.pet_count ?? 0}</td>
 
-                {/* Status */}
-                <td className="px-5 py-4">
-                  <div className="body-sm flex items-center gap-2 text-ink/90">
-                    <StatusDot ok />
-                    Normal
-                  </div>
-                </td>
-              </tr>
-            ))
+                  {/* Status */}
+                  <td className="px-5 py-4">
+                    <div
+                      className="body-sm flex items-center gap-2 text-ink/90"
+                      title={isActive ? "Active" : "Suspended"}
+                    >
+                      <StatusDot ok={isActive} />
+                      {isActive ? "Active" : "Suspended"}
+                    </div>
+                  </td>
+                </tr>
+              );
+            })
           )}
         </tbody>
       </table>
