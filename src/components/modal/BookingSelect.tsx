@@ -8,6 +8,9 @@ import { useTimePicker } from "@/hooks/useTimePicker"
 import DatePicker from "../date-picker/DatePicker"
 import { Calendar, Clock } from 'lucide-react';
 import TimePicker from "../time-picker/TimePicker"
+import Link from "next/link"
+import { useState } from "react"
+import { useRouter } from "next/router"
 
 interface BookingSelectProps {
     sitterId: number
@@ -17,13 +20,36 @@ interface BookingSelectProps {
 }
 
 export default function BookingSelect({
-    sitterId = 1, // eslint-disable-line @typescript-eslint/no-unused-vars
+    sitterId = 1,
     open,
     onOpenChange,
     disabledDates = [],
 }: BookingSelectProps) {
+    const router = useRouter()
     const { date, month, setMonth, handleSelect } = useDatePicker()
     const { startTime, endTime, setStartTime, setEndTime } = useTimePicker()
+
+    const [errorText, setErrorText] = useState<string>("")
+
+    const hendleOnSubmit = () => {
+        console.log("date", date);
+
+        if (!date || !startTime || !endTime) {
+            setErrorText("Please select a date and time to continue");
+            return
+        }
+        setErrorText("")
+
+        router.push({
+            pathname: '/booking',
+            query: {
+                date: date.toISOString(),
+                startTime: startTime.toISOString(),
+                endTime: endTime.toISOString(),
+                sitterId: sitterId
+            }
+        })
+    }
 
     return (
         <div>
@@ -61,22 +87,6 @@ export default function BookingSelect({
                                         disablePastDates: true,
                                     }}
                                 />
-
-                                {/* <DatePicker
-                                    date={date}
-                                    month={month}
-                                    onMonthChange={setMonth}
-                                    onSelect={(date?: Date) => {
-                                        handleSelect(date)
-                                        setStartTime(undefined)
-                                        setEndTime(undefined)
-                                    }}
-                                    disabledDates={disabledDates}
-                                    rules={{
-                                        disablePastDates: true,
-                                        minDate: new Date(1995, 1, 1),
-                                    }}
-                                /> */}
                             </div>
 
                             {/* Time Picker */}
@@ -108,16 +118,19 @@ export default function BookingSelect({
                                 />
                             </div>
                         </div>
+                        <div className="flex items-center justify-center p-2">
+                            <p className="text-[14px] text-error">{errorText}</p>
+                        </div>
                         {/* Actions */}
                         <div
-                            className="flex justify-between gap-4 mt-4 ">
+                            className="flex justify-between gap-4">
                             <PrimaryButton
                                 text="Continue"
                                 bgColor="primary"
                                 textColor="white"
                                 type="submit"
                                 className="w-full"
-                                onClick={() => onOpenChange(false)}
+                                onClick={hendleOnSubmit}
                             />
                         </div>
                     </>

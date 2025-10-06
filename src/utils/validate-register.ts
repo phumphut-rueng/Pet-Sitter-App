@@ -1,5 +1,5 @@
 import axios from "axios";
-import { FieldValidation, UserRole, errorType } from "@/types/register.type";
+import { FieldValidation, UserRole, errorType } from "@/types/register.types";
 
 const result = (
     message = "",

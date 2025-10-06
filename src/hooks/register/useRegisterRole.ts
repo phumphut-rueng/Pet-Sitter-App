@@ -1,5 +1,5 @@
 import { useState } from "react"
-import { RegisterForm } from "@/types/register.type"
+import { RegisterForm } from "@/types/register.types"
 
 // จัดการ role (Owner / Sitter)
 export function useRegisterRole(setError: (err: RegisterForm) => void) {
