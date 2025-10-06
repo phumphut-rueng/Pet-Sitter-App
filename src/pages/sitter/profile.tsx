@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from "react";
+import React, { useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
 import { useForm, Controller } from "react-hook-form";
 import Sidebar from "@/components/layout/SitterSidebar";
@@ -18,29 +18,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import Image from "next/image";
 import toast, { Toaster } from "react-hot-toast";
 import { uploadToCloudinary } from "@/utils/uploadToCloudinary";
-
-type SitterFormValues = {
-  fullName: string;
-  experience: string;
-  phone: string;
-  email: string;
-  tradeName: string;
-  petTypes: PetType[];
-  introduction: string;
-  location_description: string;
-  service_description: string;
-  address_detail: string;
-  address_province: string;
-  address_district: string;
-  address_sub_district: string;
-  address_post_code: string;
-  profileImageUrl: string;
-  images: string[];
-  newImageFiles: File[];
-};
+import AddressSection from "@/components/form/AddressSection";
+import type { SitterFormValues } from "@/components/types/SitterForms";
 
 type GetSitterResponse = {
   exists: boolean;
@@ -67,6 +48,8 @@ type GetSitterResponse = {
     address_district: string | null;
     address_sub_district: string | null;
     address_post_code: string | null;
+    latitude: number | null;
+    longitude: number | null;
     images: string[];
     petTypes: { id: number; name: string }[];
   };
@@ -89,7 +72,7 @@ function getStatusKey(status: string): StatusKey {
       return 'waitingApprove'; // fallback
   }
 }
-
+//ตรวจสอบเบอร์โทรซ้ำ
 async function checkPhoneDuplicate(
   phone: string,
   excludeUserId?: number
@@ -110,6 +93,7 @@ async function checkPhoneDuplicate(
   }
 }
 
+//ตรวจสอบอีเมลซ้ำ
 async function checkEmailDuplicate(
   email: string,
   excludeUserId?: number
@@ -133,7 +117,7 @@ async function checkEmailDuplicate(
 export default function PetSitterProfilePage() {
   const [userId, setUserId] = useState<number | null>(null);
   const { status, update } = useSession();
-  const [initialGallery, setInitialGallery] = useState<string[]>([]);
+  const [initialGallery, setInitialGallery] = useState<string[]>([]); //รูปที่โหลดมาจาก database
   const [approvalStatus, setApprovalStatus] = useState<string>('');
   const [sitterData, setSitterData] = useState<{
     id: number;
@@ -155,40 +139,6 @@ export default function PetSitterProfilePage() {
     sitter_pet_type?: Array<{ pet_type: { pet_type_name: string } }>;
     petTypes?: Array<{ pet_type: { pet_type_name: string } }>;
   } | null>(null);
-
-  type Province = {
-    code: string;
-    name: string;
-  };
-
-  type District = {
-    code: string;
-    name: string;
-  };
-
-  type Subdistrict = {
-    code: string;
-    name: string;
-    postalCode: string;
-  };
-
-  type AddressData = {
-    provinces: Province[];
-    districtsByProvince: Record<string, District[]>;
-    subdistrictsByDistrict: Record<string, Subdistrict[]>;
-  };
-
-  const [addr, setAddr] = useState<AddressData | null>(null);
-  const [provinceOpts, setProvinceOpts] = useState<Province[]>([]);
-  const [districtOpts, setDistrictOpts] = useState<District[]>([]);
-  const [subdistrictOpts, setSubdistrictOpts] = useState<Subdistrict[]>([]);
-  const [profileLoaded, setProfileLoaded] = useState(false);
-
-  const initialAddrRef = useRef<{
-    province?: string;
-    district?: string;
-    subdistrict?: string;
-  }>({});
 
   const {
     register,
@@ -215,6 +165,8 @@ export default function PetSitterProfilePage() {
       address_district: "",
       address_sub_district: "",
       address_post_code: "",
+      latitude: undefined,
+      longitude: undefined,
       profileImageUrl: "",
       images: [],
       newImageFiles: [],
@@ -222,20 +174,6 @@ export default function PetSitterProfilePage() {
     mode: "onBlur",
     shouldUnregister: false,
   });
-
-  const watchProvince = watch("address_province");
-  const watchDistrict = watch("address_district");
-  const watchSubdistrict = watch("address_sub_district");
-
-  useEffect(() => {
-    fetch("/th-address.json")
-      .then((r) => r.json())
-      .then((json: AddressData) => {
-        setAddr(json);
-        setProvinceOpts(json.provinces || []);
-      })
-      .catch((e) => console.error("load th-address.json failed:", e));
-  }, []);
 
   useEffect(() => {
     if (status === "loading") return;
@@ -251,12 +189,6 @@ export default function PetSitterProfilePage() {
         setUserId(data.user.id);
         setApprovalStatus(data.user.sitter_approval_status?.status_name || 'Waiting for approve');
         setSitterData(data.sitter as typeof sitterData);
-
-        initialAddrRef.current = {
-          province: data.sitter?.address_province || "",
-          district: data.sitter?.address_district || "",
-          subdistrict: data.sitter?.address_sub_district || "",
-        };
 
         reset({
           fullName: data.user.name || "",
@@ -275,102 +207,19 @@ export default function PetSitterProfilePage() {
           address_district: data.sitter?.address_district || "",
           address_sub_district: data.sitter?.address_sub_district || "",
           address_post_code: data.sitter?.address_post_code || "",
+          latitude: data.sitter?.latitude ?? undefined,
+          longitude: data.sitter?.longitude ?? undefined,
           profileImageUrl: data.user.profile_image || "",
           images: data.sitter?.images || [],
         });
         setInitialGallery(data.sitter?.images || []);
-        setProfileLoaded(true);
       } catch (error) {
         console.error("load profile error:", error);
       }
     })();
   }, [status, reset]);
 
-  //เมื่อ province พร้อม -> สร้าง district options
-  useEffect(() => {
-    if (!addr || !watchProvince || !profileLoaded) return;
-
-    const p = addr.provinces.find((x) => x.name === watchProvince);
-    const dList = p ? addr.districtsByProvince[p.code] ?? [] : [];
-    setDistrictOpts(dList);
-
-    if (!watchDistrict && initialAddrRef.current.district) {
-      const exists = dList.some(
-        (x) => x.name === initialAddrRef.current.district
-      );
-      if (exists) {
-        setValue("address_district", initialAddrRef.current.district, {
-          shouldDirty: false,
-        });
-      }
-    }
-  }, [addr, watchProvince, profileLoaded, watchDistrict, setValue]);
-
-  //เมื่อ district พร้อม -> สร้าง subdistrict options & postcode
-  useEffect(() => {
-    if (!addr || !watchProvince || !watchDistrict || !profileLoaded) return;
-
-    const p = addr.provinces.find((x) => x.name === watchProvince);
-    const dList = p ? addr.districtsByProvince[p.code] ?? [] : [];
-    const d = dList.find((x) => x.name === watchDistrict);
-    const subs = d ? addr.subdistrictsByDistrict[d.code] ?? [] : [];
-    setSubdistrictOpts(subs);
-
-    if (!watchSubdistrict && initialAddrRef.current.subdistrict) {
-      const exists = subs.some(
-        (x) => x.name === initialAddrRef.current.subdistrict
-      );
-      if (exists) {
-        setValue("address_sub_district", initialAddrRef.current.subdistrict, {
-          shouldDirty: false,
-        });
-        const s = subs.find(
-          (x) => x.name === initialAddrRef.current.subdistrict
-        );
-        setValue("address_post_code", s?.postalCode ?? "", {
-          shouldDirty: false,
-        });
-      }
-    }
-  }, [
-    addr,
-    watchProvince,
-    watchDistrict,
-    profileLoaded,
-    watchSubdistrict,
-    setValue,
-  ]);
-
-  useEffect(() => {
-    if (!watchSubdistrict) return;
-    const s = subdistrictOpts.find((x) => x.name === watchSubdistrict);
-    setValue("address_post_code", s?.postalCode ?? "", { shouldDirty: false });
-  }, [watchSubdistrict, subdistrictOpts, setValue]);
-
-  const onProvinceChange = (provName: string) => {
-    const current = getValues("address_province");
-    if (provName === current) return;
-    setValue("address_province", provName, { shouldDirty: true });
-    setValue("address_district", "", { shouldDirty: true });
-    setValue("address_sub_district", "", { shouldDirty: true });
-    setValue("address_post_code", "", { shouldDirty: true });
-  };
-
-  const onDistrictChange = (distName: string) => {
-    const current = getValues("address_district");
-    if (distName === current) return;
-    setValue("address_district", distName, { shouldDirty: true });
-    setValue("address_sub_district", "", { shouldDirty: true });
-    setValue("address_post_code", "", { shouldDirty: true });
-  };
-
-  const onSubdistrictChange = (subName: string) => {
-    setValue("address_sub_district", subName, { shouldDirty: true });
-    const s = subdistrictOpts.find((x) => x.name === subName);
-    setValue("address_post_code", s?.postalCode ?? "", { shouldDirty: true });
-  };
-
-  // ฟังก์ชันตรวจสอบข้อมูลพื้นฐานที่จำเป็นสำหรับ Request for Approval
+  //ฟังก์ชันตรวจสอบข้อมูลพื้นฐานที่จำเป็นสำหรับ Request for Approval
   const validateBasicFields = () => {
     const values = getValues();
     const basicErrors: string[] = [];
@@ -482,8 +331,8 @@ export default function PetSitterProfilePage() {
   const onSubmit = handleSubmit(async (values) => {
     await toast.promise(
       (async () => {
+        //อัปโหลดรูปหม่ไป cloudinary
         const uploadedUrls: string[] = [];
-
         if (values.newImageFiles && values.newImageFiles.length > 0) {
           for (const file of values.newImageFiles) {
             const url = await uploadToCloudinary(file);
@@ -491,11 +340,14 @@ export default function PetSitterProfilePage() {
           }
         }
 
+        //รวมรูปเก่ากับรูปใหม่
         const allImageUrls = [...values.images, ...uploadedUrls];
 
         const payload = {
           ...values,
           images: allImageUrls,
+          latitude: values.latitude ?? undefined,
+          longitude: values.longitude ?? undefined,
         };
         delete (payload as Record<string, unknown>).newImageFiles;
 
@@ -508,8 +360,9 @@ export default function PetSitterProfilePage() {
           const data = await res.json().catch(() => ({}));
           throw new Error(data?.message || "Failed to update sitter");
         }
-        await update();
 
+        //โหลดภาพล่าสุดมาแสดง
+        await update();
         const res2 = await fetch("/api/sitter/get-profile-sitter");
         if (res2.ok) {
           const data = await res2.json();
@@ -528,10 +381,7 @@ export default function PetSitterProfilePage() {
 
   return (
     <main className="flex container-1200 !px-0 bg-gray-1">
-      <aside className="min-w-0">
-        <Sidebar />
-      </aside>
-
+      <Sidebar className="min-w-0" />
       <section className="flex-1 min-w-0">
         <PetSitterNavbar
           avatarUrl={
@@ -840,189 +690,15 @@ export default function PetSitterProfilePage() {
 
           {/* Address - แสดงเฉพาะเมื่อสถานะเป็น Approved */}
           {approvalStatus === 'Approved' && (
-            <section className="bg-white rounded-xl py-4 px-12 mt-4 pb-7">
-            <h4 className="text-gray-4 font-bold text-xl pt-4">Address</h4>
-
-            <div className="mt-4 grid gap-4 md:grid-cols-2">
-              <div className="md:col-span-2">
-                <InputText
-                  placeholder=""
-                  label="Address detail*"
-                  type="text"
-                  variant={errors.address_detail ? "error" : "default"}
-                  {...register("address_detail", {
-                    required: "Please enter your address detail.",
-                  })}
-                />
-                {errors.address_detail && (
-                  <p className="mt-1 text-sm text-red">
-                    {errors.address_detail.message}
-                  </p>
-                )}
-              </div>
-
-              {/* Province */}
-              <div className="flex flex-col gap-1">
-                <label className="font-medium text-black">Province*</label>
-                <Controller
-                  name="address_province"
-                  control={control}
-                  rules={{ required: "Please select a province." }}
-                  render={({ field }) => (
-                    <Select
-                      value={field.value || ""}
-                      onValueChange={(val) => {
-                        if (val !== field.value) {
-                          field.onChange(val);
-                          onProvinceChange(val);
-                        }
-                      }}
-                    >
-                      <SelectTrigger
-                        className={`!h-12 w-full rounded-xl border px-4 text-left ${
-                          errors.address_province
-                            ? "!border-red focus:ring-red"
-                            : "border-gray-2"
-                        }`}
-                      >
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent className="bg-white border border-gray-2 max-h-72 overflow-auto">
-                        {provinceOpts.map((p) => (
-                          <SelectItem key={p.code} value={p.name}>
-                            {p.name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  )}
-                />
-                {errors.address_province && (
-                  <p className="mt-1 text-sm text-red">
-                    {errors.address_province.message}
-                  </p>
-                )}
-              </div>
-
-              {/* District */}
-              <div className="flex flex-col gap-1">
-                <label className="font-medium text-black">District*</label>
-                <Controller
-                  name="address_district"
-                  control={control}
-                  rules={{ required: "Please select a district." }}
-                  render={({ field }) => (
-                    <Select
-                      value={field.value || ""}
-                      onValueChange={(val) => {
-                        if (val !== field.value) {
-                          field.onChange(val);
-                          onDistrictChange(val);
-                        }
-                      }}
-                    >
-                      <SelectTrigger
-                        className={`!h-12 w-full rounded-xl border px-4 text-left ${
-                          errors.address_district
-                            ? "!border-red focus:ring-red"
-                            : "border-gray-2"
-                        }`}
-                      >
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent className="bg-white border border-gray-2 max-h-72 overflow-auto">
-                        {districtOpts.map((d) => (
-                          <SelectItem key={d.code} value={d.name}>
-                            {d.name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  )}
-                />
-                {errors.address_district && (
-                  <p className="mt-1 text-sm text-red">
-                    {errors.address_district.message}
-                  </p>
-                )}
-              </div>
-
-              {/* Sub-district */}
-              <div className="flex flex-col gap-1">
-                <label className="font-medium text-black">Sub-district*</label>
-                <Controller
-                  name="address_sub_district"
-                  control={control}
-                  rules={{ required: "Please select a sub-district." }}
-                  render={({ field }) => (
-                    <Select
-                      value={field.value}
-                      onValueChange={(val) => {
-                        field.onChange(val);
-                        onSubdistrictChange(val);
-                      }}
-                    >
-                      <SelectTrigger
-                        className={`!h-12 w-full rounded-xl border px-4 text-left ${
-                          errors.address_sub_district
-                            ? "!border-red focus:ring-red"
-                            : "border-gray-2"
-                        }`}
-                      >
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent className="bg-white border border-gray-2 max-h-72 overflow-auto">
-                        {subdistrictOpts.map((s) => (
-                          <SelectItem key={s.code} value={s.name}>
-                            {s.name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  )}
-                />
-                {errors.address_sub_district && (
-                  <p className="mt-1 text-sm text-red">
-                    {errors.address_sub_district.message}
-                  </p>
-                )}
-              </div>
-
-              <div>
-                <InputText
-                  placeholder=""
-                  label="Post code*"
-                  type="text"
-                  inputMode="numeric"
-                  pattern="[0-9]*"
-                  variant={errors.address_post_code ? "error" : "default"}
-                  readOnly
-                  {...register("address_post_code", {
-                    required:
-                      "Please select a sub-district to get the postcode.",
-                  })}
-                />
-                {errors.address_post_code && (
-                  <p className="mt-1 text-sm text-red">
-                    {errors.address_post_code.message}
-                  </p>
-                )}
-              </div>
-
-              <div className="md:col-span-2">
-                <div className="relative aspect-video w-full overflow-hidden rounded-xl border border-gray-2 bg-gray-1">
-                  <Image
-                    src="/images/map.svg"
-                    alt="Map preview"
-                    fill
-                    className="object-cover"
-                    priority={false}
-                  />
-                </div>
-              </div>
-            </div>
-          </section>
+            <AddressSection 
+            control={control}
+            register={register}
+            errors={errors}
+            watch={watch}
+            setValue={setValue}
+            />
           )}
+
         </form>
       </section>
       <Toaster position="top-right" />
