@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from "react";
+import React, { useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
 import { useForm, Controller } from "react-hook-form";
 import Sidebar from "@/components/layout/SitterSidebar";
@@ -118,7 +118,6 @@ export default function PetSitterProfilePage() {
   const [userId, setUserId] = useState<number | null>(null);
   const { status, update } = useSession();
   const [initialGallery, setInitialGallery] = useState<string[]>([]); //รูปที่โหลดมาจาก database
-  const [isProfileLoaded, setIsProfileLoaded] = useState(false);
   const [approvalStatus, setApprovalStatus] = useState<string>('');
   const [sitterData, setSitterData] = useState<{
     id: number;
@@ -214,7 +213,6 @@ export default function PetSitterProfilePage() {
           images: data.sitter?.images || [],
         });
         setInitialGallery(data.sitter?.images || []);
-        setIsProfileLoaded(true);
       } catch (error) {
         console.error("load profile error:", error);
       }
@@ -700,7 +698,7 @@ export default function PetSitterProfilePage() {
             setValue={setValue}
             />
           )}
-          
+
         </form>
       </section>
       <Toaster position="top-right" />

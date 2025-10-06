@@ -66,7 +66,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         status_updated_at: new Date()
       },
       include: {
-        sitter_approval_status: true,
+        approval_status: true,
         user: {
           select: {
             name: true,
@@ -97,7 +97,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       message: "Pet Sitter approved successfully",
       data: {
         sitterId: updatedSitter.id,
-        status: updatedSitter.sitter_approval_status.status_name,
+        status: updatedSitter.approval_status.status_name,
         approvedBy: user.name || user.email,
         updatedAt: updatedSitter.status_updated_at
       }
