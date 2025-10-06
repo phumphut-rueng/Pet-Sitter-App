@@ -1,11 +1,18 @@
-import { useState, useEffect, useCallback } from 'react';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Search } from 'lucide-react';
-import { StatusBadge, StatusKey } from '@/components/badges/StatusBadge';
-import { PetPawLoadingSmall } from '@/components/loading/PetPawLoadingSmall';
-import { Pagination } from '@/components/pagination/Pagination';
-import Link from 'next/link';
-import axios from 'axios';
+import { useState, useEffect, useCallback } from "react";
+import Head from "next/head";
+import AdminSidebar from "@/components/layout/AdminSidebar";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Search } from "lucide-react";
+import { StatusBadge, StatusKey } from "@/components/badges/StatusBadge";
+import { PetPawLoadingSmall } from "@/components/loading/PetPawLoadingSmall";
+import { Pagination } from "@/components/pagination/Pagination";
+import axios from "axios";
 
 interface SitterData {
   id: number;
@@ -52,27 +59,29 @@ interface ApiResponse {
 }
 
 export default function AdminPetSitterPage() {
-  const [searchTerm, setSearchTerm] = useState('');
-  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('');
-  const [statusFilter, setStatusFilter] = useState('');
-  const [sortOrder, setSortOrder] = useState('newest'); // newest หรือ oldest
+  const [searchTerm, setSearchTerm] = useState("");
+  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState("");
+  const [statusFilter, setStatusFilter] = useState("");
+  const [sortOrder, setSortOrder] = useState("newest"); // newest หรือ oldest
   const [sitters, setSitters] = useState<SitterData[]>([]);
   const [loading, setLoading] = useState(true);
   const [pagination, setPagination] = useState({
     page: 1,
     limit: 8,
     totalCount: 0,
-    totalPages: 0
+    totalPages: 0,
   });
 
   // Auto-complete states
-  const [suggestions, setSuggestions] = useState<Array<{
-    sitterName: string;
-    userName: string;
-    type: string;
-  }>>([]);
+  const [suggestions, setSuggestions] = useState<
+    Array<{
+      sitterName: string;
+      userName: string;
+      type: string;
+    }>
+  >([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
-  const [selectedSuggestion, setSelectedSuggestion] = useState<string>('');
+  const [selectedSuggestion, setSelectedSuggestion] = useState<string>("");
 
   // ฟังก์ชันดึงข้อมูล suggestions
   const fetchSuggestions = useCallback(async (query: string) => {
@@ -83,11 +92,13 @@ export default function AdminPetSitterPage() {
     }
 
     try {
-      const response = await axios.get(`/api/admin/search-suggestions?query=${encodeURIComponent(query)}`);
+      const response = await axios.get(
+        `/api/admin/search-suggestions?query=${encodeURIComponent(query)}`
+      );
       setSuggestions(response.data.suggestions || []);
       setShowSuggestions(true);
     } catch (error) {
-      console.error('Error fetching suggestions:', error);
+      console.error("Error fetching suggestions:", error);
       setSuggestions([]);
       setShowSuggestions(false);
     }
@@ -99,31 +110,39 @@ export default function AdminPetSitterPage() {
       setLoading(true);
       const params = new URLSearchParams({
         page: pagination.page.toString(),
-        limit: pagination.limit.toString()
+        limit: pagination.limit.toString(),
       });
 
       if (debouncedSearchTerm) {
-        params.append('searchTerm', debouncedSearchTerm);
+        params.append("searchTerm", debouncedSearchTerm);
       }
-      if (statusFilter && statusFilter !== 'all') {
-        params.append('status', statusFilter);
+      if (statusFilter && statusFilter !== "all") {
+        params.append("status", statusFilter);
       }
       if (sortOrder) {
-        params.append('sortOrder', sortOrder);
+        params.append("sortOrder", sortOrder);
       }
 
-      const response = await axios.get(`/api/admin/get-sitter?${params.toString()}`);
+      const response = await axios.get(
+        `/api/admin/get-sitter?${params.toString()}`
+      );
       const data: ApiResponse = response.data;
-      
+
       setSitters(data.data);
       setPagination(data.pagination);
     } catch (error) {
-      console.error('Error fetching sitters:', error);
+      console.error("Error fetching sitters:", error);
       setSitters([]);
     } finally {
       setLoading(false);
     }
-  }, [debouncedSearchTerm, statusFilter, sortOrder, pagination.page, pagination.limit]);
+  }, [
+    debouncedSearchTerm,
+    statusFilter,
+    sortOrder,
+    pagination.page,
+    pagination.limit,
+  ]);
 
   // Debounce search term - หน่วงเวลา 500ms ก่อนเรียก API
   useEffect(() => {
@@ -145,14 +164,14 @@ export default function AdminPetSitterPage() {
     } else if (!searchTerm) {
       setSuggestions([]);
       setShowSuggestions(false);
-      setSelectedSuggestion('');
+      setSelectedSuggestion("");
     }
   }, [searchTerm, fetchSuggestions, selectedSuggestion]);
 
   // Reset pagination เมื่อ search term หรือ sort order เปลี่ยน
   useEffect(() => {
     if (debouncedSearchTerm !== searchTerm || sortOrder) {
-      setPagination(prev => ({ ...prev, page: 1 }));
+      setPagination((prev) => ({ ...prev, page: 1 }));
     }
   }, [debouncedSearchTerm, searchTerm, sortOrder]);
 
@@ -165,23 +184,30 @@ export default function AdminPetSitterPage() {
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       const target = event.target as HTMLElement;
-      if (!target.closest('.search-container')) {
+      if (!target.closest(".search-container")) {
         setShowSuggestions(false);
       }
     };
 
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
   // ฟังก์ชันสำหรับเปลี่ยนหน้า
   const handlePageChange = (page: number) => {
-    setPagination(prev => ({ ...prev, page }));
+    setPagination((prev) => ({ ...prev, page }));
   };
 
   // ฟังก์ชันสำหรับจัดการ suggestions
-  const handleSuggestionClick = (suggestion: { sitterName: string; userName: string; type: string }) => {
-    const selectedName = suggestion.type === 'sitter' ? suggestion.sitterName : suggestion.userName;
+  const handleSuggestionClick = (suggestion: {
+    sitterName: string;
+    userName: string;
+    type: string;
+  }) => {
+    const selectedName =
+      suggestion.type === "sitter"
+        ? suggestion.sitterName
+        : suggestion.userName;
     setSearchTerm(selectedName);
     setSelectedSuggestion(selectedName);
     setShowSuggestions(false);
@@ -189,8 +215,8 @@ export default function AdminPetSitterPage() {
   };
 
   const handleClearSearch = () => {
-    setSearchTerm('');
-    setSelectedSuggestion('');
+    setSearchTerm("");
+    setSelectedSuggestion("");
     setShowSuggestions(false);
     setSuggestions([]);
   };
@@ -198,191 +224,263 @@ export default function AdminPetSitterPage() {
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
     setSearchTerm(value);
-    setSelectedSuggestion(''); // รีเซ็ตเมื่อพิมพ์ใหม่
+    setSelectedSuggestion(""); // รีเซ็ตเมื่อพิมพ์ใหม่
   };
 
   // ฟังก์ชันสำหรับแปลงสถานะเป็น StatusKey
   const getStatusKey = (status: string): StatusKey => {
     switch (status) {
-      case 'Waiting for approve':
-        return 'waitingApprove';
-      case 'Approved':
-        return 'approved';
-      case 'Rejected':
-        return 'rejected';
+      case "Waiting for approve":
+        return "waitingApprove";
+      case "Approved":
+        return "approved";
+      case "Rejected":
+        return "rejected";
       default:
-        return 'waitingApprove'; // fallback เป็น waitingApprove
+        return "waitingApprove"; // fallback เป็น waitingApprove
     }
   };
 
   return (
-    <div className="min-h-screen bg-muted">
-      <div className="container mx-auto p-6">
-        {/* Header and Search/Filter Bar */}
-        <div className="flex items-center justify-between mb-6">
-          {/* Header */}
-          <h1 className="text-2xl font-bold text-ink">Pet Sitter</h1>
+    <>
+      <Head>
+        <title>Admin • Pet Sitter</title>
+      </Head>
 
-          {/* Search and Filter */}
-          <div className="flex items-center space-x-4">
-            {/* Search Input with Auto-complete */}
-            <div className="relative search-container">
-              <input
-                type="text"
-                placeholder="Search by name..."
-                value={searchTerm}
-                onChange={handleInputChange}
-                className="w-64 h-10 px-3 py-2 text-sm border border-border rounded-md bg-white placeholder:text-muted-text focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent pr-10"
-              />
-              {searchTerm && (
-                <button
-                  onClick={handleClearSearch}
-                  className="absolute right-8 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-text hover:text-ink flex items-center justify-center"
-                >
-                  ×
-                </button>
-              )}
-              <Search className="absolute right-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-text" />
-              
-              {/* Suggestions Dropdown */}
-              {showSuggestions && suggestions.length > 0 && (
-                <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-border rounded-md shadow-lg z-50 max-h-60 overflow-y-auto">
-                  {suggestions.map((suggestion, index) => {
-                    const displayName = suggestion.type === 'sitter' ? suggestion.sitterName : suggestion.userName;
-                    const typeLabel = suggestion.type === 'sitter' ? 'Pet Sitter' : 'Full Name';
-                    
-                    return (
-                      <div
-                        key={index}
-                        onClick={() => handleSuggestionClick(suggestion)}
-                        className="px-3 py-2 text-sm cursor-pointer hover:bg-muted border-b border-border last:border-b-0"
-                      >
-                        <div className="font-medium text-ink">{displayName}</div>
-                        <div className="text-xs text-muted-text">{typeLabel}</div>
-                      </div>
-                    );
-                  })}
-                </div>
-              )}
-            </div>
+      <div className="mx-auto w-full max-w-[1200px]">
+        <div className="flex gap-6">
+          <aside className="hidden md:block md:w-[240px] shrink-0">
+            <AdminSidebar sticky />
+          </aside>
 
-            {/* Sort Order Select */}
-            <Select value={sortOrder} onValueChange={setSortOrder}>
-              <SelectTrigger className="w-32 h-10">
-                <SelectValue placeholder="Sort by" />
-              </SelectTrigger>
-              <SelectContent className="bg-white">
-                <SelectItem value="newest" className="hover:bg-muted">Newest</SelectItem>
-                <SelectItem value="oldest" className="hover:bg-muted">Oldest</SelectItem>
-              </SelectContent>
-            </Select>
+          {/* Main */}
+          <main className="flex-1 min-w-0 px-4 py-6 lg:px-6">
+            {/* Header and Search/Filter Bar */}
+            <div className="flex items-center justify-between mb-6">
+              {/* Header */}
+              <h1 className="text-2xl font-bold text-ink">Pet Sitter</h1>
 
-            {/* Status Select */}
-            <Select value={statusFilter} onValueChange={setStatusFilter}>
-              <SelectTrigger className="w-40 h-10">
-                <SelectValue placeholder="All status" />
-              </SelectTrigger>
-              <SelectContent className="bg-white">
-                <SelectItem value="all" className="hover:bg-muted">All status</SelectItem>
-                <SelectItem value="waiting" className="hover:bg-muted">Waiting for approve</SelectItem>
-                <SelectItem value="approved" className="hover:bg-muted">Approved</SelectItem>
-                <SelectItem value="rejected" className="hover:bg-muted">Rejected</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-        </div>
+              {/* Search and Filter */}
+              <div className="flex items-center space-x-4">
+                {/* Search Input with Auto-complete */}
+                <div className="relative search-container">
+                  <input
+                    type="text"
+                    placeholder="Search by name..."
+                    value={searchTerm}
+                    onChange={handleInputChange}
+                    className="w-64 h-10 px-3 py-2 text-sm border border-border rounded-md bg-white placeholder:text-muted-text focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent pr-10"
+                  />
+                  {searchTerm && (
+                    <button
+                      onClick={handleClearSearch}
+                      className="absolute right-8 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-text hover:text-ink flex items-center justify-center"
+                    >
+                      ×
+                    </button>
+                  )}
+                  <Search className="absolute right-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-text" />
 
-        {/* Table */}
-        <div className="bg-white rounded-xl shadow-lg border border-border overflow-hidden">
-          {/* Table Header */}
-          <div className="bg-ink text-white">
-            <div className="grid grid-cols-4 gap-6 px-8 py-5">
-              <div className="font-semibold text-lg">Full Name</div>
-              <div className="font-semibold text-lg">Pet Sitter Name</div>
-              <div className="font-semibold text-lg">Email</div>
-              <div className="font-semibold text-lg">Status</div>
-            </div>
-          </div>
+                  {/* Suggestions Dropdown */}
+                  {showSuggestions && suggestions.length > 0 && (
+                    <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-border rounded-md shadow-lg z-50 max-h-60 overflow-y-auto">
+                      {suggestions.map((suggestion, index) => {
+                        const displayName =
+                          suggestion.type === "sitter"
+                            ? suggestion.sitterName
+                            : suggestion.userName;
+                        const typeLabel =
+                          suggestion.type === "sitter"
+                            ? "Pet Sitter"
+                            : "Full Name";
 
-          {/* Table Body */}
-          <div className="divide-y divide-border">
-            {loading ? (
-              <div className="flex justify-center py-12">
-                <PetPawLoadingSmall message="Loading Pet Sitters" />
-              </div>
-            ) : sitters.length === 0 ? (
-              <div className="px-8 py-12 text-center text-muted-text text-lg">
-                ไม่พบข้อมูล Pet Sitter
-              </div>
-            ) : (
-              sitters.map((sitter) => {
-                const statusKey = getStatusKey(sitter.approval_status);
-                const initials = sitter.user_name
-                  ? sitter.user_name
-                      .split(' ')
-                      .map(name => name.charAt(0))
-                      .join('')
-                      .toUpperCase()
-                      .slice(0, 2)
-                  : sitter.user_email.charAt(0).toUpperCase();
-
-                return (
-                  <Link 
-                    key={sitter.id} 
-                    href={`/admin/petsitter/${sitter.id}`}
-                    className="block px-8 py-6 hover:bg-muted transition-colors duration-200 cursor-pointer"
-                  >
-                    <div className="grid grid-cols-4 gap-6 items-center">
-                      {/* Full Name with Avatar */}
-                      <div className="flex items-center gap-4">
-                        {sitter.user_profile_image ? (
-                          <div className="w-12 h-12 rounded-full overflow-hidden shadow-md">
-                            <img
-                              src={sitter.user_profile_image}
-                              alt={sitter.user_name || sitter.user_email}
-                              className="w-full h-full object-cover"
-                            />
+                        return (
+                          <div
+                            key={index}
+                            onClick={() => handleSuggestionClick(suggestion)}
+                            className="px-3 py-2 text-sm cursor-pointer hover:bg-muted border-b border-border last:border-b-0"
+                          >
+                            <div className="font-medium text-ink">
+                              {displayName}
+                            </div>
+                            <div className="text-xs text-muted-text">
+                              {typeLabel}
+                            </div>
                           </div>
-                        ) : (
-                          <div className="w-12 h-12 bg-gradient-to-br from-blue-400 to-purple-500 rounded-full flex items-center justify-center shadow-md">
-                            <span className="text-white font-semibold text-lg">{initials}</span>
-                          </div>
-                        )}
-                        <span className="text-ink font-medium text-lg">{sitter.user_name || sitter.user_email}</span>
-                      </div>
-
-                      {/* Pet Sitter Name */}
-                      <div className="text-ink font-medium text-lg line-clamp-2 overflow-hidden">
-                        {sitter.name || 'No sitter name'}
-                      </div>
-
-                      {/* Email */}
-                      <div className="text-muted-text text-lg">{sitter.user_email}</div>
-
-                      {/* Status */}
-                      <div className="flex items-center">
-                        <StatusBadge status={statusKey} className="text-lg" />
-                      </div>
+                        );
+                      })}
                     </div>
-                  </Link>
-                );
-              })
-            )}
-          </div>
-        </div>
+                  )}
+                </div>
 
-        {/* Pagination */}
-        {!loading && sitters.length > 0 && (
-          <div className="mt-6 flex justify-center">
-            <Pagination
-              currentPage={pagination.page}
-              totalPages={pagination.totalPages}
-              onClick={handlePageChange}
-            />
-          </div>
-        )}
+                {/* Sort Order Select */}
+                <Select value={sortOrder} onValueChange={setSortOrder}>
+                  <SelectTrigger className="w-32 h-10">
+                    <SelectValue placeholder="Sort by" />
+                  </SelectTrigger>
+                  <SelectContent className="bg-white">
+                    <SelectItem value="newest" className="hover:bg-muted">
+                      Newest
+                    </SelectItem>
+                    <SelectItem value="oldest" className="hover:bg-muted">
+                      Oldest
+                    </SelectItem>
+                  </SelectContent>
+                </Select>
+
+                {/* Status Select */}
+                <Select value={statusFilter} onValueChange={setStatusFilter}>
+                  <SelectTrigger className="w-40 h-10">
+                    <SelectValue placeholder="All status" />
+                  </SelectTrigger>
+                  <SelectContent className="bg-white">
+                    <SelectItem value="all" className="hover:bg-muted">
+                      All status
+                    </SelectItem>
+                    <SelectItem value="waiting" className="hover:bg-muted">
+                      Waiting for approve
+                    </SelectItem>
+                    <SelectItem value="approved" className="hover:bg-muted">
+                      Approved
+                    </SelectItem>
+                    <SelectItem value="rejected" className="hover:bg-muted">
+                      Rejected
+                    </SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
+            {/* Table */}
+            <div className="overflow-hidden rounded-2xl border border-gray-200 bg-white">
+              <table className="min-w-full">
+                <thead>
+                  <tr className="bg-ink/[0.92] text-white text-left">
+                    <th className="px-5 py-3 caption font-medium">Full Name</th>
+                    <th className="px-5 py-3 caption font-medium">
+                      Pet Sitter Name
+                    </th>
+                    <th className="px-5 py-3 caption font-medium">Email</th>
+                    <th className="px-5 py-3 caption font-medium">Status</th>
+                  </tr>
+                </thead>
+
+                <tbody>
+                  {loading ? (
+                    <tr>
+                      <td
+                        colSpan={4}
+                        className="px-5 py-8 text-center text-gray-500 body-sm"
+                      >
+                        <PetPawLoadingSmall message="Loading Pet Sitters" />
+                      </td>
+                    </tr>
+                  ) : sitters.length === 0 ? (
+                    <tr>
+                      <td
+                        colSpan={4}
+                        className="px-5 py-8 text-center text-gray-500 body-sm"
+                      >
+                        No data
+                      </td>
+                    </tr>
+                  ) : (
+                    sitters.map((sitter) => {
+                      const statusKey = getStatusKey(sitter.approval_status);
+                      const initials = sitter.user_name
+                        ? sitter.user_name
+                            .split(" ")
+                            .map((name) => name.charAt(0))
+                            .join("")
+                            .toUpperCase()
+                            .slice(0, 2)
+                        : sitter.user_email.charAt(0).toUpperCase();
+
+                       return (
+                         <tr
+                           key={sitter.id}
+                           className="border-t last:border-b hover:bg-gray-50 cursor-pointer"
+                           onClick={() => window.location.href = `/admin/petsitter/${sitter.id}`}
+                         >
+                           {/* Full Name */}
+                           <td className="px-5 py-4">
+                             <div className="flex items-center gap-3 min-w-0">
+                               <div className="flex-shrink-0 h-10 w-10">
+                                 {sitter.user_profile_image ? (
+                                   <img
+                                     className="h-10 w-10 rounded-full object-cover"
+                                     src={sitter.user_profile_image}
+                                     alt={sitter.user_name}
+                                   />
+                                 ) : (
+                                   <div className="h-10 w-10 rounded-full bg-brand flex items-center justify-center">
+                                     <span className="text-sm font-medium text-white">
+                                       {initials}
+                                     </span>
+                                   </div>
+                                 )}
+                               </div>
+                               <div className="min-w-0">
+                                 <div className="body-sm text-ink/90 truncate max-w-[200px]">
+                                   {sitter.user_name}
+                                 </div>
+                               </div>
+                             </div>
+                           </td>
+
+                           {/* Pet Sitter Name */}
+                           <td className="px-5 py-4">
+                             <div className="body-sm text-ink/80 max-w-[200px] line-clamp-2">
+                               {sitter.name || "No trade name"}
+                             </div>
+                           </td>
+
+                           {/* Email */}
+                           <td className="px-5 py-4">
+                             <div className="body-sm text-ink/80 truncate max-w-[250px]">
+                               {sitter.user_email}
+                             </div>
+                           </td>
+
+                           {/* Status */}
+                           <td className="px-5 py-4">
+                             <StatusBadge status={statusKey} />
+                           </td>
+                         </tr>
+                       );
+                    })
+                  )}
+                </tbody>
+              </table>
+            </div>
+
+            {/* Pagination */}
+            {!loading && sitters.length > 0 && (
+              <div className="mt-6 grid grid-cols-3 items-center">
+                <div className="text-sm text-gray-500">
+                  Showing{" "}
+                  {sitters.length === 0 ? 0 : (pagination.page - 1) * pagination.limit + 1}
+                  {sitters.length > 0 && (
+                    <>
+                      {" - "}
+                      {(pagination.page - 1) * pagination.limit + sitters.length}
+                    </>
+                  )}{" "}
+                  of {pagination.totalCount}
+                </div>
+                <div className="flex justify-center">
+                  <Pagination
+                    currentPage={pagination.page}
+                    totalPages={pagination.totalPages}
+                    onClick={handlePageChange}
+                  />
+                </div>
+                <div /> {/* right spacer */}
+              </div>
+            )}
+          </main>
+        </div>
       </div>
-    </div>
+    </>
   );
 }
-

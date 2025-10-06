@@ -9,16 +9,26 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   }
 
   try {
-    
-
-    const { sitterId } = req.query;
+    const { sitterId, page = 1, limit = 8 } = req.query;
 
     // Validate sitterId
     if (!sitterId || isNaN(Number(sitterId))) {
       return res.status(400).json({ message: "Invalid sitter ID" });
     }
 
-    // Fetch approval history for the sitter
+    // Validate pagination parameters
+    const pageNum = Math.max(1, parseInt(page as string) || 1);
+    const limitNum = Math.min(100, Math.max(1, parseInt(limit as string) || 8));
+    const skip = (pageNum - 1) * limitNum;
+
+    // Get total count first
+    const totalCount = await prisma.sitter_approval_history.count({
+      where: {
+        sitter_id: parseInt(sitterId as string)
+      }
+    });
+
+    // Fetch approval history for the sitter with pagination
     const history = await prisma.sitter_approval_history.findMany({
       where: {
         sitter_id: parseInt(sitterId as string)
@@ -50,7 +60,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       },
       orderBy: {
         changed_at: 'desc'
-      }
+      },
+      skip: skip,
+      take: limitNum
     });
 
     // Get status names for each status_id
@@ -90,7 +102,14 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     return res.status(200).json({
       message: "Approval history retrieved successfully",
       data: formattedHistory,
-      totalRecords: formattedHistory.length
+      pagination: {
+        currentPage: pageNum,
+        totalPages: Math.ceil(totalCount / limitNum),
+        totalRecords: totalCount,
+        recordsPerPage: limitNum,
+        hasNextPage: pageNum < Math.ceil(totalCount / limitNum),
+        hasPrevPage: pageNum > 1
+      }
     });
 
   } catch (error) {
