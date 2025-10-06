@@ -135,7 +135,26 @@ export default function PetSitterProfilePage() {
   const { status, update } = useSession();
   const [initialGallery, setInitialGallery] = useState<string[]>([]);
   const [approvalStatus, setApprovalStatus] = useState<string>('');
-  const [sitterData, setSitterData] = useState<any>(null);
+  const [sitterData, setSitterData] = useState<{
+    id: number;
+    name: string | null;
+    location_description: string | null;
+    phone: string | null;
+    introduction: string | null;
+    address_detail: string | null;
+    address_province: string | null;
+    address_district: string | null;
+    address_sub_district: string | null;
+    address_post_code: string | null;
+    base_price: string | null;
+    experience: number | null;
+    service_description: string | null;
+    approval_status_id: number;
+    admin_note?: string | null;
+    sitter_image?: Array<{ id: number; image_url: string }>;
+    sitter_pet_type?: Array<{ pet_type: { pet_type_name: string } }>;
+    petTypes?: Array<{ pet_type: { pet_type_name: string } }>;
+  } | null>(null);
 
   type Province = {
     code: string;
@@ -231,7 +250,7 @@ export default function PetSitterProfilePage() {
         const data: GetSitterResponse = await res.json();
         setUserId(data.user.id);
         setApprovalStatus(data.user.sitter_approval_status?.status_name || 'Waiting for approve');
-        setSitterData(data.sitter);
+        setSitterData(data.sitter as typeof sitterData);
 
         initialAddrRef.current = {
           province: data.sitter?.address_province || "",
@@ -557,7 +576,7 @@ export default function PetSitterProfilePage() {
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="text-sm text-red font-medium break-words">
-                    <span className="font-medium">Your request has not been approved:</span> '{sitterData.admin_note}'
+                    <span className="font-medium">Your request has not been approved:</span> &apos;{sitterData.admin_note}&apos;
                   </p>
                 </div>
               </div>

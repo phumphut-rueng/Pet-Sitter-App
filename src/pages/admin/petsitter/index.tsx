@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import Head from "next/head";
+import Image from "next/image";
 import AdminSidebar from "@/components/layout/AdminSidebar";
 import {
   Select,
@@ -407,10 +408,12 @@ export default function AdminPetSitterPage() {
                              <div className="flex items-center gap-3 min-w-0">
                                <div className="flex-shrink-0 h-10 w-10">
                                  {sitter.user_profile_image ? (
-                                   <img
+                                   <Image
                                      className="h-10 w-10 rounded-full object-cover"
                                      src={sitter.user_profile_image}
                                      alt={sitter.user_name}
+                                     width={40}
+                                     height={40}
                                    />
                                  ) : (
                                    <div className="h-10 w-10 rounded-full bg-brand flex items-center justify-center">

@@ -1,5 +1,5 @@
 import { useRouter } from "next/router";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import Head from "next/head";
 import AdminSidebar from "@/components/layout/AdminSidebar";
 import Link from "next/link";
@@ -66,19 +66,7 @@ export default function PetSitterDetailPage() {
   const [totalHistoryCount, setTotalHistoryCount] = useState(0);
   const itemsPerPage = 8;
 
-  useEffect(() => {
-    if (id) {
-      fetchSitterDetail();
-    }
-  }, [id]);
-
-  useEffect(() => {
-    if (activeTab === "history" && id) {
-      fetchHistory(currentPage);
-    }
-  }, [activeTab, id, currentPage]);
-
-  const fetchSitterDetail = async () => {
+  const fetchSitterDetail = useCallback(async () => {
     try {
       setLoading(true);
       const response = await axios.get(`/api/admin/petsitter/get-sitter-by-id?id=${id}`);
@@ -88,9 +76,9 @@ export default function PetSitterDetailPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [id]);
 
-  const fetchHistory = async (page = 1) => {
+  const fetchHistory = useCallback(async (page = 1) => {
     try {
       setLoadingHistory(true);
       const response = await axios.get(`/api/admin/petsitter/history?sitterId=${id}&page=${page}&limit=${itemsPerPage}`);
@@ -104,7 +92,19 @@ export default function PetSitterDetailPage() {
     } finally {
       setLoadingHistory(false);
     }
-  };
+  }, [id, itemsPerPage]);
+
+  useEffect(() => {
+    if (id) {
+      fetchSitterDetail();
+    }
+  }, [id, fetchSitterDetail]);
+
+  useEffect(() => {
+    if (activeTab === "history" && id) {
+      fetchHistory(currentPage);
+    }
+  }, [activeTab, id, currentPage, fetchHistory]);
 
   const getStatusKey = (status: string): StatusKey => {
     switch (status) {
@@ -308,7 +308,7 @@ export default function PetSitterDetailPage() {
                       <span className="font-medium">
                         Their request has not been approved:
                       </span>{" "}
-                      '{sitter.admin_note}'
+                      &apos;{sitter.admin_note}&apos;
                     </p>
                   </div>
                 </div>
@@ -371,9 +371,11 @@ export default function PetSitterDetailPage() {
                     <div className="w-64 flex-shrink-0">
                       <div className="w-64 h-64 rounded-full overflow-hidden bg-muted">
                         {sitter.user_profile_image ? (
-                          <img
+                          <Image
                             src={sitter.user_profile_image}
                             alt={sitter.user_name}
+                            width={256}
+                            height={256}
                             className="w-full h-full object-cover"
                           />
                         ) : (
@@ -688,7 +690,13 @@ export default function PetSitterDetailPage() {
                             </tr>
                           </thead>
                           <tbody className="bg-white divide-y divide-border">
-                            {historyData.map((record: any, index: number) => (
+                            {historyData.map((record: {
+                              id: number;
+                              statusName: string;
+                              adminName?: string;
+                              adminNote?: string;
+                              changedAt: string;
+                            }, index: number) => (
                               <tr
                                 key={record.id}
                                 className={

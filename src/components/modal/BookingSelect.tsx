@@ -17,7 +17,7 @@ interface BookingSelectProps {
 }
 
 export default function BookingSelect({
-    sitterId = 1, //เดี๋ยวใช้
+    sitterId = 1, // eslint-disable-line @typescript-eslint/no-unused-vars
     open,
     onOpenChange,
     disabledDates = [],
