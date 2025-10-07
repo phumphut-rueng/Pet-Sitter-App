@@ -1,13 +1,7 @@
-import { Pet, PetStatus } from "@/types/pet.types";
+import { Pet } from "@/types/pet.types";
 import CreateNewPetCard from "../cards/CreateNewPetCard";
 import PetCard from "../cards/PetCard";
-import { Dispatch, SetStateAction, useEffect, useState } from "react";
-import axios, { AxiosError } from "axios";
-
-interface ErrorResponse {
-    error: string
-    details?: unknown
-}
+import { Dispatch, SetStateAction } from "react";
 
 export default function BookingSelectYourPet({
     pets,

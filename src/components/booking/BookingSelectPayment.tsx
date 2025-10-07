@@ -1,7 +1,5 @@
 import { useBookingForm } from "@/hooks/useBookingForm"
 import InputText from "../input/InputText";
-import InputTextArea from "../input/InputTextArea";
-import PrimaryButton from "../buttons/PrimaryButton";
 
 export default function BookingSelectPayment() {
     const {
