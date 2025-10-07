@@ -85,32 +85,7 @@ const chatMessages = {
       isImage: false
     }
   ],
-  '3': [ // Emma Wilson
-    {
-      id: '1',
-      message: 'Hi there!',
-      sender: 'other',
-      avatar: '/images/demo/bird.svg',
-      timestamp: '8:45 AM',
-      isImage: false
-    },
-    {
-      id: '2',
-      message: 'hi',
-      sender: 'user',
-      avatar: '/images/demo/bird.svg',
-      timestamp: '8:46 AM',
-      isImage: false
-    },
-    {
-      id: '3',
-      message: 'How can I help you today?',
-      sender: 'other',
-      avatar: '/images/demo/bird.svg',
-      timestamp: '8:47 AM',
-      isImage: false
-    }
-  ],
+  
   '4': [ // David Brown
     {
       id: '1',
