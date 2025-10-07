@@ -57,6 +57,61 @@ export default function ChatWidget() {
   const { isConnected, sendMessage, userId, onlineUsers, messages: socketMessages, socket } = useSocketContext();
   const router = useRouter();
 
+  // ฟังก์ชันสำหรับคำนวณเวลาสัมพัทธ์ (Relative Time) เหมือน Facebook
+  const getRelativeTime = (timestamp: Date | string): string => {
+    // ตรวจสอบว่า timestamp มีค่าและถูกต้อง
+    if (!timestamp) {
+      return 'เวลาไม่ระบุ';
+    }
+
+    const now = new Date();
+    const messageTime = new Date(timestamp);
+    
+    // ตรวจสอบว่า Date object ถูกต้อง
+    if (isNaN(messageTime.getTime())) {
+      console.error('Invalid timestamp:', timestamp);
+      return 'เวลาไม่ถูกต้อง';
+    }
+
+    const diffInSeconds = Math.floor((now.getTime() - messageTime.getTime()) / 1000);
+
+    // ถ้าเป็นเวลาที่ผ่านมาไม่เกิน 1 นาที
+    if (diffInSeconds < 60) {
+      return 'Just now';
+    }
+
+    // ถ้าเป็นเวลาที่ผ่านมาไม่เกิน 1 ชั่วโมง
+    const diffInMinutes = Math.floor(diffInSeconds / 60);
+    if (diffInMinutes < 60) {
+      return `${diffInMinutes} minute${diffInMinutes === 1 ? '' : 's'} ago`;
+    }
+
+    // ถ้าเป็นเวลาที่ผ่านมาไม่เกิน 24 ชั่วโมง
+    const diffInHours = Math.floor(diffInMinutes / 60);
+    if (diffInHours < 24) {
+      return `${diffInHours} hour${diffInHours === 1 ? '' : 's'} ago`;
+    }
+
+    // ถ้าเป็นเวลาที่ผ่านมาไม่เกิน 7 วัน
+    const diffInDays = Math.floor(diffInHours / 24);
+    if (diffInDays < 7) {
+      return `${diffInDays} day${diffInDays === 1 ? '' : 's'} ago`;
+    }
+
+    // ถ้าเป็นเวลาที่ผ่านมามากกว่า 7 วัน ให้แสดงวันที่
+    const diffInWeeks = Math.floor(diffInDays / 7);
+    if (diffInWeeks < 4) {
+      return `${diffInWeeks} week${diffInWeeks === 1 ? '' : 's'} ago`;
+    }
+
+    // ถ้าเป็นเวลาที่ผ่านมามากกว่า 4 สัปดาห์ ให้แสดงวันที่แบบเต็ม
+    return messageTime.toLocaleDateString('en-US', {
+      month: 'short',
+      day: 'numeric',
+      year: messageTime.getFullYear() !== now.getFullYear() ? 'numeric' : undefined
+    });
+  };
+
   const scrollToBottom = () => {
     // ใช้ requestAnimationFrame เพื่อให้แน่ใจว่า DOM ได้อัพเดทแล้ว
     requestAnimationFrame(() => {
@@ -84,11 +139,7 @@ export default function ChatWidget() {
         (lastMessage.sender_id === parseInt(userId || '0') ? `You: ${lastMessage.content}` : lastMessage.content || '') : 
         'No messages yet',
       timestamp: lastMessage?.timestamp ? 
-        new Date(lastMessage.timestamp).toLocaleTimeString('en-US', { 
-          hour: 'numeric', 
-          minute: '2-digit',
-          hour12: true 
-        }) : 
+        getRelativeTime(lastMessage.timestamp) : 
         'No time',
       avatar: otherUser.profile_image || '/images/avatar-default.png',
       unreadCount: chat.unread_count || 0,
@@ -155,6 +206,16 @@ export default function ChatWidget() {
       fetchChats();
     }
   }, [userId]);
+
+  // อัปเดตเวลาสัมพัทธ์ทุกนาที
+  useEffect(() => {
+    const interval = setInterval(() => {
+      // Force re-render เพื่ออัปเดตเวลาสัมพัทธ์
+      setChats(prev => [...prev]);
+    }, 60000); // อัปเดตทุก 60 วินาที
+
+    return () => clearInterval(interval);
+  }, []);
 
   // จัดการกับ chatId จาก URL parameter
   useEffect(() => {
@@ -227,7 +288,7 @@ export default function ChatWidget() {
         
         if (existingChatIndex !== -1) {
           // อัปเดต chat ที่มีอยู่แล้ว
-          return prev.map(chat => {
+          const updatedChats = prev.map(chat => {
             if (chat.id === latestMessage.chatId) {
               const updatedChat: Chat = {
                 ...chat,
@@ -256,11 +317,18 @@ export default function ChatWidget() {
             }
             return chat;
           });
-                } else {
-                  // ถ้า chat ยังไม่อยู่ใน list (เช่น ถูกซ่อนไว้) ให้ refresh chat list
-                  fetchChats();
-                  return prev;
-                }
+          
+          // เรียงลำดับตาม updated_at (ใหม่สุดขึ้นบน) - เหมือนตอนส่งข้อความ
+          return updatedChats.sort((a, b) => {
+            const dateA = a.updated_at ? new Date(a.updated_at).getTime() : 0;
+            const dateB = b.updated_at ? new Date(b.updated_at).getTime() : 0;
+            return dateB - dateA;
+          });
+        } else {
+          // ถ้า chat ยังไม่อยู่ใน list (เช่น ถูกซ่อนไว้) ให้ refresh chat list
+          fetchChats();
+          return prev;
+        }
       });
     }
   }, [socketMessages, selectedChatId]);
@@ -276,15 +344,24 @@ export default function ChatWidget() {
       
       // อัปเดต unread count ใน chat list เฉพาะเมื่อไม่ใช่ chat ปัจจุบันที่กำลังดูอยู่
       if (chatId.toString() !== selectedChatId) {
-        setChats(prev => prev.map(chat => {
-          if (chat.id === chatId) {
-            return {
-              ...chat,
-              unread_count: newUnreadCount
-            };
-          }
-          return chat;
-        }));
+        setChats(prev => {
+          const updatedChats = prev.map(chat => {
+            if (chat.id === chatId) {
+              return {
+                ...chat,
+                unread_count: newUnreadCount
+              };
+            }
+            return chat;
+          });
+          
+          // เรียงลำดับตาม updated_at (ใหม่สุดขึ้นบน) เพื่อให้ chat ที่มีข้อความใหม่ขึ้นไปบนสุด
+          return updatedChats.sort((a, b) => {
+            const dateA = a.updated_at ? new Date(a.updated_at).getTime() : 0;
+            const dateB = b.updated_at ? new Date(b.updated_at).getTime() : 0;
+            return dateB - dateA;
+          });
+        });
       }
     };
 
@@ -309,15 +386,24 @@ export default function ChatWidget() {
     }
     
     // รีเซ็ต unread count เมื่อเลือก chat
-    setChats(prev => prev.map(chat => {
-      if (chat.id.toString() === chatId) {
-        return {
-          ...chat,
-          unread_count: 0
-        };
-      }
-      return chat;
-    }));
+    setChats(prev => {
+      const updatedChats = prev.map(chat => {
+        if (chat.id.toString() === chatId) {
+          return {
+            ...chat,
+            unread_count: 0
+          };
+        }
+        return chat;
+      });
+      
+      // เรียงลำดับตาม updated_at (ใหม่สุดขึ้นบน) เพื่อให้แน่ใจว่า chat list เรียงลำดับถูกต้อง
+      return updatedChats.sort((a, b) => {
+        const dateA = a.updated_at ? new Date(a.updated_at).getTime() : 0;
+        const dateB = b.updated_at ? new Date(b.updated_at).getTime() : 0;
+        return dateB - dateA;
+      });
+    });
 
     // อัปเดต unread count ใน database
     try {
@@ -432,12 +518,7 @@ export default function ChatWidget() {
             message: msg.content || '',
             sender: msg.sender_id === parseInt(userId || '0') ? 'user' : 'other',
             avatar: msg.sender.profile_image || '/images/avatar-default.png',
-            timestamp: msg.timestamp ? 
-              new Date(msg.timestamp).toLocaleTimeString('en-US', { 
-                hour: 'numeric', 
-                minute: '2-digit',
-                hour12: true 
-              }) : '',
+            timestamp: msg.timestamp ? msg.timestamp.toString() : '', // ส่งเป็น string ของ timestamp
             isImage: msg.message_type === 'IMAGE',
             imageUrl: msg.image_url || undefined
           }))}
