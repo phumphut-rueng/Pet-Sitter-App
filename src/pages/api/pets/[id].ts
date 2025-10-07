@@ -4,24 +4,70 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/pages/api/auth/[...nextauth]";
 import { petSchema } from "@/lib/validators/pet";
 
-export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+type PetResponse = {
+  id: number;
+  name: string;
+  breed: string;
+  sex: "Male" | "Female";
+  ageMonth: number;
+  color: string;
+  weightKg: number;
+  about: string;
+  imageUrl?: string;
+  petTypeId: number;
+  petTypeName: string;
+};
+
+type SuccessResponse = 
+  | PetResponse 
+  | { message: string };
+
+type ErrorResponse = {
+  message: string;
+  details?: unknown;
+};
+
+export default async function handler(
+  req: NextApiRequest,
+  res: NextApiResponse<SuccessResponse | ErrorResponse>
+) {
+  // Check authentication
   const session = await getServerSession(req, res, authOptions);
   const userIdStr = session?.user?.id;
-  if (!userIdStr) return res.status(401).json({ error: "Unauthorized" });
+  
+  if (!userIdStr) {
+    return res.status(401).json({ 
+      message: "Unauthorized" 
+    });
+  }
 
   const userId = Number(userIdStr);
-  if (!Number.isFinite(userId)) return res.status(400).json({ error: "Invalid user id" });
+  if (!Number.isFinite(userId)) {
+    return res.status(400).json({ 
+      message: "Invalid user id" 
+    });
+  }
 
   const id = Number(req.query.id);
-  if (!Number.isFinite(id)) return res.status(400).json({ error: "Invalid id" });
+  if (!Number.isFinite(id)) {
+    return res.status(400).json({ 
+      message: "Invalid pet id" 
+    });
+  }
 
   try {
+    // GET - ดึงข้อมูล pet
     if (req.method === "GET") {
       const pet = await prisma.pet.findFirst({
-        where: { id, owner_id: userId },   
+        where: { id, owner_id: userId },
         include: { pet_type: true },
       });
-      if (!pet) return res.status(404).json({ error: "Pet not found" });
+
+      if (!pet) {
+        return res.status(404).json({ 
+          message: "Pet not found" 
+        });
+      }
 
       return res.status(200).json({
         id: pet.id,
@@ -38,17 +84,21 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       });
     }
 
+    // PUT - อัพเดท pet
     if (req.method === "PUT") {
       const parsed = petSchema.safeParse(req.body);
+      
       if (!parsed.success) {
-        return res
-          .status(400)
-          .json({ error: "Validation error", details: parsed.error.flatten() });
+        return res.status(400).json({
+          message: "Validation error",
+          details: parsed.error.flatten(),
+        });
       }
+
       const data = parsed.data;
 
       const updated = await prisma.pet.updateMany({
-        where: { id, owner_id: userId },   
+        where: { id, owner_id: userId },
         data: {
           pet_type_id: data.petTypeId,
           name: data.name,
@@ -62,23 +112,44 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           updated_at: new Date(),
         },
       });
-      if (updated.count === 0) return res.status(404).json({ error: "Pet not found" });
 
-      return res.status(200).json({ message: "OK" });
+      if (updated.count === 0) {
+        return res.status(404).json({ 
+          message: "Pet not found" 
+        });
+      }
+
+      return res.status(200).json({ 
+        message: "Pet updated successfully" 
+      });
     }
 
+    // DELETE - ลบ pet
     if (req.method === "DELETE") {
       const result = await prisma.pet.deleteMany({
         where: { id, owner_id: userId },
       });
-      if (result.count === 0) return res.status(404).json({ error: "Pet not found" });
-      return res.status(200).json({ message: "Deleted" });
+
+      if (result.count === 0) {
+        return res.status(404).json({ 
+          message: "Pet not found" 
+        });
+      }
+
+      return res.status(200).json({ 
+        message: "Pet deleted successfully" 
+      });
     }
 
+    // Method not allowed
     res.setHeader("Allow", ["GET", "PUT", "DELETE"]);
-    return res.status(405).json({ error: "Method not allowed" });
-  } catch (err) {
-    console.error("pet [id] api error:", err);
-    return res.status(500).json({ error: "Internal Server Error" });
+    return res.status(405).json({ 
+      message: "Method not allowed" 
+    });
+  } catch (error) {
+    console.error("pet [id] api error:", error);
+    return res.status(500).json({ 
+      message: "Internal server error" 
+    });
   }
 }

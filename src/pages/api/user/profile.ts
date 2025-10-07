@@ -11,7 +11,7 @@ import {
   pickDobYmd,
   pickProfileImageUrl,
   pickProfileImagePublicId,
-} from "@/lib/validators/validation";
+} from "@/lib/validators/profile";
 import { extractPublicIdFromCloudinaryUrl } from "@/lib/cloudinary/id";
 import { userRepository, type UpdateData } from "@/lib/repo/user.repo";
 

@@ -19,13 +19,18 @@ import {
   parsePetId,
   petResponseToFormValues,
   formValuesToPayload,
-  petService,
+  petService, // 🔹 petService ใช้ axios ทั้งหมด (ไม่มี fetch API)
 } from "@/lib/pet/pet-utils";
 
+/**
+ * 📄 หน้าแก้ไขข้อมูล Pet
+ * ใช้ axios ผ่าน petService ในการเรียก API ทั้งหมด
+ */
 export default function EditPetPage() {
   const router = useRouter();
   const { getPetTypes } = usePetsApi();
 
+  // แปลง query parameter เป็น pet ID
   const petId = React.useMemo(() => parsePetId(router.query.id), [router.query.id]);
 
   const [loading, setLoading] = React.useState(true);
@@ -33,14 +38,23 @@ export default function EditPetPage() {
   const [initialValues, setInitialValues] = React.useState<PetFormValues | null>(null);
   const [showDeleteDialog, setShowDeleteDialog] = React.useState(false);
 
+  /**
+   * โหลดข้อมูล pet เมื่อ component mount หรือ petId เปลี่ยน
+   * ใช้ petService.fetchPet() ซึ่งภายในใช้ axios.get()
+   */
   React.useEffect(() => {
     if (!petId) return;
-    let active = true;
+    let active = true; // ป้องกัน memory leak
+
     (async () => {
       try {
         setLoading(true);
         setServerError(null);
+        
+        // เรียก axios.get() ผ่าน petService.fetchPet()
+        // หมายเหตุ: ชื่อ "fetchPet" เป็นแค่ชื่อฟังก์ชัน ไม่ได้ใช้ fetch API
         const pet = await petService.fetchPet(petId);
+        
         if (!active) return;
         setInitialValues(petResponseToFormValues(pet));
       } catch (error) {
@@ -52,14 +66,23 @@ export default function EditPetPage() {
         if (active) setLoading(false);
       }
     })();
+
+    // cleanup: ป้องกัน set state หลัง unmount
     return () => { active = false; };
   }, [petId]);
 
+  /**
+   * อัพเดทข้อมูล pet
+   * ใช้ petService.updatePet() ซึ่งภายในใช้ axios.put()
+   */
   const handleSubmit = async (values: PetFormValues) => {
     if (!petId) return;
     try {
-      const payload = await formValuesToPayload(values, getPetTypes); 
+      const payload = await formValuesToPayload(values, getPetTypes);
+      
+      // เรียก axios.put() ผ่าน petService.updatePet()
       await petService.updatePet(petId, payload);
+      
       toast.success(SUCCESS_MESSAGES.petUpdated);
       router.push(ROUTES.petList);
     } catch (error) {
@@ -69,10 +92,16 @@ export default function EditPetPage() {
     }
   };
 
+  /**
+   * ลบ pet
+   * ใช้ petService.deletePet() ซึ่งภายในใช้ axios.delete()
+   */
   const handleDelete = async () => {
     if (!petId) return;
     try {
+      // เรียก axios.delete() ผ่าน petService.deletePet()
       await petService.deletePet(petId);
+      
       toast.success(SUCCESS_MESSAGES.petDeleted);
       router.push(ROUTES.petList);
     } catch (error) {
@@ -84,12 +113,14 @@ export default function EditPetPage() {
     }
   };
 
+  /** ยกเลิกการแก้ไข กลับไปหน้ารายการ pet */
   const handleCancel = () => router.push(ROUTES.petList);
 
   return (
     <AccountPageShell title="Your Pet">
       <PageToaster />
 
+      {/* Header พร้อมปุ่ม Back */}
       <div className="mb-4 flex items-center gap-2">
         <button
           type="button"
@@ -105,10 +136,12 @@ export default function EditPetPage() {
         <h1 className="text-2xl font-bold text-ink">Your Pet</h1>
       </div>
 
+      {/* แสดง Loading หรือ Form */}
       {loading ? (
         <div className="text-slate-600">Loading...</div>
       ) : (
         <>
+          {/* ฟอร์มแก้ไข Pet */}
           <PetForm
             mode="edit"
             initialValues={initialValues ?? undefined}
@@ -118,6 +151,7 @@ export default function EditPetPage() {
             onDelete={() => setShowDeleteDialog(true)}
           />
 
+          {/* Dialog ยืนยันการลบ */}
           <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
             <AlertDialogContent className="p-0 rounded-2xl font-[700] border-transparent w-[90vw] max-w-[400px]">
               <div className="p-3 pl-5 flex justify-between items-center border-b border-gray-2">

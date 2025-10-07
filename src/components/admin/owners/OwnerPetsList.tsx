@@ -1,82 +1,70 @@
 import * as React from "react";
-import PetCard from "./PetCard";
-import PetDetailModal from "./PetDetailModal";
-import toast from "react-hot-toast";
+import PetCard from "@/components/cards/PetCard";
+import type { PetSpecies } from "@/components/cards/PetCard";
+import type { PetItem } from "@/types/admin/owners"; 
 
-type PetItem = {
-  id: number;
-  name: string | null;
-  image_url: string | null;
-  pet_type_name?: string;
-  breed: string | null;
-  sex: string | null;
-  age_month: number | null;
-  color: string | null;
-  is_banned?: boolean | null;
+type Props = {
+  pets: PetItem[];
+  onPetClick?: (p: PetItem) => void;
 };
 
-export default function OwnerPetsList({ pets }: { pets: PetItem[] }) {
-  const [open, setOpen] = React.useState(false);
-  const [active, setActive] = React.useState<PetItem | null>(null);
-  const [loading, setLoading] = React.useState(false);
+// --- Cloudinary helper -------------------------------------------------
+const CLOUD_NAME =
+  process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME || "df1j8dvg0";
 
-  const handleOpen = (p: PetItem) => {
-    setActive(p);
-    setOpen(true);
-  };
+/** แปลง image_url เป็น URL พร้อม transformation 320x320 */
+function toCldThumb(src?: string | null, size = 320): string | undefined {
+  if (!src) return undefined;
+  const val = src.trim();
+  if (!val) return undefined;
 
-  async function toggleSuspend(petId: number, nextSuspend: boolean) {
+  // URL เต็ม
+  if (/^https?:\/\//i.test(val)) {
     try {
-      setLoading(true);
-      const res = await fetch(`/api/admin/pets/${petId}/ban`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ action: nextSuspend ? "ban" : "unban" }),
-      });
-      if (!res.ok) throw new Error(await res.text());
-
-      // อัปเดตในลิสต์ทันที
-      setActive((prev) => (prev ? { ...prev, is_banned: nextSuspend } : prev));
-      // (อัปเดต array)
-      // @ts-ignore
-      pets = pets.map((p) => (p.id === petId ? { ...p, is_banned: nextSuspend } : p));
-
-      toast.success(nextSuspend ? "Pet suspended" : "Pet unsuspended");
-      setOpen(false);
-    } catch (e) {
-      toast.error(e instanceof Error ? e.message : "Operation failed");
-    } finally {
-      setLoading(false);
+      const u = new URL(val);
+      if (u.hostname === "res.cloudinary.com" && u.pathname.includes("/upload/")) {
+        const [before, after] = u.pathname.split("/upload/");
+        u.pathname = `${before}/upload/f_auto,q_auto,c_fill,w_${size},h_${size}/${after}`.replace(/\/{2,}/g, "/");
+        return u.toString();
+      }
+      return val;
+    } catch {
+      // ถ้า parse ไม่ได้ ให้ถือเป็น public_id ต่อ
     }
   }
 
-  return (
-    <>
-      <div className="px-10 pb-10 pt-6">
-        <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-          {pets.length === 0 ? (
-            <div className="text-gray-500">No pets.</div>
-          ) : (
-            pets.map((p) => (
-              <PetCard
-                key={p.id}
-                name={p.name ?? "(no name)"}
-                typeLabel={p.pet_type_name}
-                imageUrl={p.image_url || undefined}
-                onClick={() => handleOpen(p)}
-              />
-            ))
-          )}
-        </div>
-      </div>
+  // public_id (ตัดนามสกุลทิ้ง)
+  const pid = val.replace(/\.[a-z0-9]+$/i, "");
+  return `https://res.cloudinary.com/${CLOUD_NAME}/image/upload/f_auto,q_auto,c_fill,w_${size},h_${size}/${pid}`;
+}
 
-      <PetDetailModal
-        open={open}
-        onOpenChange={setOpen}
-        pet={active}
-        onToggleSuspend={toggleSuspend}
-        loading={loading}
-      />
-    </>
+// species ที่โชว์บนชิป
+function normalizeSpecies(name?: string | null): PetSpecies {
+  if (!name) return "Unknown" as PetSpecies;
+  const s = name.trim();
+  if (!s) return "Unknown" as PetSpecies;
+  return (s.charAt(0).toUpperCase() + s.slice(1).toLowerCase()) as PetSpecies;
+}
+
+export default function OwnerPetsList({ pets, onPetClick }: Props) {
+  return (
+    <div className="px-10 pb-10 pt-6">
+      {pets.length === 0 ? (
+        <div className="text-gray-500">No pets.</div>
+      ) : (
+        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+          {pets.map((p) => (
+            <PetCard
+              key={p.id}
+              id={p.id}
+              name={p.name ?? "(no name)"}
+              species={normalizeSpecies(p.pet_type_name)}
+              img={toCldThumb(p.image_url, 320)}
+              onClick={() => onPetClick?.(p)}
+            />
+          ))}
+        </div>
+      )}
+    </div>
   );
 }

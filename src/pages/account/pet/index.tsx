@@ -72,6 +72,8 @@ export default function PetListPage() {
             img={p.img}
             onClickId={handleEditPet}
             size={260}
+            priority={true}
+            
           />
         ))}
 

@@ -1,36 +1,95 @@
+import axios, { AxiosError, AxiosRequestConfig } from "axios";
+
 const API_BASE = process.env.NEXT_PUBLIC_API_BASE ?? "";
 
-type UnknownRecord = Record<string, unknown>;
-const isRecord = (v: unknown): v is UnknownRecord => typeof v === "object" && v !== null;
+const axiosClient = axios.create({
+  baseURL: API_BASE,
+  headers: {
+    "Content-Type": "application/json",
+  },
+  withCredentials: true, // เทียบเท่า credentials: "include"
+});
 
-export async function apiRequest<T>(path: string, init?: RequestInit): Promise<T> {
-  const res = await fetch(`${API_BASE}${path}`, {
-    ...init,
-    headers: { "Content-Type": "application/json", ...(init?.headers || {}) },
-    credentials: "include",
-  });
-
-  if (!res.ok) {
-    let message = `HTTP ${res.status}`;
-    try {
-      const ct = res.headers.get("content-type") || "";
-      const raw: unknown = ct.includes("json") ? await res.json() : await res.text();
-      if (typeof raw === "string") message = raw || message;
-      else if (isRecord(raw) && typeof raw.error === "string") message = raw.error;
-      else if (isRecord(raw) && typeof raw.message === "string") message = raw.message;
-    } catch { /* ignore */ }
+// Response interceptor - แปลง error ให้เป็น format เดียวกัน
+axiosClient.interceptors.response.use(
+  (response) => response,
+  (error: AxiosError<{ message?: string; error?: string }>) => {
+    // ดึง message จาก response
+    const message = 
+      error.response?.data?.message || 
+      error.response?.data?.error || 
+      error.message || 
+      "Unknown error";
+    
+    // Throw error ใหม่พร้อม message
     throw new Error(message);
   }
+);
 
-  return res.status === 204 ? (undefined as unknown as T) : ((await res.json()) as T);
+// ========================================
+// Main API Request Function (ใช้ Axios)
+// ========================================
+
+type ApiRequestOptions = {
+  method?: "GET" | "POST" | "PUT" | "DELETE" | "PATCH";
+  body?: string;
+  cache?: RequestCache; // เก็บไว้เพื่อ backward compatibility (แต่ไม่ใช้งาน)
+};
+
+export async function apiRequest<T>(
+  path: string,
+  options: ApiRequestOptions = {}
+): Promise<T> {
+  const { method = "GET", body } = options;
+
+  const config: AxiosRequestConfig = {
+    url: path,
+    method,
+    data: body ? JSON.parse(body) : undefined,
+  };
+
+  const response = await axiosClient.request<T>(config);
+  return response.data;
 }
+
+// ========================================
+// Unique Validation Functions
+// ========================================
 
 export type ValidationField = "name" | "email" | "phone";
 
-export async function checkUnique(field: ValidationField, value: string) {
-  const r = await apiRequest<{ unique: boolean }>("/api/user/unique-check", {
-    method: "POST",
-    body: JSON.stringify({ field, value }),
-  });
-  if (!r.unique) throw new Error(`${field}_taken`);
+/**
+ * เช็คว่า field ซ้ำหรือไม่
+ * - เรียก API: /api/user/get-email หรือ /api/user/check-phone
+ * - Response: { exists: boolean }
+ * - ถ้า exists = true → throw error
+ */
+export async function checkUnique(
+  field: ValidationField,
+  value: string
+): Promise<void> {
+  // ถ้าเป็น name ยังไม่มี API ให้ return ไปก่อน
+  if (field === "name") {
+    return;
+  }
+
+  // กำหนด endpoint และ body ตาม field
+  let endpoint = "";
+  let body: Record<string, string> = {};
+
+  if (field === "email") {
+    endpoint = "/api/user/get-email";
+    body = { email: value };
+  } else if (field === "phone") {
+    endpoint = "/api/user/check-phone";
+    body = { phone: value };
+  }
+
+  // เรียก API
+  const response = await axiosClient.post<{ exists: boolean }>(endpoint, body);
+
+  // ถ้า exists = true แปลว่าซ้ำ → throw error
+  if (response.data.exists) {
+    throw new Error(`${field}_taken`);
+  }
 }

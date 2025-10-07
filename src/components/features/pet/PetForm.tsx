@@ -120,7 +120,7 @@ const PetImageField: React.FC<{
 
 
       <div className="inline-block cursor-pointer [&_button]:cursor-pointer [&_button]:outline-none">
-        <AvatarUploader imageUrl={imageUrl} onChange={onChange} diameterPx={176} />
+        <AvatarUploader imageUrl={imageUrl} onChange={onChange} diameterPx={176} priority={true}  />
       </div>
     </div>
   );

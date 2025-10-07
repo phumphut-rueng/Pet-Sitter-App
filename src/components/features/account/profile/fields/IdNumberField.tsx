@@ -1,6 +1,6 @@
 import * as React from "react";
 import { Control } from "react-hook-form";
-import type { OwnerProfileInput } from "@/lib/validators/account";
+import type { OwnerProfileInput } from "@/lib/validators/profile";
 import InputText from "@/components/input/InputText";
 import { FormField } from "./FormField";
 import { formatIdNumber } from "../utils/id";

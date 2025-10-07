@@ -1,4 +1,3 @@
-// src/components/admin/owners/CloudAvatar.tsx
 import * as React from "react";
 import Image from "next/image";
 
@@ -6,16 +5,16 @@ type Props = {
   publicId?: string | null;
   legacyUrl?: string | null;
   alt?: string;
-  size?: number;      // px
-  className?: string; // container class
+  size?: number;
+  className?: string;
   priority?: boolean;
 };
 
-const CLOUD_NAME = "df1j8dvg0";
+const CLOUD_NAME = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME || "df1j8dvg0";
 const cldUrl = (pid: string, w: number, h: number, q?: number) =>
   `https://res.cloudinary.com/${CLOUD_NAME}/image/upload/f_auto,q_${q ?? "auto"},c_fill,w_${w},h_${h}/${pid}`;
 
-// แปลง legacy Cloudinary URL -> public_id (ตัด vXXXX และนามสกุลทิ้ง)
+// ดึง public_id ออกจาก URL เต็มๆ (ตัด vXXXX และนามสกุลทิ้ง)
 function extractPublicId(url: string): string | null {
   try {
     const u = new URL(url);
@@ -47,7 +46,7 @@ export default function CloudAvatar({
     if (legacyUrl) {
       const pid = extractPublicId(legacyUrl);
       if (pid) return cldUrl(pid, size, size);
-      return legacyUrl; // non-Cloudinary URL
+      return legacyUrl;
     }
     return "";
   }, [publicId, legacyUrl, size]);
@@ -60,7 +59,6 @@ export default function CloudAvatar({
     setErrored(false);
   }, [buildSrc]);
 
-  // ✅ กำหนดให้ "ถ้าไม่มี src หรือโหลดพัง" → แสดงตัวอักษรเสมอ
   if (!src || errored) {
     const letter = (alt || "?").trim().charAt(0).toUpperCase() || "?";
     return (
@@ -85,7 +83,7 @@ export default function CloudAvatar({
         fill
         sizes={`${size}px`}
         priority={priority}
-        onError={() => { setErrored(true); setSrc(""); }} // ✅ บังคับไปสาขาตัวอักษร
+        onError={() => { setErrored(true); setSrc(""); }}
         className="object-cover"
       />
     </div>

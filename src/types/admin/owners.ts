@@ -1,9 +1,6 @@
-
-// ใช้ชนิดสถานะเดียวทั้งโปรเจกต์
 export type UserStatus = "ACTIVE" | "SUSPENDED";
 
 /* ---------- LIST TYPES ---------- */
-
 export type OwnerRow = {
   id: number;
   name: string | null;
@@ -13,7 +10,7 @@ export type OwnerRow = {
   pet_count: number;
   profile_image?: string | null;
   profile_image_public_id?: string | null;
-  status: UserStatus; //  จำเป็นสำหรับหน้า list (badge/ฟิลเตอร์)
+  status: UserStatus;
 };
 
 export type OwnerListResponse = {
@@ -24,22 +21,19 @@ export type OwnerListResponse = {
 };
 
 /* ---------- DETAIL TYPE ---------- */
-
 export type OwnerDetail = {
   id: number;
   name: string | null;
   email: string;
   phone: string | null;
-  profile_image: string | null;                 // legacy
+  profile_image: string | null;
   profile_image_public_id?: string | null;
 
-  // optional fields
   id_number?: string | null;
   dob?: string | null;
 
   created_at: string;
 
-  // ✅ ใช้ชนิดเดียวกันกับ list
   status?: UserStatus;
   suspended_at?: string | null;
   suspend_reason?: string | null;
@@ -52,8 +46,11 @@ export type OwnerDetail = {
     age_month: number | null;
     color: string | null;
     image_url: string | null;
-    created_at: string;
-    is_banned?: boolean | null; // สำหรับปุ่ม Ban/Unban pet
-    pet_type_name?: string; 
+    created_at: string;             //  จำเป็น (ฝั่ง list ใช้ sort/render)
+    is_banned?: boolean | null;
+    pet_type_name?: string;
   }>;
 };
+
+
+export type PetItem = OwnerDetail["pets"][number];
