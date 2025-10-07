@@ -38,6 +38,100 @@ const ChatContainer: React.FC<ChatContainerProps> = ({
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const [messageInput, setMessageInput] = useState('');
 
+  // ฟังก์ชันสำหรับตรวจสอบว่าควรแสดงเวลาหรือไม่ (เหมือน Facebook)
+  const shouldShowTimestamp = (currentMessage: Message, previousMessage: Message | undefined, isFirstMessage: boolean): boolean => {
+    // แสดงเวลาสำหรับข้อความแรก
+    if (isFirstMessage) {
+      return true;
+    }
+
+    // ถ้าไม่มีข้อความก่อนหน้า ให้แสดงเวลา
+    if (!previousMessage) {
+      return true;
+    }
+
+    // ตรวจสอบว่า timestamp มีค่าและถูกต้อง
+    if (!currentMessage.timestamp || !previousMessage.timestamp) {
+      return true; // แสดงเวลาถ้าข้อมูลไม่ครบ
+    }
+
+    const currentTime = new Date(currentMessage.timestamp);
+    const previousTime = new Date(previousMessage.timestamp);
+
+    // ตรวจสอบว่า Date object ถูกต้อง
+    if (isNaN(currentTime.getTime()) || isNaN(previousTime.getTime())) {
+      return true; // แสดงเวลาถ้าข้อมูลไม่ถูกต้อง
+    }
+
+    const timeDiffInMinutes = (currentTime.getTime() - previousTime.getTime()) / (1000 * 60);
+
+    // แสดงเวลาถ้าเวลาห่างกันมากกว่า 5 นาที
+    if (timeDiffInMinutes >= 5) {
+      return true;
+    }
+
+    // แสดงเวลาถ้าข้ามวัน
+    const currentDate = currentTime.toDateString();
+    const previousDate = previousTime.toDateString();
+    if (currentDate !== previousDate) {
+      return true;
+    }
+
+    return false;
+  };
+
+  // ฟังก์ชันสำหรับจัดรูปแบบเวลาแสดงผล
+  const formatTimestamp = (timestamp: string): string => {
+    // ตรวจสอบว่า timestamp มีค่าและถูกต้อง
+    if (!timestamp) {
+      return 'เวลาไม่ระบุ';
+    }
+
+    console.log('formatTimestamp received:', timestamp, 'type:', typeof timestamp);
+    const messageTime = new Date(timestamp);
+    console.log('converted to Date:', messageTime, 'isValid:', !isNaN(messageTime.getTime()));
+    
+    // ตรวจสอบว่า Date object ถูกต้อง
+    if (isNaN(messageTime.getTime())) {
+      return 'เวลาไม่ถูกต้อง';
+    }
+
+    const now = new Date();
+    const messageDate = messageTime.toDateString();
+    const nowDate = now.toDateString();
+
+    // ถ้าเป็นวันเดียวกัน ให้แสดงแค่เวลา
+    if (messageDate === nowDate) {
+      return messageTime.toLocaleTimeString('th-TH', {
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: false
+      });
+    }
+
+    // ถ้าเป็นวันก่อนหน้า ให้แสดง "เมื่อวาน"
+    const yesterday = new Date(now);
+    yesterday.setDate(yesterday.getDate() - 1);
+    if (messageDate === yesterday.toDateString()) {
+      return `เมื่อวาน ${messageTime.toLocaleTimeString('th-TH', {
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: false
+      })}`;
+    }
+
+    // ถ้าเป็นวันอื่น ให้แสดงวันที่และเวลา
+    return messageTime.toLocaleDateString('th-TH', {
+      day: 'numeric',
+      month: 'short',
+      year: messageTime.getFullYear() !== now.getFullYear() ? 'numeric' : undefined
+    }) + ` ${messageTime.toLocaleTimeString('th-TH', {
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: false
+    })}`;
+  };
+
   // Auto scroll to bottom when messages change
   useEffect(() => {
     if (scrollContainerRef.current && messages.length > 0) {
@@ -139,17 +233,24 @@ const ChatContainer: React.FC<ChatContainerProps> = ({
         ) : (
           // Messages
           <div className="space-y-4">
-            {messages.map((msg) => (
-              <ChatBubble
-                key={msg.id}
-                message={msg.message}
-                sender={msg.sender}
-                avatar={msg.avatar}
-                timestamp={msg.timestamp}
-                isImage={msg.isImage}
-                imageUrl={msg.imageUrl}
-              />
-            ))}
+            {messages.map((msg, index) => {
+              const previousMessage = index > 0 ? messages[index - 1] : undefined;
+              const isFirstMessage = index === 0;
+              const shouldShow = shouldShowTimestamp(msg, previousMessage, isFirstMessage);
+              
+              return (
+                <ChatBubble
+                  key={msg.id}
+                  message={msg.message}
+                  sender={msg.sender}
+                  avatar={msg.avatar}
+                  timestamp={shouldShow ? formatTimestamp(msg.timestamp) : undefined}
+                  isImage={msg.isImage}
+                  imageUrl={msg.imageUrl}
+                  showTimestamp={shouldShow}
+                />
+              );
+            })}
           </div>
         )}
       </div>

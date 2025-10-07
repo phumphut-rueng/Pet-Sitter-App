@@ -8,6 +8,7 @@ interface ChatBubbleProps {
   timestamp?: string;
   isImage?: boolean;
   imageUrl?: string;
+  showTimestamp?: boolean; // เพิ่ม prop สำหรับควบคุมการแสดงเวลา
 }
 
 const ChatBubble: React.FC<ChatBubbleProps> = ({
@@ -16,15 +17,16 @@ const ChatBubble: React.FC<ChatBubbleProps> = ({
   avatar,
   timestamp,
   isImage = false,
-  imageUrl
+  imageUrl,
+  showTimestamp = false
 }) => {
   
   const isUser = sender === 'user';
 
   return (
     <div className="mb-4">
-      {/* Timestamp - Center aligned like Facebook */}
-      {timestamp && (
+      {/* Timestamp - Center aligned like Facebook - แสดงเฉพาะเมื่อ showTimestamp เป็น true */}
+      {timestamp && showTimestamp && (
         <div className="flex justify-center mb-2">
           <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded-full">
             {timestamp}
