@@ -230,7 +230,7 @@ export default function ChatWidget() {
                   }
                 },
                 updated_at: latestMessage.timestamp,
-                unread_count: chat.unread_count || 0 // ไม่เพิ่ม unread count ที่นี่ เพราะจะจัดการผ่าน unread_update event
+                unread_count: latestMessage.chatId.toString() === selectedChatId ? 0 : (chat.unread_count || 0) // ถ้ากำลังดูอยู่ให้เป็น 0
               };
               return updatedChat;
             }
@@ -254,16 +254,18 @@ export default function ChatWidget() {
     const handleUnreadUpdate = (event: CustomEvent) => {
       const { chatId, newUnreadCount } = event.detail;
       
-      // อัปเดต unread count ใน chat list
-      setChats(prev => prev.map(chat => {
-        if (chat.id === chatId) {
-          return {
-            ...chat,
-            unread_count: newUnreadCount
-          };
-        }
-        return chat;
-      }));
+      // อัปเดต unread count ใน chat list เฉพาะเมื่อไม่ใช่ chat ปัจจุบันที่กำลังดูอยู่
+      if (chatId.toString() !== selectedChatId) {
+        setChats(prev => prev.map(chat => {
+          if (chat.id === chatId) {
+            return {
+              ...chat,
+              unread_count: newUnreadCount
+            };
+          }
+          return chat;
+        }));
+      }
     };
 
     window.addEventListener('refresh_chat_list', handleRefreshChatList as EventListener);
