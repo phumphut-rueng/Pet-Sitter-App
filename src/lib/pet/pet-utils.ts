@@ -1,7 +1,7 @@
 import type { NextRouter } from "next/router";
 import type { PetInput } from "@/lib/validators/pet";
 import { Pet, PetFormValues, PetType } from "@/types/pet.types";
-import { uploadToCloudinary } from "@/utils/uploadToCloudinary";
+import { uploadToCloudinary } from "@/lib/cloudinary/upload-to-cloudinary";
 
 export type { Pet, PetFormValues, PetType };
 

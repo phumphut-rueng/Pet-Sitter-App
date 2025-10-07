@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { uploadToCloudinary } from "@/utils/uploadToCloudinary";
+import { uploadToCloudinary } from "@/lib/cloudinary/upload-to-cloudinary";
 
 /* =========================
  * Messages

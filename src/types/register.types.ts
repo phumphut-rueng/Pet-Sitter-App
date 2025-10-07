@@ -1,16 +1,10 @@
+import { FieldValidation } from "./field-validation";
+
 export interface RegisterForm {
     name: string;
     email: string;
     phone: string;
     password: string;
-}
-
-export type errorType = "" | "Conflict";
-
-export interface FieldValidation {
-    error?: errorType
-    message: string
-    data?: object;
 }
 
 export interface RegisterValidation {
