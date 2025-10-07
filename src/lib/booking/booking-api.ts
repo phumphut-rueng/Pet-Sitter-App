@@ -1,9 +1,5 @@
 import axios, { AxiosError } from "axios"
-import { RegisterForm } from "@/types/register.types"
-import { useRouter } from "next/router"
 import { Pet } from "@/types/pet.types"
-import { useState } from "react"
-import { PetType } from "@/components/fields/PetTypeSelect"
 import { Sitter } from "@/types/sitter.types"
 
 interface ErrorResponse {
@@ -11,7 +7,7 @@ interface ErrorResponse {
     details?: unknown
 }
 
-export const getPetById = async (userId: number): Promise<Pet[] | undefined> => {
+export const getPetById = async (): Promise<Pet[] | undefined> => {
     try {
         const result = await axios.get<Pet[]>(`/api/pets`)
 

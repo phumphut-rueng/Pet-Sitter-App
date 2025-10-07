@@ -1,5 +1,4 @@
 import ProgressStep from "@/components/progress-step/ProgressStep"
-import { useBookingForm } from "@/hooks/useBookingForm"
 import BookingInformation from "@/components/booking/BookingSelectInformation"
 import BookingSelectDetail from "@/components/booking/BookingSelectDetail"
 import PrimaryButton from "@/components/buttons/PrimaryButton";
@@ -7,77 +6,54 @@ import BookingSelectYourPet from "@/components/booking/BookingSelectYourPet";
 import { useEffect, useState } from "react";
 import BookingSelectPayment from "@/components/booking/BookingSelectPayment";
 import { useRouter } from "next/router";
-import { formatToThaiTimeAD } from "@/utils/date-utils";
-import axios, { AxiosError } from "axios";
-import { useSession } from "next-auth/react";
-import { getServerSession } from "next-auth";
-import { NextApiRequest, NextApiResponse } from "next";
+// import { useSession } from "next-auth/react";
 import { Pet, PetStatus } from "@/types/pet.types";
 import { getPetById, getSitterById } from "@/lib/booking/booking-api";
 import { PetType, Sitter } from "@/types/sitter.types";
 
-export default function handler(
+export default function Handler(
 ) {
-    const { data: session } = useSession();
+    // const { data: session } = useSession();
     // const currentUserId = session?.user?.id ? Number(session.user.id) : undefined;
     const currentUserId = Number(48) //fortest
 
     const router = useRouter()
-    const { date, startTime, endTime, sitterId = 10 } = router.query;
+    const { startTime, endTime, sitterId = 10 } = router.query;
 
-    let [activeNumber, setactiveNumber] = useState<number>(1);
+    const [activeNumber, setactiveNumber] = useState<number>(1);
     const [hasSelect, setHasSelect] = useState<boolean>(false);
     const [petName, setPetName] = useState<string>("-");
     const [pets, setPets] = useState<Pet[]>([])
     const [sitter, setSitter] = useState<Sitter>()
-    const [sitterPetType, setSitterPetType] = useState<PetType[]>([])
+    // const [sitterPetType, setSitterPetType] = useState<PetType[]>([])
     const [price, setPrice] = useState<number>(0)
-    const [loading, setLoading] = useState<boolean>(false)
-    const [dataLoaded, setDataLoaded] = useState<boolean>(false) // เพิ่มตัวนี้
+    // const [loading, setLoading] = useState<boolean>(false)
+    // const [dataLoaded, setDataLoaded] = useState<boolean>(false) // เพิ่มตัวนี้
 
-    const petstest: Pet[] = [
-        { id: 1, name: "Bubba", petTypeId: 1, status: 'unselected' },
-        { id: 2, name: "Daisy", petTypeId: 1, status: 'selected' },
-        { id: 3, name: "I Som", petTypeId: 2, status: 'disabled' },
-        { id: 4, name: "Noodle Birb", petTypeId: 3, status: 'unselected' },
-    ];
+    // const petstest: Pet[] = [
+    //     { id: 1, name: "Bubba", petTypeId: 1, status: 'unselected' },
+    //     { id: 2, name: "Daisy", petTypeId: 1, status: 'selected' },
+    //     { id: 3, name: "I Som", petTypeId: 2, status: 'disabled' },
+    //     { id: 4, name: "Noodle Birb", petTypeId: 3, status: 'unselected' },
+    // ];
 
     useEffect(() => {
         const fetchData = async () => {
             if (!currentUserId) return;
 
-            setLoading(true)
+            // setLoading(true)
             try {
                 // โหลด pets
-                const petResult = await getPetById(currentUserId)
-                setPets(petResult ?? [])
-
-                // โหลด sitter
+                const petResult = await getPetById()
                 const sitterResult = await getSitterById(Number(sitterId));
 
-                console.log("sitterResult", sitterResult);
-
-                let petType: PetType[] = [];
+                const petType: PetType[] = [];
                 sitterResult?.sitter_pet_type.map((item) => {
                     petType.push(item.pet_type)
                 })
 
-                setSitter(sitterResult)
-                setSitterPetType(petType)
-                setDataLoaded(true) // บอกว่าโหลดเสร็จแล้ว
-            } finally {
-                setLoading(false)
-            }
-        }
-
-        fetchData()
-    }, [currentUserId, sitterId])
-
-    useEffect(() => {
-        if (!dataLoaded || pets.length === 0) {
-            if (sitterPetType.length === 0) {
-                const updatedPets = pets.map((pet) => {
-                    const isSupported = sitterPetType.some(type => pet.petTypeId === type.id);
+                const updatedPets = (petResult ?? []).map((pet) => {
+                    const isSupported = petType.some(type => pet.petTypeId === type.id);
                     return {
                         ...pet,
                         status: (isSupported ? "unselected" : "disabled") as PetStatus
@@ -85,28 +61,49 @@ export default function handler(
                 });
 
                 setPets(updatedPets)
+                setSitter(sitterResult)
+                // setSitterPetType(petType)
+            } finally {
+                // setLoading(false)
             }
         }
-    }, [dataLoaded]);
+
+        fetchData()
+    }, [currentUserId, sitterId])
+
+    // useEffect(() => {
+    //     if (dataLoaded && pets.length > 0 && sitterPetType.length > 0) {
+    //         const updatedPets = pets.map((pet) => {
+    //             const isSupported = sitterPetType.some(type => pet.petTypeId === type.id);
+    //             return {
+    //                 ...pet,
+    //                 status: (isSupported ? "unselected" : "disabled") as PetStatus
+    //             };
+    //         });
+
+    //         setPets(updatedPets)
+    //     }
+    // }, [dataLoaded]);
 
     useEffect(() => {
         const countSelect = pets.filter(item => item.status === "selected");
         if (countSelect.length > 0) {
             setHasSelect(true);
 
-            let str: string[] = []
-            countSelect.map((item) => {
+            const str: string[] = []
+            countSelect.forEach((item) => {
                 str.push(item.name)
-            },)
+            })
             setPrice((Number(sitter?.base_price) ?? 300)
                 * countSelect.length)
-            str.length === 0 ? setPetName("-") : setPetName(str.join(", "))
+            setPetName(str.length === 0 ? "-" : str.join(", "))
         }
         else {
             setHasSelect(false);
             setPetName("-")
+            setPrice(0)
         }
-    }, [pets]);
+    }, [pets, sitter?.base_price]);
 
     const handleBack = () => {
         if (activeNumber > 1) {
