@@ -428,7 +428,7 @@ export default function ComponentAll() {
                         activeNumner = วงที่กลมที่กำลัง active อยู่
                         */}
             <ProgressStep
-              activeNumner={2} />
+              activeNumber={2} />
           </SubSection>
         </Section>
 

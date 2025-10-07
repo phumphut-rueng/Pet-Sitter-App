@@ -29,3 +29,16 @@ export const formatToThaiTimeAD = (isoString: string | undefined | string[]) => 
     }
 }
 
+// แปลงวันที่เป็นรูปแบบ "25 Aug, 2023"
+export const formatToThaiDate = (isoString: string | undefined | string[]) => {
+    if (typeof isoString === "string") {
+        const date = new Date(isoString);
+        return date.toLocaleString("en-GB", {
+            timeZone: "Asia/Bangkok",
+            year: "numeric",
+            month: "short",
+            day: "numeric",
+        });
+    }
+    return "";
+}

@@ -1,13 +1,21 @@
 import { useBookingForm } from "@/hooks/useBookingForm"
+import { formatToThaiDate } from "@/utils/date-utils"
+import { formatTo12hTime } from "@/utils/time-utils"
 
-export default function BookingSelectDetail() {
-    const {
-        form,
-        error,
-        handleChange,
-        handlePhoneChange,
-    } = useBookingForm();
-
+export default function BookingSelectDetail(
+    {
+        sitterName,
+        startTime,
+        endTime,
+        petName,
+        price
+    }: {
+        sitterName: string
+        startTime: string | string[] | undefined
+        endTime: string | string[] | undefined
+        petName: string
+        price: number
+    }) {
     return (
 
         <div className="bg-white rounded-2xl shadow-md space-y-4">
@@ -18,25 +26,25 @@ export default function BookingSelectDetail() {
             <div className="text-sm text-gray-600 space-y-6 p-6">
                 <LabelText
                     textHeader="Pet Sitter"
-                    textDetail="Happy House! By Jane Maison"
+                    textDetail={sitterName}
                 />
                 <LabelText
-                    textHeader="Date & Time:"
-                    textDetail="25 Aug, 2023 | 7 AM - 10 AM"
+                    textHeader="Date & Time"
+                    textDetail={`${formatToThaiDate(startTime)} | ${formatTo12hTime(startTime)} - ${formatTo12hTime(endTime)}`}
                 />
                 <LabelText
-                    textHeader="Duration:"
+                    textHeader="Duration"
                     textDetail="3 hours"
                 />
                 <LabelText
-                    textHeader="Pet:"
-                    textDetail="Mr.Ham, Bingsu"
+                    textHeader="Pet"
+                    textDetail={petName}
                 />
             </div>
             <div
                 className="flex justify-between items-center p-6 bg-black rounded-b-2xl text-[16px] text-white">
                 <span>Total</span>
-                <span>900.00 THB</span>
+                <span>{price} THB</span>
             </div>
         </div>
     )
@@ -52,7 +60,7 @@ function LabelText(
     }) {
     return (
         <p className="flex flex-col font-[500]">
-            <span className="text-gray-6 text-[14px]">{textHeader}:</span>
+            <span className="text-gray-6 text-[14px]">{textHeader} :</span>
             <span className="text-gray-9">{textDetail}</span>
         </p>
     )

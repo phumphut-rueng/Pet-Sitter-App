@@ -20,7 +20,7 @@ interface BookingSelectProps {
 }
 
 export default function BookingSelect({
-    sitterId = 1,
+    sitterId,
     open,
     onOpenChange,
     disabledDates = [],

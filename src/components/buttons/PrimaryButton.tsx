@@ -51,9 +51,10 @@ export default function PrimaryButton({
       className={`${bgColorMap[bgColor]} ${textColorMap[textColor]} h-12 px-10 rounded-full flex items-center text-base font-bold justify-center
       hover:cursor-pointer 
       active:scale-95 transition 
-      disabled:opacity-50 
+      disabled:opacity-50
       disabled:cursor-not-allowed 
-      disabled:bg-gray-1 
+      disabled:bg-gray-2 
+      disabled:text-gray-6
       ${className}`}
       onClick={onClick}
     >
