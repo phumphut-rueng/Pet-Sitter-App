@@ -152,10 +152,13 @@ export default async function socketHandler(req: NextApiRequest, res: NextApiRes
           // ใช้ unread count จาก database (ที่ตรวจสอบว่ากำลังดูอยู่หรือไม่แล้ว)
           const unreadCountForReceiver = updatedUserChatSettings.unread_count || 0;
           
-          io.to(data.receiverId).emit('unread_update', { 
-            chatId: data.chatId, 
-            newUnreadCount: unreadCountForReceiver
-          });
+          // ส่ง unread update ให้ receiver เฉพาะเมื่อไม่ได้กำลังดู chat นี้อยู่
+          if (!isReceiverViewingThisChat) {
+            io.to(data.receiverId).emit('unread_update', { 
+              chatId: data.chatId, 
+              newUnreadCount: unreadCountForReceiver
+            });
+          }
 
           // ส่ง event เพื่อแจ้งให้ frontend refresh chat list (สำหรับกรณีที่ chat ถูกซ่อนไว้)
           io.to(data.receiverId).emit('chat_list_update', {
