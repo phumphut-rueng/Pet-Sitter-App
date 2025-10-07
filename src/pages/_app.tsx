@@ -4,6 +4,7 @@ import type { AppProps } from "next/app";
 import { SessionProvider } from "next-auth/react";
 import { useRouter } from "next/router";
 import Navbar from "@/components/navbar/Navbar";
+import { SocketProvider } from "@/components/chat/SocketProvider";
 
 const NAV_HIDE_ROUTES = new Set([
   "/login",
@@ -43,8 +44,10 @@ export default function App({ Component, pageProps: { session, ...pageProps } }:
 
   return (
     <SessionProvider session={session}>
-      {showNavbar && <Navbar />}
-      <Component {...pageProps} />
+      <SocketProvider>
+        {showNavbar && <Navbar />}
+        <Component {...pageProps} />
+      </SocketProvider>
     </SessionProvider>
   );
 }
