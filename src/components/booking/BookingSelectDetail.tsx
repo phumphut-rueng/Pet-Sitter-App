@@ -1,5 +1,5 @@
-import { formatToThaiDate } from "@/utils/date-utils"
-import { formatTo12hTime } from "@/utils/time-utils"
+import { formatToThaiDate } from "@/lib/utils/date"
+import { formatTo12hTime } from "@/lib/utils/time"
 
 export default function BookingSelectDetail(
     {

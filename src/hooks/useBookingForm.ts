@@ -1,5 +1,5 @@
+import { validateEmail, validatePhone } from "@/lib/validators/validation"
 import { BookingForm } from "@/types/booking.types"
-import { validateEmail, validatePhone } from "@/utils/validate-register"
 import { useCallback, useState } from "react"
 
 export function useBookingForm() {

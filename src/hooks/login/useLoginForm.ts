@@ -1,6 +1,6 @@
 // hooks/useLoginForm.ts
 import { useState, useEffect } from "react";
-import { validateEmail, validatePassword } from "@/utils/validate-register";
+import { validateEmail, validatePassword } from "@/lib/validators/validation"
 
 export function useLoginForm() {
     const [email, setEmail] = useState("");

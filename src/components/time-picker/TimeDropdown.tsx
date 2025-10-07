@@ -1,5 +1,5 @@
 // components/TimeDropdown.tsx
-import { parseTimeStringToDate, TimeStatus } from "@/utils/time-utils"
+import { parseTimeStringToDate, TimeStatus } from "@/lib/utils/time"
 
 interface TimeDropdownProps {
     timeSlots: string[]
