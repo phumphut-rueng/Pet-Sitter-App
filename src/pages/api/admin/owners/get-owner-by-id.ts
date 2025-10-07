@@ -1,4 +1,3 @@
-// src/pages/api/admin/owners/get-owner-by-id.ts
 import type { NextApiRequest, NextApiResponse } from "next";
 import { prisma } from "@/lib/prisma/prisma";
 import type { OwnerDetail } from "@/types/admin/owners";

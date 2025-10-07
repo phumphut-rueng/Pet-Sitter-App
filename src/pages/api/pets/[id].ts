@@ -60,6 +60,7 @@ export default async function handler(
     if (req.method === "GET") {
       const pet = await prisma.pet.findFirst({
         where: { id, owner_id: userId },
+        where: { id, owner_id: userId },
         include: { pet_type: true },
       });
 
@@ -98,6 +99,7 @@ export default async function handler(
       const data = parsed.data;
 
       const updated = await prisma.pet.updateMany({
+        where: { id, owner_id: userId },
         where: { id, owner_id: userId },
         data: {
           pet_type_id: data.petTypeId,

@@ -58,7 +58,6 @@ model sitter_image {
 }
 
 /// This model contains an expression index which requires additional setup for migrations. Visit https://pris.ly/d/expression-indexes for more info.
-/// This model contains an expression index which requires additional setup for migrations. Visit https://pris.ly/d/expression-indexes for more info.
 model user {
   id                       Int                       @id @default(autoincrement())
   name                     String?                   @db.VarChar(100)
@@ -97,7 +96,6 @@ model user {
   @@index([approval_status_id], map: "idx_user_approval_status_id")
   @@index([name], map: "idx_user_name")
   @@index([phone], map: "idx_user_phone")
-  @@index([approval_status_id], map: "idx_user_approval_status_id")
   @@index([status_updated_at], map: "idx_user_status_updated_at")
   @@index([status], map: "idx_user_status")
   @@index([suspended_at], map: "idx_user_suspended_at")
@@ -154,32 +152,10 @@ model pet {
   ban_reason         String?   @db.VarChar(1000)
   owner              user      @relation(fields: [owner_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
   pet_type           pet_type  @relation(fields: [pet_type_id], references: [id], onUpdate: NoAction)
-  id                 Int       @id @default(autoincrement())
-  owner_id           Int
-  pet_type_id        Int
-  name               String    @db.VarChar(100)
-  breed              String    @db.VarChar(100)
-  sex                String    @db.VarChar(10)
-  age_month          Int
-  color              String    @db.VarChar(100)
-  weight_kg          Decimal   @db.Decimal(6, 2)
-  about              String?   @db.VarChar(1000)
-  image_url          String?   @db.VarChar(255)
-  created_at         DateTime  @default(now()) @db.Timestamp(6)
-  updated_at         DateTime? @db.Timestamp(6)
-  image_public_id    String?   @db.VarChar(255)
-  is_banned          Boolean?  @default(false)
-  banned_at          DateTime? @db.Timestamp(6)
-  banned_by_admin_id Int?
-  ban_reason         String?   @db.VarChar(1000)
-  owner              user      @relation(fields: [owner_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
-  pet_type           pet_type  @relation(fields: [pet_type_id], references: [id], onUpdate: NoAction)
 
   @@index([name], map: "idx_pet_name")
   @@index([owner_id], map: "idx_pet_owner_id")
   @@index([pet_type_id], map: "idx_pet_pet_type_id")
-  @@index([created_at], map: "idx_pet_created_at")
-  @@index([is_banned], map: "idx_pet_is_banned")
   @@index([created_at], map: "idx_pet_created_at")
   @@index([is_banned], map: "idx_pet_is_banned")
 }
@@ -207,18 +183,12 @@ model sitter_approval_status {
 model sitter_approval_history {
   id         Int      @id @default(autoincrement())
   sitter_id  Int?
-  sitter_id  Int?
   status_id  Int
   admin_id   Int?
   admin_note String?  @db.VarChar(1000)
   changed_at DateTime @default(now()) @db.Timestamp(6)
   user_id    Int?
-  user_id    Int?
   admin      admin?   @relation("ApprovalHistoryAdmin", fields: [admin_id], references: [id])
-  sitter     sitter?  @relation(fields: [sitter_id], references: [id], onDelete: Cascade)
-  user       user?    @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
-
-  @@index([user_id], map: "idx_approval_history_user")
   sitter     sitter?  @relation(fields: [sitter_id], references: [id], onDelete: Cascade)
   user       user?    @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
 
