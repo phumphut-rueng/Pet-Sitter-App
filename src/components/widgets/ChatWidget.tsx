@@ -57,6 +57,16 @@ export default function ChatWidget() {
   const { isConnected, sendMessage, userId, onlineUsers, messages: socketMessages, socket } = useSocketContext();
   const router = useRouter();
 
+  const scrollToBottom = () => {
+    // ใช้ requestAnimationFrame เพื่อให้แน่ใจว่า DOM ได้อัพเดทแล้ว
+    requestAnimationFrame(() => {
+      const scrollContainer = document.querySelector('.overflow-y-auto');
+      if (scrollContainer) {
+        scrollContainer.scrollTop = scrollContainer.scrollHeight;
+      }
+    });
+  };
+
   const selectedChat = chats.find(chat => chat.id.toString() === selectedChatId);
 
   // Convert real data to ChatListItem format for ChatList component
@@ -124,6 +134,10 @@ export default function ChatWidget() {
       
       if (response.data.success) {
         setMessages(response.data.messages);
+        // Scroll ไปที่ล่างสุดหลังจากโหลดข้อความ
+        setTimeout(() => {
+          scrollToBottom();
+        }, 100);
       }
     } catch (error) {
       console.error('Error fetching messages:', error);
@@ -166,6 +180,7 @@ export default function ChatWidget() {
       const chatExists = chats.some(chat => chat.id.toString() === selectedChatId);
       if (chatExists) {
         fetchMessages(selectedChatId);
+        // Scroll ไปที่ล่างสุดเมื่อเปลี่ยน chat (จะทำงานใน fetchMessages)
         } else {
           setMessages([]); // ล้างข้อความถ้า chat ไม่พบ
           setSelectedChatId(''); // ล้าง selectedChatId ด้วย
@@ -199,6 +214,11 @@ export default function ChatWidget() {
         };
         
         setMessages(prev => [...prev, newMessage]);
+        
+        // Scroll ไปที่ล่างสุดเมื่อได้รับข้อความใหม่
+        setTimeout(() => {
+          scrollToBottom();
+        }, 50);
       }
       
       // อัปเดต chat list เพื่อแสดงข้อความล่าสุด
@@ -374,6 +394,7 @@ export default function ChatWidget() {
     // Refresh messages after sending
     setTimeout(() => {
       fetchMessages(selectedChatId);
+      // Scroll ไปที่ล่างสุดหลังจากส่งข้อความ (จะทำงานใน fetchMessages)
     }, 100);
   };
 

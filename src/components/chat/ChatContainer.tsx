@@ -40,10 +40,27 @@ const ChatContainer: React.FC<ChatContainerProps> = ({
 
   // Auto scroll to bottom when messages change
   useEffect(() => {
-    if (scrollContainerRef.current) {
-      scrollContainerRef.current.scrollTop = scrollContainerRef.current.scrollHeight;
+    if (scrollContainerRef.current && messages.length > 0) {
+      // ใช้ requestAnimationFrame เพื่อให้แน่ใจว่า DOM ได้อัพเดทแล้ว
+      requestAnimationFrame(() => {
+        if (scrollContainerRef.current) {
+          scrollContainerRef.current.scrollTop = scrollContainerRef.current.scrollHeight;
+        }
+      });
     }
   }, [messages]);
+
+  // Auto scroll เมื่อส่งข้อความใหม่
+  useEffect(() => {
+    if (scrollContainerRef.current && messageInput === '' && messages.length > 0) {
+      // เมื่อส่งข้อความเสร็จ (messageInput เป็น empty string)
+      requestAnimationFrame(() => {
+        if (scrollContainerRef.current) {
+          scrollContainerRef.current.scrollTop = scrollContainerRef.current.scrollHeight;
+        }
+      });
+    }
+  }, [messageInput, messages.length]);
 
   const handleSendMessage = () => {
     if (!messageInput.trim()) return;
@@ -52,6 +69,13 @@ const ChatContainer: React.FC<ChatContainerProps> = ({
       onSendMessage(messageInput);
     }
     setMessageInput('');
+    
+    // Scroll ไปที่ล่างสุดทันทีหลังจากส่งข้อความ
+    setTimeout(() => {
+      if (scrollContainerRef.current) {
+        scrollContainerRef.current.scrollTop = scrollContainerRef.current.scrollHeight;
+      }
+    }, 100);
   };
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
@@ -88,7 +112,7 @@ const ChatContainer: React.FC<ChatContainerProps> = ({
       )}
 
       {/* Messages Area */}
-      <div className="flex-1 overflow-y-auto p-4">
+      <div ref={scrollContainerRef} className="flex-1 overflow-y-auto p-4">
         {messages.length === 0 ? (
           // Empty State
           <div className="flex items-center justify-center h-full">
@@ -114,7 +138,7 @@ const ChatContainer: React.FC<ChatContainerProps> = ({
           </div>
         ) : (
           // Messages
-          <div ref={scrollContainerRef} className="space-y-4">
+          <div className="space-y-4">
             {messages.map((msg) => (
               <ChatBubble
                 key={msg.id}
