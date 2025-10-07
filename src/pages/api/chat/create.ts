@@ -1,3 +1,5 @@
+// file: pages/api/chat/create.ts
+
 import { NextApiRequest, NextApiResponse } from 'next';
 import { prisma } from '@/lib/prisma/prisma';
 
@@ -7,36 +9,33 @@ interface NextApiRequestWithUser extends NextApiRequest {
   };
 }
 
-export default async function handle(req: NextApiRequestWithUser, res: NextApiResponse) {
+export default async function handler(req: NextApiRequestWithUser, res: NextApiResponse) {
   if (req.method !== 'POST') {
     return res.status(405).json({ message: 'Method Not Allowed' });
   }
 
   // ตรวจสอบ authentication (ชั่วคราวให้ผ่านก่อน)
-  // TODO: ต้องเพิ่ม authentication middleware
   if (!req.user?.id) {
-    // สำหรับการทดสอบ ให้ใช้ user ID จาก query parameter
     const testUserId = req.query.userId as string;
     if (!testUserId) {
       return res.status(401).json({ message: 'Unauthorized - Please add ?userId=YOUR_USER_ID to URL' });
     }
-    // สร้าง fake user object
     req.user = { id: testUserId };
   }
 
-  const { otherUserId } = req.body;
   const currentUserId = parseInt(req.user.id);
+  const { otherUserId } = req.body;
 
   if (!otherUserId) {
-    return res.status(400).json({ message: 'Other user ID is required' });
+    return res.status(400).json({ message: 'otherUserId is required' });
   }
 
-  const otherUserIdInt = parseInt(otherUserId);
-  if (isNaN(otherUserIdInt)) {
-    return res.status(400).json({ message: 'Invalid user ID format' });
+  const otherUserIdNumber = parseInt(otherUserId);
+  if (isNaN(otherUserIdNumber)) {
+    return res.status(400).json({ message: 'Invalid otherUserId format' });
   }
 
-  if (currentUserId === otherUserIdInt) {
+  if (currentUserId === otherUserIdNumber) {
     return res.status(400).json({ message: 'Cannot create chat with yourself' });
   }
 
@@ -45,16 +44,19 @@ export default async function handle(req: NextApiRequestWithUser, res: NextApiRe
     const existingChat = await prisma.chat.findFirst({
       where: {
         OR: [
-          { user1_id: currentUserId, user2_id: otherUserIdInt },
-          { user1_id: otherUserIdInt, user2_id: currentUserId }
+          { user1_id: currentUserId, user2_id: otherUserIdNumber },
+          { user1_id: otherUserIdNumber, user2_id: currentUserId }
         ]
       }
     });
 
     if (existingChat) {
-      return res.json({ 
-        chat: existingChat, 
-        message: 'Chat already exists' 
+      // ถ้ามี chat อยู่แล้ว ให้ส่ง chat ID กลับ
+      return res.json({
+        success: true,
+        chatId: existingChat.id,
+        isNewChat: false,
+        message: 'Chat already exists'
       });
     }
 
@@ -62,7 +64,8 @@ export default async function handle(req: NextApiRequestWithUser, res: NextApiRe
     const newChat = await prisma.chat.create({
       data: {
         user1_id: currentUserId,
-        user2_id: otherUserIdInt,
+        user2_id: otherUserIdNumber,
+        updated_at: new Date()
       }
     });
 
@@ -73,31 +76,22 @@ export default async function handle(req: NextApiRequestWithUser, res: NextApiRe
           user_id: currentUserId,
           chat_id: newChat.id,
           unread_count: 0,
+          is_hidden: false // ฝ่ายที่กด Send Message จะเห็นทันที
         },
         {
-          user_id: otherUserIdInt,
+          user_id: otherUserIdNumber,
           chat_id: newChat.id,
           unread_count: 0,
+          is_hidden: true // ฝ่ายที่ถูกส่งข้อความจะซ่อนไว้จนกว่าจะมีข้อความ
         }
       ]
     });
 
-    // ดึงข้อมูล chat พร้อม user details
-    const chatWithUsers = await prisma.chat.findUnique({
-      where: { id: newChat.id },
-      include: {
-        user_chat_user1_idTouser: {
-          select: { id: true, name: true, profile_image: true }
-        },
-        user_chat_user2_idTouser: {
-          select: { id: true, name: true, profile_image: true }
-        }
-      }
-    });
-
-    res.status(201).json({ 
-      chat: chatWithUsers, 
-      message: 'Chat created successfully' 
+    res.json({
+      success: true,
+      chatId: newChat.id,
+      isNewChat: true,
+      message: 'Chat created successfully'
     });
 
   } catch (error) {

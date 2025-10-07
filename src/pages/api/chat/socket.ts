@@ -89,7 +89,7 @@ export default async function socketHandler(req: NextApiRequest, res: NextApiRes
             } 
           });
           
-          // 3. INCREMENT UNREAD COUNT สำหรับผู้รับและดึงจำนวน unread ใหม่
+          // 3. INCREMENT UNREAD COUNT และแสดง chat สำหรับผู้รับ
           const updatedUserChatSettings = await prisma.user_chat_settings.update({
             where: { 
               user_id_chat_id: { 
@@ -97,7 +97,10 @@ export default async function socketHandler(req: NextApiRequest, res: NextApiRes
                 chat_id: data.chatId 
               } 
             },
-            data: { unread_count: { increment: 1 } },
+            data: { 
+              unread_count: { increment: 1 },
+              is_hidden: false // แสดง chat เมื่อมีข้อความแรก
+            },
             select: { unread_count: true }
           });
           
@@ -134,6 +137,12 @@ export default async function socketHandler(req: NextApiRequest, res: NextApiRes
           io.to(data.receiverId).emit('unread_update', { 
             chatId: data.chatId, 
             newUnreadCount: updatedUserChatSettings.unread_count || 0
+          });
+
+          // ส่ง event เพื่อแจ้งให้ frontend refresh chat list (สำหรับกรณีที่ chat ถูกซ่อนไว้)
+          io.to(data.receiverId).emit('chat_list_update', {
+            chatId: data.chatId,
+            action: 'show' // แสดง chat ที่ถูกซ่อนไว้
           });
         } catch (error) {
           console.error('Error sending message:', error);

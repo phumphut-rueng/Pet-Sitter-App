@@ -2,6 +2,7 @@ import Image from "next/image";
 import { StarRating, TagList, LocationIcon } from "./PetSitterCard";
 import PrimaryButton from "../buttons/PrimaryButton";
 import Link from "next/link";
+import { useCreateChat } from "@/hooks/useCreateChat";
 export default function PetSitterProfileCard({
   title,
   hostName,
@@ -23,9 +24,15 @@ export default function PetSitterProfileCard({
   ownerId: number;
   sitterId: number;
 }) {
+  const { createChatAndNavigate, loading } = useCreateChat();
+
   const getInitial = (name: string) => {
     if (!name) return "?";
     return name[0].toUpperCase();
+  };
+
+  const handleSendMessage = () => {
+    createChatAndNavigate(ownerId);
   };
 
   return (
@@ -65,18 +72,14 @@ export default function PetSitterProfileCard({
       </div>
 
       <div className="flex gap-2 pt-4 border-t mt-4 border-gray-2 -mx-6 px-6">
-        <Link
-          href={`/messages/${ownerId}`}
-          passHref
-          className="flex-1 min-w-0 whitespace-nowrap"
-        >
-          <PrimaryButton
-            text="Send Message"
-            bgColor="secondary"
-            textColor="orange"
-            className="w-full"
-          />
-        </Link>
+        <PrimaryButton
+          text={loading ? "Creating..." : "Send Message"}
+          bgColor="secondary"
+          textColor="orange"
+          className="flex-1 w-full"
+          onClick={handleSendMessage}
+          disabled={loading}
+        />
 
         <Link
           href={`/book-now/${sitterId}`}

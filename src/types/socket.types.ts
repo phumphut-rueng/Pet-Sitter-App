@@ -13,6 +13,7 @@ export interface SocketEvents {
   receive_message: (message: MessagePayload) => void;
   unread_update: (data: UnreadUpdateData) => void;
   online_users_list: (onlineUsers: string[]) => void;
+  chat_list_update: (data: ChatListUpdateData) => void;
 }
 
 export interface SendMessageData {
@@ -41,6 +42,11 @@ export interface MessagePayload {
 export interface UnreadUpdateData {
   chatId: number;
   newUnreadCount: number;
+}
+
+export interface ChatListUpdateData {
+  chatId: number;
+  action: 'show' | 'hide';
 }
 
 // Next.js API Request with user

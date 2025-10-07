@@ -35,7 +35,7 @@ export default async function handle(req: NextApiRequestWithUser, res: NextApiRe
 
   if (req.method === 'GET') {
     try {
-      // 1. ตรวจสอบว่า user มีสิทธิ์เข้าถึง chat นี้หรือไม่
+      // 1. ตรวจสอบว่า user มีสิทธิ์เข้าถึง chat นี้หรือไม่ และ chat ไม่ได้ถูกซ่อนไว้
       const chat = await prisma.chat.findFirst({
         where: {
           id: chatIdNumber,
@@ -43,11 +43,19 @@ export default async function handle(req: NextApiRequestWithUser, res: NextApiRe
             { user1_id: parseInt(currentUserId) },
             { user2_id: parseInt(currentUserId) }
           ]
+        },
+        include: {
+          user_chat_settings: {
+            where: {
+              user_id: parseInt(currentUserId),
+              is_hidden: false // ตรวจสอบว่า chat ไม่ได้ถูกซ่อนไว้
+            }
+          }
         }
       });
 
-      if (!chat) {
-        return res.status(403).json({ message: 'Access denied to this chat' });
+      if (!chat || chat.user_chat_settings.length === 0) {
+        return res.status(403).json({ message: 'Access denied to this chat or chat is hidden' });
       }
 
       // 2. ดึงประวัติข้อความ
@@ -89,7 +97,27 @@ export default async function handle(req: NextApiRequestWithUser, res: NextApiRe
         },
       });
 
-      res.json(messages);
+      // จัดรูปแบบข้อมูลให้ตรงกับ ChatWidget interface
+      const formattedMessages = messages.map(message => ({
+        id: message.id,
+        chat_id: message.chat_id,
+        sender_id: message.sender_id,
+        message_type: message.message_type,
+        content: message.content,
+        image_url: message.image_url,
+        timestamp: message.timestamp,
+        is_read: message.is_read,
+        sender: {
+          id: message.user.id,
+          name: message.user.name,
+          email: '', // ไม่ได้ส่งมาใน API นี้
+          profile_image: message.user.profile_image,
+          is_online: null, // ไม่ได้ส่งมาใน API นี้
+          last_seen: null // ไม่ได้ส่งมาใน API นี้
+        }
+      }));
+
+      res.json({ success: true, messages: formattedMessages });
     } catch (error) {
       console.error('Error fetching messages:', error);
       res.status(500).json({ message: 'Internal server error' });
