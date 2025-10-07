@@ -44,6 +44,26 @@ export const SocketProvider: React.FC<SocketProviderProps> = ({ children }) => {
   };
 
   useEffect(() => {
+    // โหลด online users เริ่มต้นจาก API
+    const fetchOnlineUsers = async () => {
+      try {
+        const response = await fetch('/api/chat/online-users');
+        const data = await response.json();
+        
+        if (data.success) {
+          console.log('Loaded initial online users:', data.onlineUsers);
+          setOnlineUsers(data.onlineUsers);
+        }
+      } catch (error) {
+        console.error('Error fetching online users:', error);
+      }
+    };
+
+    // เรียกใช้เมื่อ component mount
+    if (isConnected) {
+      fetchOnlineUsers();
+    }
+
     // ฟังก์ชันสำหรับจัดการ custom events
     const handleReceiveMessage = (event: CustomEvent<MessagePayload>) => {
       console.log('Received message via custom event:', event.detail);
@@ -57,7 +77,13 @@ export const SocketProvider: React.FC<SocketProviderProps> = ({ children }) => {
 
     const handleUserOnline = (event: CustomEvent<string>) => {
       console.log('User online via custom event:', event.detail);
-      setOnlineUsers(prev => [...prev, event.detail]);
+      setOnlineUsers(prev => {
+        // ตรวจสอบว่า user ID นี้ยังไม่อยู่ในรายการ
+        if (!prev.includes(event.detail)) {
+          return [...prev, event.detail];
+        }
+        return prev;
+      });
     };
 
     const handleUserOffline = (event: CustomEvent<string>) => {
@@ -65,11 +91,17 @@ export const SocketProvider: React.FC<SocketProviderProps> = ({ children }) => {
       setOnlineUsers(prev => prev.filter(id => id !== event.detail));
     };
 
+    const handleOnlineUsersList = (event: CustomEvent<string[]>) => {
+      console.log('Online users list via custom event:', event.detail);
+      setOnlineUsers(event.detail);
+    };
+
     // เพิ่ม event listeners
     window.addEventListener('socket:receive_message', handleReceiveMessage as EventListener);
     window.addEventListener('socket:unread_update', handleUnreadUpdate as EventListener);
     window.addEventListener('socket:user_online', handleUserOnline as EventListener);
     window.addEventListener('socket:user_offline', handleUserOffline as EventListener);
+    window.addEventListener('socket:online_users_list', handleOnlineUsersList as EventListener);
 
     // Cleanup event listeners
     return () => {
@@ -77,8 +109,9 @@ export const SocketProvider: React.FC<SocketProviderProps> = ({ children }) => {
       window.removeEventListener('socket:unread_update', handleUnreadUpdate as EventListener);
       window.removeEventListener('socket:user_online', handleUserOnline as EventListener);
       window.removeEventListener('socket:user_offline', handleUserOffline as EventListener);
+      window.removeEventListener('socket:online_users_list', handleOnlineUsersList as EventListener);
     };
-  }, []);
+  }, [isConnected]);
 
   const value: SocketContextType = {
     socket,

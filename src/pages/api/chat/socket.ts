@@ -47,7 +47,20 @@ export default async function socketHandler(req: NextApiRequest, res: NextApiRes
             data: { is_online: true } 
           });
           socket.join(userId); // เข้า Private Room ด้วย ID ตัวเอง
-          io.emit('user_online', userId); // แจ้งเพื่อน
+          
+          // ดึงรายชื่อผู้ใช้ออนไลน์ทั้งหมดและส่งให้ client
+          const onlineUsers = await prisma.user.findMany({
+            where: { is_online: true },
+            select: { id: true },
+          });
+          
+          const onlineUserIds = onlineUsers.map(user => user.id.toString());
+          
+          // ส่งรายชื่อ online users ทั้งหมดให้ client ที่เพิ่งเข้ามา
+          socket.emit('online_users_list', onlineUserIds);
+          
+          // แจ้งทุกคนว่ามี user ใหม่เข้ามา
+          io.emit('user_online', userId);
         } catch (error) {
           console.error('Error joining app:', error);
         }

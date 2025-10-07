@@ -22,55 +22,58 @@ const ChatBubble: React.FC<ChatBubbleProps> = ({
   const isUser = sender === 'user';
 
   return (
-    <div className={`flex ${isUser ? 'justify-end' : 'justify-start'} mb-4`}>
-      <div className={`flex ${isUser ? 'flex-row-reverse' : 'flex-row'} items-end max-w-[80%]`}>
-        {/* Avatar */}
-        {avatar && isUser === false && (
-          <div className={`ml-3 flex-shrink-0`}>
-            <div className="w-8 h-8 rounded-full overflow-hidden">
-              <Image
-                src={avatar}
-                alt="Avatar"
-                className="w-full h-full object-cover"
-                width={32}
-                height={32}
-              />
-            </div>
-          </div>
-        )}
-
-        {/* Message Container */}
-        
-        <div className={`flex flex-col ${isUser ? 'items-end' : 'items-start'}`}>
-          {/* Message Bubble */}
-          <div
-            className={`px-4 py-2 max-w-full ${
-              isUser
-                ? 'bg-orange-6 text-brand-text rounded-tl-lg rounded-tr-lg rounded-bl-lg'
-                : 'bg-white border-1 border-gray-2 text-gray-9 rounded-tl-lg rounded-tr-lg rounded-br-lg'
-            }`}
-          >
-            {isImage && imageUrl ? (
-              <div className="bg-gray-2 rounded-lg flex items-center justify-center">
+    <div className="mb-4">
+      {/* Timestamp - Center aligned like Facebook */}
+      {timestamp && (
+        <div className="flex justify-center mb-2">
+          <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded-full">
+            {timestamp}
+          </span>
+        </div>
+      )}
+      
+      <div className={`flex ${isUser ? 'justify-end' : 'justify-start'} mb-1`}>
+        <div className={`flex ${isUser ? 'flex-row-reverse' : 'flex-row'} items-end max-w-[70%]`}>
+          {/* Avatar - Only show for incoming messages */}
+          {avatar && !isUser && (
+            <div className="flex-shrink-0 mr-3">
+              <div className="w-8 h-8 rounded-full overflow-hidden">
                 <Image
-                  src={imageUrl}
-                  alt="Message image"
-                  className="max-w-full max-h-96 object-contain rounded-lg"
-                  width={260}
-                  height={260}
+                  src={avatar}
+                  alt="Avatar"
+                  className="w-full h-full object-cover"
+                  width={32}
+                  height={32}
                 />
               </div>
-            ) : (
-              <p className="text-sm leading-relaxed wrap-anywhere">{message}</p>
-            )}
-          </div>
-
-          {/* Timestamp */}
-          {timestamp && (
-            <span className="text-xs text-gray-7 mt-1 px-2">
-              {timestamp}
-            </span>
+            </div>
           )}
+
+          {/* Message Container */}
+          <div className={`flex flex-col ${isUser ? 'items-end' : 'items-start'}`}>
+            {/* Message Bubble */}
+            <div
+              className={`px-4 py-3 max-w-full rounded-lg ${
+                isUser
+                  ? 'bg-orange-500 text-white' // Orange background for user messages
+                  : 'bg-white border border-gray-200 text-gray-900' // White background for other messages
+              }`}
+            >
+              {isImage && imageUrl ? (
+                <div className="rounded-lg overflow-hidden">
+                  <Image
+                    src={imageUrl}
+                    alt="Message image"
+                    className="max-w-full max-h-64 object-contain"
+                    width={200}
+                    height={200}
+                  />
+                </div>
+              ) : (
+                <p className="text-sm leading-relaxed">{message}</p>
+              )}
+            </div>
+          </div>
         </div>
       </div>
     </div>
