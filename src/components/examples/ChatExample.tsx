@@ -138,18 +138,21 @@ const ChatExample: React.FC = () => {
         )}
 
         {/* Online Users */}
-        {onlineUsers.length > 0 && (
-          <div>
-            <h3 className="font-medium mb-2">ผู้ใช้ที่ออนไลน์:</h3>
-            <div className="flex flex-wrap gap-2">
-              {onlineUsers.map((userId) => (
+        <div>
+          <h3 className="font-medium mb-2">ผู้ใช้ที่ออนไลน์:</h3>
+          <p className="text-sm text-gray-600 mb-2">จำนวน: {onlineUsers.length} คน</p>
+          <div className="flex flex-wrap gap-2">
+            {onlineUsers.length === 0 ? (
+              <span className="px-2 py-1 bg-gray-100 text-gray-600 rounded text-sm">ไม่มีผู้ใช้ออนไลน์</span>
+            ) : (
+              onlineUsers.map((userId) => (
                 <span key={userId} className="px-2 py-1 bg-green-100 text-green-800 rounded text-sm">
                   {userId}
                 </span>
-              ))}
-            </div>
+              ))
+            )}
           </div>
-        )}
+        </div>
       </div>
     </div>
   );

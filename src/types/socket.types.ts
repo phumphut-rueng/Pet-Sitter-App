@@ -12,6 +12,7 @@ export interface SocketEvents {
   user_offline: (userId: string) => void;
   receive_message: (message: MessagePayload) => void;
   unread_update: (data: UnreadUpdateData) => void;
+  online_users_list: (onlineUsers: string[]) => void;
 }
 
 export interface SendMessageData {

@@ -1,47 +1,38 @@
 const sampleChats = [
   {
     id: '1',
-    name: 'Jane Maison',
-    lastMessage: 'You: hi this is a long message',
-    timestamp: '2m',
-    avatar: '/images/landing_page/lovely-pet-portrait-isolated.svg',
-    unreadCount: 1,
+    name: 'Sarah Johnson',
+    lastMessage: 'You: hello!',
+    timestamp: '10:34 AM',
+    avatar: '/images/demo/daisy.svg',
+    unreadCount: 0,
     isOnline: true
   },
   {
     id: '2',
-    name: 'John Smith',
-    lastMessage: 'Thanks for the help! this is a long message',
-    timestamp: '5m',
-    avatar: '/images/landing_page/lovely-pet-portrait-isolated.svg',
-    unreadCount: 0,
-    isOnline: false
-  },
-  {
-    id: '3',
-    name: 'Sarah Wilson',
-    lastMessage: 'Can we meet tomorrow?',
-    timestamp: '1h',
-    avatar: '/images/landing_page/lovely-pet-portrait-isolated.svg',
-    unreadCount: 3,
+    name: 'Mike Chen',
+    lastMessage: 'I love your cat!',
+    timestamp: '9:18 AM',
+    avatar: '/images/demo/bubba.svg',
+    unreadCount: 4,
     isOnline: true
   },
   {
-    id: '4',
-    name: 'Mike Johnson',
-    lastMessage: 'The pet is doing great!',
-    timestamp: '2h',
-    avatar: '/images/landing_page/lovely-pet-portrait-isolated.svg',
+    id: '3',
+    name: 'Emma Wilson',
+    lastMessage: 'hi',
+    timestamp: '8:47 AM',
+    avatar: '/images/demo/bird.svg',
     unreadCount: 0,
     isOnline: false
   },
   {
-    id: '5',
-    name: 'Emily Davis',
-    lastMessage: 'See you next week',
-    timestamp: '1d',
-    avatar: '/images/landing_page/lovely-pet-portrait-isolated.svg',
-    unreadCount: 100,
+    id: '4',
+    name: 'David Brown',
+    lastMessage: 'yeah my home is so big',
+    timestamp: '7:33 AM',
+    avatar: '/images/demo/isom.svg',
+    unreadCount: 1,
     isOnline: true
   }
 ];

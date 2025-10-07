@@ -56,6 +56,11 @@ export const connectSocket = (userId: string): Socket<SocketEvents> => {
     window.dispatchEvent(new CustomEvent('socket:user_offline', { detail: userId }));
   });
 
+  socket.on('online_users_list', (onlineUsers) => {
+    console.log('Online users list:', onlineUsers);
+    window.dispatchEvent(new CustomEvent('socket:online_users_list', { detail: onlineUsers }));
+  });
+
   return socket;
 };
 
