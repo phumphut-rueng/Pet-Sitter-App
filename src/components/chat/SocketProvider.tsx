@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { useSocket } from '@/hooks/useSocket';
-import { MessagePayload, UnreadUpdateData } from '@/types/socket.types';
+import { MessagePayload, UnreadUpdateData, ChatListUpdateData } from '@/types/socket.types';
 
 interface SocketContextType {
   socket: any;
@@ -96,12 +96,19 @@ export const SocketProvider: React.FC<SocketProviderProps> = ({ children }) => {
       setOnlineUsers(event.detail);
     };
 
+    const handleChatListUpdate = (event: CustomEvent<ChatListUpdateData>) => {
+      console.log('Chat list update via custom event:', event.detail);
+      // ส่ง event ไปให้ ChatWidget เพื่อ refresh chat list
+      window.dispatchEvent(new CustomEvent('refresh_chat_list', { detail: event.detail }));
+    };
+
     // เพิ่ม event listeners
     window.addEventListener('socket:receive_message', handleReceiveMessage as EventListener);
     window.addEventListener('socket:unread_update', handleUnreadUpdate as EventListener);
     window.addEventListener('socket:user_online', handleUserOnline as EventListener);
     window.addEventListener('socket:user_offline', handleUserOffline as EventListener);
     window.addEventListener('socket:online_users_list', handleOnlineUsersList as EventListener);
+    window.addEventListener('socket:chat_list_update', handleChatListUpdate as EventListener);
 
     // Cleanup event listeners
     return () => {
@@ -110,6 +117,7 @@ export const SocketProvider: React.FC<SocketProviderProps> = ({ children }) => {
       window.removeEventListener('socket:user_online', handleUserOnline as EventListener);
       window.removeEventListener('socket:user_offline', handleUserOffline as EventListener);
       window.removeEventListener('socket:online_users_list', handleOnlineUsersList as EventListener);
+      window.removeEventListener('socket:chat_list_update', handleChatListUpdate as EventListener);
     };
   }, [isConnected]);
 

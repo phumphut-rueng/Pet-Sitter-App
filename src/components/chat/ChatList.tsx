@@ -1,17 +1,28 @@
 import React from 'react';
-import sampleChats from '../../utils/mockChatListData';
 import Image from 'next/image';
+
+interface ChatListItem {
+  id: string;
+  name: string;
+  lastMessage: string;
+  timestamp: string;
+  avatar: string;
+  unreadCount: number;
+  isOnline: boolean;
+}
 
 interface ChatListProps {
   selectedChatId?: string;
   onChatSelect?: (chatId: string) => void;
   className?: string;
+  chats?: ChatListItem[];
 }
 
 const ChatList: React.FC<ChatListProps> = ({ 
-  selectedChatId = '1', 
+  selectedChatId = '', 
   onChatSelect,
-  className = ''
+  className = '',
+  chats = []
 }) => {
   const handleChatSelect = (chatId: string) => {
     if (onChatSelect) {
@@ -28,67 +39,76 @@ const ChatList: React.FC<ChatListProps> = ({
 
       {/* Chat List */}
       <div className="flex-1 overflow-y-auto">
-        {sampleChats.map((chat) => {
-          const isSelected = selectedChatId === chat.id;
-          
-          return (
-            <div
-              key={chat.id}
-              onClick={() => handleChatSelect(chat.id)}
-              className={`p-4 cursor-pointer transition-colors duration-200 border-b border-gray-800 ${
-                isSelected
-                  ? 'bg-gray-700' // selected state
-                  : 'bg-black hover:bg-gray-900' // default state
-              }`}
-            >
-              <div className="flex items-center space-x-3">
-                {/* Avatar */}
-                <div className="relative flex-shrink-0">
-                  <div className="w-12 h-12 rounded-full overflow-hidden">
-                    <Image
-                      src={chat.avatar || '/images/landing_page/lovely-pet-portrait-isolated.svg'}
-                      alt={chat.name}
-                      className="w-full h-full object-cover"
-                      width={48}
-                      height={48}
-                    />
-                  </div>
-                  {/* Online indicator */}
-                  {chat.isOnline && (
-                    <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 border-2 border-black rounded-full"></div>
-                  )}
-                </div>
-
-                {/* Chat Info */}
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center justify-between">
-                    <h4 className="text-sm font-medium truncate text-white">
-                      {chat.name}
-                    </h4>
-                    <span className="text-xs text-gray-400 ml-2">
-                      {chat.timestamp}
-                    </span>
-                  </div>
-                  
-                  <div className="flex items-center justify-between mt-1">
-                    <p className="text-sm truncate text-gray-300">
-                      {chat.lastMessage}
-                    </p>
-                    
-                    {/* Unread count badge */}
-                    {chat.unreadCount > 0 && (
-                      <div className="flex-shrink-0 ml-2">
-                        <span className="inline-flex items-center justify-center px-2 py-1 text-xs font-bold text-white bg-red-500 rounded-full min-w-[20px] h-5">
-                          {chat.unreadCount > 99 ? '99+' : chat.unreadCount}
-                        </span>
-                      </div>
+        {chats.length === 0 ? (
+          <div className="flex items-center justify-center h-full">
+            <div className="text-center text-gray-400">
+              <p>No conversations yet</p>
+              <p className="text-sm mt-2">Start chatting with someone!</p>
+            </div>
+          </div>
+        ) : (
+          chats.map((chat) => {
+            const isSelected = selectedChatId === chat.id;
+            
+            return (
+              <div
+                key={chat.id}
+                onClick={() => handleChatSelect(chat.id)}
+                className={`p-4 cursor-pointer transition-colors duration-200 border-b border-gray-800 ${
+                  isSelected
+                    ? 'bg-gray-700' // selected state
+                    : 'bg-black hover:bg-gray-900' // default state
+                }`}
+              >
+                <div className="flex items-center space-x-3">
+                  {/* Avatar */}
+                  <div className="relative flex-shrink-0">
+                    <div className="w-12 h-12 rounded-full overflow-hidden">
+                      <Image
+                        src={chat.avatar}
+                        alt={chat.name}
+                        className="w-full h-full object-cover"
+                        width={48}
+                        height={48}
+                      />
+                    </div>
+                    {/* Online indicator */}
+                    {chat.isOnline && (
+                      <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 border-2 border-black rounded-full"></div>
                     )}
+                  </div>
+
+                  {/* Chat Info */}
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center justify-between">
+                      <h4 className="text-sm font-medium truncate text-white">
+                        {chat.name}
+                      </h4>
+                      <span className="text-xs text-gray-400 ml-2">
+                        {chat.timestamp}
+                      </span>
+                    </div>
+                    
+                    <div className="flex items-center justify-between mt-1">
+                      <p className="text-sm truncate text-gray-300">
+                        {chat.lastMessage}
+                      </p>
+                      
+                      {/* Unread count badge */}
+                      {chat.unreadCount > 0 && (
+                        <div className="flex-shrink-0 ml-2">
+                          <span className="inline-flex items-center justify-center px-2 py-1 text-xs font-bold text-white bg-red-500 rounded-full min-w-[20px] h-5">
+                            {chat.unreadCount > 99 ? '99+' : chat.unreadCount}
+                          </span>
+                        </div>
+                      )}
+                    </div>
                   </div>
                 </div>
               </div>
-            </div>
-          );
-        })}
+            );
+          })
+        )}
       </div>
     </div>
   );

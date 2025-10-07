@@ -61,6 +61,11 @@ export const connectSocket = (userId: string): Socket<SocketEvents> => {
     window.dispatchEvent(new CustomEvent('socket:online_users_list', { detail: onlineUsers }));
   });
 
+  socket.on('chat_list_update', (data) => {
+    console.log('Chat list update:', data);
+    window.dispatchEvent(new CustomEvent('socket:chat_list_update', { detail: data }));
+  });
+
   return socket;
 };
 
