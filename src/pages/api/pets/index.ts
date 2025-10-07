@@ -16,7 +16,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   try {
     if (req.method === "GET") {
       const pets = await prisma.pet.findMany({
-        where: { owner_id: 48 },
+        where: { owner_id: ownerId },
         orderBy: { id: "asc" },
         include: { pet_type: true },
       });
