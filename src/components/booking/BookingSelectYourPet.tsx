@@ -1,35 +1,59 @@
 import { Pet, PetStatus } from "@/types/pet.types";
 import CreateNewPetCard from "../cards/CreateNewPetCard";
 import PetCard from "../cards/PetCard";
+import { Dispatch, SetStateAction, useEffect, useState } from "react";
+import axios, { AxiosError } from "axios";
 
-export default function BookingSelectYourPet() {
+interface ErrorResponse {
+    error: string
+    details?: unknown
+}
 
-    const pets: Pet[] = [
-        { id: 1, name: "Bubba", petTypeId: 1, status: 'unselected' },
-        { id: 2, name: "Daisy", petTypeId: 1, status: 'selected' },
-        { id: 3, name: "I Som", petTypeId: 2, status: 'disabled' },
-        { id: 4, name: "Noodle Birb", petTypeId: 3, status: 'unselected' },
-    ];
+export default function BookingSelectYourPet({
+    pets,
+    setPets,
+}: {
+    pets: Pet[],
+    setPets: Dispatch<SetStateAction<Pet[]>>
+}) {
+    const onClick = (id: number) => {
+        console.log("onClickId", id);
+
+        setPets((prevPets) =>
+            prevPets.map((pet) =>
+                pet.id === id
+                    ? {
+                        ...pet,
+                        status: pet.status === "selected" ? "unselected" : "selected",
+                    }
+                    : pet
+            )
+        )
+    }
 
     return (
-        <div className="grid grid-cols-3 gap-4 min-w-0">
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-4 min-w-0">
             {pets.map((p) => (
                 <div
-                    key={`lg-${p.id}`}
-                    className="min-w-0 flex justify-center">
+                    key={`p-${p.id}`}
+                    className="min-w-0 ">
                     <PetCard
                         name={p.name}
-                        species="Cat"
-                        img=""
+                        species={p.petTypeName ?? "unknown"}
+                        img={p.imageUrl ?? ""}
                         selected={p.status === 'selected'}
                         disabled={p.status === 'disabled'}
                         width={207}
                         height={240}
                         avatarSize={104} // แนะนำสำหรับใบ 207×240
+                        onClick={() => onClick(p.id)}
                     />
                 </div>
             ))}
-            <CreateNewPetCard />
+            <CreateNewPetCard
+                height={240}
+                className="w-[207px]"
+            />
         </div>
     )
 }

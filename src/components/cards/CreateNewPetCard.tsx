@@ -70,7 +70,7 @@ export default function CreateNewPetCard({
         <div className={iconContainerStyles}>
           <span className={textStyles}>+</span>
         </div>
-        
+
         <div className={labelStyles}>
           Create New Pet
         </div>
