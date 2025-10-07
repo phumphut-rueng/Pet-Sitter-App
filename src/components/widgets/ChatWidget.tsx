@@ -54,7 +54,7 @@ export default function ChatWidget() {
   const [chats, setChats] = useState<Chat[]>([]);
   const [messages, setMessages] = useState<Message[]>([]);
   const [loading, setLoading] = useState(true);
-  const { isConnected, sendMessage, userId, onlineUsers, messages: socketMessages } = useSocketContext();
+  const { isConnected, sendMessage, userId, onlineUsers, messages: socketMessages, socket } = useSocketContext();
   const router = useRouter();
 
   const selectedChat = chats.find(chat => chat.id.toString() === selectedChatId);
@@ -129,9 +129,8 @@ export default function ChatWidget() {
       console.error('Error fetching messages:', error);
       if (axios.isAxiosError(error)) {
         console.error('Error details:', error.response?.data);
-        if (error.response?.status === 403) {
-          console.log('Chat is hidden or access denied');
-          setMessages([]); // ล้างข้อความถ้าไม่มีสิทธิ์เข้าถึง
+          if (error.response?.status === 403) {
+            setMessages([]); // ล้างข้อความถ้าไม่มีสิทธิ์เข้าถึง
         }
       }
     }
@@ -153,9 +152,8 @@ export default function ChatWidget() {
         setSelectedChatId(chatId);
         // ลบ chatId จาก URL หลังจากเลือกแล้ว
         router.replace('/chat', undefined, { shallow: true });
-      } else {
-        console.log('Chat not found in chatlist, might be hidden. Clearing selectedChatId');
-        setSelectedChatId(''); // ล้าง selectedChatId ทันที
+        } else {
+          setSelectedChatId(''); // ล้าง selectedChatId ทันที
         // ลบ chatId จาก URL ด้วย
         router.replace('/chat', undefined, { shallow: true });
       }
@@ -168,11 +166,10 @@ export default function ChatWidget() {
       const chatExists = chats.some(chat => chat.id.toString() === selectedChatId);
       if (chatExists) {
         fetchMessages(selectedChatId);
-      } else {
-        console.log('Chat not found in chatlist, might be hidden');
-        setMessages([]); // ล้างข้อความถ้า chat ไม่พบ
-        setSelectedChatId(''); // ล้าง selectedChatId ด้วย
-      }
+        } else {
+          setMessages([]); // ล้างข้อความถ้า chat ไม่พบ
+          setSelectedChatId(''); // ล้าง selectedChatId ด้วย
+        }
     }
   }, [selectedChatId, chats]);
 
@@ -205,53 +202,110 @@ export default function ChatWidget() {
       }
       
       // อัปเดต chat list เพื่อแสดงข้อความล่าสุด
-      setChats(prev => prev.map(chat => {
-        if (chat.id === latestMessage.chatId) {
-          const updatedChat: Chat = {
-            ...chat,
-            last_message: {
-              id: parseInt(latestMessage.id),
-              chat_id: latestMessage.chatId,
-              sender_id: parseInt(latestMessage.senderId),
-              message_type: latestMessage.messageType,
-              content: latestMessage.content,
-              image_url: latestMessage.imageUrl || null,
-              timestamp: latestMessage.timestamp,
-              is_read: latestMessage.isRead,
-              sender: {
-                id: parseInt(latestMessage.senderId),
-                name: latestMessage.senderName,
-                email: '',
-                profile_image: latestMessage.senderProfileImage || null,
-                is_online: null,
-                last_seen: null
-              }
-            },
-            updated_at: latestMessage.timestamp
-          };
-          return updatedChat;
-        }
-        return chat;
-      }));
+      setChats(prev => {
+        const existingChatIndex = prev.findIndex(chat => chat.id === latestMessage.chatId);
+        
+        if (existingChatIndex !== -1) {
+          // อัปเดต chat ที่มีอยู่แล้ว
+          return prev.map(chat => {
+            if (chat.id === latestMessage.chatId) {
+              const updatedChat: Chat = {
+                ...chat,
+                last_message: {
+                  id: parseInt(latestMessage.id),
+                  chat_id: latestMessage.chatId,
+                  sender_id: parseInt(latestMessage.senderId),
+                  message_type: latestMessage.messageType,
+                  content: latestMessage.content,
+                  image_url: latestMessage.imageUrl || null,
+                  timestamp: latestMessage.timestamp,
+                  is_read: latestMessage.isRead,
+                  sender: {
+                    id: parseInt(latestMessage.senderId),
+                    name: latestMessage.senderName,
+                    email: '',
+                    profile_image: latestMessage.senderProfileImage || null,
+                    is_online: null,
+                    last_seen: null
+                  }
+                },
+                updated_at: latestMessage.timestamp,
+                unread_count: chat.unread_count || 0 // ไม่เพิ่ม unread count ที่นี่ เพราะจะจัดการผ่าน unread_update event
+              };
+              return updatedChat;
+            }
+            return chat;
+          });
+                } else {
+                  // ถ้า chat ยังไม่อยู่ใน list (เช่น ถูกซ่อนไว้) ให้ refresh chat list
+                  fetchChats();
+                  return prev;
+                }
+      });
     }
   }, [socketMessages, selectedChatId]);
 
   // จัดการกับ refresh chat list event
   useEffect(() => {
     const handleRefreshChatList = (event: CustomEvent) => {
-      console.log('Refreshing chat list due to:', event.detail);
       fetchChats(); // refresh chat list
     };
 
+    const handleUnreadUpdate = (event: CustomEvent) => {
+      const { chatId, newUnreadCount } = event.detail;
+      
+      // อัปเดต unread count ใน chat list
+      setChats(prev => prev.map(chat => {
+        if (chat.id === chatId) {
+          return {
+            ...chat,
+            unread_count: newUnreadCount
+          };
+        }
+        return chat;
+      }));
+    };
+
     window.addEventListener('refresh_chat_list', handleRefreshChatList as EventListener);
+    window.addEventListener('socket:unread_update', handleUnreadUpdate as EventListener);
 
     return () => {
       window.removeEventListener('refresh_chat_list', handleRefreshChatList as EventListener);
+      window.removeEventListener('socket:unread_update', handleUnreadUpdate as EventListener);
     };
   }, []);
 
-  const handleChatSelect = (chatId: string) => {
+  const handleChatSelect = async (chatId: string) => {
     setSelectedChatId(chatId);
+    
+    // ส่ง currentChatId ไปยัง socket server
+    if (socket && userId) {
+      socket.emit('set_current_chat', {
+        userId: userId,
+        chatId: parseInt(chatId)
+      });
+    }
+    
+    // รีเซ็ต unread count เมื่อเลือก chat
+    setChats(prev => prev.map(chat => {
+      if (chat.id.toString() === chatId) {
+        return {
+          ...chat,
+          unread_count: 0
+        };
+      }
+      return chat;
+    }));
+
+    // อัปเดต unread count ใน database
+    try {
+      await axios.post('/api/chat/mark-read', {
+        chatId: parseInt(chatId),
+        userId: userId
+      });
+    } catch (error) {
+      console.error('Error marking chat as read:', error);
+    }
   };
 
   const handleSendMessage = async (message: string) => {
@@ -273,6 +327,47 @@ export default function ChatWidget() {
     };
 
     sendMessage(messageData);
+    
+    // อัปเดต chat list ทันทีเมื่อส่งข้อความใหม่
+    const newMessage = {
+      id: Date.now(), // temporary ID
+      chat_id: parseInt(selectedChatId),
+      sender_id: parseInt(userId || '0'),
+      message_type: 'TEXT',
+      content: message,
+      image_url: null,
+      timestamp: new Date(),
+      is_read: false,
+      sender: {
+        id: parseInt(userId || '0'),
+        name: 'You', // หรือชื่อผู้ใช้จริง
+        email: '',
+        profile_image: null,
+        is_online: null,
+        last_seen: null
+      }
+    };
+
+    // อัปเดต chat list ทันที
+    setChats(prev => {
+      const updatedChats = prev.map(chat => {
+        if (chat.id.toString() === selectedChatId) {
+          return {
+            ...chat,
+            last_message: newMessage,
+            updated_at: new Date()
+          };
+        }
+        return chat;
+      });
+      
+      // เรียงลำดับตาม updated_at (ใหม่สุดขึ้นบน)
+      return updatedChats.sort((a, b) => {
+        const dateA = a.updated_at ? new Date(a.updated_at).getTime() : 0;
+        const dateB = b.updated_at ? new Date(b.updated_at).getTime() : 0;
+        return dateB - dateA;
+      });
+    });
     
     // Refresh messages after sending
     setTimeout(() => {
