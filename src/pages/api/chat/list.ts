@@ -24,7 +24,7 @@ export default async function handle(req: NextApiRequestWithUser, res: NextApiRe
   const currentUserId = parseInt(req.user.id);
 
   try {
-    // ดึงรายการ chat ที่ user มีส่วนร่วม และไม่ถูกซ่อน
+    // ดึงรายการ chat ที่ user มีส่วนร่วม และไม่ถูกซ่อน หรือมีข้อความที่ยังไม่ได้อ่าน
     const chats = await prisma.chat.findMany({
       where: {
         AND: [
@@ -35,12 +35,28 @@ export default async function handle(req: NextApiRequestWithUser, res: NextApiRe
             ]
           },
           {
-            user_chat_settings: {
-              some: {
-                user_id: currentUserId,
-                is_hidden: false
+            OR: [
+              // Chat ที่ไม่ถูกซ่อน
+              {
+                user_chat_settings: {
+                  some: {
+                    user_id: currentUserId,
+                    is_hidden: false
+                  }
+                }
+              },
+              // Chat ที่มีข้อความที่ยังไม่ได้อ่าน (แม้จะถูกซ่อน)
+              {
+                user_chat_settings: {
+                  some: {
+                    user_id: currentUserId,
+                    unread_count: {
+                      gt: 0
+                    }
+                  }
+                }
               }
-            }
+            ]
           }
         ]
       },
@@ -68,6 +84,20 @@ export default async function handle(req: NextApiRequestWithUser, res: NextApiRe
         }
       },
       orderBy: { updated_at: 'desc' }
+    });
+
+    // อัปเดต is_hidden เป็น false สำหรับ chat ที่มีข้อความที่ยังไม่ได้อ่าน
+    await prisma.user_chat_settings.updateMany({
+      where: {
+        user_id: currentUserId,
+        unread_count: {
+          gt: 0
+        },
+        is_hidden: true
+      },
+      data: {
+        is_hidden: false
+      }
     });
 
     // จัดรูปแบบข้อมูลให้ตรงกับ ChatWidget interface

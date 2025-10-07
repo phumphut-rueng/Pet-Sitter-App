@@ -23,6 +23,7 @@ let io: Server; // Global Instance
 
 interface SocketWithUser extends Socket {
   userId?: string;
+  currentChatId?: number;
 }
 
 export default async function socketHandler(req: NextApiRequest, res: NextApiResponseWithSocket) {
@@ -39,9 +40,9 @@ export default async function socketHandler(req: NextApiRequest, res: NextApiRes
 
     io.on('connection', (socket: SocketWithUser) => {
       // Event: เมื่อผู้ใช้เข้าสู่แอป
-      socket.on('join_app', async (userId: string) => {
-        try {
-          socket.userId = userId;
+        socket.on('join_app', async (userId: string) => {
+          try {
+            (socket as SocketWithUser).userId = userId;
           await prisma.user.update({ 
             where: { id: parseInt(userId) }, 
             data: { is_online: true } 
@@ -89,7 +90,14 @@ export default async function socketHandler(req: NextApiRequest, res: NextApiRes
             } 
           });
           
-          // 3. INCREMENT UNREAD COUNT และแสดง chat สำหรับผู้รับ
+          // 3. ตรวจสอบว่า receiver กำลังดู chat นี้อยู่หรือไม่
+          const receiverSocket = Array.from(io.sockets.sockets.values()).find(
+            socket => (socket as SocketWithUser).userId === data.receiverId
+          ) as SocketWithUser;
+          const isReceiverViewingThisChat = receiverSocket?.currentChatId === data.chatId;
+          
+          
+          // 4. INCREMENT UNREAD COUNT และแสดง chat สำหรับผู้รับ (ถ้าไม่ได้กำลังดูอยู่)
           const updatedUserChatSettings = await prisma.user_chat_settings.update({
             where: { 
               user_id_chat_id: { 
@@ -98,7 +106,9 @@ export default async function socketHandler(req: NextApiRequest, res: NextApiRes
               } 
             },
             data: { 
-              unread_count: { increment: 1 },
+              unread_count: isReceiverViewingThisChat 
+                ? { set: 0 } // ถ้ากำลังดูอยู่ ให้ set เป็น 0
+                : { increment: 1 }, // ถ้าไม่ได้ดู ให้เพิ่ม 1
               is_hidden: false // แสดง chat เมื่อมีข้อความแรก
             },
             select: { unread_count: true }
@@ -133,10 +143,18 @@ export default async function socketHandler(req: NextApiRequest, res: NextApiRes
           io.to(data.senderId).emit('receive_message', payload);
           io.to(data.receiverId).emit('receive_message', payload);
           
-          // ส่ง unread update เฉพาะคนรับ
+          // ส่ง unread update ให้ทั้งคนส่งและคนรับ
+          io.to(data.senderId).emit('unread_update', { 
+            chatId: data.chatId, 
+            newUnreadCount: 0 // คนส่งไม่ต้องมี unread count
+          });
+          
+          // ใช้ unread count จาก database (ที่ตรวจสอบว่ากำลังดูอยู่หรือไม่แล้ว)
+          const unreadCountForReceiver = updatedUserChatSettings.unread_count || 0;
+          
           io.to(data.receiverId).emit('unread_update', { 
             chatId: data.chatId, 
-            newUnreadCount: updatedUserChatSettings.unread_count || 0
+            newUnreadCount: unreadCountForReceiver
           });
 
           // ส่ง event เพื่อแจ้งให้ frontend refresh chat list (สำหรับกรณีที่ chat ถูกซ่อนไว้)
@@ -149,18 +167,23 @@ export default async function socketHandler(req: NextApiRequest, res: NextApiRes
         }
       });
 
+      // Event: เมื่อผู้ใช้เลือก chat ปัจจุบัน
+        socket.on('set_current_chat', (data: { userId: string; chatId: number }) => {
+          (socket as SocketWithUser).currentChatId = data.chatId;
+        });
+
       // Event: เมื่อผู้ใช้ออกจากแอป
       socket.on('disconnect', async () => {
         try {
-          if (socket.userId) {
+          if ((socket as SocketWithUser).userId) {
             await prisma.user.update({ 
-              where: { id: parseInt(socket.userId) }, 
+              where: { id: parseInt((socket as SocketWithUser).userId!) }, 
               data: { 
                 is_online: false, 
                 last_seen: new Date() 
               } 
             });
-            io.emit('user_offline', socket.userId);
+            io.emit('user_offline', (socket as SocketWithUser).userId);
           }
         } catch (error) {
           console.error('Error handling disconnect:', error);
