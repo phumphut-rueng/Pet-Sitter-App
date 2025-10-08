@@ -60,7 +60,7 @@ export type ValidationField = "name" | "email" | "phone";
 
 /**
  * เช็คว่า field ซ้ำหรือไม่
- * - เรียก API: /api/user/get-email หรือ /api/user/check-phone
+ * - เรียก API: /api/user/get-email//คนเปลี่ยนชื่อ หรือ /api/user/check-phone
  * - Response: { exists: boolean }
  * - ถ้า exists = true → throw error
  */
@@ -78,7 +78,7 @@ export async function checkUnique(
   let body: Record<string, string> = {};
 
   if (field === "email") {
-    endpoint = "/api/user/get-email";
+    endpoint = "/api/user/get-role";
     body = { email: value };
   } else if (field === "phone") {
     endpoint = "/api/user/check-phone";

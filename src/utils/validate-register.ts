@@ -40,7 +40,7 @@ export async function validateEmail(
                 exists: boolean;
                 data: { user_role: UserRole[] }
             }>(
-                "/api/user/get-email",
+                "/api/user/get-role",
                 { email: value }
             );
 
