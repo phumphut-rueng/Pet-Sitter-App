@@ -2,11 +2,9 @@ import * as React from "react";
 import Image from "next/image";
 import { cn } from "@/lib/utils/utils";
 
-
 export type PetSpecies = "Cat" | "Dog" | "Bird" | "Rabbit" | (string & {});
 
 export type PetCardProps = {
-
   id?: number;
   name: string;
   species: PetSpecies;
@@ -14,7 +12,7 @@ export type PetCardProps = {
   selected?: boolean;
   disabled?: boolean;
   className?: string;
-
+  priority?: boolean;
   onClick?: () => void;
   onClickId?: (id: number) => void;
   size?: number;
@@ -22,7 +20,6 @@ export type PetCardProps = {
   height?: number;
   avatarSize?: number;
 };
-
 
 const AVATAR_CONFIG = {
   MIN: 64,
@@ -70,20 +67,18 @@ const CARD_STYLES = {
   noImage: "text-muted-text text-sm",
 } as const;
 
-
 const calculateAvatarSize = (cardHeight: number, customAvatarSize?: number): number => {
   if (customAvatarSize) {
     return Math.max(AVATAR_CONFIG.MIN, Math.min(AVATAR_CONFIG.MAX, customAvatarSize));
   }
   const autoSize = Math.round(Math.min(AVATAR_CONFIG.BASE_SIZE, cardHeight) * AVATAR_CONFIG.RATIO);
   const clampedSize = Math.max(AVATAR_CONFIG.MIN, Math.min(AVATAR_CONFIG.MAX, autoSize));
-  return clampedSize % 2 === 0 ? clampedSize : clampedSize + 1; // even for crisper rendering
+  return clampedSize % 2 === 0 ? clampedSize : clampedSize + 1;
 };
 
 const getSpeciesStyle = (species: string): string => {
   return SPECIES_STYLES[species] ?? SPECIES_STYLES.default;
 };
-
 
 const SpeciesChip: React.FC<{ species: string }> = React.memo(({ species }) => {
   const chipStyle = getSpeciesStyle(species);
@@ -104,8 +99,9 @@ const PetAvatar: React.FC<{
   src: string;
   name: string;
   size: number;
+  priority?: boolean;
   onError: () => void;
-}> = React.memo(({ src, name, size, onError }) => {
+}> = React.memo(({ src, name, size, priority = false, onError }) => {
   const hasImage = src.trim().length > 0;
   return (
     <div style={{ width: size, height: size }} className={CARD_STYLES.avatar} aria-hidden>
@@ -116,8 +112,7 @@ const PetAvatar: React.FC<{
           fill
           sizes={`${size}px`}
           className="object-cover"
-          loading="lazy"
-          decoding="async"
+          priority={priority}
           onError={onError}
         />
       ) : (
@@ -127,7 +122,6 @@ const PetAvatar: React.FC<{
   );
 });
 PetAvatar.displayName = "PetAvatar";
-
 
 const useImageState = (initialImage?: string) => {
   const [imageSrc, setImageSrc] = React.useState<string>((initialImage ?? "").trim());
@@ -150,7 +144,6 @@ const useCardDimensions = (size: number, width?: number, height?: number) =>
     [size, width, height]
   );
 
-/** รวม handler เดียวให้คลิก/กดแป้นทำงาน */
 const useUnifiedInteraction = (
   disabled: boolean,
   id: number | undefined,
@@ -185,6 +178,7 @@ function PetCard({
   selected = false,
   disabled = false,
   className,
+  priority = false,
   onClick,
   onClickId,
   size = DEFAULT_CARD_SIZE,
@@ -224,7 +218,13 @@ function PetCard({
     >
       {selected && <SelectedBadge />}
 
-      <PetAvatar src={imageSrc} name={name} size={calculatedAvatarSize} onError={handleImageError} />
+      <PetAvatar 
+        src={imageSrc} 
+        name={name} 
+        size={calculatedAvatarSize} 
+        priority={priority}
+        onError={handleImageError} 
+      />
 
       <p className={CARD_STYLES.petName}>{name}</p>
 
@@ -232,6 +232,5 @@ function PetCard({
     </button>
   );
 }
-
 
 export default React.memo(PetCard);

@@ -1,3 +1,4 @@
+// src/pages/admin/owner/index.tsx
 import { useEffect, useMemo, useState } from "react";
 import Head from "next/head";
 import AdminSidebar from "@/components/layout/AdminSidebar";
@@ -6,6 +7,8 @@ import { Pagination } from "@/components/pagination/Pagination";
 import OwnersTable from "@/components/admin/owners/OwnersTable";
 import type { OwnerRow, OwnerListResponse } from "@/types/admin/owners";
 import { cn } from "@/lib/utils/utils";
+import { api } from "@/lib/api/axios";           // ✅ เพิ่ม
+import { isAxiosError } from "axios";            // ✅ เพิ่ม
 
 function PageHeader({
   title,
@@ -37,28 +40,27 @@ export default function AdminOwnerListPage() {
   // ----- computed -----
   const totalPages = useMemo(() => Math.max(1, Math.ceil(total / limit)), [total, limit]);
 
-  // ----- fetch list from API -----
+  // ----- fetch list from API (axios) -----
   useEffect(() => {
     let cancelled = false;
+    const controller = new AbortController();
 
     (async () => {
       setLoading(true);
       try {
-        const params = new URLSearchParams({
-          page: String(page),
-          limit: String(limit),
-          q: q.trim(),
-        });
-
-        const res = await fetch(`/api/admin/owners/get-owners?${params.toString()}`);
-        if (!res.ok) throw new Error(await res.text());
-
-        const data: OwnerListResponse = await res.json();
+        const { data } = await api.get<OwnerListResponse>(
+          "admin/owners/get-owners",          // ✅ ไม่ต้องมี /api นำหน้า
+          {
+            params: { page, limit, q: q.trim() },
+            signal: controller.signal,         // ✅ ยกเลิกได้เวลา unmount/เปลี่ยนพารามิเตอร์
+          }
+        );
         if (!cancelled) {
           setRows(data.items ?? []);
           setTotal(data.total ?? 0);
         }
       } catch (err) {
+        if (isAxiosError(err) && err.code === "ERR_CANCELED") return; // ✅ ถูกยกเลิก
         console.error(err);
         if (!cancelled) {
           setRows([]);
@@ -71,6 +73,7 @@ export default function AdminOwnerListPage() {
 
     return () => {
       cancelled = true;
+      controller.abort();
     };
   }, [page, limit, q]);
 

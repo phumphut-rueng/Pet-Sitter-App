@@ -1,6 +1,6 @@
 import * as React from "react";
 import { Control } from "react-hook-form";
-import type { OwnerProfileInput } from "@/lib/validators/account";
+import type { OwnerProfileInput } from "@/lib/validators/profile";
 import DatePicker from "@/components/date-picker/DatePicker";
 import { FormField } from "./FormField";
 import { toYmd, parseYmd, sameMonth, clampDay } from "../utils/date";
@@ -46,6 +46,19 @@ const DobPickerInner: React.FC<DobInnerProps> = ({ value, onChange, error }) => 
     if (nextStr !== prevStr) onChange(nextStr);
   };
 
+  // ✅ ตั้งช่วงปีให้เลือกได้ (ย้อนหลัง 100 ปีถึงวันนี้) และปิดการ block อดีต
+  const today = React.useMemo(() => {
+    const d = new Date();
+    d.setHours(0, 0, 0, 0);
+    return d;
+  }, []);
+
+  const min = React.useMemo(() => {
+    const d = new Date(today);
+    d.setFullYear(d.getFullYear() - 100);
+    return d;
+  }, [today]);
+
   return (
     <div className="flex flex-col gap-1">
       <label htmlFor="date" className="text-sm font-medium text-gray-700">
@@ -57,7 +70,11 @@ const DobPickerInner: React.FC<DobInnerProps> = ({ value, onChange, error }) => 
           month={month}
           onMonthChange={handleMonthChange}
           onSelect={handleSelect}
-          rules={{ maxDate: new Date() }}
+          rules={{
+            disablePastDates: false, // 🔑 อนุญาตคลิกวัน/เดือน/ปีในอดีต
+            minDate: min,            // ย้อนหลัง 100 ปี
+            maxDate: today,          // ไม่ให้เกินวันนี้
+          }}
           width={400}
         />
       </div>

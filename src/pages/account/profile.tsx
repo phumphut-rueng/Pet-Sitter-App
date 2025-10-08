@@ -9,7 +9,7 @@ import ProfileForm from "@/components/features/account/profile/components/Profil
 import PageToaster from "@/components/ui/PageToaster";
 import { useOwnerProfileForm } from "@/hooks/useOwnerProfileForm";
 import { authOptions } from "@/pages/api/auth/[...nextauth]";
-import type { OwnerProfileInput } from "@/lib/validators/account";
+import type { OwnerProfileInput } from "@/lib/validators/profile";
 
 const ERROR_MESSAGES = {
   loadFailed: "Failed to load profile.",

@@ -1,145 +1,205 @@
 import { z } from "zod";
-import { uploadToCloudinary } from "@/lib/cloudinary/upload-to-cloudinary";
 
-/* =========================
- * Messages
- * ========================= */
-export const ERROR_MESSAGES = {
-  loadFailed: "Failed to load profile",
-  updateFailed: "Update failed",
-  unknown: "Unknown error",
+// ========================================
+// Constants & Rules
+// ========================================
+
+export const VALIDATION_RULES = {
+  name: {
+    min: 6,
+    max: 20,
+  },
+  phone: {
+    length: 10,
+    pattern: /^0\d{9}$/,
+  },
+  idNumber: {
+    length: 13,
+    pattern: /^\d{13}$/,
+  },
+  dob: {
+    pattern: /^\d{4}-\d{2}-\d{2}$/,
+  },
 } as const;
 
-export const SUCCESS_MESSAGES = {
-  profileUpdated: "Profile updated!",
+export const PROFILE_ERROR_MESSAGES = {
+  name: {
+    required: "Your name is required",
+    length: `Name must be ${VALIDATION_RULES.name.min}–${VALIDATION_RULES.name.max} characters`,
+  },
+  email: {
+    required: "Email is required",
+    format: "Invalid email format",
+  },
+  phone: {
+    required: "Phone is required",
+    format: "Phone must start with 0 and be 10 digits",
+  },
+  idNumber: {
+    format: "ID must be 13 digits",
+  },
+  dob: {
+    format: "Date must be in YYYY-MM-DD format",
+  },
 } as const;
 
-/* =========================
- * Types
- * ========================= */
-export type ProfileFormValues = {
-  name: string;
-  email: string;
-  phone: string;
-  idNumber?: string;
-  dob?: string;          // 'YYYY-MM-DD' หรือว่าง
-  profileImage?: string; // data URL / http(s) URL / ''
-};
+// ========================================
+// Base Validators (Zod)
+// ========================================
 
-export const ProfileInputSchema = z.object({
-  name: z.string().trim().min(1).max(100),
-  email: z.string().email().max(100),
-  phone: z.string().trim().max(20).optional().nullable().transform(v => v ?? undefined),
-  idNumber: z.string().trim().max(50).optional().nullable().transform(v => v ?? undefined),
+const validators = {
+  name: z
+    .string()
+    .min(1, PROFILE_ERROR_MESSAGES.name.required)
+    .min(VALIDATION_RULES.name.min, PROFILE_ERROR_MESSAGES.name.length)
+    .max(VALIDATION_RULES.name.max, PROFILE_ERROR_MESSAGES.name.length),
+
+  email: z
+    .string()
+    .min(1, PROFILE_ERROR_MESSAGES.email.required)
+    .email(PROFILE_ERROR_MESSAGES.email.format),
+
+  phone: z
+    .string()
+    .min(1, PROFILE_ERROR_MESSAGES.phone.required)
+    .regex(VALIDATION_RULES.phone.pattern, PROFILE_ERROR_MESSAGES.phone.format),
+
+  idNumber: z
+    .string()
+    .optional()
+    .refine(
+      (value) => !value || VALIDATION_RULES.idNumber.pattern.test(value),
+      PROFILE_ERROR_MESSAGES.idNumber.format
+    ),
+
   dob: z
     .string()
-    .regex(/^\d{4}-\d{2}-\d{2}$/)
     .optional()
-    .nullable()
-    .transform(v => (v && v.trim() ? v : undefined)),
-  profileImage: z.string().optional(),
+    .refine(
+      (value) => !value || VALIDATION_RULES.dob.pattern.test(value),
+      PROFILE_ERROR_MESSAGES.dob.format
+    ),
+
+  image: z.any().optional(),
+} as const;
+
+// ========================================
+// Schemas
+// ========================================
+
+/**
+ * Schema หลักสำหรับ Owner Profile Form
+ */
+export const ownerProfileSchema = z.object({
+  image: validators.image,
+  name: validators.name,
+  email: validators.email,
+  phone: validators.phone,
+  idNumber: validators.idNumber,
+  dob: validators.dob,
 });
-export type ProfileInput = z.infer<typeof ProfileInputSchema>;
 
-/* =========================
- * Helpers
- * ========================= */
-const isHttpUrl = (s?: string) => !!s && /^https?:\/\//i.test(s);
-const isDataUrl = (s?: string) => !!s && /^data:image\/[a-zA-Z]+;base64,/.test(s);
+export type OwnerProfileInput = z.infer<typeof ownerProfileSchema>;
 
-async function dataUrlToFile(dataUrl: string, filename = "profile.png"): Promise<File> {
-  const res = await fetch(dataUrl);
-  const blob = await res.blob();
-  return new File([blob], filename, { type: blob.type || "image/png" });
-}
+/**
+ * Schema สำหรับ API Update (server-side)
+ */
+export const updateProfileSchema = z.object({
+  name: z.string().trim().min(1).max(100).optional(),
+  email: z.string().trim().email().optional(),
+  phone: z.string().trim().regex(/^\d{9,15}$/).optional(),
+  dob: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
+  profileImage: z.string().url().optional(),
+  profile_image_public_id: z.string().min(1).optional().or(z.literal(null)),
+});
 
-export function getErrorMessage(e: unknown): string {
-  if (typeof e === "string") return e;
-  if (e instanceof Error) return e.message;
-  try { return JSON.stringify(e); } catch { return ERROR_MESSAGES.unknown; }
-}
+export type UpdateProfileInput = z.infer<typeof updateProfileSchema>;
 
-/* =========================
- * Mapper: Form -> Payload
- * ========================= */
-export async function formValuesToProfilePayload(v: ProfileFormValues): Promise<ProfileInput> {
-  let profileImage: string | undefined;
-  const img = (v.profileImage ?? "").trim();
+/**
+ * Schema Variants (สำหรับใช้งานต่างๆ)
+ */
+export const profileSchemas = {
+  full: ownerProfileSchema,
+  required: z.object({
+    name: validators.name,
+    email: validators.email,
+    phone: validators.phone,
+  }),
+  public: z.object({
+    name: validators.name,
+    image: validators.image,
+  }),
+  update: z.object({
+    name: validators.name.optional(),
+    email: validators.email.optional(),
+    phone: validators.phone.optional(),
+    idNumber: validators.idNumber,
+    dob: validators.dob,
+    image: validators.image,
+  }),
+  api: updateProfileSchema,
+} as const;
 
-  if (isDataUrl(img)) {
-    const file = await dataUrlToFile(img, "profile.png");
-    // อัปโหลดไปโฟลเดอร์ owner-profile
-    const url = await uploadToCloudinary(file, { folder: "owner-profile" });
-    profileImage = url;
-  } else if (isHttpUrl(img) || img.startsWith("/")) {
-    profileImage = img;
-  } else {
-    profileImage = undefined;
-  }
+// ========================================
+// Helper Functions
+// ========================================
 
-  const dto = {
-    name: v.name.trim(),
-    email: v.email.trim(),
-    phone: v.phone?.trim() || undefined,
-    idNumber: v.idNumber?.trim() || undefined,
-    dob: v.dob?.trim() || undefined,
-    ...(profileImage ? { profileImage } : {}),
-  };
+/**
+ * Validate แต่ละ field แบบ standalone
+ */
+export const profileValidation = {
+  validateName: (name: string) => validators.name.safeParse(name),
+  validateEmail: (email: string) => validators.email.safeParse(email),
+  validatePhone: (phone: string) => validators.phone.safeParse(phone),
+  validateIdNumber: (idNumber: string) => validators.idNumber.safeParse(idNumber),
+  validateDob: (dob: string) => validators.dob.safeParse(dob),
+} as const;
 
-  return ProfileInputSchema.parse(dto);
-}
+// ========================================
+// Type Guards & Helpers
+// ========================================
 
-/* =========================
- * Service
- * ========================= */
-const API_BASE = process.env.NEXT_PUBLIC_API_BASE ?? "";
+type UnknownRecord = Record<string, unknown>;
+const isRecord = (v: unknown): v is UnknownRecord => 
+  typeof v === "object" && v !== null;
 
-function parseApiErrorMessage(payload: unknown): string | null {
-  if (typeof payload !== "object" || payload === null) return null;
-  const rec = payload as Record<string, unknown>;
-  const e = rec["error"];
-  const m = rec["message"];
-  if (typeof e === "string") return e;
-  if (typeof m === "string") return m;
-  return null;
-}
-
-export const profileService = {
-  async fetchOwner(): Promise<ProfileFormValues> {
-    const res = await fetch(`${API_BASE}/api/user/profile`, {
-      credentials: "include",
-      cache: "no-store",
-    });
-    if (!res.ok) throw new Error(ERROR_MESSAGES.loadFailed);
-    const data = (await res.json()) as {
-      name?: string; email: string; phone?: string;
-      idNumber?: string | null; dob?: string | null; profileImage?: string | null;
-    };
-    return {
-      name: data.name ?? "",
-      email: data.email ?? "",
-      phone: data.phone ?? "",
-      idNumber: data.idNumber ?? "",
-      dob: data.dob ?? "",
-      profileImage: data.profileImage ?? "",
-    };
-  },
-
-  async updateOwner(payload: ProfileInput): Promise<void> {
-    const res = await fetch(`${API_BASE}/api/user/profile`, {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      credentials: "include",
-      body: JSON.stringify(payload),
-    });
-    if (!res.ok) {
-      let msg: string = ERROR_MESSAGES.updateFailed;
-      try {
-        const parsed: unknown = await res.json();
-        const m = parseApiErrorMessage(parsed);
-        if (m) msg = m;
-      } catch { /* ignore */ }
-      throw new Error(msg);
-    }
-  },
+export const normalizeString = (v: unknown): string | undefined => {
+  if (typeof v !== "string") return undefined;
+  const trimmed = v.trim();
+  return trimmed ? trimmed : undefined;
 };
+
+export const pickDobYmd = (body: unknown): string | undefined => {
+  if (!isRecord(body)) return undefined;
+  const raw = normalizeString(body["dob"]);
+  if (!raw) return undefined;
+  return VALIDATION_RULES.dob.pattern.test(raw) ? raw : undefined;
+};
+
+export const pickProfileImageUrl = (body: unknown): string | undefined => {
+  if (!isRecord(body)) return undefined;
+  const candidate =
+    body["profileImage"] ??
+    body["profile_image"] ??
+    body["profileImageUrl"] ??
+    body["imageUrl"] ??
+    body["image"];
+  return normalizeString(candidate);
+};
+
+export const pickProfileImagePublicId = (body: unknown): string | undefined => {
+  if (!isRecord(body)) return undefined;
+  const candidate =
+    body["profile_image_public_id"] ??
+    body["profileImagePublicId"] ??
+    body["public_id"] ??
+    body["publicId"];
+  return normalizeString(candidate);
+};
+
+// ========================================
+// Type Exports
+// ========================================
+
+export type ValidationDetails = z.inferFlattenedErrors<typeof updateProfileSchema>;
+export type ProfileFormValues = OwnerProfileInput;

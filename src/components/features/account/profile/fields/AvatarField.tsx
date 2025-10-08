@@ -1,6 +1,6 @@
 import * as React from "react";
 import { Control } from "react-hook-form";
-import type { OwnerProfileInput } from "@/lib/validators/account";
+import type { OwnerProfileInput } from "@/lib/validators/profile";
 import AvatarUploader from "@/components/form/AvatarUpload";
 import { FormField } from "./FormField";
 import { handleFileToDataURL } from "../utils/file";
@@ -26,6 +26,7 @@ export const AvatarField: React.FC<{
                 field.onChange(dataURL);
               }}
               diameterPx={176}
+              priority={true} 
             />
           </div>
           <p className="mt-2 text-xs text-muted-foreground cursor-pointer">
