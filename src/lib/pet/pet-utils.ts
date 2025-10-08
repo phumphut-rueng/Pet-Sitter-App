@@ -2,6 +2,8 @@ import type { NextRouter } from "next/router";
 import type { PetInput } from "@/lib/validators/pet";
 import { Pet, PetFormValues, PetType } from "@/types/pet.types";
 import { uploadToCloudinary } from "@/lib/cloudinary/upload-to-cloudinary";
+import { api } from "@/lib/api/axios";
+import { isAxiosError } from "axios";
 
 export type { Pet, PetFormValues, PetType };
 
@@ -28,7 +30,21 @@ export const SUCCESS_MESSAGES = {
 
 export const NAVIGATION_DELAY = 900;
 
+/** 
+ * แปลง axios error เป็น message string 
+ * รองรับทั้ง { message } และ { error } 
+ */
 export const getErrorMessage = (error: unknown): string => {
+  if (isAxiosError(error)) {
+    const data = error.response?.data as { message?: string; error?: string } | undefined;
+    return (
+      data?.message ||
+      data?.error ||
+      error.response?.statusText ||
+      error.message ||
+      ERROR_MESSAGES.unknown
+    );
+  }
   if (typeof error === "string") return error;
   if (error instanceof Error) return error.message;
   try {
@@ -38,12 +54,14 @@ export const getErrorMessage = (error: unknown): string => {
   }
 };
 
+/** แปลง router query เป็น pet ID */
 export const parsePetId = (routerQuery: unknown): number | undefined => {
   const raw = Array.isArray(routerQuery) ? routerQuery[0] : routerQuery;
   const parsed = raw ? Number(raw) : NaN;
   return Number.isFinite(parsed) && parsed > 0 ? parsed : undefined;
 };
 
+/** ตรวจสอบว่า URL รูปภาพถูกต้องหรือไม่ */
 export const validateImageUrl = (url?: string | null): string => {
   const trimmed = (url ?? "").trim();
   return trimmed &&
@@ -52,6 +70,7 @@ export const validateImageUrl = (url?: string | null): string => {
     : "";
 };
 
+/** นำทางไปหน้าอื่นหลังจาก delay */
 export const delayedNavigation = (
   router: Pick<NextRouter, "push">,
   path: string,
@@ -63,12 +82,10 @@ export const delayedNavigation = (
 };
 
 /* =========================
- * Pet response -> form values
+ * แปลง Pet response → form values
  * ========================= */
 function toFormSex(value: unknown): PetFormValues["sex"] {
-  return value === "Male" || value === "Female"
-    ? (value as PetFormValues["sex"])
-    : "";
+  return value === "Male" || value === "Female" ? value : "";
 }
 
 export const petResponseToFormValues = (pet: Pet): PetFormValues => ({
@@ -84,7 +101,7 @@ export const petResponseToFormValues = (pet: Pet): PetFormValues => ({
 });
 
 /* =========================
- * Pet type resolve
+ * Pet type resolve (หา pet type ID จากชื่อ)
  * ========================= */
 const norm = (s: string) =>
   s
@@ -99,8 +116,6 @@ const PET_TYPE_ALIASES: Record<string, string[]> = {
   cat: ["cat", "cats", "feline", "แมว"],
   bird: ["bird", "birds", "นก"],
   rabbit: ["rabbit", "rabbits", "กระต่าย"],
-  // ถ้าโปรเจ็กต์มี type "Other" ให้เพิ่ม:
-  // other: ["other", "อื่นๆ", "etc"],
 };
 
 function resolvePetTypeId(input: string, types: PetType[]): number | null {
@@ -128,24 +143,37 @@ function resolvePetTypeId(input: string, types: PetType[]): number | null {
     if (byCap) return byCap.id;
   }
 
-
   return null;
 }
 
 /* =========================
  * Image helpers (upload to Cloudinary)
+ *ไม่ใช้ fetch API แล้วใช้ atob แปลง base64 เป็น Blob แทน
  * ========================= */
 const isDataUrl = (s?: string) => !!s && /^data:image\/[a-zA-Z]+;base64,/.test(s);
 
-async function dataUrlToFile(dataUrl: string, filename = "pet.png"): Promise<File> {
-  const res = await fetch(dataUrl);
-  const blob = await res.blob();
-  return new File([blob], filename, { type: blob.type || "image/png" });
+/** 
+ * แปลง data URL → File โดยไม่ใช้ fetch API
+ * ใช้ atob() แปลง base64 → binary → Blob → File แทน
+ */
+function dataUrlToFile(dataUrl: string, filename = "pet.png"): File {
+  const m = dataUrl.match(/^data:([^;]+);base64,(.+)$/);
+  if (!m) throw new Error("Invalid data URL");
+  const mime = m[1] || "image/png";
+  const b64 = m[2];
+  
+  // ใช้ atob แปลง base64 เป็น binary string (ไม่ใช้ fetch)
+  const bin = atob(b64);
+  const bytes = new Uint8Array(bin.length);
+  for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+  
+  const blob = new Blob([bytes], { type: mime });
+  return new File([blob], filename, { type: mime });
 }
 
 /* =========================
- * Form -> API payload
- * (Upload image to folder "pet_profile" if needed)
+ * แปลง Form API payload
+ * อัพโหลดรูปไปที่ Cloudinary folder "pet-profile"
  * ========================= */
 export const formValuesToPayload = async (
   values: PetFormValues,
@@ -158,12 +186,11 @@ export const formValuesToPayload = async (
     throw new Error(ERROR_MESSAGES.invalidPetType);
   }
 
-  // รูปจากฟอร์ม (อาจเป็น data URL / URL / path)
   let imageUrl = (values.image ?? "").trim();
 
-  // ถ้าเป็น data URL ให้อัปขึ้น Cloudinary โฟลเดอร์ pet-profile
+  // ถ้าเป็น data URL ให้แปลงเป็น File และอัพโหลด (ไม่ใช้ fetch)
   if (isDataUrl(imageUrl)) {
-    const file = await dataUrlToFile(imageUrl, "pet.png");
+    const file = dataUrlToFile(imageUrl, "pet.png");
     imageUrl = await uploadToCloudinary(file, { folder: "pet-profile" });
   }
 
@@ -176,87 +203,83 @@ export const formValuesToPayload = async (
     color: values.color.trim(),
     weightKg: Number(values.weightKg || 0),
     about: values.about?.trim() || "",
-    imageUrl, // ใช้คีย์เดิมของโปรเจ็กต์คุณ
+    imageUrl,
   };
 };
 
-const API_BASE = process.env.NEXT_PUBLIC_API_BASE ?? "";
-
 /* =========================
- * API error parse
+ * API error parser
+ * รองรับทั้ง { message: "..." } และ { error: "..." }
  * ========================= */
 function parseApiErrorMessage(payload: unknown): string | null {
   if (typeof payload !== "object" || payload === null) return null;
   const rec = payload as Record<string, unknown>;
-  const e = rec["error"];
-  const m = rec["message"];
-  if (typeof e === "string") return e;
-  if (typeof m === "string") return m;
+  const message = rec["message"];
+  const error = rec["error"];
+  if (typeof message === "string") return message;
+  if (typeof error === "string") return error;
   return null;
 }
 
 /* =========================
- * petService
+ * 🔧 petService: ใช้ axios เรียก API ทั้งหมด
+ * ⚠️ ชื่อฟังก์ชัน "fetchPet" เป็นแค่ชื่อ ไม่ได้ใช้ fetch API
+ * จริงๆ ใช้ axios.get(), axios.put(), axios.post(), axios.delete()
  * ========================= */
 export const petService = {
+  /**
+   * 📥 fetchPet: โหลดข้อมูล pet ด้วย axios.get()
+   * หมายเหตุ: ชื่อ "fetch" เป็นแค่ชื่อฟังก์ชัน ไม่ได้ใช้ fetch API นะครับ!
+   */
   async fetchPet(id: number): Promise<Pet> {
-    const res = await fetch(`${API_BASE}/api/pets/${id}`, {
-      credentials: "include",
-      cache: "no-store",
-    });
-    if (!res.ok) throw new Error(ERROR_MESSAGES.loadFailed);
-    return (await res.json()) as Pet;
+    try {
+      // 🔹 ใช้ axios.get() ไม่ใช่ fetch
+      const { data } = await api.get<Pet>(`pets/${id}`);
+      return data;
+    } catch (err) {
+      throw new Error(getErrorMessage(err) || ERROR_MESSAGES.loadFailed);
+    }
   },
 
+  /** updatePet: อัพเดท pet ด้วย axios.put() */
   async updatePet(id: number, payload: PetInput): Promise<void> {
-    const res = await fetch(`${API_BASE}/api/pets/${id}`, {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      credentials: "include",
-      body: JSON.stringify(payload),
-    });
-    if (!res.ok) {
-      let errorMessage: string = ERROR_MESSAGES.updateFailed;
-      try {
-        const parsed: unknown = await res.json();
-        const msg = parseApiErrorMessage(parsed);
-        if (msg) errorMessage = msg;
-      } catch { /* ignore parse error */ }
-      throw new Error(errorMessage);
+    try {
+      // ใช้ axios.put() ไม่ใช่ fetch
+      await api.put(`pets/${id}`, payload);
+    } catch (err) {
+      if (isAxiosError(err)) {
+        const msg = parseApiErrorMessage(err.response?.data) || getErrorMessage(err);
+        throw new Error(msg || ERROR_MESSAGES.updateFailed);
+      }
+      throw new Error(ERROR_MESSAGES.updateFailed);
     }
   },
 
+  /** 🗑️ deletePet: ลบ pet ด้วย axios.delete() */
   async deletePet(id: number): Promise<void> {
-    const res = await fetch(`${API_BASE}/api/pets/${id}`, {
-      method: "DELETE",
-      credentials: "include",
-    });
-    if (!res.ok) {
-      let errorMessage: string = ERROR_MESSAGES.deleteFailed;
-      try {
-        const parsed: unknown = await res.json();
-        const msg = parseApiErrorMessage(parsed);
-        if (msg) errorMessage = msg;
-      } catch { /* ignore parse error */ }
-      throw new Error(errorMessage);
+    try {
+      // ใช้ axios.delete() ไม่ใช่ fetch
+      await api.delete(`pets/${id}`);
+    } catch (err) {
+      if (isAxiosError(err)) {
+        const msg = parseApiErrorMessage(err.response?.data) || getErrorMessage(err);
+        throw new Error(msg || ERROR_MESSAGES.deleteFailed);
+      }
+      throw new Error(ERROR_MESSAGES.deleteFailed);
     }
   },
 
+  /**  createPet: สร้าง pet ใหม่ด้วย axios.post() */
   async createPet(payload: PetInput): Promise<void> {
-    const res = await fetch(`${API_BASE}/api/pets`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      credentials: "include",
-      body: JSON.stringify(payload),
-    });
-    if (!res.ok) {
-      let errorMessage: string = ERROR_MESSAGES.createFailed;
-      try {
-        const parsed: unknown = await res.json();
-        const msg = parseApiErrorMessage(parsed);
-        if (msg) errorMessage = msg;
-      } catch { /* ignore parse error */ }
-      throw new Error(errorMessage);
+    try {
+      // 🔹 ใช้ axios.post() ไม่ใช่ fetch
+      await api.post(`pets`, payload);
+    } catch (err) {
+      if (isAxiosError(err)) {
+        const msg = parseApiErrorMessage(err.response?.data) || getErrorMessage(err);
+        throw new Error(msg || ERROR_MESSAGES.createFailed);
+      }
+      throw new Error(ERROR_MESSAGES.createFailed);
     }
   },
 };

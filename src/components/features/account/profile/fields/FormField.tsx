@@ -6,7 +6,7 @@ import {
   ControllerFieldState,
   Path,
 } from "react-hook-form";
-import type { OwnerProfileInput } from "@/lib/validators/account";
+import type { OwnerProfileInput } from "@/lib/validators/profile";
 
 type FormFieldProps<Name extends Path<OwnerProfileInput>> = {
   control: Control<OwnerProfileInput>;

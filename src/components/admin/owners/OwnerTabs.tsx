@@ -30,20 +30,25 @@ export default function OwnerTabs({ value, onValueChange, className }: Props) {
           ["reviews", "Reviews"],
         ] as const).map(([val, label], index) => (
           <TabsTrigger
-            key={val}
-            value={val}
-            className={cn(
-              "px-8 py-4 text-base font-medium",
-              "transition-all duration-200",
-              index === 0 
-                ? "rounded-tl-xl rounded-tr-xl rounded-br-xl rounded-bl-none" // Tab แรก: โค้ง 3 มุม
-                : "rounded-t-xl", // Tab อื่นๆ: โค้งแค่ด้านบน
-              "data-[state=active]:bg-orange-500 data-[state=active]:text-white data-[state=active]:shadow-sm",
-              "data-[state=inactive]:bg-gray-200 data-[state=inactive]:text-gray-500",
-              "hover:bg-orange-100 hover:text-orange-600",
-              "data-[state=active]:hover:bg-orange-600"
-            )}
-          >
+                      key={val}
+                      value={val}
+                      className={cn(
+                        "px-8 py-4 text-base font-medium",
+                        "transition-all duration-200",
+                        "relative z-10", // ให้ tab ลอยเหนือ content
+                        index === 0 
+                          ? "rounded-tl-xl rounded-tr-xl rounded-br-xl rounded-bl-none" // Tab แรก: โค้ง 3 มุม
+                          : "rounded-t-xl", // Tab อื่นๆ: โค้งแค่ด้านบน
+                        // Active state - พื้นขาว ตัวอักษรส้ม ไม่มีเงา
+                        "data-[state=active]:bg-white data-[state=active]:text-orange-5",
+                        "data-[state=active]:-mb-px", // ดึง tab ขึ้นมาทับ border ของ content
+                        // Inactive state - พื้นเทา ตัวอักษรเทา
+                        "data-[state=inactive]:bg-gray-2 data-[state=inactive]:text-gray-6",
+                        // Hover states
+                        "data-[state=inactive]:hover:bg-gray-1 data-[state=inactive]:hover:text-gray-7",
+                        "data-[state=active]:hover:text-orange-6"
+                      )}
+                    >
             {label}
           </TabsTrigger>
         ))}

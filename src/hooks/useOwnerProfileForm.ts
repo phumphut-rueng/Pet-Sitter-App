@@ -1,30 +1,69 @@
 import { useCallback, useRef } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { ownerProfileSchema, type OwnerProfileInput } from "@/lib/validators/account";
+import axios from "axios";
 
-import { apiRequest, checkUnique } from "@/lib/api/api-client";
+import {
+  ownerProfileSchema,
+  type OwnerProfileInput,
+} from "@/lib/validators/profile";
+
+import {
+  validateEmailUnique,
+  validatePhoneUnique,
+  validateUniqueFields,
+  checkFieldChanges,
+  VALIDATION_ERROR_MESSAGES,
+} from "@/lib/validators/helpers";
+
+import { apiRequest } from "@/lib/api/api-client";
 import { uploadAndGetPublicId } from "@/lib/cloudinary/image-upload";
-import { toErrorMessage, sanitize } from "@/lib/utils/strings";
-import { transformData, DEFAULT_VALUES, type OwnerProfileDTO } from "@/components/features/account/profile/transform";
+import { toErrorMessage } from "@/lib/utils/strings";
+import {
+  transformData,
+  DEFAULT_VALUES,
+  type OwnerProfileDTO,
+} from "@/components/features/account/profile/transform";
 
-const ERROR_MESSAGES = {
-  nameTaken: "This name is already in use.",
-  emailTaken: "This email is already in use.",
-  phoneTaken: "This phone number is already in use.",
-  invalidDate: "Invalid date. Use YYYY-MM-DD.",
-  unknown: "Unknown error",
-} as const;
+// ------------------------------
+// helpers
+// ------------------------------
+const isDataUrl = (s?: string): boolean =>
+  !!s && /^data:image\/[a-zA-Z]+;base64,/.test(s);
 
-const isDataUrl = (s?: string) => !!s && /^data:image\/[a-zA-Z]+;base64,/.test(s);
+// แปลง data URL เป็น File โดยใช้ axios
 async function dataUrlToFile(dataUrl: string, filename = "profile.png"): Promise<File> {
-  const res = await fetch(dataUrl);
-  const blob = await res.blob();
+  const response = await axios.get(dataUrl, {
+    responseType: 'blob'
+  });
+  
+  const blob = response.data;
   return new File([blob], filename, { type: blob.type || "image/png" });
 }
 
+/**
+ * บีบค่าจาก transform ให้เป็นรูปทรงเดียวกับ OwnerProfileInput
+ * - ตัดคีย์ที่ schema ไม่รู้จักทิ้ง
+ * - บีบ null → undefined สำหรับฟิลด์ optional
+ */
+function toFormShape(v: unknown): Partial<OwnerProfileInput> {
+  const r = (v ?? {}) as Record<string, unknown>;
+  return {
+    name: (r.name as string) ?? "",
+    email: (r.email as string) ?? "",
+    phone: (r.phone as string) ?? "",
+    image: (r.image as unknown) ?? undefined,
+    idNumber: (r.idNumber as string | null | undefined) ?? undefined,
+    dob: (r.dob as string | null | undefined) ?? undefined,
+  };
+}
+
+// ------------------------------
+// main hook
+// ------------------------------
 export function useOwnerProfileForm() {
-  const initialRef = useRef<OwnerProfileDTO | null>(null);
+  // เก็บค่าเริ่มต้นในรูปทรง "ฟอร์ม" เพื่อตรงกับ checkFieldChanges
+  const initialRef = useRef<Partial<OwnerProfileInput> | null>(null);
 
   const form = useForm<OwnerProfileInput>({
     resolver: zodResolver(ownerProfileSchema),
@@ -32,90 +71,104 @@ export function useOwnerProfileForm() {
     defaultValues: DEFAULT_VALUES,
   });
 
+  // load profile
   const load = useCallback(async () => {
     const profile = await apiRequest<OwnerProfileDTO>("/api/user/profile", {
       method: "GET",
       cache: "no-store",
     });
+
     const formData = transformData.fromApiToForm(profile);
-    initialRef.current = transformData.toStorageFormat(formData);
-    form.reset(formData);
+
+    // ✅ เก็บค่าเริ่มต้นเป็นรูปทรงฟอร์ม และ reset ด้วยค่าที่ไม่มี null
+    const shaped = toFormShape(formData);
+    initialRef.current = shaped;
+    form.reset(shaped);
   }, [form]);
 
-  const checkChanges = useCallback((values: OwnerProfileInput) => {
-    const initial = initialRef.current;
-    return {
-      name: sanitize.trimString(values.name) !== (initial?.name ?? ""),
-      email: sanitize.trimString(values.email) !== (initial?.email ?? ""),
-      phone: sanitize.onlyDigits(values.phone) !== sanitize.onlyDigits(initial?.phone ?? ""),
-    };
-  }, []);
+  // validate before save (check unique เฉพาะฟิลด์ที่แก้)
+  const validateBeforeSave = useCallback(
+    async (values: OwnerProfileInput): Promise<boolean> => {
+      const changes = checkFieldChanges(
+        initialRef.current,
+        values,
+        ["name", "email", "phone"] as const
+      );
 
-  const validateUniqueFields = useCallback(async (values: OwnerProfileInput) => {
-    const ch = checkChanges(values);
-    const tasks: Promise<void>[] = [
-      ch.name ? checkUnique("name", sanitize.trimString(values.name)) : Promise.resolve(),
-      ch.email ? checkUnique("email", sanitize.trimString(values.email)) : Promise.resolve(),
-      ch.phone ? checkUnique("phone", sanitize.onlyDigits(values.phone)!) : Promise.resolve(),
-    ];
-    const [r1, r2, r3] = await Promise.allSettled(tasks);
-    let ok = true;
-    if (r1.status === "rejected") { form.setError("name", { message: ERROR_MESSAGES.nameTaken }); ok = false; }
-    if (r2.status === "rejected") { form.setError("email", { message: ERROR_MESSAGES.emailTaken }); ok = false; }
-    if (r3.status === "rejected") { form.setError("phone", { message: ERROR_MESSAGES.phoneTaken }); ok = false; }
-    return ok;
-  }, [form, checkChanges]);
+      const fieldsToCheck: Parameters<typeof validateUniqueFields>[0] = {};
+      if (changes.name) fieldsToCheck.name = values.name;
+      if (changes.email) fieldsToCheck.email = values.email;
+      if (changes.phone) fieldsToCheck.phone = values.phone;
 
-  const save = useCallback(async (values: OwnerProfileInput): Promise<boolean> => {
-    const isUnique = await validateUniqueFields(values);
-    if (!isUnique) return false;
+      if (Object.keys(fieldsToCheck).length === 0) return true;
 
-    try {
-      let public_id: string | undefined;
-      if (typeof values.image === "string" && isDataUrl(values.image.trim())) {
-        const file = await dataUrlToFile(values.image.trim(), "profile.png");
-        const up = await uploadAndGetPublicId(file, "owner-profile");
-        public_id = up.public_id;
+      const errors = await validateUniqueFields(fieldsToCheck);
+      if (errors.length > 0) {
+        errors.forEach((err) => form.setError(err.field, { message: err.message }));
+        return false;
       }
-
-      const base = transformData.fromFormToApi(values);
-      const body: Record<string, unknown> = {
-        name: base.name,
-        email: base.email,
-        phone: base.phone,
-        dob: base.dob,
-        profile_image_public_id: public_id ?? undefined, // เก็บด้วย public_id เท่านั้น
-      };
-
-      await apiRequest<unknown>("/api/user/profile", {
-        method: "PUT",
-        body: JSON.stringify(body),
-      });
-
-      await load(); // sync state หลังบันทึก
       return true;
-    } catch (err) {
-      const message = toErrorMessage(err, ERROR_MESSAGES.unknown);
-      if (message.includes("email_taken")) { form.setError("email", { message: ERROR_MESSAGES.emailTaken }); return false; }
-      if (message.includes("phone_taken")) { form.setError("phone", { message: ERROR_MESSAGES.phoneTaken }); return false; }
-      if (message.startsWith("HTTP 400")) { form.setError("dob", { message: ERROR_MESSAGES.invalidDate }); return false; }
-      throw err;
-    }
-  }, [form, validateUniqueFields, load]);
+    },
+    [form]
+  );
 
-  const checkEmailUnique = async (email: string) => {
-    const v = sanitize.trimString(email);
-    if (!v) return true as const;
-    try { await checkUnique("email", v); return true as const; }
-    catch { return ERROR_MESSAGES.emailTaken; }
+  // save profile
+  const save = useCallback(
+    async (values: OwnerProfileInput): Promise<boolean> => {
+      const ok = await validateBeforeSave(values);
+      if (!ok) return false;
+
+      try {
+        let public_id: string | undefined;
+
+        if (typeof values.image === "string" && isDataUrl(values.image.trim())) {
+          const file = await dataUrlToFile(values.image.trim(), "profile.png");
+          const up = await uploadAndGetPublicId(file, "owner-profile");
+          public_id = up.public_id;
+        }
+
+        const apiData = transformData.fromFormToApi(values);
+        const body = {
+          name: apiData.name,
+          email: apiData.email,
+          phone: apiData.phone,
+          dob: apiData.dob,
+          profile_image_public_id: public_id ?? undefined,
+        };
+
+        await apiRequest("/api/user/profile", {
+          method: "PUT",
+          body: JSON.stringify(body),
+        });
+
+        await load();
+        return true;
+      } catch (err) {
+        const message = toErrorMessage(err, VALIDATION_ERROR_MESSAGES.unknown);
+
+        if (message.includes("email_taken")) {
+          form.setError("email", { message: VALIDATION_ERROR_MESSAGES.emailTaken });
+          return false;
+        }
+        if (message.includes("phone_taken")) {
+          form.setError("phone", { message: VALIDATION_ERROR_MESSAGES.phoneTaken });
+          return false;
+        }
+        if (message.startsWith("HTTP 400") || message.toLowerCase().includes("date")) {
+          form.setError("dob", { message: VALIDATION_ERROR_MESSAGES.invalidDate });
+          return false;
+        }
+        throw err;
+      }
+    },
+    [form, validateBeforeSave, load]
+  );
+
+  return {
+    form,
+    load,
+    save,
+    checkEmailUnique: validateEmailUnique,
+    checkPhoneUnique: validatePhoneUnique,
   };
-
-  const checkPhoneUnique = async (phone: string) => {
-    const v = sanitize.onlyDigits(phone);
-    if (!v) return true as const;
-    try { await checkUnique("phone", v); return true as const; }
-    catch { return ERROR_MESSAGES.phoneTaken; }
-  };
-
-  return { form, load, save, checkEmailUnique, checkPhoneUnique };
 }

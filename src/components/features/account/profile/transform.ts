@@ -1,4 +1,4 @@
-import type { OwnerProfileInput } from "@/lib/validators/account";
+import type { OwnerProfileInput } from "@/lib/validators/profile";
 import { cldUrl } from "@/lib/cloudinary/client";
 import { sanitize, formatDate } from "@/lib/utils/strings";
 
