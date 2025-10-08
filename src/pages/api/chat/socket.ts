@@ -35,7 +35,11 @@ export default async function socketHandler(req: NextApiRequest, res: NextApiRes
       cors: { 
         origin: '*', 
         methods: ['GET', 'POST'] 
-      } 
+      },
+      pingTimeout: 60000, // 60 วินาที
+      pingInterval: 25000, // 25 วินาที
+      upgradeTimeout: 10000, // 10 วินาที
+      allowEIO3: true
     });
 
     io.on('connection', (socket: SocketWithUser) => {

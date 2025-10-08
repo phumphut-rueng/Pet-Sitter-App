@@ -17,7 +17,13 @@ export const connectSocket = (userId: string): Socket<SocketEvents> => {
   socket = io({ 
     path: '/api/chat/socket',
     autoConnect: true,
-    forceNew: true // บังคับสร้าง connection ใหม่
+    forceNew: true, // บังคับสร้าง connection ใหม่
+    timeout: 20000, // เพิ่ม timeout เป็น 20 วินาที
+    reconnection: true, // เปิดการ reconnect อัตโนมัติ
+    reconnectionDelay: 1000, // รอ 1 วินาทีก่อน reconnect
+    reconnectionAttempts: 5, // ลอง reconnect สูงสุด 5 ครั้ง
+    reconnectionDelayMax: 5000, // รอสูงสุด 5 วินาที
+    randomizationFactor: 0.5 // เพิ่มความสุ่มในการ reconnect
   });
 
   socket.on('connect', () => {
@@ -31,6 +37,27 @@ export const connectSocket = (userId: string): Socket<SocketEvents> => {
 
   socket.on('disconnect', (reason) => {
     console.log('Socket disconnected:', reason);
+  });
+
+  // เพิ่มการจัดการ reconnect events (ใช้ any type เพื่อหลีกเลี่ยง type errors)
+  (socket as any).on('reconnect', (attemptNumber: number) => {
+    console.log('Socket reconnected after', attemptNumber, 'attempts');
+    // ส่ง join_app อีกครั้งหลังจาก reconnect
+    socket?.emit('join_app', userId);
+  });
+
+  (socket as any).on('reconnect_attempt', (attemptNumber: number) => {
+    console.log('Attempting to reconnect...', attemptNumber);
+  });
+
+  (socket as any).on('reconnect_error', (error: any) => {
+    console.error('Reconnection error:', error);
+  });
+
+  (socket as any).on('reconnect_failed', () => {
+    console.error('Reconnection failed after all attempts');
+    // แสดงข้อความแจ้งผู้ใช้
+    window.dispatchEvent(new CustomEvent('socket:reconnect_failed'));
   });
 
   // เพิ่ม Listener สำหรับ Real-Time Unread Badge Update
@@ -88,4 +115,27 @@ export const disconnectSocket = (): void => {
 
 export const getSocket = (): Socket<SocketEvents> | null => {
   return socket;
+};
+
+// ฟังก์ชันสำหรับจัดการ visibility change (เมื่อผู้ใช้กลับมาใช้หน้าจอ)
+export const handleVisibilityChange = () => {
+  if (document.visibilityState === 'visible') {
+    console.log('Page became visible, checking socket connection...');
+    if (socket && !socket.connected) {
+      console.log('Socket disconnected, attempting to reconnect...');
+      socket.connect();
+    }
+  } else {
+    console.log('Page became hidden');
+  }
+};
+
+// ฟังก์ชันสำหรับเริ่มต้น visibility change listener
+export const initVisibilityListener = () => {
+  document.addEventListener('visibilitychange', handleVisibilityChange);
+  
+  // Cleanup function
+  return () => {
+    document.removeEventListener('visibilitychange', handleVisibilityChange);
+  };
 };

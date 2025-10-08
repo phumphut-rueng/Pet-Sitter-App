@@ -51,12 +51,29 @@ export default async function handler(req: NextApiRequestWithUser, res: NextApiR
     });
 
     if (existingChat) {
-      // ถ้ามี chat อยู่แล้ว ให้ส่ง chat ID กลับ
+      // ถ้ามี chat อยู่แล้ว ให้อัปเดต is_hidden = false สำหรับผู้ส่งข้อความ
+      await prisma.user_chat_settings.updateMany({
+        where: {
+          user_id: currentUserId,
+          chat_id: existingChat.id
+        },
+        data: {
+          is_hidden: false,
+          unread_count: 0 // รีเซ็ต unread count ด้วย
+        }
+      });
+
+      // อัปเดต updated_at ของ chat
+      await prisma.chat.update({
+        where: { id: existingChat.id },
+        data: { updated_at: new Date() }
+      });
+
       return res.json({
         success: true,
         chatId: existingChat.id,
         isNewChat: false,
-        message: 'Chat already exists'
+        message: 'Chat already exists and unhidden'
       });
     }
 

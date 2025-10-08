@@ -61,7 +61,7 @@ export default function ChatWidget() {
   const getRelativeTime = (timestamp: Date | string): string => {
     // ตรวจสอบว่า timestamp มีค่าและถูกต้อง
     if (!timestamp) {
-      return 'เวลาไม่ระบุ';
+      return 'Date is undefined';
     }
 
     const now = new Date();
@@ -70,7 +70,7 @@ export default function ChatWidget() {
     // ตรวจสอบว่า Date object ถูกต้อง
     if (isNaN(messageTime.getTime())) {
       console.error('Invalid timestamp:', timestamp);
-      return 'เวลาไม่ถูกต้อง';
+      return 'Date is incorrect';
     }
 
     const diffInSeconds = Math.floor((now.getTime() - messageTime.getTime()) / 1000);
@@ -484,6 +484,52 @@ export default function ChatWidget() {
     }, 100);
   };
 
+  // ฟังก์ชันสำหรับซ่อน chat
+  const handleHideChat = async (chatId: string) => {
+    try {
+      // ส่ง request ไปยัง API เพื่อซ่อน chat
+      await axios.post('/api/chat/hide', {
+        chatId: parseInt(chatId),
+        userId: userId
+      });
+
+      // อัปเดต chat list โดยลบ chat ที่ซ่อนออก
+      setChats(prev => {
+        const filteredChats = prev.filter(chat => chat.id.toString() !== chatId);
+        
+        // ถ้าเป็น chat ที่กำลังดูอยู่ ให้เลือก chat ล่าสุดแทน
+        if (selectedChatId === chatId) {
+          if (filteredChats.length > 0) {
+            // เลือก chat ล่าสุด (ตัวแรกใน list ที่เรียงตาม updated_at desc)
+            const latestChat = filteredChats[0];
+            setSelectedChatId(latestChat.id.toString());
+            
+            // โหลดข้อความของ chat ล่าสุด
+            fetchMessages(latestChat.id.toString());
+            
+            // ส่ง currentChatId ไปยัง socket server
+            if (socket && userId) {
+              socket.emit('set_current_chat', {
+                userId: userId,
+                chatId: latestChat.id
+              });
+            }
+          } else {
+            // ถ้าไม่มี chat เหลือแล้ว ให้ล้าง selectedChatId
+            setSelectedChatId('');
+            setMessages([]);
+          }
+        }
+        
+        return filteredChats;
+      });
+
+      console.log('Chat hidden successfully:', chatId);
+    } catch (error) {
+      console.error('Error hiding chat:', error);
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex h-full bg-white rounded-lg shadow-lg overflow-hidden items-center justify-center">
@@ -524,6 +570,7 @@ export default function ChatWidget() {
           }))}
           onSendMessage={handleSendMessage}
           hasChats={chats.length > 0} // ส่งข้อมูลว่ามี chat ใน chatlist หรือไม่
+          onHideChat={handleHideChat} // ส่งฟังก์ชันสำหรับซ่อน chat
         />
       </div>
     </div>
