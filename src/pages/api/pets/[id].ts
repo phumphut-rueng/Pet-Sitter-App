@@ -1,5 +1,5 @@
 import type { NextApiRequest, NextApiResponse } from "next";
-import { prisma } from "@/lib/prisma";
+import { prisma } from "@/lib/prisma/prisma";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/pages/api/auth/[...nextauth]";
 import { petSchema } from "@/lib/validators/pet";
@@ -13,14 +13,16 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   if (!Number.isFinite(userId)) return res.status(400).json({ error: "Invalid user id" });
 
   const id = Number(req.query.id);
+
   if (!Number.isFinite(id)) return res.status(400).json({ error: "Invalid id" });
 
   try {
     if (req.method === "GET") {
       const pet = await prisma.pet.findFirst({
-        where: { id, owner_id: userId },   
+        where: { id, owner_id: userId },
         include: { pet_type: true },
       });
+
       if (!pet) return res.status(404).json({ error: "Pet not found" });
 
       return res.status(200).json({
@@ -48,7 +50,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       const data = parsed.data;
 
       const updated = await prisma.pet.updateMany({
-        where: { id, owner_id: userId },   
+        where: { id, owner_id: userId },
         data: {
           pet_type_id: data.petTypeId,
           name: data.name,

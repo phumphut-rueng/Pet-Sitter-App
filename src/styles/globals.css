@@ -150,6 +150,35 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
+button:not([disabled]),
+a[href],
+[role="button"],
+input[type="button"]:not([disabled]),
+input[type="submit"]:not([disabled]),
+summary,
+label[for] {
+  cursor: pointer;
+}
+
+
+.cursor-pointer { cursor: pointer; }
+.cursor-default { cursor: default; }
+
+dialog {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  margin: 0;
+  border: none;
+  max-width: none;
+  max-height: none;
+}
+
+dialog::backdrop {
+  background: rgba(0, 0, 0, 0.5);
+}
+
 /* กันสื่อทุกชนิดล้นกรอบแม้ลืมใส่คลาส */
 img, video, canvas, svg, iframe { max-width: 100%; height: auto; }
 

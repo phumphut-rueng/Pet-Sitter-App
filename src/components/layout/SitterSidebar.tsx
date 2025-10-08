@@ -4,6 +4,7 @@ import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
 import { signOut } from "next-auth/react";
 
+/** ===== Types ===== */
 type SidebarItem = {
   id: string;
   label: string;
@@ -12,18 +13,21 @@ type SidebarItem = {
   notify?: boolean;
 };
 
-export type SidebarProps = {
+export type SitterSidebarProps = {
   className?: string;
   activeId?: string;
   onNavigate?: (id: string) => void;
   onLogout?: () => Promise<void> | void;
   logoSrc?: string;
+  /** ให้ sidebar ติดขอบบนเวลาสกรอลล์ (default: true) */
+  sticky?: boolean;
 };
 
+/** ===== Config ===== */
 const SIDEBAR_CONFIG = {
-  width: 240,
-  logoWidth: 120,
-  logoHeight: 30,
+  width: 240,           
+  logoWidth: 131,
+  logoHeight: 40,
   defaultLogoSrc: "/icons/sitter-logo-1.svg",
   defaultActiveId: "profile",
 } as const;
@@ -41,9 +45,10 @@ const LOGOUT_CONFIG = {
   iconSrc: "/icons/ic-logout.svg",
 } as const;
 
+
 const STYLES = {
   sidebar:
-    "sticky top-0 flex min-h-[100svh] h-auto shrink-0 flex-col bg-bg text-text border-r border-border",
+    "flex min-h-[100svh] h-auto shrink-0 flex-col bg-bg text-text border-r border-border",
   header: "px-5 pt-8 pb-6 border-b border-border",
   nav: "flex-1 overflow-y-auto px-2 py-4",
   navList: "space-y-0.5",
@@ -61,6 +66,7 @@ const STYLES = {
   notification: "ml-auto mt-[1px] inline-block h-2 w-2 rounded-full bg-red",
 } as const;
 
+/** ===== Utils ===== */
 const cn = (...c: (string | false | null | undefined)[]) => c.filter(Boolean).join(" ");
 
 const findActiveItem = (pathname: string): string => {
@@ -71,6 +77,7 @@ const findActiveItem = (pathname: string): string => {
 const getMenuItemClassName = (isActive: boolean) =>
   cn(STYLES.menuItem.base, isActive ? STYLES.menuItem.active : STYLES.menuItem.inactive);
 
+/** ===== Small atoms ===== */
 const IconMask: React.FC<{ src: string; className?: string }> = React.memo(
   ({ src, className = "w-5 h-5" }) => (
     <span
@@ -95,8 +102,8 @@ IconMask.displayName = "IconMask";
 
 const SidebarLogo: React.FC<{
   logoSrc: string;
-  href?: string;           
-  onNavigate?: () => void;  
+  href?: string;
+  onNavigate?: () => void;
 }> = React.memo(({ logoSrc, href = "/", onNavigate }) => (
   <div className={STYLES.header}>
     <Link
@@ -167,13 +174,15 @@ const LogoutSection: React.FC<{ onClick: () => void; disabled?: boolean }> = Rea
 );
 LogoutSection.displayName = "LogoutSection";
 
-export default function Sidebar({
+/** ===== Main component ===== */
+export default function SitterSidebar({
   className = "",
   activeId,
   onNavigate,
   onLogout,
   logoSrc = SIDEBAR_CONFIG.defaultLogoSrc,
-}: SidebarProps) {
+  sticky = true,
+}: SitterSidebarProps) {
   const pathname = usePathname();
   const router = useRouter();
   const [pending, setPending] = React.useState(false);
@@ -199,10 +208,14 @@ export default function Sidebar({
     return void doDefaultLogout();
   }, [onLogout, doDefaultLogout]);
 
-  const sidebarClassName = cn(STYLES.sidebar, `w-[${SIDEBAR_CONFIG.width}px]`, className);
+  // ควบคุมการ sticky ให้เลือกได้
+  const positionCls = sticky ? "sticky top-0" : "static";
+
+  
+  const sidebarClassName = cn(positionCls, STYLES.sidebar, className);
 
   return (
-    <aside className={sidebarClassName}>
+    <aside className={sidebarClassName} style={{ width: SIDEBAR_CONFIG.width }}>
       <SidebarLogo logoSrc={logoSrc} />
       <NavigationList currentActiveId={currentActiveId} onNavigate={onNavigate} />
       <LogoutSection onClick={handleLogout} disabled={pending} />

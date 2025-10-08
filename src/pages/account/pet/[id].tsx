@@ -20,7 +20,7 @@ import {
   petResponseToFormValues,
   formValuesToPayload,
   petService,
-} from "@/lib/pet-utils";
+} from "@/lib/pet/pet-utils";
 
 export default function EditPetPage() {
   const router = useRouter();

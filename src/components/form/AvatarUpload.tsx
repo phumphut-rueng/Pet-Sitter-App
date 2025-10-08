@@ -5,6 +5,7 @@ type AvatarUploaderProps = {
   imageUrl?: string; // รูปเดิมจากระบบ
   onChange?: (selectedFile: File | null) => void;
   diameterPx?: number;
+  priority?: boolean; //พี่ใส่เพิ่มกัน next แจ้งเตือน
 };
 
 const ACCEPTED_IMAGE_MIME_TYPES = ["image/png", "image/jpeg", "image/jpg"];
@@ -15,6 +16,7 @@ export default function AvatarUploader({
   imageUrl,
   onChange,
   diameterPx = 176,
+  priority = false, //พี่ใส่เพิ่มกัน next แจ้งเตือน
 }: AvatarUploaderProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
@@ -60,6 +62,7 @@ export default function AvatarUploader({
             className="object-cover w-full h-full"
             unoptimized
             loader={passThroughLoader}
+            priority={priority} //พี่ใส่เพิ่มกัน next แจ้งเตือน
           />
         ) : (
           <Image
@@ -67,8 +70,8 @@ export default function AvatarUploader({
             alt="placeholder"
             width={Math.round(diameterPx / 2)}
             height={Math.round(diameterPx / 2)}
-            priority
             className="w-20 h-20"
+            priority={priority}  //พี่ใส่เพิ่มกัน next แจ้งเตือน
           />
         )}
       </div>

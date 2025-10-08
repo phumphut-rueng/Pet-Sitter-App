@@ -1,6 +1,6 @@
 import { useState, useCallback } from "react"
-import { RegisterForm } from "@/types/register.type"
-import { validateEmail, validatePhone, validatePassword } from "@/utils/validate-register"
+import { RegisterForm } from "@/types/register.types"
+import { validateEmail, validatePhone, validatePassword } from "@/lib/validators/validation"
 
 // จัดการฟอร์ม + validation
 export function useRegisterForm() {

@@ -1,7 +1,7 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/pages/api/auth/[...nextauth]";
-import { prisma } from "@/lib/prisma";
+import { prisma } from "@/lib/prisma/prisma";
 import { petSchema } from "@/lib/validators/pet";
 
 
@@ -16,9 +16,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   try {
     if (req.method === "GET") {
       const pets = await prisma.pet.findMany({
-        where: { owner_id: ownerId },          
+        where: { owner_id: ownerId },
         orderBy: { id: "asc" },
-        include: { pet_type: true },          
+        include: { pet_type: true },
       });
 
       return res.status(200).json(

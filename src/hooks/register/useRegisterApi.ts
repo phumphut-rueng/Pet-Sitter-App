@@ -1,5 +1,5 @@
 import axios from "axios"
-import { RegisterForm } from "@/types/register.type"
+import { RegisterForm } from "@/types/register.types"
 import { useRouter } from "next/router"
 
 // รวม API (register, addRole)

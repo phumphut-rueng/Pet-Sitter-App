@@ -1,8 +1,8 @@
 import { useState, useMemo, useCallback } from "react"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
-import { formatDate } from "@/utils/date-utils"
-import { cn } from "@/lib/utils"
-import { getDaysInMonth, getFirstDayOfMonth } from "@/utils/date-utils"
+import { formatDate } from "@/lib/utils/date"
+import { cn } from "@/lib/utils/utils"
+import { getDaysInMonth, getFirstDayOfMonth } from "@/lib/utils/date"
 import { DatePickerProps } from "@/types/date-picker.types"
 import CalendarHeader from "./CalendarHeader"
 import CalendarTable from "./CalendarTable"
@@ -27,12 +27,13 @@ function DatePicker({
     }, [month])
 
     const {
-        disablePastDates,
+        disablePastDates = true,
         minDate,
         maxDate,
     } = rules
 
-    // ถ้า minDate ถูกส่งเข้ามา ให้ disablePastDates = false
+    // ถ้า minDate ถูกส่งเข้ามา ให้ disablePastDates = false 
+    // (true = เลือกไม่ได้, false = เลือกได้)
     const newDisablePastDates =
         (minDate !== undefined) ? false : disablePastDates;
 
@@ -56,14 +57,9 @@ function DatePicker({
             : new Date()
     )
 
-    console.log("new\n", newMinDate, "\n", newMaxDate, new Date());
-
-
-    console.log("newDisable\n", newDisablePastDates, newMinDate, newMinDate.getFullYear());
     const startYear = newMinDate.getFullYear()
     const endYear = newMaxDate.getFullYear()
     const yearsPerPage = 12
-    console.log("Year\n", startYear, endYear, yearsPerPage, newMaxDate, newMaxDate.getFullYear());
 
     const today = useMemo(() => {
         const d = new Date()
@@ -160,8 +156,13 @@ function DatePicker({
         setPickerView('year')
     }, [currentMonth, startYear, yearsPerPage])
 
+    const handleOpen = useCallback((open: boolean) => {
+        setPickerView('date')
+        setIsOpen(open)
+    }, [setPickerView, setIsOpen])
+
     return (
-        <Popover open={isOpen} onOpenChange={(o) => setIsOpen(o)}>
+        <Popover open={isOpen} onOpenChange={(open) => handleOpen(open)}>
             <PopoverTrigger asChild>
                 <button
                     id="date"
@@ -195,8 +196,8 @@ function DatePicker({
                                 onMonthChange={onMonthChange}
                                 rules={{
                                     disablePastDates: newDisablePastDates,
-                                    minDate,
-                                    maxDate,
+                                    minDate: newMinDate,
+                                    maxDate: newMaxDate,
                                     today
                                 }}
                             />

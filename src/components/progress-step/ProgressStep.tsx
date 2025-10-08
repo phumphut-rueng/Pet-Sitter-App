@@ -1,13 +1,13 @@
 import ProgressBar from "./ProgressBar"
 
 interface ProgressStepProps {
-    activeNumner?: number;
+    activeNumber?: number;
     size?: number;
 }
 
 
 export default function ProgressStep({
-    activeNumner = 1,
+    activeNumber = 1,
     size = 28
 }: ProgressStepProps) {
     return (
@@ -16,17 +16,17 @@ export default function ProgressStep({
                 number={1}
                 size={size}
                 label="Your Pet"
-                status={activeNumner === 1 ? "active" : "inactive"} />
+                status={activeNumber === 1 ? "active" : activeNumber > 1 ? "done" : "inactive"} />
             <ProgressBar
                 number={2}
                 size={size}
                 label="Information"
-                status={activeNumner === 2 ? "active" : "inactive"} />
+                status={activeNumber === 2 ? "active" : activeNumber > 2 ? "done" : "inactive"} />
             <ProgressBar
                 number={3}
                 size={size}
                 label="Payment"
-                status={activeNumner === 3 ? "active" : "inactive"} />
+                status={activeNumber === 3 ? "active" : "inactive"} />
         </div>
     )
 }

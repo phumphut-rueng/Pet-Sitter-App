@@ -1,5 +1,5 @@
 import { ChevronLeft, ChevronDown } from "lucide-react"
-import { useCallback } from "react"
+import { useCallback, useMemo } from "react"
 import { MonthProps } from "@/types/date-picker.types"
 
 export default function MonthPicker({
@@ -9,18 +9,24 @@ export default function MonthPicker({
     setView,
     rules = {},
 }: MonthProps) {
-    const months = [
-        "January", "February", "March", "April", "May", "June",
-        "July", "August", "September", "October", "November", "December"
-    ]
+    const months = useMemo(
+        () => [
+            "January", "February", "March", "April", "May", "June",
+            "July", "August", "September", "October", "November", "December"
+        ],
+        []
+    )
     const {
         disablePastDates = false
     } = rules
 
-    const handleMonthSelect = useCallback((id: number) => {
-        onMonthSelect(new Date(currentMonth.getFullYear(), id, 1))
-        setView("date")
-    }, [onMonthSelect, setView, currentMonth])
+    const handleMonthSelect = useCallback(
+        (monthIndex: number) => {
+            onMonthSelect(new Date(currentMonth.getFullYear(), monthIndex, 1))
+            setView("date")
+        },
+        [onMonthSelect, setView, currentMonth]
+    )
 
     return (
         <div className="space-y-4">
@@ -49,7 +55,6 @@ export default function MonthPicker({
             {/* Grid แสดงเดือนทั้งหมด (3 คอลัมน์) */}
             <div className="grid grid-cols-3 gap-2">
                 {months.map((m, idx) => {
-                    console.log(disablePastDates);
 
                     const isCurrentYear = currentMonth.getFullYear() === new Date().getFullYear()
                     const isPastMonth = disablePastDates &&

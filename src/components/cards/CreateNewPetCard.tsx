@@ -1,5 +1,5 @@
 import * as React from "react";
-import { cn } from "@/lib/utils";
+import { cn } from "@/lib/utils/utils";
 
 
 type Props = React.ButtonHTMLAttributes<HTMLButtonElement> & {
@@ -70,7 +70,7 @@ export default function CreateNewPetCard({
         <div className={iconContainerStyles}>
           <span className={textStyles}>+</span>
         </div>
-        
+
         <div className={labelStyles}>
           Create New Pet
         </div>

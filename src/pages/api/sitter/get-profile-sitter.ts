@@ -1,7 +1,8 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 import { getServerSession } from "next-auth";
-import { prisma } from "@/lib/prisma";
+import { prisma } from "@/lib/prisma/prisma";
 import { authOptions } from "../auth/[...nextauth]";
+import { Prisma } from "@prisma/client";
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   try {
@@ -12,7 +13,19 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     const user = await prisma.user.findUnique({
       where: { email: session.user.email },
-      select: { id: true, email: true, phone: true, name: true, profile_image: true },
+      select: { 
+        id: true, 
+        email: true, 
+        phone: true, 
+        name: true, 
+        profile_image: true,
+        approval_status_id: true,
+        sitter_approval_status: {
+          select: {
+            status_name: true
+          }
+        }
+      },
     });
     if (!user) return res.status(404).json({ message: "User not found" });
 
@@ -21,11 +34,24 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       include: {
         sitter_image: true,
         sitter_pet_type: { include: { pet_type: true } },
+        sitter_approval_status: true,
       },
-    });
+    }) as Prisma.sitterGetPayload<{
+      include: {
+        sitter_image: true;
+        sitter_pet_type: { include: { pet_type: true } };
+      };
+    }>;
 
     if (!sitter) {
-      return res.status(200).json({ exists: false, user, sitter: null });
+      return res.status(200).json({ 
+        exists: false, 
+        user: {
+          ...user,
+          sitter_approval_status: user.sitter_approval_status
+        }, 
+        sitter: null 
+      });
     }
 
     return res.status(200).json({
@@ -44,6 +70,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         address_district: sitter.address_district,
         address_sub_district: sitter.address_sub_district,
         address_post_code: sitter.address_post_code,
+        admin_note: sitter.admin_note,
+        latitude: sitter.latitude,
+        longitude: sitter.longitude,
         images: sitter.sitter_image.map((i) => i.image_url),
         petTypes: sitter.sitter_pet_type.map((sp) => ({
           id: sp.pet_type_id,

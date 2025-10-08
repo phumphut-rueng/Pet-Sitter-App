@@ -8,6 +8,7 @@ export type StatusKey =
   | "success"
   | "canceled"
   // Pet Sitter
+  | "pendingSubmission"
   | "waitingApprove"
   | "approved"
   | "rejected"
@@ -26,6 +27,7 @@ const LABEL: Record<StatusKey, string> = {
   inService: "In service",
   success: "Success",
   canceled: "Canceled",
+  pendingSubmission: "Pending submission",
   waitingApprove: "Waiting for approve",
   approved: "Approved",
   rejected: "Rejected",
@@ -43,7 +45,8 @@ const TONE: Record<StatusKey, string> = {
     inService:      "text-blue",
     success:        "text-green",
     canceled:       "text-red",
-  
+    
+    pendingSubmission: "text-gray-6",
     waitingApprove: "text-pink",
     approved:       "text-green",
     rejected:       "text-red",
