@@ -3,14 +3,19 @@ import { Bell, MessageSquare, Menu, X } from "lucide-react";
 import IconButton from "./IconButton";
 import PrimaryButton from "@/components/buttons/PrimaryButton";
 import { NavigationProps, MenuItem } from "@/types/navigation.types";
+import { useUnreadCount } from "@/hooks/useUnreadCount";
 
 const MobileNav: React.FC<NavigationProps> = ({
   isAuthenticated,
+  user,
   menuItems,
   onNavigate,
   onLogout
 }) => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  
+  // ใช้ hook เพื่อดึง unread count
+  const { hasUnread } = useUnreadCount(user?.id?.toString());
 
   const toggleMobileMenu = () => {
     const newState = !isMobileMenuOpen;
@@ -66,14 +71,14 @@ const MobileNav: React.FC<NavigationProps> = ({
           <IconButton
             icon={Bell}
             route="/notifications"
-            hasIndicator={true}
+            hasIndicator={false} // ปิด notification indicator ชั่วคราว
             aria-label="Notifications"
             onNavigate={onNavigate}
           />
           <IconButton
             icon={MessageSquare}
-            route="/messages"
-            hasIndicator={true}
+            route="/chat" // เปลี่ยนจาก /messages เป็น /chat
+            hasIndicator={hasUnread} // ใช้ unread count จริง
             aria-label="Messages"
             onNavigate={onNavigate}
           />

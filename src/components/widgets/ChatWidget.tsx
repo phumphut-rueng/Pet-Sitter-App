@@ -411,6 +411,14 @@ export default function ChatWidget() {
         chatId: parseInt(chatId),
         userId: userId
       });
+      
+      // ส่ง custom event เพื่อแจ้งให้ navbar อัปเดต unread count
+      window.dispatchEvent(new CustomEvent('socket:unread_update', { 
+        detail: { 
+          chatId: parseInt(chatId), 
+          newUnreadCount: 0 
+        } 
+      }));
     } catch (error) {
       console.error('Error marking chat as read:', error);
     }
