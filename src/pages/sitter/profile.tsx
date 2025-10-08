@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import axios from "axios";
 import { useSession } from "next-auth/react";
 import { useForm, Controller } from "react-hook-form";
 import Sidebar from "@/components/layout/SitterSidebar";
@@ -75,7 +76,6 @@ function getStatusKey(status: string): StatusKey {
 }
 
 export default function PetSitterProfilePage() {
-  const [userId, setUserId] = useState<number | null>(null);
   const { status, update } = useSession();
   const [initialGallery, setInitialGallery] = useState<string[]>([]); //รูปที่โหลดมาจาก database
   const [approvalStatus, setApprovalStatus] = useState<string>("");
@@ -141,14 +141,9 @@ export default function PetSitterProfilePage() {
     if (status === "loading") return;
     (async () => {
       try {
-        const res = await fetch("/api/sitter/get-profile-sitter");
-        if (res.status === 401) return;
-        if (!res.ok) {
-          console.warn("get-sitter failed", res.status);
-          return;
-        }
-        const data: GetSitterResponse = await res.json();
-        setUserId(data.user.id);
+        const { data } = await axios.get<GetSitterResponse>(
+          "/api/sitter/get-profile-sitter"
+        );
         setCurrentPhone(data.sitter?.phone || data.user.phone || "");
         setCurrentEmail(data.user.email || "");
         setApprovalStatus(
@@ -322,25 +317,16 @@ export default function PetSitterProfilePage() {
         };
         delete (payload as Record<string, unknown>).newImageFiles;
 
-        const res = await fetch("/api/sitter/put-sitter", {
-          method: "PUT",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(payload),
-        });
-        if (!res.ok) {
-          const data = await res.json().catch(() => ({}));
-          throw new Error(data?.message || "Failed to update sitter");
-        }
+        await axios.put("/api/sitter/put-sitter", payload);
 
         //โหลดภาพล่าสุดมาแสดง
         await update();
-        const res2 = await fetch("/api/sitter/get-profile-sitter");
-        if (res2.ok) {
-          const data = await res2.json();
-          const latestImages = data.sitter?.images || [];
+        const { data: refreshed } = await axios.get<GetSitterResponse>(
+          "/api/sitter/get-profile-sitter"
+        );
+          const latestImages = refreshed.sitter?.images || [];
           setValue("images", latestImages);
           setInitialGallery(latestImages);
-        }
       })(),
       {
         loading: "Saving profile...",
