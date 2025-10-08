@@ -11,6 +11,7 @@ export default async function handler(
 
     try {
         const { id } = req.query;
+        console.log("id", id);
 
         if (!id) {
             return res.status(400).json({

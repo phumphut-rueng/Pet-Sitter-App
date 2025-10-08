@@ -31,8 +31,6 @@ export default function BookingSelect({
     const [errorText, setErrorText] = useState<string>("")
 
     const hendleOnSubmit = () => {
-        console.log("date", date);
-
         if (!date || !startTime || !endTime) {
             setErrorText("Please select a date and time to continue");
             return

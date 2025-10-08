@@ -161,12 +161,12 @@ function dataUrlToFile(dataUrl: string, filename = "pet.png"): File {
   if (!m) throw new Error("Invalid data URL");
   const mime = m[1] || "image/png";
   const b64 = m[2];
-  
+
   // ใช้ atob แปลง base64 เป็น binary string (ไม่ใช้ fetch)
   const bin = atob(b64);
   const bytes = new Uint8Array(bin.length);
   for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
-  
+
   const blob = new Blob([bytes], { type: mime });
   return new File([blob], filename, { type: mime });
 }
@@ -181,6 +181,8 @@ export const formValuesToPayload = async (
 ): Promise<PetInput> => {
   const types = await getPetTypes();
   const petTypeId = resolvePetTypeId(values.type, types);
+  console.log("types", types);
+  console.log("petTypeId", petTypeId);
 
   if (petTypeId == null) {
     throw new Error(ERROR_MESSAGES.invalidPetType);
@@ -277,6 +279,7 @@ export const petService = {
     } catch (err) {
       if (isAxiosError(err)) {
         const msg = parseApiErrorMessage(err.response?.data) || getErrorMessage(err);
+        console.log(err)
         throw new Error(msg || ERROR_MESSAGES.createFailed);
       }
       throw new Error(ERROR_MESSAGES.createFailed);

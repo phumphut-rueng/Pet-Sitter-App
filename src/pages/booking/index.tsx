@@ -1,25 +1,36 @@
 import ProgressStep from "@/components/progress-step/ProgressStep"
-import BookingInformation from "@/components/booking/BookingSelectInformation"
-import BookingSelectDetail from "@/components/booking/BookingSelectDetail"
+import BookingInformation from "@/components/booking/BookingInformation"
+import BookingSelectDetail from "@/components/booking/BookingDetail"
 import PrimaryButton from "@/components/buttons/PrimaryButton";
-import BookingSelectYourPet from "@/components/booking/BookingSelectYourPet";
-import { useEffect, useState } from "react";
-import BookingSelectPayment from "@/components/booking/BookingSelectPayment";
+import BookingSelectYourPet from "@/components/booking/BookingYourPet";
+import { useEffect, useRef, useState } from "react";
+import BookingSelectPayment from "@/components/booking/BookingPayment";
 import { useRouter } from "next/router";
-// import { useSession } from "next-auth/react";
+import { useSession } from "next-auth/react";
 import { Pet, PetStatus } from "@/types/pet.types";
 import { getPetById, getSitterById } from "@/lib/booking/booking-api";
 import { PetType, Sitter } from "@/types/sitter.types";
+import PageToaster from "@/components/ui/PageToaster";
+
+interface informationType {
+    name: "",
+    email: "",
+    phone: "",
+    additional: ""
+}
 
 export default function Handler(
 ) {
-    // const { data: session } = useSession();
-    // const currentUserId = session?.user?.id ? Number(session.user.id) : undefined;
-    const currentUserId = Number(48) //fortest
+    const hasFetched = useRef(false);
+    const { data: session } = useSession();
+    const currentUserId = session?.user?.id ? Number(session.user.id) : undefined;
 
     const router = useRouter()
-    const { startTime, endTime, sitterId = 10 } = router.query;
+    const { startTime, endTime, sitterId } = router.query;
 
+    const parsedSitterId = sitterId ? Number(sitterId) : undefined;
+
+    // const [sitterIdnew, setSitterIdnew] = useState<number | null>(null);
     const [activeNumber, setactiveNumber] = useState<number>(1);
     const [hasSelect, setHasSelect] = useState<boolean>(false);
     const [petName, setPetName] = useState<string>("-");
@@ -27,30 +38,62 @@ export default function Handler(
     const [sitter, setSitter] = useState<Sitter>()
     // const [sitterPetType, setSitterPetType] = useState<PetType[]>([])
     const [price, setPrice] = useState<number>(0)
-    // const [loading, setLoading] = useState<boolean>(false)
-    // const [dataLoaded, setDataLoaded] = useState<boolean>(false) // เพิ่มตัวนี้
+    const [loading, setLoading] = useState<boolean>(false)
+    const [refreshKey, setRefreshKey] = useState<number>(0) // เปลี่ยนชื่อให้ชัดเจน
+    const [isFetching, setIsFetching] = useState(false);
 
-    // const petstest: Pet[] = [
-    //     { id: 1, name: "Bubba", petTypeId: 1, status: 'unselected' },
-    //     { id: 2, name: "Daisy", petTypeId: 1, status: 'selected' },
-    //     { id: 3, name: "I Som", petTypeId: 2, status: 'disabled' },
-    //     { id: 4, name: "Noodle Birb", petTypeId: 3, status: 'unselected' },
-    // ];
+    const [information, setInformation] = useState<informationType>(
+        {
+            name: "",
+            email: "",
+            phone: "",
+            additional: ""
+        }
+    )
+
+    const [error, setError] = useState<informationType>(
+        {
+            name: "",
+            email: "",
+            phone: "",
+            additional: ""
+        }
+    )
 
     useEffect(() => {
+        if (refreshKey > 0) {
+            hasFetched.current = false;
+        }
+    }, [refreshKey]);
+
+    useEffect(() => {
+        // console.log("📥 useEffect triggered", {
+        //     refreshKey,
+        //     sitterId,
+        //     parsedSitterId,
+        //     currentUserId,
+        //     hasFetched: hasFetched.current
+        // });
+
         const fetchData = async () => {
-            if (!currentUserId) return;
+            if (!currentUserId || !parsedSitterId || hasFetched.current) {
+                return;
+            }
 
-            // setLoading(true)
+            hasFetched.current = true;
+
+            setLoading(true);
             try {
-                // โหลด pets
-                const petResult = await getPetById()
-                const sitterResult = await getSitterById(Number(sitterId));
+                const petResult = await getPetById();
+                const sitterResult = await getSitterById(parsedSitterId);
 
-                const petType: PetType[] = [];
-                sitterResult?.sitter_pet_type.map((item) => {
-                    petType.push(item.pet_type)
-                })
+                if (!sitterResult) {
+                    return;
+                }
+
+                const petType: PetType[] = sitterResult.sitter_pet_type?.map(
+                    (item) => item.pet_type
+                ) || [];
 
                 const updatedPets = (petResult ?? []).map((pet) => {
                     const isSupported = petType.some(type => pet.petTypeId === type.id);
@@ -60,30 +103,17 @@ export default function Handler(
                     };
                 });
 
-                setPets(updatedPets)
-                setSitter(sitterResult)
-                // setSitterPetType(petType)
+                setPets(updatedPets);
+                setSitter(sitterResult);
+            } catch (error) {
+                console.error("❌ Fetch error:", error);
             } finally {
-                // setLoading(false)
+                setLoading(false);
             }
-        }
+        };
 
-        fetchData()
-    }, [currentUserId, sitterId])
-
-    // useEffect(() => {
-    //     if (dataLoaded && pets.length > 0 && sitterPetType.length > 0) {
-    //         const updatedPets = pets.map((pet) => {
-    //             const isSupported = sitterPetType.some(type => pet.petTypeId === type.id);
-    //             return {
-    //                 ...pet,
-    //                 status: (isSupported ? "unselected" : "disabled") as PetStatus
-    //             };
-    //         });
-
-    //         setPets(updatedPets)
-    //     }
-    // }, [dataLoaded]);
+        fetchData();
+    }, [currentUserId, parsedSitterId, refreshKey]);
 
     useEffect(() => {
         const countSelect = pets.filter(item => item.status === "selected");
@@ -94,7 +124,8 @@ export default function Handler(
             countSelect.forEach((item) => {
                 str.push(item.name)
             })
-            setPrice((Number(sitter?.base_price) ?? 300)
+
+            setPrice((Number(sitter?.base_price) || 310)
                 * countSelect.length)
             setPetName(str.length === 0 ? "-" : str.join(", "))
         }
@@ -104,6 +135,10 @@ export default function Handler(
             setPrice(0)
         }
     }, [pets, sitter?.base_price]);
+
+    const handleRefreshPets = () => {
+        setRefreshKey(prev => prev + 1);
+    }
 
     const handleBack = () => {
         if (activeNumber > 1) {
@@ -139,6 +174,7 @@ export default function Handler(
                                         <BookingSelectYourPet
                                             pets={pets}
                                             setPets={setPets}
+                                            onRefresh={handleRefreshPets}
                                         />
                                     </div>
                                 )
