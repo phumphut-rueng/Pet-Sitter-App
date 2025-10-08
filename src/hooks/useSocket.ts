@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react';
 import { useSession } from 'next-auth/react';
-import { connectSocket, disconnectSocket, getSocket } from '@/utils/socket';
+import { connectSocket, disconnectSocket, getSocket, initVisibilityListener } from '@/utils/socket';
 import { SocketEvents } from '@/types/socket.types';
 import { Socket } from 'socket.io-client';
 
@@ -13,16 +13,20 @@ export const useSocket = () => {
     if (status === 'authenticated' && session?.user?.id) {
       console.log('Connecting socket for user:', session.user.id);
       socketRef.current = connectSocket(session.user.id);
+      
+      // เริ่มต้น visibility change listener
+      const cleanupVisibilityListener = initVisibilityListener();
+      
+      // disconnect เมื่อ user logout หรือ component unmount
+      return () => {
+        if (socketRef.current) {
+          console.log('Disconnecting socket');
+          disconnectSocket();
+          socketRef.current = null;
+        }
+        cleanupVisibilityListener();
+      };
     }
-
-    // disconnect เมื่อ user logout หรือ component unmount
-    return () => {
-      if (socketRef.current) {
-        console.log('Disconnecting socket');
-        disconnectSocket();
-        socketRef.current = null;
-      }
-    };
   }, [status, session?.user?.id]);
 
   return {

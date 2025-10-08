@@ -26,6 +26,7 @@ interface ChatContainerProps {
   messages?: Message[];
   onSendMessage?: (message: string) => void;
   hasChats?: boolean; // เพิ่ม prop เพื่อตรวจสอบว่ามี chat ใน chatlist หรือไม่
+  onHideChat?: (chatId: string) => void; // เพิ่ม prop สำหรับซ่อน chat
 }
 
 const ChatContainer: React.FC<ChatContainerProps> = ({ 
@@ -33,7 +34,8 @@ const ChatContainer: React.FC<ChatContainerProps> = ({
   selectedChat,
   messages = sampleMessages,
   onSendMessage,
-  hasChats = true
+  hasChats = true,
+  onHideChat
 }) => {
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const [messageInput, setMessageInput] = useState('');
@@ -87,9 +89,7 @@ const ChatContainer: React.FC<ChatContainerProps> = ({
       return 'เวลาไม่ระบุ';
     }
 
-    console.log('formatTimestamp received:', timestamp, 'type:', typeof timestamp);
     const messageTime = new Date(timestamp);
-    console.log('converted to Date:', messageTime, 'isValid:', !isNaN(messageTime.getTime()));
     
     // ตรวจสอบว่า Date object ถูกต้อง
     if (isNaN(messageTime.getTime())) {
@@ -102,18 +102,18 @@ const ChatContainer: React.FC<ChatContainerProps> = ({
 
     // ถ้าเป็นวันเดียวกัน ให้แสดงแค่เวลา
     if (messageDate === nowDate) {
-      return messageTime.toLocaleTimeString('th-TH', {
+      return messageTime.toLocaleTimeString('en-US', {
         hour: '2-digit',
         minute: '2-digit',
         hour12: false
       });
     }
 
-    // ถ้าเป็นวันก่อนหน้า ให้แสดง "เมื่อวาน"
+    // ถ้าเป็นวันก่อนหน้า ให้แสดง "Yesterday"
     const yesterday = new Date(now);
     yesterday.setDate(yesterday.getDate() - 1);
     if (messageDate === yesterday.toDateString()) {
-      return `เมื่อวาน ${messageTime.toLocaleTimeString('th-TH', {
+      return `Yesterday ${messageTime.toLocaleTimeString('en-US', {
         hour: '2-digit',
         minute: '2-digit',
         hour12: false
@@ -121,11 +121,11 @@ const ChatContainer: React.FC<ChatContainerProps> = ({
     }
 
     // ถ้าเป็นวันอื่น ให้แสดงวันที่และเวลา
-    return messageTime.toLocaleDateString('th-TH', {
+    return messageTime.toLocaleDateString('en-US', {
       day: 'numeric',
       month: 'short',
       year: messageTime.getFullYear() !== now.getFullYear() ? 'numeric' : undefined
-    }) + ` ${messageTime.toLocaleTimeString('th-TH', {
+    }) + ` ${messageTime.toLocaleTimeString('en-US', {
       hour: '2-digit',
       minute: '2-digit',
       hour12: false
@@ -178,6 +178,13 @@ const ChatContainer: React.FC<ChatContainerProps> = ({
     }
   };
 
+  // ฟังก์ชันสำหรับซ่อน chat
+  const handleHideChat = () => {
+    if (selectedChat && onHideChat) {
+      onHideChat(selectedChat.id);
+    }
+  };
+
   return (
     <div className={`flex flex-col bg-white h-full ${className}`}>
       {/* Header - แสดงเฉพาะเมื่อมี chat ใน chatlist */}
@@ -197,7 +204,11 @@ const ChatContainer: React.FC<ChatContainerProps> = ({
               {selectedChat?.name || 'Select a conversation'}
             </h3>
           </div>
-          <button className="text-gray-500 hover:text-gray-700">
+          <button 
+            onClick={handleHideChat}
+            className="text-gray-500 hover:text-gray-700 transition-colors"
+            title="Hide chat"
+          >
             <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
             </svg>

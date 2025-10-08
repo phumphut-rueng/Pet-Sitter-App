@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { useSocket } from '@/hooks/useSocket';
 import { MessagePayload, UnreadUpdateData, ChatListUpdateData } from '@/types/socket.types';
+import axios from 'axios';
 
 interface SocketContextType {
   socket: any;
@@ -47,12 +48,11 @@ export const SocketProvider: React.FC<SocketProviderProps> = ({ children }) => {
     // โหลด online users เริ่มต้นจาก API
     const fetchOnlineUsers = async () => {
       try {
-        const response = await fetch('/api/chat/online-users');
-        const data = await response.json();
+        const response = await axios.get('/api/chat/online-users');
         
-        if (data.success) {
-          console.log('Loaded initial online users:', data.onlineUsers);
-          setOnlineUsers(data.onlineUsers);
+        if (response.data.success) {
+          console.log('Loaded initial online users:', response.data.onlineUsers);
+          setOnlineUsers(response.data.onlineUsers);
         }
       } catch (error) {
         console.error('Error fetching online users:', error);
