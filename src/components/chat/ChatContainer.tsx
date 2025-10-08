@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import Image from 'next/image';
 import ChatBubble from './ChatBubble';
+import { uploadAndGetPublicId } from '@/lib/cloudinary/image-upload';
 import sampleMessagesData from '../../utils/mockChatData';
 
 interface Message {
@@ -38,7 +39,9 @@ const ChatContainer: React.FC<ChatContainerProps> = ({
   onHideChat
 }) => {
   const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const [messageInput, setMessageInput] = useState('');
+  const [isUploading, setIsUploading] = useState(false);
 
   // ฟังก์ชันสำหรับตรวจสอบว่าควรแสดงเวลาหรือไม่ (เหมือน Facebook)
   const shouldShowTimestamp = (currentMessage: Message, previousMessage: Message | undefined, isFirstMessage: boolean): boolean => {
@@ -185,6 +188,58 @@ const ChatContainer: React.FC<ChatContainerProps> = ({
     }
   };
 
+  // ฟังก์ชันสำหรับจัดการการอัปโหลดรูปภาพ
+  const handleImageUpload = async (file: File) => {
+    if (!file || !onSendMessage) return;
+
+    setIsUploading(true);
+    try {
+      // อัปโหลดรูปภาพไปยัง Cloudinary
+      const uploadResult = await uploadAndGetPublicId(file, 'chat-images');
+      
+      // ส่งข้อความที่มีรูปภาพ (ใช้ URL เป็น content)
+      onSendMessage(uploadResult.url || '');
+      
+    } catch (error) {
+      console.error('Error uploading image:', error);
+      alert('Failed to upload image. Please try again.');
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
+  // ฟังก์ชันสำหรับเปิด file picker
+  const openFilePicker = () => {
+    if (fileInputRef.current) {
+      fileInputRef.current.click();
+    }
+  };
+
+  // ฟังก์ชันสำหรับจัดการการเลือกไฟล์
+  const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      // ตรวจสอบประเภทไฟล์
+      if (!file.type.startsWith('image/')) {
+        alert('Please select an image file.');
+        return;
+      }
+      
+      // ตรวจสอบขนาดไฟล์ (5MB max)
+      if (file.size > 5 * 1024 * 1024) {
+        alert('Image size must be less than 5MB.');
+        return;
+      }
+      
+      handleImageUpload(file);
+    }
+    
+    // รีเซ็ต input value เพื่อให้สามารถเลือกไฟล์เดียวกันได้อีกครั้ง
+    if (event.target) {
+      event.target.value = '';
+    }
+  };
+
   return (
     <div className={`flex flex-col bg-white h-full ${className}`}>
       {/* Header - แสดงเฉพาะเมื่อมี chat ใน chatlist */}
@@ -276,6 +331,31 @@ const ChatContainer: React.FC<ChatContainerProps> = ({
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
               </svg>
             </button>
+
+            {/* Image upload button */}
+            <button
+              onClick={openFilePicker}
+              disabled={isUploading}
+              className="text-gray-500 hover:text-gray-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              title="Upload image"
+            >
+              {isUploading ? (
+                <div className="w-6 h-6 border-2 border-gray-300 border-t-gray-600 rounded-full animate-spin"></div>
+              ) : (
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                </svg>
+              )}
+            </button>
+
+            {/* Hidden file input */}
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*"
+              className="hidden"
+              onChange={handleFileSelect}
+            />
 
             {/* Message input */}
             <input
