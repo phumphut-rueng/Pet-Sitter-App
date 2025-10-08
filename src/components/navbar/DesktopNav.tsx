@@ -5,6 +5,7 @@ import IconButton from "./IconButton";
 import AvatarDropdown from "./AvatarDropdown";
 import PrimaryButton from "@/components/buttons/PrimaryButton";
 import { NavigationProps } from "@/types/navigation.types";
+import { useUnreadCount } from "@/hooks/useUnreadCount";
 
 const DesktopNav: React.FC<NavigationProps> = ({
   isAuthenticated,
@@ -13,6 +14,9 @@ const DesktopNav: React.FC<NavigationProps> = ({
   onNavigate,
   onLogout
 }) => {
+  // ใช้ hook เพื่อดึง unread count
+  const { hasUnread } = useUnreadCount(user?.id?.toString());
+
   return (
     <div className="hidden md:flex items-center justify-end space-x-4">
       {isAuthenticated ? (
@@ -20,14 +24,14 @@ const DesktopNav: React.FC<NavigationProps> = ({
           <IconButton
             icon={Bell}
             route="/notifications"
-            hasIndicator={true}
+            hasIndicator={false} // ปิด notification indicator ชั่วคราว
             aria-label="Notifications"
             onNavigate={onNavigate}
           />
           <IconButton
             icon={MessageSquare}
-            route="/messages"
-            hasIndicator={true}
+            route="/chat" // เปลี่ยนจาก /messages เป็น /chat
+            hasIndicator={hasUnread} // ใช้ unread count จริง
             aria-label="Messages"
             onNavigate={onNavigate}
           />

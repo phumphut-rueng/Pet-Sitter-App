@@ -93,6 +93,11 @@ export const connectSocket = (userId: string): Socket<SocketEvents> => {
     window.dispatchEvent(new CustomEvent('socket:chat_list_update', { detail: data }));
   });
 
+  socket.on('unread_update', (data) => {
+    console.log('Unread update:', data);
+    window.dispatchEvent(new CustomEvent('socket:unread_update', { detail: data }));
+  });
+
   return socket;
 };
 
