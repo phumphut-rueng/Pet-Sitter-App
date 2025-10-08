@@ -1,4 +1,5 @@
 import { useRouter } from "next/navigation";
+import axios from "axios";
 import { useEffect, useState } from "react";
 import SitterSidebar from "@/components/layout/SitterSidebar";
 import PetSitterNavbar from "@/components/PetSitterNavbar";
@@ -104,9 +105,9 @@ export default function PetSitterBookingPage() {
   useEffect(() => {
     (async () => {
       try {
-        const res = await fetch("/api/sitter/get-profile-sitter");
-        if (!res.ok) return;
-        const data: GetSitterResponse = await res.json();
+        const { data } = await axios.get<GetSitterResponse>(
+          "/api/sitter/get-profile-sitter"
+        );
         setUserName(data.user.name || data.sitter?.name || "");
         setAvatarUrl(
           data.user.profile_image || "/icons/avatar-placeholder.svg"
@@ -124,10 +125,10 @@ export default function PetSitterBookingPage() {
         <PetSitterNavbar avatarUrl={avatarUrl} name={userName} />
         <div className="px-8 py-6">
           <div className="flex items-center justify-between gap-4 mb-6">
-            <div >
-            <h2 className="text-2xl font-semibold text-gray-9">
-              Booking List
-            </h2>
+            <div>
+              <h2 className="text-2xl font-semibold text-gray-9">
+                Booking List
+              </h2>
             </div>
 
             {/* Search + Filter */}
@@ -158,8 +159,8 @@ export default function PetSitterBookingPage() {
               </div>
 
               <Select value={statusFilter} onValueChange={setStatusFilter}>
-                <SelectTrigger className="w-[200px] !h-10 rounded-sm border-gray-2 bg-white ">
-                  <SelectValue placeholder="All status"/>
+                <SelectTrigger className="w-[200px] !h-10 rounded-sm border-gray-2 bg-white">
+                  <SelectValue />
                 </SelectTrigger>
                 <SelectContent className="bg-white border-gray-2">
                   <SelectItem value="All">All status</SelectItem>
@@ -182,7 +183,9 @@ export default function PetSitterBookingPage() {
             <table className="w-full text-left">
               <thead className="bg-black text-white">
                 <tr>
-                  <th className="py-3 px-5 text-sm font-medium">Pet Owner Name</th>
+                  <th className="py-3 px-5 text-sm font-medium">
+                    Pet Owner Name
+                  </th>
                   <th className="py-3 px-5 text-sm ont-medium">Pet(s)</th>
                   <th className="py-3 px-5 text-sm font-medium">Duration</th>
                   <th className="py-3 px-5 text-sm font-medium">Booked Date</th>
@@ -193,10 +196,17 @@ export default function PetSitterBookingPage() {
                 {filteredBookings.map((b) => (
                   <tr
                     key={b.id}
-                    className="border-t-2 border-gray-1 cursor-pointer hover:bg-orange-1 transition"
+                    className="border-t-2 border-gray-1 font-medium text-black cursor-pointer hover:bg-orange-1 transition"
                     onClick={() => router.push(`/sitter/booking/${b.id}`)}
                   >
-                    <td className="py-4 px-5">{b.ownerName}</td>
+                    <td className="py-4 px-5">
+                      <span className="inline-flex items-center gap-2">
+                      {b.status === "waitingConfirm" && (
+                        <span className="inline-block w-2 h-2 bg-orange-5 rounded-full" />
+                      )}
+                      {b.ownerName}
+                      </span>
+                    </td>
                     <td className="py-4 px-5">{b.pets}</td>
                     <td className="py-4 px-5">{b.duration}</td>
                     <td className="py-4 px-5">{b.bookedDate}</td>
@@ -208,10 +218,7 @@ export default function PetSitterBookingPage() {
 
                 {filteredBookings.length === 0 && (
                   <tr>
-                    <td
-                      colSpan={5}
-                      className="py-4 px-5 text-center"
-                    >
+                    <td colSpan={5} className="py-4 px-5 text-center">
                       No bookings found
                     </td>
                   </tr>
