@@ -434,12 +434,16 @@ export default function ChatWidget() {
       ? selectedChat.user2_id.toString() 
       : selectedChat.user1_id.toString();
 
+    // ตรวจสอบว่าเป็น URL รูปภาพหรือไม่
+    const isImageUrl = message.startsWith('http') && (message.includes('.jpg') || message.includes('.jpeg') || message.includes('.png') || message.includes('.gif') || message.includes('.webp'));
+
     const messageData = {
       chatId: parseInt(selectedChatId),
       senderId: userId!,
       receiverId: receiverId,
       content: message,
-      messageType: 'TEXT',
+      messageType: isImageUrl ? 'IMAGE' : 'TEXT',
+      imageUrl: isImageUrl ? message : undefined,
     };
 
     sendMessage(messageData);
