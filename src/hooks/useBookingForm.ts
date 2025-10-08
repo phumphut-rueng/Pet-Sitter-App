@@ -1,21 +1,28 @@
-import { useState, useCallback } from "react"
-import { RegisterForm } from "@/types/register.types"
-import { validateEmail, validatePhone, validatePassword } from "@/lib/validators/validation"
+import { validateEmail, validatePhone } from "@/lib/validators/validation"
+import { BookingForm } from "@/types/booking.types"
+import { useCallback, useState } from "react"
 
-// จัดการฟอร์ม + validation
-export function useRegisterForm() {
-    const [form, setForm] = useState<RegisterForm>({
+export function useBookingForm() {
+    const [form, setForm] = useState<BookingForm>({
         name: "",
         email: "",
         phone: "",
-        password: "",
+        addition: "",
+        cardNumber: "",
+        cardName: "",
+        expiryDate: "",
+        cvc: "",
     })
 
-    const [error, setError] = useState<RegisterForm>({
+    const [error, setError] = useState<BookingForm>({
         name: "",
         email: "",
         phone: "",
-        password: "",
+        addition: "",
+        cardNumber: "",
+        cardName: "",
+        expiryDate: "",
+        cvc: "",
     })
 
     const handleChange = useCallback(
@@ -39,15 +46,21 @@ export function useRegisterForm() {
     const validateForm = async (role: number) => {
         const checkMail = await validateEmail(form.email, role, true)
         const checkPhone = await validatePhone(form.phone)
-        const checkPassword = await validatePassword(form.password)
 
         return {
             name: "",
             email: checkMail.message || "",
             phone: checkPhone.message || "",
-            password: checkPassword.message || "",
         }
     }
 
-    return { form, setForm, error, setError, handleChange, handlePhoneChange, validateForm }
+    return {
+        form,
+        setForm,
+        error,
+        setError,
+        handleChange,
+        handlePhoneChange,
+        validateForm
+    }
 }

@@ -1,5 +1,11 @@
 // utils/time-utils.ts ฟังก์ชันเกี่ยวกับเวลา เช่น format, parse, compare
 
+export interface TimeStatus {
+    isDisabledSlot: boolean
+    isPastStartTime: boolean
+    isPastTime: boolean
+}
+
 // แปลง Date → "8:30 AM"
 export const formatDateToTimeString = (date: Date | undefined): string => {
     if (!date) return ""
@@ -51,8 +57,15 @@ export const generateTimeSlots = (startTime = 8, endTime = 23, interval: 30 | 60
     return times
 }
 
-export interface TimeStatus {
-    isDisabledSlot: boolean
-    isPastStartTime: boolean
-    isPastTime: boolean
+// แปลงเวลาเป็นรูปแบบ "7 AM" หรือ "10 AM"
+export const formatTo12hTime = (isoString: string | undefined | string[]) => {
+    if (typeof isoString === "string") {
+        const date = new Date(isoString);
+        return date.toLocaleString("en-US", {
+            timeZone: "Asia/Bangkok",
+            hour: "numeric",
+            hour12: true,
+        });
+    }
+    return "";
 }

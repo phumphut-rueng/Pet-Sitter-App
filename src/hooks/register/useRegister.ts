@@ -1,5 +1,5 @@
 import { useState } from "react"
-import { RegisterForm } from "@/types/register.type"
+import { RegisterForm } from "@/types/register.types"
 import { useRegisterForm } from "./useRegisterForm"
 import { useRegisterRole } from "./useRegisterRole"
 import { useRegisterApi } from "./useRegisterApi"

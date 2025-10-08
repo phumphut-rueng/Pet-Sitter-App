@@ -19,7 +19,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import toast, { Toaster } from "react-hot-toast";
-import { uploadToCloudinary } from "@/utils/uploadToCloudinary";
+import { uploadToCloudinary } from "@/lib/cloudinary/upload-to-cloudinary";
 import AddressSection from "@/components/form/AddressSection";
 import type { SitterFormValues } from "@/components/types/SitterForms";
 
@@ -256,7 +256,7 @@ export default function PetSitterProfilePage() {
   const handleRequestApproval = async () => {
     // ตรวจสอบข้อมูลพื้นฐานที่จำเป็นก่อน
     const basicErrors = validateBasicFields();
-    
+
     if (basicErrors.length > 0) {
       toast.error('Please complete and verify all required information.', {
         duration: 5000,
@@ -277,7 +277,7 @@ export default function PetSitterProfilePage() {
         email: values.email,
         introduction: values.introduction,
       });
-      
+
       const response = await fetch('/api/sitter/request-approval', {
         method: 'POST',
         headers: {
@@ -295,12 +295,12 @@ export default function PetSitterProfilePage() {
       if (response.ok) {
         const result = await response.json();
         console.log("✅ Success response:", result);
-        
+
         // แสดง toast แจ้งเตือนสำเร็จ (2 วินาที)
         toast.success('Request for approval submitted successfully!', {
           duration: 3000
         });
-        
+
         // แสดง toast บอกว่าจะ refresh (2 วินาที)
         setTimeout(() => {
           toast('Refreshing page to update status...', {
@@ -311,12 +311,12 @@ export default function PetSitterProfilePage() {
             }
           });
         }, 1000);
-        
+
         // รีเฟรชหน้าหลังจาก 4 วินาที
         setTimeout(() => {
           window.location.reload();
         }, 4000);
-        
+
       } else {
         const errorData = await response.json();
         console.error("❌ Error response:", errorData);
@@ -496,11 +496,10 @@ export default function PetSitterProfilePage() {
                           onValueChange={field.onChange}
                         >
                           <SelectTrigger
-                            className={` w-full rounded-xl !h-12 px-4 py-2 border !border-gray-2 ${
-                              errors.experience
-                                ? "!border-red focus:ring-red"
-                                : "border-gray-3"
-                            }`}
+                            className={` w-full rounded-xl !h-12 px-4 py-2 border !border-gray-2 ${errors.experience
+                              ? "!border-red focus:ring-red"
+                              : "border-gray-3"
+                              }`}
                           >
                             <SelectValue placeholder="" />
                           </SelectTrigger>
@@ -607,95 +606,95 @@ export default function PetSitterProfilePage() {
           {/* Pet Sitter - แสดงเฉพาะเมื่อสถานะเป็น Approved */}
           {approvalStatus === 'Approved' && (
             <section className="bg-white rounded-xl py-4 px-12 mt-4 pb-7">
-            <h4 className="text-gray-4 font-bold text-xl py-4">Pet Sitter</h4>
+              <h4 className="text-gray-4 font-bold text-xl py-4">Pet Sitter</h4>
 
-            <div className="grid grid-cols-2 gap-4">
-              <div className="col-span-1">
-                <InputText
-                  placeholder=""
-                  label="Pet sitter name (Trade Name)*"
-                  type="text"
-                  variant={errors.tradeName ? "error" : "default"}
-                  {...register("tradeName", {
-                    required: "Please enter your trade name.",
-                  })}
-                />
-                {errors.tradeName && (
-                  <p className="mt-1 text-sm text-red">
-                    {errors.tradeName.message}
-                  </p>
-                )}
-              </div>
-
-              <div className="col-span-2">
-                <label className="block text-[16px] font-medium text-black mb-2">
-                  Pet type
-                </label>
-                <Controller
-                  name="petTypes"
-                  control={control}
-                  rules={{
-                    validate: (arr) =>
-                      (Array.isArray(arr) && arr.length > 0) ||
-                      "Please select at least one pet type.",
-                  }}
-                  render={({ field }) => (
-                    <PetTypeSelect
-                      value={field.value}
-                      onChange={(vals) => field.onChange(vals)}
-                      error={!!errors.petTypes}
-                    />
+              <div className="grid grid-cols-2 gap-4">
+                <div className="col-span-1">
+                  <InputText
+                    placeholder=""
+                    label="Pet sitter name (Trade Name)*"
+                    type="text"
+                    variant={errors.tradeName ? "error" : "default"}
+                    {...register("tradeName", {
+                      required: "Please enter your trade name.",
+                    })}
+                  />
+                  {errors.tradeName && (
+                    <p className="mt-1 text-sm text-red">
+                      {errors.tradeName.message}
+                    </p>
                   )}
-                />
-                {errors.petTypes && (
-                  <p className="mt-2 text-sm text-red">
-                    {String(errors.petTypes.message)}
+                </div>
+
+                <div className="col-span-2">
+                  <label className="block text-[16px] font-medium text-black mb-2">
+                    Pet type
+                  </label>
+                  <Controller
+                    name="petTypes"
+                    control={control}
+                    rules={{
+                      validate: (arr) =>
+                        (Array.isArray(arr) && arr.length > 0) ||
+                        "Please select at least one pet type.",
+                    }}
+                    render={({ field }) => (
+                      <PetTypeSelect
+                        value={field.value}
+                        onChange={(vals) => field.onChange(vals)}
+                        error={!!errors.petTypes}
+                      />
+                    )}
+                  />
+                  {errors.petTypes && (
+                    <p className="mt-2 text-sm text-red">
+                      {String(errors.petTypes.message)}
+                    </p>
+                  )}
+                </div>
+
+                <div className="col-span-2">
+                  <InputTextArea
+                    label="Services (Describe all of your service for pet sitting)"
+                    {...register("service_description")}
+                  />
+                </div>
+
+                <div className="col-span-2">
+                  <InputTextArea
+                    label="My Place (Describe you place)"
+                    {...register("location_description")}
+                  />
+                </div>
+
+                <div className="col-span-2">
+                  <p className="font-medium text-black pb-4">
+                    Image Gellery (Maximum 10 images)
                   </p>
-                )}
+                  <ImageGallery
+                    initialImageUrls={initialGallery}
+                    onChange={(state) => {
+                      setValue("images", state.existingImageUrls, {
+                        shouldDirty: true,
+                      });
+                      setValue("newImageFiles", state.newImageFiles, {
+                        shouldDirty: true,
+                      });
+                    }}
+                  />
+                </div>
               </div>
-
-              <div className="col-span-2">
-                <InputTextArea
-                  label="Services (Describe all of your service for pet sitting)"
-                  {...register("service_description")}
-                />
-              </div>
-
-              <div className="col-span-2">
-                <InputTextArea
-                  label="My Place (Describe you place)"
-                  {...register("location_description")}
-                />
-              </div>
-
-              <div className="col-span-2">
-                <p className="font-medium text-black pb-4">
-                  Image Gellery (Maximum 10 images)
-                </p>
-                <ImageGallery
-                  initialImageUrls={initialGallery}
-                  onChange={(state) => {
-                    setValue("images", state.existingImageUrls, {
-                      shouldDirty: true,
-                    });
-                    setValue("newImageFiles", state.newImageFiles, {
-                      shouldDirty: true,
-                    });
-                  }}
-                />
-              </div>
-            </div>
-          </section>
+            </section>
           )}
 
           {/* Address - แสดงเฉพาะเมื่อสถานะเป็น Approved */}
           {approvalStatus === 'Approved' && (
-            <AddressSection 
-            control={control}
-            register={register}
-            errors={errors}
-            watch={watch}
-            setValue={setValue}
+            <AddressSection
+              control={control}
+              register={register}
+              errors={errors}
+              watch={watch}
+              setValue={setValue}
             />
           )}
 

@@ -1,9 +1,11 @@
-export type PetType = {
+export interface PetType {
   id: number;
   name: string;
-};
+}
 
-export type Pet = {
+export type PetStatus = "selected" | "unselected" | "disabled";
+
+export interface Pet {
   id: number;
   name: string;
   petTypeId: number;
@@ -15,12 +17,14 @@ export type Pet = {
   weightKg?: number | null;
   about?: string | null;
   imageUrl?: string | null;
-};
+  selected?: boolean;
+  disabled?: boolean;
+  status?: PetStatus;
+}
 
-
-export type PetFormValues = {
+export interface PetFormValues {
   name: string;
-  type: string;          
+  type: string;
   breed: string;
   sex: string;           // "Male" | "Female" | ""
   ageMonth: string;      // เก็บเป็น string ในฟอร์ม
@@ -28,4 +32,4 @@ export type PetFormValues = {
   weightKg: string;      // เก็บเป็น string ในฟอร์ม
   about: string;
   image: string;         // dataURL หรือ URL
-};
+}

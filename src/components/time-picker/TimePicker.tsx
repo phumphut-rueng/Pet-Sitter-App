@@ -2,7 +2,7 @@
 import { useCallback, useMemo, useState } from "react"
 import { ChevronDown } from "lucide-react"
 import TimeDropdown from "./TimeDropdown"
-import { formatDateToTimeString, generateTimeSlots, timeToMinutes, dateToMinutes, parseTimeStringToDate } from "@/utils/time-utils"
+import { formatDateToTimeString, generateTimeSlots, timeToMinutes, dateToMinutes, parseTimeStringToDate } from "@/lib/utils/time"
 import { TimePickerProps } from "@/types/time-picker.types"
 
 /**

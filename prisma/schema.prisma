@@ -59,33 +59,39 @@ model sitter_image {
 
 /// This model contains an expression index which requires additional setup for migrations. Visit https://pris.ly/d/expression-indexes for more info.
 model user {
-  id                      Int                       @id @default(autoincrement())
-  name                    String?                   @db.VarChar(100)
-  email                   String                    @unique @db.VarChar(100)
-  password                String                    @db.VarChar(255)
-  phone                   String?                   @db.VarChar(20)
-  profile_image           String?                   @db.VarChar(255)
-  dob                     DateTime?                 @db.Date
-  bank_name               String?                   @db.VarChar(100)
-  bank_number             String?                   @db.VarChar(50)
-  created_at              DateTime                  @default(now()) @db.Timestamp(6)
-  updated_at              DateTime?                 @db.Timestamp(6)
-  profile_image_public_id String?                   @db.VarChar(255)
-  status                  user_status               @default(ACTIVE)
-  approval_status_id      Int                       @default(1)
-  status_updated_at       DateTime?                 @db.Timestamp(6)
-  admin_note              String?                   @db.VarChar(1000)
-  suspended_at            DateTime?                 @db.Timestamp(6)
-  suspended_by_admin_id   Int?
-  suspend_reason          String?                   @db.VarChar(1000)
-  admin                   admin?
-  pets                    pet[]
-  report                  report[]
-  reviews                 review[]
-  sitter                  sitter[]
-  sitter_approval_history sitter_approval_history[]
-  sitter_approval_status  sitter_approval_status    @relation(fields: [approval_status_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  user_role               user_role[]
+  id                       Int                       @id @default(autoincrement())
+  name                     String?                   @db.VarChar(100)
+  email                    String                    @unique @db.VarChar(100)
+  password                 String                    @db.VarChar(255)
+  phone                    String?                   @db.VarChar(20)
+  profile_image            String?                   @db.VarChar(255)
+  dob                      DateTime?                 @db.Date
+  bank_name                String?                   @db.VarChar(100)
+  bank_number              String?                   @db.VarChar(50)
+  created_at               DateTime                  @default(now()) @db.Timestamp(6)
+  updated_at               DateTime?                 @db.Timestamp(6)
+  profile_image_public_id  String?                   @db.VarChar(255)
+  status                   user_status               @default(ACTIVE)
+  approval_status_id       Int                       @default(1)
+  status_updated_at        DateTime?                 @db.Timestamp(6)
+  admin_note               String?                   @db.VarChar(1000)
+  suspended_at             DateTime?                 @db.Timestamp(6)
+  suspended_by_admin_id    Int?
+  suspend_reason           String?                   @db.VarChar(1000)
+  is_online                Boolean?                  @default(false)
+  last_seen                DateTime?                 @default(now()) @db.Timestamp(6)
+  admin                    admin?
+  chat_chat_user1_idTouser chat[]                    @relation("chat_user1_idTouser")
+  chat_chat_user2_idTouser chat[]                    @relation("chat_user2_idTouser")
+  message                  message[]
+  pets                     pet[]
+  report                   report[]
+  reviews                  review[]
+  sitter                   sitter[]
+  sitter_approval_history  sitter_approval_history[]
+  sitter_approval_status   sitter_approval_status    @relation(fields: [approval_status_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  user_chat_settings       user_chat_settings[]
+  user_role                user_role[]
 
   @@index([approval_status_id], map: "idx_user_approval_status_id")
   @@index([name], map: "idx_user_name")
@@ -208,6 +214,56 @@ model report {
   @@index([status], map: "idx_report_status")
   @@index([handled_by_admin_id], map: "idx_report_handled_admin")
   @@index([status, created_at(sort: Desc)], map: "idx_report_status_created")
+}
+
+model chat {
+  id                                    Int                  @id @default(autoincrement())
+  user1_id                              Int
+  user2_id                              Int
+  last_message_id                       Int?                 @unique
+  updated_at                            DateTime?            @default(now()) @db.Timestamp(6)
+  message_chat_last_message_idTomessage message?             @relation("chat_last_message_idTomessage", fields: [last_message_id], references: [id], onUpdate: NoAction, map: "chat_last_message_fkey")
+  user_chat_user1_idTouser              user                 @relation("chat_user1_idTouser", fields: [user1_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "chat_user1_fkey")
+  user_chat_user2_idTouser              user                 @relation("chat_user2_idTouser", fields: [user2_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "chat_user2_fkey")
+  message_message_chat_idTochat         message[]            @relation("message_chat_idTochat")
+  user_chat_settings                    user_chat_settings[]
+
+  @@unique([user1_id, user2_id], map: "chat_users_unique")
+  @@index([updated_at(sort: Desc)], map: "idx_chat_updated_at")
+  @@index([user1_id, user2_id], map: "idx_chat_user1_user2")
+}
+
+model message {
+  id                                 Int       @id @default(autoincrement())
+  chat_id                            Int
+  sender_id                          Int
+  message_type                       String?   @default("TEXT") @db.VarChar(10)
+  content                            String?
+  image_url                          String?   @db.VarChar(255)
+  timestamp                          DateTime? @default(now()) @db.Timestamp(6)
+  is_read                            Boolean?  @default(false)
+  chat_chat_last_message_idTomessage chat?     @relation("chat_last_message_idTomessage")
+  chat_message_chat_idTochat         chat      @relation("message_chat_idTochat", fields: [chat_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "message_chat_fkey")
+  user                               user      @relation(fields: [sender_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "message_sender_fkey")
+
+  @@index([chat_id], map: "idx_message_chat_id")
+  @@index([chat_id, timestamp(sort: Desc)], map: "idx_message_chat_timestamp")
+  @@index([sender_id], map: "idx_message_sender_id")
+  @@index([timestamp(sort: Desc)], map: "idx_message_timestamp")
+}
+
+model user_chat_settings {
+  id           Int      @id @default(autoincrement())
+  user_id      Int
+  chat_id      Int
+  is_hidden    Boolean? @default(false)
+  unread_count Int?     @default(0)
+  chat         chat     @relation(fields: [chat_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "user_chat_settings_chat_fkey")
+  user         user     @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "user_chat_settings_user_fkey")
+
+  @@unique([user_id, chat_id], map: "user_chat_settings_unique")
+  @@index([chat_id], map: "idx_user_chat_settings_chat_id")
+  @@index([user_id], map: "idx_user_chat_settings_user_id")
 }
 
 enum report_status {

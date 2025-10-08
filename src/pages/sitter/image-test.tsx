@@ -1,7 +1,7 @@
 import { useState } from "react";
 import AvatarUploader from "@/components/form/AvatarUpload";
 import ImageGallery from "@/components/form/ImageGalleryUpload";
-import { uploadToCloudinary } from "@/utils/uploadToCloudinary";
+import { uploadToCloudinary } from "@/lib/cloudinary/upload-to-cloudinary";
 
 export default function UploadExamplePage() {
   const [profileImageUrl, setProfileImageUrl] = useState("");

@@ -136,8 +136,6 @@ export default function Login() {
           />
         </form>
 
-
-
         <SocialLogin />
 
         {/* register prompt */}
