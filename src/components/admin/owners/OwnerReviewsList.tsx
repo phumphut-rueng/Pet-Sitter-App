@@ -130,7 +130,7 @@ const EmptyState: React.FC = () => (
       </svg>
       <p className="mt-4 text-ink font-medium">No reviews yet</p>
       <p className="mt-1 text-sm text-gray-6">
-        This owner hasn't received any reviews from sitters
+        This owner hasn&apos;t received any reviews from sitters
       </p>
     </div>
   </div>
@@ -150,7 +150,6 @@ const ErrorState: React.FC<ErrorStateProps> = ({ message }) => (
 
 export default function OwnerReviewsList({
   reviews,
-  meta,
   loading,
   error,
 }: OwnerReviewsListProps) {

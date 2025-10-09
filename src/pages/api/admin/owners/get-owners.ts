@@ -1,4 +1,3 @@
-
 //  ใช้สำหรับหน้ารายการ Owner ทั้งหมด (listing)
 //  รองรับ pagination, search, และ filter ตาม status
 
@@ -6,6 +5,7 @@ import type { NextApiRequest, NextApiResponse } from "next";
 import { prisma } from "@/lib/prisma/prisma";
 import type { OwnerListResponse } from "@/types/admin/owners";
 import type { Prisma } from "@prisma/client";
+import { user_status } from "@prisma/client";
 import { OWNER_ROLE_NAMES } from "@/lib/constants/roles";
 import { toInt, apiHandler, methodNotAllowed } from "@/lib/api/api-utils";
 
@@ -59,7 +59,7 @@ async function handler(
   }
 
   if (status !== "all") {
-    whereBase.status = status as any;
+    whereBase.status = status as user_status;
   }
 
   const [rows, total] = await Promise.all([
