@@ -19,6 +19,11 @@ export default function CreatePetPage() {
   const { getPetTypes } = usePetsApi();
   const [loading, setLoading] = React.useState(false);
 
+  //  รองรับรีเซ็ตฟอร์มเมื่อมี query เปลี่ยน (เช่น ?refresh=timestamp)
+  const refreshQuery =
+    Array.isArray(router.query.refresh) ? router.query.refresh[0] : router.query.refresh;
+  const formKey = typeof refreshQuery === "string" ? refreshQuery : "create-form";
+
   const handleSubmit = async (values: PetFormValues) => {
     try {
       setLoading(true);
@@ -39,7 +44,13 @@ export default function CreatePetPage() {
   return (
     <AccountPageShell title="Your Pet">
       <PageToaster />
-      <PetForm mode="create" loading={loading} onSubmit={handleSubmit} onCancel={handleCancel} />
+      <PetForm
+        key={formKey} //  key เปลี่ยนเมื่อ refresh เปลี่ยน ฟอร์ม remount/ล้างค่า
+        mode="create"
+        loading={loading}
+        onSubmit={handleSubmit}
+        onCancel={handleCancel}
+      />
     </AccountPageShell>
   );
 }

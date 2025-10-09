@@ -19,7 +19,7 @@ export default function OwnerTabs({ value, onValueChange, className }: Props) {
     >
       <TabsList
         className={cn(
-          "h-auto bg-transparent p-0 gap-3",
+          "h4-bold h-auto bg-transparent p-0 gap-3",
           "flex items-center justify-start",
           "w-full"
         )}
