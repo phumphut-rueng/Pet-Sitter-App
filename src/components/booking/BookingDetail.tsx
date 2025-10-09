@@ -6,12 +6,14 @@ export default function BookingSelectDetail(
         sitterName,
         startTime,
         endTime,
+        duration,
         petName,
         price
     }: {
         sitterName: string
         startTime: string | string[] | undefined
         endTime: string | string[] | undefined
+        duration: string
         petName: string
         price: number
     }) {
@@ -33,7 +35,7 @@ export default function BookingSelectDetail(
                 />
                 <LabelText
                     textHeader="Duration"
-                    textDetail="3 hours"
+                    textDetail={duration}
                 />
                 <LabelText
                     textHeader="Pet"

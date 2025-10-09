@@ -24,30 +24,14 @@ import { PetSitterCard, PetSitterCardLarge, PetSitterCardSmall } from "@/compone
 import BookingCard from "@/components/cards/BookingCard";
 import PetCard from "@/components/cards/PetCard";
 import AccountSidebarMini from "@/components/layout/AccountSidebarMini";
-import BookingSelect from "@/components/modal/BookingSelect";
+import BookingSelect from "@/components/booking/BookingSelect";
 import DatePicker from "@/components/date-picker/DatePicker";
 import TimePicker from "@/components/time-picker/TimePicker";
 import AdminSidebar from "@/components/layout/AdminSidebar";
 import SitterSidebar from "@/components/layout/SitterSidebar";
-// Section Wrapper
-const Section = ({ title, cols = 1, children }: {
-  title: string;
-  cols?: number;
-  children: React.ReactNode
-}) => (
-  <div className="space-y-4">
-    <h2 className="text-xl font-bold text-center text-orange-5">{title}</h2>
-    <div className={cn("grid gap-4", `sm:grid-cols-${cols}`)}>{children}</div>
-  </div>
-);
-
-// SubSection Card
-const SubSection = ({ title, children }: { title: string; children: React.ReactNode }) => (
-  <div className="p-4 border border-orange-5 rounded-lg  shadow-sm">
-    <p className="text-sm font-semibold text-gray-6 mb-2">{title}</p>
-    <div className="flex flex-wrap justify-center gap-3">{children}</div>
-  </div>
-);
+import CreateNewPetCard from "@/components/cards/CreateNewPetCard";
+import { Section, SubSection } from "@/components/component-all/ComponentAllStyle";
+import { PetPawLoading } from "@/components/loading/PetPawLoading";
 
 //sidebar
 const SidebarDemo: React.FC = () => {
@@ -187,30 +171,16 @@ export default function ComponentAll() {
 
   return (
     <div className="min-h-screen text-white p-6">
-      <PrimaryButton
-        text="Booking Select  Click!!"
-        bgColor="primary"
-        textColor="white"
-        onClick={() => setIsOpenBookingSelect(true)}
-      />
-
-      <DatePicker
-        date={date2}
-        month={month2}
-        onMonthChange={setMonth2}
-        onSelect={setDate2}
-      />
-
       <div className=" mx-auto space-y-10">
         {/* Rating */}
-        <Section title="Selection">
+        <Section title="Selection" cols={4}>
           <SubSection title="Checkbox - Radio [คุณเอป]">
             <PetTypeCheckBox layout="column" />
           </SubSection>
           <SubSection title="Rating">
             {/* 
-                        value = Rating
-                        */}
+              value = Rating
+            */}
             <RatingSelect
               value={1}
             />
@@ -223,13 +193,6 @@ export default function ComponentAll() {
           </SubSection>
           <SubSection title="Payment Selection [คุณเอป]">
             <CashButton />
-          </SubSection>
-        </Section>
-
-        {/* Icon */}
-        <Section title="Icon">
-          <SubSection title="[เดี๋ยวเอามาใส่]">
-            <></>
           </SubSection>
         </Section>
 
@@ -311,24 +274,24 @@ export default function ComponentAll() {
         <Section title="Upload Image">
           <SubSection title="Upload Image">
             {/* 
-                        currentPage = หน้าที่เลือกอยู่
-                        totalPages = หน้าทั้งหมด
-                        */}
-            <ImageGallery
-            />
-          </SubSection>
-          <SubSection title="Avatar">
+             currentPage = หน้าที่เลือกอยู่
+             totalPages = หน้าทั้งหมด
+             */}
+            <ImageGallery />
             {/* 
-                        currentPage = หน้าที่เลือกอยู่
-                        totalPages = หน้าทั้งหมด
-                        */}
-            <AvatarUploader
+             currentPage = หน้าที่เลือกอยู่
+             totalPages = หน้าทั้งหมด
+             */}
+            <AvatarUploader />
+            <CreateNewPetCard
+              height={18}
+              className="w-[170px]"
             />
           </SubSection>
         </Section>
 
         {/* Badge */}
-        <Section title="Badge">
+        <Section title="Badge" cols={2}>
           {/* 
                     status = ชื่อ
                     */}
@@ -400,7 +363,7 @@ export default function ComponentAll() {
         </Section>
 
         {/* Progress */}
-        <Section title="Progress">
+        <Section title="Progress" cols={2}>
           <SubSection title="Progress Bar">
             {/* 
                         number = เลขในวงกลม
@@ -424,26 +387,34 @@ export default function ComponentAll() {
           </SubSection>
 
           <SubSection title="Progress Step">
-            {/* 
-                        activeNumner = วงที่กลมที่กำลัง active อยู่
-                        */}
+            {/* activeStep = วงที่กลมที่กำลัง active อยู่ */}
             <ProgressStep
-              activeNumber={2} />
+              activeStep={2} />
+          </SubSection>
+
+          <SubSection title="Pagination">
+            {/* 
+            currentPage = หน้าที่เลือกอยู่
+            totalPages = หน้าทั้งหมด
+            */}
+            <Pagination
+              currentPage={5}
+              totalPages={45}
+            />
           </SubSection>
         </Section>
 
         {/* ========================== CARD SYSTEM ========================== */}
         {/*
-  notekaa:
-  - ใช้ {...sitterCommon}  มีข้อมูล: title, hostName, location, coverUrl, avatarUrl
-  - ใช้ {...bookingBase}  มีข้อมูล: title, sitterName, avatarUrl, transactionDate, dateTime, duration, pet
-  - สีกรอบส้ม: Large=border-orange-5 (#FF7037), Small=border-orange-6 (#E44A0C)
-  - Responsive: Desktop="hidden md:block", Mobile="md:hidden"
-*/}
+          notekaa:
+          - ใช้ {...sitterCommon}  มีข้อมูล: title, hostName, location, coverUrl, avatarUrl
+          - ใช้ {...bookingBase}  มีข้อมูล: title, sitterName, avatarUrl, transactionDate, dateTime, duration, pet
+          - สีกรอบส้ม: Large=border-orange-5 (#FF7037), Small=border-orange-6 (#E44A0C)
+          - Responsive: Desktop="hidden md:block", Mobile="md:hidden"
+        */}
 
-        <Section title="การ์ด + Sidebar">
-          <SubSection title="card เกือบเสร็จ ขาดนิดเดียว 😅">
-
+        <Section title="Sidebar">
+          <SubSection title="">
             {/* ===================== SIDEBAR ===================== */}
             {/* : <SidebarDemo /> */}
             <SidebarDemo />
@@ -453,23 +424,28 @@ export default function ComponentAll() {
 
             {/* ===================== PET CARDS ===================== */}
             {/* 
-      วิธีใช้ PetCard:
-      <PetCard 
-        name="ชื่อสัตว์เลี้ยง"
-        species="Dog|Cat|Bird|Rabbit"
-        img="url รูปภาพ"
-        selected={true|false}
-        disabled={true|false}
-        onClick={() => {}}
-      />
-    */}
+              วิธีใช้ PetCard:
+              <PetCard 
+                name="ชื่อสัตว์เลี้ยง"
+                species="Dog|Cat|Bird|Rabbit"
+                img="url รูปภาพ"
+                selected={true|false}
+                disabled={true|false}
+                onClick={() => {}}
+              />
+            */}
+          </SubSection>
+        </Section>
+
+        <Section title="card เกือบเสร็จ ขาดนิดเดียว 😅" cols={2}>
+          <SubSection title="Pet Cards">
             <div className="w-full space-y-6">
-              <h3 className="text-lg font-semibold text-ink/90">Pet Cards</h3>
+              <h3 className="text-lg font-semibold text-ink/90"></h3>
               <PetCardGrid />
             </div>
-
-            {/* ===================== LARGE PET SITTER CARDS ===================== */}
-            {/* 
+          </SubSection>
+          {/* ===================== LARGE PET SITTER CARDS ===================== */}
+          {/* 
       วิธีใช้ PetSitterCardLarge:
       
       แบบรูปซ้าย (default):
@@ -488,11 +464,9 @@ export default function ComponentAll() {
         tags={["Dog", "Cat", "etc"]}
         className="min-h-[268px]"
       />
-      
     */}
-            <div className="space-y-3 rounded-2xl border border-dashed border-purple-300 p-5">
-              <h3 className="text-lg font-semibold text-ink/90">Pet Sitter – Large</h3>
-
+          <SubSection title="Pet Sitter – Large">
+            <div className="space-y-3 rounded-2xl p-5">
               {/* Desktop: รูปซ้าย (ปกติ + มีกรอบส้ม) */}
               <div className="hidden md:block w-[848px] mx-auto space-y-4">
                 <PetSitterCardLarge {...sitterCommon} rating={5} className="min-h-[216px] cursor-pointer" tags={["Dog", "Cat", "Rabbit"]} />
@@ -509,10 +483,10 @@ export default function ComponentAll() {
                 <PetSitterCard {...sitterCommon} size="sm" variant="chips" rating={5} tags={["Dog", "Cat", "Rabbit"]} />
               </div>
             </div>
-
-            {/* ===================== SMALL PET SITTER CARDS ===================== */}
-            <div className="w-full max-w-[848px] mx-auto space-y-3 rounded-2xl border border-dashed border-purple-300 p-5">
-              <h3 className="text-lg font-semibold text-ink/90">Pet Sitter – Small</h3>
+          </SubSection>
+          {/* ===================== SMALL PET SITTER CARDS ===================== */}
+          <SubSection title="Pet Sitter – Small">
+            <div className="w-full max-w-[848px] mx-auto space-y-3 rounded-2xl ">
               <div className="w-full flex justify-center">
                 <div className="grid gap-8 justify-items-center grid-cols-1 md:[grid-template-columns:471px_330px]">
                   <PetSitterCardSmall {...sitterCommon} rating={5} smPreset="wide" tags={["Dog", "Cat", "Bird", "Rabbit"]} />
@@ -522,11 +496,13 @@ export default function ComponentAll() {
                 </div>
               </div>
             </div>
+          </SubSection>
+          <SubSection title=""><></></SubSection>
+          <SubSection title="Booking Cards Desktop">
             {/* =========================================================
-          BOOKING CARDS (Desktop 4 + Mobile 4)
-      ========================================================= */}
-            <div className="mx-auto space-y-3 rounded-2xl border border-dashed border-purple-300 p-5">
-              <h3 className="text-lg font-semibold text-ink/90">Booking Cards</h3>
+                    BOOKING CARDS (Desktop 4 + Mobile 4)
+                ========================================================= */}
+            <div className="mx-auto space-y-3 rounded-2xl p-5">
               <p className="text-gray-500 text-sm -mt-1">
               </p>
 
@@ -580,7 +556,10 @@ export default function ComponentAll() {
                   ]}
                 />
               </div>
-
+            </div>
+          </SubSection>
+          <SubSection title="Booking Cards Desktop">
+            <div className="mx-auto space-y-3 rounded-2xl p-5">
               {/* ---------- Mobile (COMPACT) : 4 แบบ ---------- */}
               {/* TIP: ตั้งกรอบ 375px เพื่อให้การ์ด mobile ตรงตาม Figma */}
               <div className="mt-6 flex flex-wrap gap-4">
@@ -640,27 +619,11 @@ export default function ComponentAll() {
                     ]}
                   />
                 </div>
-              </div>
-
-
-            </div>
+              </div></div>
           </SubSection>
         </Section>
 
 
-        {/* Pagination */}
-        <Section title="Pagination">
-          <SubSection title="">
-            {/* 
-            currentPage = หน้าที่เลือกอยู่
-            totalPages = หน้าทั้งหมด
-            */}
-            <Pagination
-              currentPage={5}
-              totalPages={45}
-            />
-          </SubSection>
-        </Section>
 
         {/* Modal */}
         <Section title="Modal">
@@ -730,8 +693,8 @@ export default function ComponentAll() {
         </Section>
 
         {/* Date Picker */}
-        <Section title="Date Picker">
-          <SubSection title="">
+        <Section title="Date Picker - Time Picker" cols={2}>
+          <SubSection title="Date">
             <div className="w-[250px]">
               <span className="text-gray-6 w-[300px]"> แบบไม่มีเงื่อนไข</span>
               <DatePicker
@@ -765,11 +728,7 @@ export default function ComponentAll() {
               />
             </div>
           </SubSection>
-        </Section>
-
-        {/* Time picker */}
-        <Section title="Time picker">
-          <SubSection title="">
+          <SubSection title="Time">
             <div className="w-[250px]">
               <span className="text-gray-6"> แบบไม่มีเงื่อนไข</span>
               <TimePicker
@@ -812,6 +771,16 @@ export default function ComponentAll() {
           </SubSection>
         </Section>
 
+        <Section title="Loading">
+          <SubSection title="Loading">
+            <PetPawLoading
+              message="Loading Pet"
+              size="lg"
+              baseStyleCustum="flex items-center justify-center w-full h-full"
+            />
+          </SubSection>
+        </Section>
+
         {/* Chat */}
         <Section title="Chat">
           <SubSection title="Chat List and Chat Container">
@@ -822,7 +791,7 @@ export default function ComponentAll() {
           </SubSection>
         </Section>
       </div>
-    </div>
+    </div >
 
   );
 }

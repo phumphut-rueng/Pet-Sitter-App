@@ -3,11 +3,13 @@ import React from 'react';
 interface PetPawLoadingProps {
   message?: string;
   size?: 'sm' | 'md' | 'lg';
+  baseStyleCustum?: string
 }
 
 export function PetPawLoading({
   message = "Loading Pet Sitter Details",
-  size = 'md'
+  size = 'md',
+  baseStyleCustum
 }: PetPawLoadingProps) {
   const sizeClasses = {
     sm: {
@@ -34,9 +36,10 @@ export function PetPawLoading({
   };
 
   const classes = sizeClasses[size];
+  const baseStyle = "min-h-screen bg-gray-5 flex items-center justify-center";
 
   return (
-    <div className="min-h-screen bg-gray-5 flex items-center justify-center">
+    <div className={baseStyleCustum || baseStyle}>
       <div className="text-center">
         {/* Animated Pet Paw Loading */}
         <div className="relative mb-8">
