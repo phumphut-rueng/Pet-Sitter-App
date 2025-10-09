@@ -181,8 +181,6 @@ export const formValuesToPayload = async (
 ): Promise<PetInput> => {
   const types = await getPetTypes();
   const petTypeId = resolvePetTypeId(values.type, types);
-  console.log("types", types);
-  console.log("petTypeId", petTypeId);
 
   if (petTypeId == null) {
     throw new Error(ERROR_MESSAGES.invalidPetType);

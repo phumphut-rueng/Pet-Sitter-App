@@ -138,7 +138,7 @@ export function useBookingHandler() {
         } else if (activeStep > 1) {
             setActiveStep(prev => prev - 1)
         }
-    }, [activeStep])
+    }, [activeStep, router])
 
     const handleNext = useCallback(() => {
         let canProceed = true
