@@ -1,4 +1,3 @@
-import { useBookingForm } from "@/hooks/useBookingForm"
 import InputText from "../input/InputText";
 import { FormEvent } from "react";
 import { BookingForm } from "@/types/booking.types";

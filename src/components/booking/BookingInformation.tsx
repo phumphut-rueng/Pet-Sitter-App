@@ -1,4 +1,3 @@
-import { useBookingForm } from "@/hooks/useBookingForm"
 import InputText from "../input/InputText";
 import InputTextArea from "../input/InputTextArea";
 import { BookingForm } from "@/types/booking.types";
@@ -12,7 +11,6 @@ export default function BookingInformation(
         handleChange,
         handlePhoneChange,
         handleTextAreaChange,
-        // handleSubmit
     }: {
         form: BookingForm
         error: BookingForm
@@ -21,11 +19,8 @@ export default function BookingInformation(
         handleChange: (e: React.ChangeEvent<HTMLInputElement>) => void,
         handlePhoneChange: (e: React.ChangeEvent<HTMLInputElement>) => void,
         handleTextAreaChange: (e: React.ChangeEvent<HTMLTextAreaElement>) => void
-        // handleSubmit: (e: FormEvent<Element>) => void
     }
 ) {
-
-
     return (
         <form
             className="mt-6 space-y-6"
