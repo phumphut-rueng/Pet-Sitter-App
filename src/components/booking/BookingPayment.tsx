@@ -48,6 +48,7 @@ export default function BookingSelectPayment(
                             onChange={handleCardNumberChange}
                             errorText={error.cardNumber}
                             maxLength={19}
+                            autoComplete="off"
                         />
                     </div>
                     <div className="flex-1">
@@ -61,6 +62,7 @@ export default function BookingSelectPayment(
                             variant={!error.cardName ? "default" : "error"}
                             onChange={handleCardNameChange}
                             errorText={error.cardName}
+                            autoComplete="off"
                         />
                     </div>
                 </div>
@@ -80,6 +82,7 @@ export default function BookingSelectPayment(
                             onChange={handleExpiryDateChange}
                             errorText={error.expiryDate}
                             maxLength={7}
+                            autoComplete="off"
                         />
                     </div>
                     <div className="flex-1">
@@ -89,12 +92,13 @@ export default function BookingSelectPayment(
                             name="cvc"
                             value={form.cvc}
                             placeholder="xxx"
-                            type="number"
+                            type="text"
                             variant={!error.cvc ? "default" : "error"}
                             inputMode="numeric"
                             onChange={handleCVCChange}
                             errorText={error.cvc}
                             maxLength={4}
+                            autoComplete="off"
                         />
                     </div>
                 </div>

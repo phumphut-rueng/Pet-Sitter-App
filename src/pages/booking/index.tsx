@@ -54,12 +54,13 @@ export default function Handler(
         handleChange,
         handlePhoneChange,
         handleTextAreaChange,
-        validateInformatiionFrom,
+        validateInformationFrom,
 
         handleCardNumberChange,
         handleCardNameChange,
         handleExpiryDateChange,
         handleCVCChange,
+        validatePaymentFrom,
     } = useBookingForm()
 
 
@@ -152,9 +153,15 @@ export default function Handler(
     const handleNext = () => {
         let canNext: boolean = true;
         if (activeNumber === 2) {
-            const errors: BookingForm = validateInformatiionFrom();
+            const errors: BookingForm = validateInformationFrom();
 
             if (errors.name || errors.email || errors.phone) {
+                canNext = false
+            }
+        } else if (activeNumber === 3) {
+            const errors: BookingForm = validatePaymentFrom();
+
+            if (errors.cardNumber || errors.cardName || errors.expiryDate || errors.cvc) {
                 canNext = false
             }
         }

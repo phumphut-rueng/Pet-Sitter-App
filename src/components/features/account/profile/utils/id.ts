@@ -1,2 +1,4 @@
+import { numRegex } from "@/lib/validators/validation";
+
 export const formatIdNumber = (value: string): string =>
-    value.replace(/\D/g, "").slice(0, 13);
+    value.replace(numRegex, "").slice(0, 13);
