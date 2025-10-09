@@ -11,6 +11,9 @@ import { Pet, PetStatus } from "@/types/pet.types";
 import { getPetById, getSitterById } from "@/lib/booking/booking-api";
 import { PetType, Sitter } from "@/types/sitter.types";
 import PageToaster from "@/components/ui/PageToaster";
+import { useBookingForm } from "@/hooks/useBookingForm";
+import { boolean } from "zod/v3";
+import { BookingForm } from "@/types/booking.types";
 
 interface informationType {
     name: "",
@@ -31,7 +34,7 @@ export default function Handler(
     const parsedSitterId = sitterId ? Number(sitterId) : undefined;
 
     // const [sitterIdnew, setSitterIdnew] = useState<number | null>(null);
-    const [activeNumber, setactiveNumber] = useState<number>(1);
+    const [activeNumber, setactiveNumber] = useState<number>(3);
     const [hasSelect, setHasSelect] = useState<boolean>(false);
     const [petName, setPetName] = useState<string>("-");
     const [pets, setPets] = useState<Pet[]>([])
@@ -42,23 +45,23 @@ export default function Handler(
     const [refreshKey, setRefreshKey] = useState<number>(0) // เปลี่ยนชื่อให้ชัดเจน
     const [isFetching, setIsFetching] = useState(false);
 
-    const [information, setInformation] = useState<informationType>(
-        {
-            name: "",
-            email: "",
-            phone: "",
-            additional: ""
-        }
-    )
+    const {
+        form,
+        error,
+        setError,
+        hasErrors,
 
-    const [error, setError] = useState<informationType>(
-        {
-            name: "",
-            email: "",
-            phone: "",
-            additional: ""
-        }
-    )
+        handleChange,
+        handlePhoneChange,
+        handleTextAreaChange,
+        validateInformatiionFrom,
+
+        handleCardNumberChange,
+        handleCardNameChange,
+        handleExpiryDateChange,
+        handleCVCChange,
+    } = useBookingForm()
+
 
     useEffect(() => {
         if (refreshKey > 0) {
@@ -147,8 +150,25 @@ export default function Handler(
     }
 
     const handleNext = () => {
-        if (activeNumber < 3) {
+        let canNext: boolean = true;
+        if (activeNumber === 2) {
+            const errors: BookingForm = validateInformatiionFrom();
+
+            if (errors.name || errors.email || errors.phone) {
+                canNext = false
+            }
+        }
+
+        if (activeNumber < 3 && canNext) {
             setactiveNumber(prev => ++prev);
+        }
+    }
+    const handleSubmit = async (e: React.FormEvent) => {
+        e.preventDefault()
+
+        if (!hasErrors()) {
+            console.log("✅ Form is valid:", form)
+            // Submit to API
         }
     }
 
@@ -181,12 +201,27 @@ export default function Handler(
                             }
                             {
                                 activeNumber === 2 &&
-                                (<BookingInformation />)
+                                (<BookingInformation
+                                    form={form}
+                                    error={error}
+                                    handleSubmit={handleNext}
+                                    handleChange={handleChange}
+                                    handlePhoneChange={handlePhoneChange}
+                                    handleTextAreaChange={handleTextAreaChange}
+                                />)
 
                             }
                             {
                                 activeNumber === 3 &&
-                                (<BookingSelectPayment />)
+                                (<BookingSelectPayment
+                                    form={form}
+                                    error={error}
+                                    handleSubmit={handleNext}
+                                    handleCardNumberChange={handleCardNumberChange}
+                                    handleCardNameChange={handleCardNameChange}
+                                    handleExpiryDateChange={handleExpiryDateChange}
+                                    handleCVCChange={handleCVCChange}
+                                />)
 
                             }
                         </div>
