@@ -2,7 +2,6 @@ import React, { useEffect, useRef, useState } from 'react';
 import Image from 'next/image';
 import ChatBubble from './ChatBubble';
 import { uploadAndGetPublicId } from '@/lib/cloudinary/image-upload';
-import sampleMessagesData from '../../utils/mockChatData';
 
 interface Message {
   id: string;
@@ -14,8 +13,6 @@ interface Message {
   imageUrl?: string;
 }
 
-// Type the sampleMessages with Message interface
-const sampleMessages: Message[] = sampleMessagesData as Message[];
 
 interface ChatContainerProps {
   className?: string;
@@ -33,7 +30,7 @@ interface ChatContainerProps {
 const ChatContainer: React.FC<ChatContainerProps> = ({ 
   className = '',
   selectedChat,
-  messages = sampleMessages,
+  messages = [],
   onSendMessage,
   hasChats = true,
   onHideChat
