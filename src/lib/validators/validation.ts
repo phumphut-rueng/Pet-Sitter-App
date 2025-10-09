@@ -1,12 +1,40 @@
 import { z } from "zod";
+import { errorType, FieldValidation } from "@/types/field-validation";
+import { UserRole } from "@/types/register.types";
+import axios from "axios";
+
+const result = (
+  message = "",
+  error?: errorType,
+  data?: object
+): FieldValidation => ({
+  message,
+  ...(error && { error }),
+  ...(data && { data }),
+});
 
 type UnknownRecord = Record<string, unknown>;
 const isRecord = (v: unknown): v is UnknownRecord => typeof v === "object" && v !== null;
+
+//ที่ใช้ post เพราะว่า ไม่อยากให้ใน network เห็นข้อมูลที่ส่งไป
+async function fetchData<T>(url: string, body: unknown): Promise<T | null> {
+  try {
+    const { data } = await axios.post<T>(url, body);
+    return data;
+  } catch (e) {
+    console.error(`${url} request failed:`, e);
+    return null;
+  }
+}
+
+// Regex
 export const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 export const phoneRegex = /^0\d{9}$/;
 export const cardNameRegex = /^[a-zA-Z\s]*$/;
 export const dobRegex = /^\d{4}-\d{2}-\d{2}$/;
+export const numRegex = /\D/g;
 
+//ยังคิดไม่ออกว่าจะแก้ยังไง
 export const normalizeString = (v: unknown): string | undefined => {
   if (typeof v !== "string") return undefined;
   const t = v.trim();
@@ -52,37 +80,13 @@ export const updateProfileSchema = z.object({
 
 export type ValidationDetails = z.inferFlattenedErrors<typeof updateProfileSchema>;
 
-import { errorType, FieldValidation } from "@/types/field-validation";
-import { UserRole } from "@/types/register.types";
-import axios from "axios";
-
-const result = (
-  message = "",
-  error?: errorType,
-  data?: object
-): FieldValidation => ({
-  message,
-  ...(error && { error }),
-  ...(data && { data }),
-});
-
-//ที่ใช้ post เพราะว่า ไม่อยากให้ใน network เห็นข้อมูลที่ส่งไป
-async function fetchData<T>(url: string, body: unknown): Promise<T | null> {
-  try {
-    const { data } = await axios.post<T>(url, body);
-    return data;
-  } catch (e) {
-    console.error(`${url} request failed:`, e);
-    return null;
-  }
-}
-
+//validate
 export const validateEmail = async (
   value: string,
   role_ids?: number,
   checkConflict = false,
 ): Promise<FieldValidation> => {
-  checkEmailRegex(value)
+  formatEmail(value)
 
   if (checkConflict) {
     await checkEmailConflictAndGetRole(value, role_ids)
@@ -91,17 +95,110 @@ export const validateEmail = async (
   return { message: "" };
 }
 
-export const checkEmailRegex = (value: string) => {
+export const validatePhone = async (
+  value: string
+): Promise<FieldValidation> => {
   if (!value.trim())
-    return result("Please input your Email");
+    return result("Please input your Phone");
 
-  if (!emailRegex.test(value))
-    return result("Invalid email format");
+  formatPhone(value)
+
+  try {
+    const data = await fetchData<{ exists: boolean }>(
+      `/api/user/check-phone`,
+      { phone: value });
+
+    if (data?.exists)
+      return result("This phone number is already registered");
+  } catch (e) {
+    console.error("Phone check failed:", e);
+  }
 
   return { message: "" };
 }
 
-const checkEmailConflictAndGetRole = async (
+export const validatePassword = (
+  value: string
+): FieldValidation => {
+  if (!value.trim())
+    return result("Please input your Password");
+
+  if (value.length < 8)
+    return result("Password must be more than 8 characters");
+
+  return result();
+}
+
+export const validateCardNumber = (value: string): FieldValidation => {
+  const cleaned = value.replace(/\s/g, '');
+
+  if (!cleaned) {
+    return result("Card number is required");
+  }
+
+  if (!/^\d+$/.test(cleaned)) {
+    return result("Card number must contain only numbers");
+  }
+
+  if (cleaned.length < 13 || cleaned.length > 19) {
+    return result("Card number must be between 13-19 digits");
+  }
+
+  if (!isValidLuhn(cleaned)) {
+    return result("Invalid card number");
+  }
+
+  return { message: "" };
+};
+
+export const validateExpiryDate = (value: string): FieldValidation => {
+  const cleaned = value.replace(numRegex, '');
+
+  if (!cleaned) {
+    return result("Expiry date is required");
+  }
+
+  if (cleaned.length !== 6) {
+    return result("Invalid expiry date format (MM/YYYY)");
+  }
+
+  const month = parseInt(cleaned.substring(0, 2));
+  const year = parseInt(cleaned.substring(2, 6));
+
+  if (month < 1 || month > 12) {
+    return result("Invalid month (01-12)");
+  }
+
+  const now = new Date();
+  const currentYear = now.getFullYear();
+  const currentMonth = now.getMonth() + 1;
+
+  if (year < currentYear || (year === currentYear && month < currentMonth)) {
+    return result("Card has expired");
+  }
+
+  if (year > currentYear + 20) {
+    return result("Expiry date too far in the future");
+  }
+
+  return { message: "" };
+};
+
+export const validateCVC = (value: string): FieldValidation => {
+  const cleaned = value.replace(numRegex, '');
+
+  if (!cleaned) {
+    return result("CVC is required");
+  }
+
+  if (!/^\d{3,4}$/.test(cleaned)) {
+    return result("CVC must be 3 or 4 digits");
+  }
+
+  return { message: "" };
+};
+
+export const checkEmailConflictAndGetRole = async (
   value: string,
   role_ids?: number
 ) => {
@@ -126,43 +223,57 @@ const checkEmailConflictAndGetRole = async (
   }
 }
 
-export const validatePhone = async (
-  value: string
-): Promise<FieldValidation> => {
+//Formatting Functions
+export const formatEmail = (value: string) => {
   if (!value.trim())
-    return result("Please input your Phone");
+    return result("Please input your Email");
 
-  checkPhoneRegex(value)
-
-  try {
-    const data = await fetchData<{ exists: boolean }>(
-      `/api/user/check-phone`,
-      { phone: value });
-
-    if (data?.exists)
-      return result("This phone number is already registered");
-  } catch (e) {
-    console.error("Phone check failed:", e);
-  }
+  if (!emailRegex.test(value))
+    return result("Invalid email format");
 
   return { message: "" };
 }
 
-export const checkPhoneRegex = (value: string) => {
+export const formatPhone = (value: string) => {
   if (!phoneRegex.test(value))
     return result("Phone must start with 0 and be 10 digits");
 
   return { message: "" };
 }
 
-export async function validatePassword(
-  value: string
-): Promise<FieldValidation> {
-  if (!value.trim())
-    return result("Please input your Password");
+const isValidLuhn = (cardNumber: string): boolean => {
+  let sum = 0;
+  let isEven = false;
 
-  if (value.length < 8)
-    return result("Password must be more than 8 characters");
+  for (let i = cardNumber.length - 1; i >= 0; i--) {
+    let digit = parseInt(cardNumber[i]);
 
-  return result();
-}
+    if (isEven) {
+      digit *= 2;
+      if (digit > 9) digit -= 9;
+    }
+
+    sum += digit;
+    isEven = !isEven;
+  }
+
+  return sum % 10 === 0;
+};
+
+export const formatCardNumber = (value: string): string => {
+  const cleaned = value.replace(/\s/g, '');
+  const groups = cleaned.match(/.{1,4}/g);
+  return groups ? groups.join(' ') : cleaned;
+};
+
+export const formatExpiryDate = (value: string): string => {
+  const cleaned = value.replace(numRegex, '');
+  if (cleaned.length >= 2) {
+    return `${cleaned.substring(0, 2)}/${cleaned.substring(2, 6)}`;
+  }
+  return cleaned;
+};
+
+export const formatCVC = (value: string): string => {
+  return value.replace(numRegex, '').substring(0, 4);
+};

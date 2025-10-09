@@ -22,7 +22,7 @@ export function useLoginForm() {
 
     const validate = async () => {
         const emailErr = await validateEmail(email);
-        const passwordErr = await validatePassword(password);
+        const passwordErr = validatePassword(password);
 
         setEmailError(emailErr.message);
         setPasswordError(passwordErr.message);
