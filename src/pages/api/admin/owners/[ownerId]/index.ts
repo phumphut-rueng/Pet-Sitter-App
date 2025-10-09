@@ -42,7 +42,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     if (!u) return res.status(404).json({ message: "Owner not found" });
 
-    // ส่งเฉพาะฟิลด์ “ใหม่” ที่ FE จะใช้ต่อไป
+    // ส่งเฉพาะฟิลด์ "ใหม่" ที่ FE จะใช้ต่อไป
     const payload = {
       id: u.id,
       name: u.name,
@@ -72,7 +72,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     };
 
     return res.status(200).json(payload);
-  } catch (e) {
+  } catch {
     return res.status(500).json({ message: "Failed to load owner detail" });
   }
 }
