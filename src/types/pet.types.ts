@@ -33,3 +33,26 @@ export interface PetFormValues {
   about: string;
   image: string;         // dataURL หรือ URL
 }
+
+// 🆕 เพิ่มส่วนนี้เข้าไป
+export interface PetFormProps {
+  mode: "create" | "edit";
+  initialValues?: Partial<PetFormValues>;
+  loading?: boolean;
+  serverError?: string | null;
+  onSubmit: (values: PetFormValues) => void;
+  onCancel: () => void;
+  onDelete?: () => void;
+}
+
+export interface PetFieldConfig {
+  name: keyof PetFormValues;
+  label: string;
+  placeholder: string;
+  inputMode?: "text" | "numeric" | "decimal";
+}
+
+export interface SelectOption {
+  value: string;
+  label: string;
+}

@@ -11,6 +11,7 @@
   --gray-2: #DCDFED;
   --gray-1: #F6F6F9;   /* lightest */
   --white:  #FFFFFF;
+  --white-1: #FAFAFB;
 
     /* NEW: Figma Black for body text */
     --ink: #060D18; /* <— ใช้กับ text-ink */

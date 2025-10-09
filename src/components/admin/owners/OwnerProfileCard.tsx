@@ -5,14 +5,23 @@ const formatDob = (s?: string | null) => {
   const d = new Date(`${s}T00:00:00Z`);
   return isNaN(d.getTime())
     ? s
-    : d.toLocaleDateString(undefined, { day: "numeric", month: "short", year: "numeric" });
+    : d.toLocaleDateString(undefined, {
+        day: "numeric",
+        month: "short",
+        year: "numeric",
+      });
 };
+
 
 function Field({ label, value }: { label: string; value: string }) {
   return (
     <div>
-      <div className="text-gray-400 text-sm mb-1">{label}</div>
-      <div className="text-gray-900">{value}</div>
+      <div className="h4-bold text-gray-4 mb-1">
+        {label}
+      </div>
+      <div className="text-sm2-regular text-ink">
+        {value}
+      </div>
     </div>
   );
 }
@@ -35,14 +44,13 @@ export default function OwnerProfileCard({
   onClickBan: () => void;
 }) {
   const btnLabel = isSuspended ? "Unban This User" : "Ban This User";
-  const btnClass = isSuspended
-    ? "text-orange-500 hover:bg-orange-50"
-    : "text-orange-500 hover:bg-orange-50";
+  const btnClass =
+    "px-6 py-3 rounded-xl text-sm2-bold transition-colors text-orange-5 hover:bg-orange-5/10 active:bg-orange-5/15 focus:outline-none focus:ring-2 focus:ring-orange-5/30";
 
   return (
     <div className="px-10 pb-10 pt-6">
-      <div className="flex gap-10 items-start">
-        {/* Avatar ใหญ่ซ้าย */}
+      <div className="flex items-start gap-10">
+        {/* Avatar ซ้าย */}
         <CloudAvatar
           publicId={owner.profile_image_public_id ?? undefined}
           legacyUrl={owner.profile_image ?? undefined}
@@ -52,9 +60,9 @@ export default function OwnerProfileCard({
           priority
         />
 
-        {/* การ์ดข้อมูล */}
-        <div className="flex-1 bg-[#FAFAFB] rounded-lg p-6 min-h-[360px]">
-          <div className="space-y-8">
+        <div className="min-h-[360px] flex-1 rounded-lg bg-white-1 p-6">
+          {/* ระยะห่างระหว่างหัวข้อ = 40px → space-y-10 */}
+          <div className="space-y-10">
             <Field label="Pet Owner Name" value={owner.name || "-"} />
             <Field label="Email" value={owner.email} />
             <Field label="Phone" value={owner.phone || "-"} />
@@ -63,11 +71,8 @@ export default function OwnerProfileCard({
           </div>
 
           {/* ปุ่มมุมขวาล่าง */}
-          <div className="flex justify-end mt-10">
-            <button
-              onClick={onClickBan}
-              className={`px-6 py-3 rounded-xl font-medium transition-colors ${btnClass}`}
-            >
+          <div className="mt-10 flex justify-end">
+            <button onClick={onClickBan} className={btnClass}>
               {btnLabel}
             </button>
           </div>

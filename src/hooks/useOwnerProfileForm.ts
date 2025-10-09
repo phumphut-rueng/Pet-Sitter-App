@@ -16,7 +16,7 @@ import {
   VALIDATION_ERROR_MESSAGES,
 } from "@/lib/validators/helpers";
 
-import { apiRequest } from "@/lib/api/api-client";
+import { api } from "@/lib/api/axios"; 
 import { uploadAndGetPublicId } from "@/lib/cloudinary/image-upload";
 import { toErrorMessage } from "@/lib/utils/strings";
 import {
@@ -25,13 +25,12 @@ import {
   type OwnerProfileDTO,
 } from "@/components/features/account/profile/transform";
 
-// ------------------------------
 // helpers
-// ------------------------------
+
 const isDataUrl = (s?: string): boolean =>
   !!s && /^data:image\/[a-zA-Z]+;base64,/.test(s);
 
-// แปลง data URL เป็น File โดยใช้ axios
+// แปลง data URL เป็น File axs
 async function dataUrlToFile(dataUrl: string, filename = "profile.png"): Promise<File> {
   const response = await axios.get(dataUrl, {
     responseType: 'blob'
@@ -41,11 +40,10 @@ async function dataUrlToFile(dataUrl: string, filename = "profile.png"): Promise
   return new File([blob], filename, { type: blob.type || "image/png" });
 }
 
-/**
- * บีบค่าจาก transform ให้เป็นรูปทรงเดียวกับ OwnerProfileInput
- * - ตัดคีย์ที่ schema ไม่รู้จักทิ้ง
- * - บีบ null → undefined สำหรับฟิลด์ optional
- */
+
+//บีบค่าจาก transform ให้เป็นรูปทรงเดียวกับ OwnerProfileInput ตัดคีย์ที่ schema ไม่รู้จักทิ้ง 
+// บีบ null → undefined สำหรับฟิลด์ optional
+ 
 function toFormShape(v: unknown): Partial<OwnerProfileInput> {
   const r = (v ?? {}) as Record<string, unknown>;
   return {
@@ -58,9 +56,8 @@ function toFormShape(v: unknown): Partial<OwnerProfileInput> {
   };
 }
 
-// ------------------------------
 // main hook
-// ------------------------------
+
 export function useOwnerProfileForm() {
   // เก็บค่าเริ่มต้นในรูปทรง "ฟอร์ม" เพื่อตรงกับ checkFieldChanges
   const initialRef = useRef<Partial<OwnerProfileInput> | null>(null);
@@ -73,14 +70,11 @@ export function useOwnerProfileForm() {
 
   // load profile
   const load = useCallback(async () => {
-    const profile = await apiRequest<OwnerProfileDTO>("/api/user/profile", {
-      method: "GET",
-      cache: "no-store",
-    });
+    //  เปลี่ยนจาก apiRequest เป็น api.get
+    const { data: profile } = await api.get<OwnerProfileDTO>("/user/profile");
 
     const formData = transformData.fromApiToForm(profile);
-
-    // ✅ เก็บค่าเริ่มต้นเป็นรูปทรงฟอร์ม และ reset ด้วยค่าที่ไม่มี null
+    // เก็บค่าเริ่มต้นเป็นรูปทรงฟอร์ม และ reset ด้วยค่าที่ไม่มี null
     const shaped = toFormShape(formData);
     initialRef.current = shaped;
     form.reset(shaped);
@@ -136,10 +130,8 @@ export function useOwnerProfileForm() {
           profile_image_public_id: public_id ?? undefined,
         };
 
-        await apiRequest("/api/user/profile", {
-          method: "PUT",
-          body: JSON.stringify(body),
-        });
+        //  เปลี่ยนจาก apiRequest เป็น api.put
+        await api.put("/user/profile", body);
 
         await load();
         return true;
