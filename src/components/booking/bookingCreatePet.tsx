@@ -1,20 +1,10 @@
-
-import { useRouter } from "next/router";
-import toast from "react-hot-toast";
-import AccountPageShell from "@/components/layout/AccountPageShell";
 import PetForm from "@/components/features/pet/PetForm";
-import PageToaster from "@/components/ui/PageToaster";
 import { usePetsApi } from "@/hooks/usePets";
 import {
   PetFormValues,
-  ROUTES,
-  SUCCESS_MESSAGES,
-  getErrorMessage,
   formValuesToPayload,
   petService,
 } from "@/lib/pet/pet-utils";
-import AlertConfirm from "../modal/AlertConfirm";
-import { AlertDialogDescription } from "@radix-ui/react-alert-dialog";
 import { Dispatch, SetStateAction, useEffect, useRef, useState } from "react";
 
 interface BookingCreatePetProps {
@@ -28,7 +18,6 @@ export default function BookingCreatePet(
     onOpenChange,
     onSuccess
   }: BookingCreatePetProps) {
-  const router = useRouter();
   const { getPetTypes } = usePetsApi();
   const [loading, setLoading] = useState(false);
   const dialogRef = useRef<HTMLDialogElement>(null);

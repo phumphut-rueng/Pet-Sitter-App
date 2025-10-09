@@ -10,17 +10,8 @@ import { useSession } from "next-auth/react";
 import { Pet, PetStatus } from "@/types/pet.types";
 import { getPetById, getSitterById } from "@/lib/booking/booking-api";
 import { PetType, Sitter } from "@/types/sitter.types";
-import PageToaster from "@/components/ui/PageToaster";
 import { useBookingForm } from "@/hooks/useBookingForm";
-import { boolean } from "zod/v3";
 import { BookingForm } from "@/types/booking.types";
-
-interface informationType {
-    name: "",
-    email: "",
-    phone: "",
-    additional: ""
-}
 
 export default function Handler(
 ) {
@@ -42,14 +33,11 @@ export default function Handler(
     // const [sitterPetType, setSitterPetType] = useState<PetType[]>([])
     const [price, setPrice] = useState<number>(0)
     const [loading, setLoading] = useState<boolean>(false)
-    const [refreshKey, setRefreshKey] = useState<number>(0) // เปลี่ยนชื่อให้ชัดเจน
-    const [isFetching, setIsFetching] = useState(false);
+    const [refreshKey, setRefreshKey] = useState<number>(0)
 
     const {
         form,
         error,
-        setError,
-        hasErrors,
 
         handleChange,
         handlePhoneChange,
@@ -170,14 +158,6 @@ export default function Handler(
             setactiveNumber(prev => ++prev);
         }
     }
-    const handleSubmit = async (e: React.FormEvent) => {
-        e.preventDefault()
-
-        if (!hasErrors()) {
-            console.log("✅ Form is valid:", form)
-            // Submit to API
-        }
-    }
 
     return (
         <main className="container-1200 flex flex-col min-h-[calc(100vh-80px)] mx-auto bg-gray-1 px-4 py-8">
@@ -188,6 +168,7 @@ export default function Handler(
                         <ProgressStep activeNumber={activeNumber} />
                     </div>
 
+                    ({loading} &&
                     <div className="flex flex-col flex-1 bg-white rounded-2xl ">
                         <div className="p-5 flex-1 overflow-auto">
                             {
@@ -255,6 +236,7 @@ export default function Handler(
                             </PrimaryButton>
                         </div>
                     </div>
+                    )
                 </div>
 
                 {/* Right Side - Booking Detail */}
