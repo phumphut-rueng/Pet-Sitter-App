@@ -10,7 +10,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { getLatLngFromAddress } from "@/utils/nominatim";
+import { getLatLngFromAddress } from "@/lib/utils/nominatim";
 import { Controller } from "react-hook-form";
 import type {
   Control,
