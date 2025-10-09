@@ -12,6 +12,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { StatusBadge, StatusKey } from "@/components/badges/StatusBadge";
+import NotFound from "@/pages/404";
 
 type Booking = {
   id: number;
@@ -22,7 +23,7 @@ type Booking = {
   status: StatusKey;
 };
 
-// 🧪 Mock ข้อมูล
+// Mock ข้อมูล
 const mockBookings: Booking[] = [
   {
     id: 1,
@@ -37,7 +38,7 @@ const mockBookings: Booking[] = [
     ownerName: "Robert Jr.",
     pets: 1,
     duration: "24 hours",
-    bookedDate: "12 Aug, 7 AM - 13 Aug, 7 AM",
+    bookedDate: "12 Aug, 7 AM - 11 AM",
     status: "waitingConfirm",
   },
   {
@@ -61,7 +62,7 @@ const mockBookings: Booking[] = [
     ownerName: "Andaman R",
     pets: 2,
     duration: "3 hours",
-    bookedDate: "25 Aug, 7 AM - 10 AM",
+    bookedDate: "25 Aug, 7 AM - 9 AM",
     status: "success",
   },
   {
@@ -69,7 +70,7 @@ const mockBookings: Booking[] = [
     ownerName: "Chatchai Haithong",
     pets: 2,
     duration: "3 hours",
-    bookedDate: "25 Aug, 7 AM - 10 AM",
+    bookedDate: "29 July, 7 AM - 11 AM",
     status: "canceled",
   },
 ];
@@ -179,7 +180,7 @@ export default function PetSitterBookingPage() {
           </div>
 
           {/* Table */}
-          <div className="overflow-hidden rounded-xl border border-gray-1">
+          <div className="overflow-hidden rounded-2xl border border-gray-1">
             <table className="w-full text-left">
               <thead className="bg-black text-white">
                 <tr>
