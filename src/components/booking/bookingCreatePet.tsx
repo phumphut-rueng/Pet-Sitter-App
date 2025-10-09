@@ -32,7 +32,7 @@ export default function BookingCreatePet(
   const { getPetTypes } = usePetsApi();
   const [loading, setLoading] = useState(false);
   const dialogRef = useRef<HTMLDialogElement>(null);
-  const [confirmOpen, setConfirmOpen] = useState(false);
+  const [formKey, setFormKey] = useState(0); // สำหรับ reset form
 
   useEffect(() => {
     const d = dialogRef.current;
@@ -41,6 +41,7 @@ export default function BookingCreatePet(
     // ✅ แก้ no-unused-expressions + กัน showModal ซ้ำ
     if (open && !d.open) {
       d.showModal();
+      setFormKey(prev => prev + 1);
     } else if (!open && d.open) {
       d.close();
     }
@@ -98,6 +99,7 @@ export default function BookingCreatePet(
 
         <div className="w-[800px] h-[850px] p-10">
           <PetForm
+            key={formKey}
             mode="create"
             loading={loading}
             onSubmit={handleSubmit}

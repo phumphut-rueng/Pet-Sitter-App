@@ -2,6 +2,10 @@ import { z } from "zod";
 
 type UnknownRecord = Record<string, unknown>;
 const isRecord = (v: unknown): v is UnknownRecord => typeof v === "object" && v !== null;
+export const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+export const phoneRegex = /^0\d{9}$/;
+export const cardNameRegex = /^[a-zA-Z\s]*$/;
+export const dobRegex = /^\d{4}-\d{2}-\d{2}$/;
 
 export const normalizeString = (v: unknown): string | undefined => {
   if (typeof v !== "string") return undefined;
@@ -13,7 +17,7 @@ export const pickDobYmd = (body: unknown): string | undefined => {
   if (!isRecord(body)) return undefined;
   const raw = normalizeString(body["dob"]);
   if (!raw) return undefined;
-  return /^\d{4}-\d{2}-\d{2}$/.test(raw) ? raw : undefined;
+  return dobRegex.test(raw) ? raw : undefined;
 };
 
 export const pickProfileImageUrl = (body: unknown): string | undefined => {
@@ -41,7 +45,7 @@ export const updateProfileSchema = z.object({
   name: z.string().trim().min(1).max(100).optional(),
   email: z.string().trim().email().optional(),
   phone: z.string().trim().regex(/^\d{9,15}$/).optional(),
-  dob: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
+  dob: z.string().regex(dobRegex).optional(),
   profileImage: z.string().url().optional(),                 // legacy
   profile_image_public_id: z.string().min(1).optional().or(z.literal(null)), // new
 });
@@ -78,21 +82,26 @@ export const validateEmail = async (
   role_ids?: number,
   checkConflict = false,
 ): Promise<FieldValidation> => {
-  if (!value.trim())
-    return result("Please input your Email");
-
-  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  if (!emailRegex.test(value))
-    return result("Invalid email format");
+  checkEmailRegex(value)
 
   if (checkConflict) {
-    await checkEmailConflict(value, role_ids)
+    await checkEmailConflictAndGetRole(value, role_ids)
   }
 
   return { message: "" };
 }
 
-const checkEmailConflict = async (
+export const checkEmailRegex = (value: string) => {
+  if (!value.trim())
+    return result("Please input your Email");
+
+  if (!emailRegex.test(value))
+    return result("Invalid email format");
+
+  return { message: "" };
+}
+
+const checkEmailConflictAndGetRole = async (
   value: string,
   role_ids?: number
 ) => {
@@ -123,9 +132,7 @@ export const validatePhone = async (
   if (!value.trim())
     return result("Please input your Phone");
 
-  const phoneRegex = /^0\d{9}$/;
-  if (!phoneRegex.test(value))
-    return result("Phone must start with 0 and be 10 digits");
+  checkPhoneRegex(value)
 
   try {
     const data = await fetchData<{ exists: boolean }>(
@@ -137,6 +144,13 @@ export const validatePhone = async (
   } catch (e) {
     console.error("Phone check failed:", e);
   }
+
+  return { message: "" };
+}
+
+export const checkPhoneRegex = (value: string) => {
+  if (!phoneRegex.test(value))
+    return result("Phone must start with 0 and be 10 digits");
 
   return { message: "" };
 }

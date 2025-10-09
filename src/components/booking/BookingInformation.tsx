@@ -1,17 +1,35 @@
 import { useBookingForm } from "@/hooks/useBookingForm"
 import InputText from "../input/InputText";
 import InputTextArea from "../input/InputTextArea";
+import { BookingForm } from "@/types/booking.types";
+import { FormEvent } from "react";
 
-export default function BookingInformation() {
-    const {
+export default function BookingInformation(
+    {
         form,
         error,
+        handleSubmit,
         handleChange,
         handlePhoneChange,
-    } = useBookingForm();
+        handleTextAreaChange,
+        // handleSubmit
+    }: {
+        form: BookingForm
+        error: BookingForm
+        handleSubmit: (e: FormEvent<Element>) => void
+
+        handleChange: (e: React.ChangeEvent<HTMLInputElement>) => void,
+        handlePhoneChange: (e: React.ChangeEvent<HTMLInputElement>) => void,
+        handleTextAreaChange: (e: React.ChangeEvent<HTMLTextAreaElement>) => void
+        // handleSubmit: (e: FormEvent<Element>) => void
+    }
+) {
+
 
     return (
-        <form className="mt-6 space-y-6">
+        <form
+            className="mt-6 space-y-6"
+            onSubmit={handleSubmit}>
             {/* Name */}
             <InputText
                 label="Your Name*"
@@ -59,10 +77,10 @@ export default function BookingInformation() {
             {/* Additional Message */}
             <InputTextArea
                 label="Additional Message (To pet sitter)"
-                id="message"
-                name="message"
+                id="addition"
+                name="addition"
                 value={form.addition}
-                onChange={() => { }}
+                onChange={handleTextAreaChange}
             />
         </form>
     )
