@@ -40,7 +40,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     if (req.method === "POST") {
       const parsed = petSchema.safeParse(req.body);
-      console.log("parsed", parsed);
 
       if (!parsed.success) {
         const flat = parsed.error.flatten();
@@ -50,7 +49,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         });
       }
       const data = parsed.data;
-      console.log("data", data);
       const created = await prisma.pet.create({
         data: {
           owner_id: ownerId,
