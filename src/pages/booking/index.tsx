@@ -12,6 +12,7 @@ import { getPetById, getSitterById } from "@/lib/booking/booking-api";
 import { PetType, Sitter } from "@/types/sitter.types";
 import { useBookingForm } from "@/hooks/useBookingForm";
 import { BookingForm } from "@/types/booking.types";
+import { PetPawLoading } from "@/components/loading/PetPawLoading";
 
 export default function Handler(
 ) {
@@ -21,18 +22,15 @@ export default function Handler(
 
     const router = useRouter()
     const { startTime, endTime, sitterId } = router.query;
-
     const parsedSitterId = sitterId ? Number(sitterId) : undefined;
 
-    // const [sitterIdnew, setSitterIdnew] = useState<number | null>(null);
-    const [activeNumber, setactiveNumber] = useState<number>(3);
+    const [activeNumber, setactiveNumber] = useState<number>(1);
     const [hasSelect, setHasSelect] = useState<boolean>(false);
     const [petName, setPetName] = useState<string>("-");
     const [pets, setPets] = useState<Pet[]>([])
     const [sitter, setSitter] = useState<Sitter>()
-    // const [sitterPetType, setSitterPetType] = useState<PetType[]>([])
     const [price, setPrice] = useState<number>(0)
-    const [loading, setLoading] = useState<boolean>(false)
+    const [loading, setLoading] = useState<boolean>(true)
     const [refreshKey, setRefreshKey] = useState<number>(0)
 
     const {
@@ -97,10 +95,9 @@ export default function Handler(
 
                 setPets(updatedPets);
                 setSitter(sitterResult);
+                setLoading(false);
             } catch (error) {
                 console.error("❌ Fetch error:", error);
-            } finally {
-                setLoading(false);
             }
         };
 
@@ -168,75 +165,78 @@ export default function Handler(
                         <ProgressStep activeNumber={activeNumber} />
                     </div>
 
-                    ({loading} &&
-                    <div className="flex flex-col flex-1 bg-white rounded-2xl ">
-                        <div className="p-5 flex-1 overflow-auto">
-                            {
-                                activeNumber === 1 &&
-                                (
-                                    <div>
-                                        <div
-                                            className="bg-white rounded-2xl font-[500] text-[16px] py-2">
-                                            Choose your pet
-                                        </div>
-                                        <BookingSelectYourPet
-                                            pets={pets}
-                                            setPets={setPets}
-                                            onRefresh={handleRefreshPets}
-                                        />
-                                    </div>
-                                )
-                            }
-                            {
-                                activeNumber === 2 &&
-                                (<BookingInformation
-                                    form={form}
-                                    error={error}
-                                    handleSubmit={handleNext}
-                                    handleChange={handleChange}
-                                    handlePhoneChange={handlePhoneChange}
-                                    handleTextAreaChange={handleTextAreaChange}
-                                />)
+                    {loading
+                        ? (<PetPawLoading message="Loading Pet" size="lg" />)
+                        : (
+                            <div className="flex flex-col flex-1 bg-white rounded-2xl ">
+                                <div className="p-5 flex-1 overflow-auto">
+                                    {
+                                        activeNumber === 1 &&
+                                        (
+                                            <div>
+                                                <div
+                                                    className="bg-white rounded-2xl font-[500] text-[16px] py-2">
+                                                    Choose your pet
+                                                </div>
+                                                <BookingSelectYourPet
+                                                    pets={pets}
+                                                    setPets={setPets}
+                                                    onRefresh={handleRefreshPets}
+                                                />
+                                            </div>
+                                        )
+                                    }
+                                    {
+                                        activeNumber === 2 &&
+                                        (<BookingInformation
+                                            form={form}
+                                            error={error}
+                                            handleSubmit={handleNext}
+                                            handleChange={handleChange}
+                                            handlePhoneChange={handlePhoneChange}
+                                            handleTextAreaChange={handleTextAreaChange}
+                                        />)
 
-                            }
-                            {
-                                activeNumber === 3 &&
-                                (<BookingSelectPayment
-                                    form={form}
-                                    error={error}
-                                    handleSubmit={handleNext}
-                                    handleCardNumberChange={handleCardNumberChange}
-                                    handleCardNameChange={handleCardNameChange}
-                                    handleExpiryDateChange={handleExpiryDateChange}
-                                    handleCVCChange={handleCVCChange}
-                                />)
+                                    }
+                                    {
+                                        activeNumber === 3 &&
+                                        (<BookingSelectPayment
+                                            form={form}
+                                            error={error}
+                                            handleSubmit={handleNext}
+                                            handleCardNumberChange={handleCardNumberChange}
+                                            handleCardNameChange={handleCardNameChange}
+                                            handleExpiryDateChange={handleExpiryDateChange}
+                                            handleCVCChange={handleCVCChange}
+                                        />)
 
-                            }
-                        </div>
+                                    }
+                                </div>
 
-                        {/* Buttons */}
-                        <div className="flex justify-between p-5">
-                            <PrimaryButton
-                                type="button"
-                                textColor="orange"
-                                bgColor="secondary"
-                                text="Back"
-                                onClick={handleBack}
-                            >
-                            </PrimaryButton>
+                                {/* Buttons */}
+                                <div className="flex justify-between p-5">
+                                    <PrimaryButton
+                                        type="button"
+                                        textColor="orange"
+                                        bgColor="secondary"
+                                        text="Back"
+                                        onClick={handleBack}
+                                    >
+                                    </PrimaryButton>
 
-                            <PrimaryButton
-                                type="submit"
-                                textColor="white"
-                                bgColor="primary"
-                                text={activeNumber === 3 ? "Confirm Booking" : "Next"}
-                                onClick={handleNext}
-                                disabled={!hasSelect}
-                            >
-                            </PrimaryButton>
-                        </div>
-                    </div>
-                    )
+                                    <PrimaryButton
+                                        type="submit"
+                                        textColor="white"
+                                        bgColor="primary"
+                                        text={activeNumber === 3 ? "Confirm Booking" : "Next"}
+                                        onClick={handleNext}
+                                        disabled={!hasSelect}
+                                    >
+                                    </PrimaryButton>
+                                </div>
+                            </div>
+                        )
+                    }
                 </div>
 
                 {/* Right Side - Booking Detail */}

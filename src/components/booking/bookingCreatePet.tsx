@@ -41,21 +41,16 @@ export default function BookingCreatePet(
       setLoading(true);
       const payload = await formValuesToPayload(values, getPetTypes);
       await petService.createPet(payload);
-
-      console.log("✅ Pet created successfully!"); // debug
-
-      // toast.success(SUCCESS_MESSAGES.petCreated);
       onOpenChange(false)
 
+      // รอให้ dialog ปิดก่อน
       setTimeout(() => {
         if (onSuccess) {
-          console.log("🔄 Calling onSuccess callback"); // debug
           onSuccess();
         }
-      }, 100); // รอให้ dialog ปิดก่อน
+      }, 100);
 
     } catch (error) {
-      // toast.error(getErrorMessage(error));
       console.error("Create pet failed:", error);
     } finally {
       setLoading(false);
@@ -84,7 +79,6 @@ export default function BookingCreatePet(
             </svg>
           </button>
         </div>
-
 
         <div className="w-[800px] h-[850px] p-10">
           <PetForm
