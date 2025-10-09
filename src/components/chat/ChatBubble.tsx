@@ -67,8 +67,8 @@ const ChatBubble: React.FC<ChatBubbleProps> = ({
                     src={imageUrl}
                     alt="Message image"
                     className="max-w-full max-h-64 object-contain"
-                    width={200}
-                    height={200}
+                    width={250}
+                    height={250}
                   />
                 </div>
               ) : (
