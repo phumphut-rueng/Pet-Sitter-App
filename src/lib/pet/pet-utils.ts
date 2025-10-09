@@ -277,7 +277,6 @@ export const petService = {
     } catch (err) {
       if (isAxiosError(err)) {
         const msg = parseApiErrorMessage(err.response?.data) || getErrorMessage(err);
-        console.log(err)
         throw new Error(msg || ERROR_MESSAGES.createFailed);
       }
       throw new Error(ERROR_MESSAGES.createFailed);

@@ -41,7 +41,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     if (req.method === "POST") {
       const parsed = petSchema.safeParse(req.body);
-      console.log("parsed", parsed);
 
       if (!parsed.success) {
         return res
@@ -49,7 +48,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           .json({ error: "Validation", details: parsed.error.flatten() });
       }
       const data = parsed.data;
-      console.log("data", data);
       const created = await prisma.pet.create({
         data: {
           owner_id: ownerId,
