@@ -35,7 +35,7 @@ const ChatBubble: React.FC<ChatBubbleProps> = ({
       )}
       
       <div className={`flex ${isUser ? 'justify-end' : 'justify-start'} mb-1`}>
-        <div className={`flex ${isUser ? 'flex-row-reverse' : 'flex-row'} items-end max-w-[70%]`}>
+        <div className={`flex ${isUser ? 'flex-row-reverse' : 'flex-row'} items-end max-w-[85%] sm:max-w-[70%]`}>
           {/* Avatar - Only show for incoming messages */}
           {avatar && !isUser && (
             <div className="flex-shrink-0 mr-3">
@@ -55,7 +55,7 @@ const ChatBubble: React.FC<ChatBubbleProps> = ({
           <div className={`flex flex-col ${isUser ? 'items-end' : 'items-start'}`}>
             {/* Message Bubble */}
             <div
-              className={`px-4 py-3 max-w-full ${
+              className={`px-3 sm:px-4 py-2 sm:py-3 max-w-full ${
                 isUser
                   ? 'bg-orange-500 text-white rounded-l-3xl rounded-tr-3xl' // Orange background for user messages
                   : 'bg-white border border-gray-200 text-gray-900 rounded-r-3xl rounded-tl-3xl' // White background for other messages
@@ -72,7 +72,7 @@ const ChatBubble: React.FC<ChatBubbleProps> = ({
                   />
                 </div>
               ) : (
-                <p className="text-sm leading-relaxed">{message}</p>
+                <p className="text-sm sm:text-base leading-relaxed">{message}</p>
               )}
             </div>
           </div>
