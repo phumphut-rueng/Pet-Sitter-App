@@ -446,7 +446,7 @@ export default function ChatWidget() {
       senderId: userId!,
       receiverId: receiverId,
       content: message,
-      messageType: (isImageUrl ? 'IMAGE' : 'TEXT') as 'TEXT' | 'IMAGE',
+      messageType: isImageUrl ? ('IMAGE' as const) : ('TEXT' as const),
       imageUrl: isImageUrl ? message : undefined,
     };
 
