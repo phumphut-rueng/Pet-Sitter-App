@@ -151,11 +151,7 @@ export default function ChatWidget() {
   // Fetch chats list
   const fetchChats = async (shouldAutoSelect: boolean = true) => {
     try {
-      const response = await axios.get('/api/chat/list', {
-        params: {
-          userId: userId // ส่ง userId สำหรับ authentication
-        }
-      });
+      const response = await axios.get('/api/chat/list');
       
       if (response.data.success) {
         setChats(response.data.chats);
@@ -181,11 +177,7 @@ export default function ChatWidget() {
   // Fetch messages for selected chat
   const fetchMessages = async (chatId: string) => {
     try {
-      const response = await axios.get(`/api/chat/${chatId}/message`, {
-        params: {
-          userId: userId // ส่ง userId สำหรับ authentication
-        }
-      });
+      const response = await axios.get(`/api/chat/${chatId}/message`);
       
       if (response.data.success) {
         setMessages(response.data.messages);
@@ -422,8 +414,7 @@ export default function ChatWidget() {
     // อัปเดต unread count ใน database
     try {
       await axios.post('/api/chat/mark-read', {
-        chatId: parseInt(chatId),
-        userId: userId
+        chatId: parseInt(chatId)
       });
       
       // ส่ง custom event เพื่อแจ้งให้ navbar อัปเดต unread count
@@ -520,8 +511,7 @@ export default function ChatWidget() {
     try {
       // ส่ง request ไปยัง API เพื่อซ่อน chat
       await axios.post('/api/chat/hide', {
-        chatId: parseInt(chatId),
-        userId: userId
+        chatId: parseInt(chatId)
       });
 
       // อัปเดต chat list โดยลบ chat ที่ซ่อนออก

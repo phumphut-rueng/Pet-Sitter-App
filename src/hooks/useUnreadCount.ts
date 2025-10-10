@@ -12,9 +12,7 @@ export const useUnreadCount = (userId: string | undefined) => {
     setLoading(true);
     try {
       console.log('Fetching unread count for user:', userId);
-      const response = await axios.get('/api/chat/unread-count', {
-        params: { userId }
-      });
+      const response = await axios.get('/api/chat/unread-count');
       
       if (response.data.success) {
         const newCount = response.data.totalUnreadCount || 0;

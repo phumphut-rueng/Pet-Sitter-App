@@ -2,14 +2,10 @@
 
 import { NextApiRequest, NextApiResponse } from 'next';
 import { prisma } from '@/lib/prisma/prisma';
+import { getServerSession } from 'next-auth/next';
+import { authOptions } from '../auth/[...nextauth]';
 
-interface NextApiRequestWithUser extends NextApiRequest {
-  user?: {
-    id: string;
-  };
-}
-
-export default async function handler(req: NextApiRequestWithUser, res: NextApiResponse) {
+export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'POST') {
     return res.status(405).json({ 
       success: false, 
@@ -17,19 +13,17 @@ export default async function handler(req: NextApiRequestWithUser, res: NextApiR
     });
   }
 
-  // ตรวจสอบ authentication (ชั่วคราวให้ผ่านก่อน)
-  if (!req.user?.id) {
-    const testUserId = req.query.userId as string;
-    if (!testUserId) {
-      return res.status(401).json({ 
-        success: false, 
-        message: 'Unauthorized - Please add ?userId=YOUR_USER_ID to URL' 
-      });
-    }
-    req.user = { id: testUserId };
+  // ใช้ NextAuth.js session แทนการส่ง userId ใน query
+  const session = await getServerSession(req, res, authOptions);
+  
+  if (!session?.user?.id) {
+    return res.status(401).json({ 
+      success: false, 
+      message: 'Unauthorized - Please login first' 
+    });
   }
 
-  const currentUserId = parseInt(req.user.id);
+  const currentUserId = parseInt(session.user.id);
   const { otherUserId } = req.body;
 
   if (!otherUserId) {
