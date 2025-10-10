@@ -72,7 +72,7 @@ model user {
   created_at              DateTime    @default(now()) @db.Timestamp(6)
   updated_at              DateTime?   @db.Timestamp(6)
   profile_image_public_id String?     @db.VarChar(255)
-  status                  user_status @default(ACTIVE)
+  status                  user_status @default(normal)
   approval_status_id      Int         @default(1)
   status_updated_at       DateTime?   @db.Timestamp(6)
   admin_note              String?     @db.VarChar(1000)
@@ -84,6 +84,7 @@ model user {
   id_number               String?     @unique(map: "unique_id_number") @db.VarChar(20)
 
   admin                    admin?
+  other_booking            booking[]                 @relation("bookingTobooking")
   other_booking            booking[]                 @relation("bookingTobooking")
   chat_chat_user1_idTouser chat[]                    @relation("chat_user1_idTouser")
   chat_chat_user2_idTouser chat[]                    @relation("chat_user2_idTouser")
@@ -227,7 +228,7 @@ model report {
   id                   Int           @id @default(autoincrement())
   reporter_id          Int
   handled_by_admin_id  Int?
-  status               report_status @default(NEW)
+  status               report_status @default(new)
   title                String        @db.VarChar(150)
   description          String?       @db.VarChar(2000)
   attachments_json     Json?
@@ -340,7 +341,7 @@ model booking {
 
   @@index([date_start, date_end], map: "idx_booking_dates")
   @@index([pet_sitter_id], map: "idx_booking_pet_sitter")
-  @@index([booking_status], map: "idx_booking_status")
+  @@index([booking_status_id], map: "idx_booking_status")
   @@index([user_id], map: "idx_booking_user")
 }
 
@@ -366,13 +367,13 @@ model status {
 }
 
 enum report_status {
-  NEW
-  PENDING
-  RESOLVED
-  CANCELED
+  new
+  pending
+  resolved
+  canceled
 }
 
 enum user_status {
-  ACTIVE
-  SUSPENDED
+  normal
+  ban
 }
