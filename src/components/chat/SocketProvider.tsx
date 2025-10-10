@@ -141,8 +141,11 @@ export const SocketProvider: React.FC<SocketProviderProps> = ({ children }) => {
     onlineUsers,
   };
 
-  // แสดง loading เมื่อ user login แล้วแต่ socket ยังไม่พร้อม
-  if (isAuthenticated && isWaitingForSocket && !isSocketReady) {
+  // แสดง loading เฉพาะเมื่อ user login แล้วแต่ socket ยังไม่พร้อม
+  // และตรวจสอบจาก localStorage ว่าเคยเชื่อมต่อแล้วหรือไม่
+  const shouldShowLoading = isAuthenticated && isWaitingForSocket && !isSocketReady;
+  
+  if (shouldShowLoading) {
     return <SocketLoading message="Establishing secure connection to chat servers..." />;
   }
 
