@@ -5,6 +5,7 @@ import PetSitterNavbar from "@/components/PetSitterNavbar";
 import { StatusBadge, StatusKey } from "@/components/badges/StatusBadge";
 import { Button } from "@/components/ui/button";
 import axios from "axios";
+import PetOwnerDetailModal from "@/components/modal/PetOwnerDetail";
 
 type BookingDetail = {
   id: number;
@@ -292,49 +293,12 @@ export default function BookingDetailPage() {
         </div>
       </section>
 
-      {/* ✅ Modal Popup */}
-      {showProfileModal && (
-        <div className="fixed inset-0 bg-gray-1 flex items-center justify-center z-50">
-          <div className="w-130 bg-white rounded-xl shadow-lg p-6 relative">
-            <button
-              onClick={handleCloseProfile}
-              className="absolute top-5 right-5 text-gray-9 hover:text-gray-4"
-            >
-              ✕
-            </button>
-
-            <h2 className="text-2xl font-bold mb-4">{booking.ownerName}</h2>
-            <div className="flex justify-between gap-6">
-              <div className="flex justify-center mb-4 w-34 h-34">
-                <img
-                  src="/images/sitters/test3.svg"
-                  alt={booking.ownerName}
-                  className="rounded-full object-cover"
-                />
-              </div>
-
-              <div className="space-y-4 rounded-xl px-5 py-5 text-gray-6 bg-gray-1 text-sm">
-                <p>
-                  <span className="font-bold">Pet Owner Name:</span>{" "}
-                  {booking.ownerName}
-                </p>
-                <p>
-                  <span className="font-bold">Email:</span> johnwick@mail.com
-                </p>
-                <p>
-                  <span className="font-bold">Phone:</span> 099 996 0734
-                </p>
-                <p>
-                  <span className="font-bold">ID Number:</span> 1122 21 236 8654
-                </p>
-                <p>
-                  <span className="font-bold">Date of Birth:</span> 2 Sep 1964
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
+      {/* pet owner detail Popup */}
+      <PetOwnerDetailModal
+        isOpen={showProfileModal}
+        onClose={handleCloseProfile}
+        ownerName={booking.ownerName}
+      />
     </main>
   );
 }
