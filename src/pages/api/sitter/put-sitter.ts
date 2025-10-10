@@ -39,7 +39,7 @@ export default async function handler(
 ) {
   try {
     if (req.method !== "PUT") {
-      return res.status(405).json({ message: "Method not allowed" });
+      return res.status(405).json({ message: `Method ${req.method} not allowed` });
     }
 
     const session = await getServerSession(req, res, authOptions);
