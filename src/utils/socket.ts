@@ -4,9 +4,16 @@ import { io, Socket } from 'socket.io-client';
 import { SocketEvents, SendMessageData } from '@/types/socket.types';
 
 let socket: Socket<SocketEvents> | null = null;
+let isSocketServerReady = false;
+let socketConnectionPromise: Promise<Socket<SocketEvents>> | null = null;
 
 // ฟังก์ชันตรวจสอบว่า socket server พร้อมหรือไม่
 export const checkSocketServerReady = async (): Promise<boolean> => {
+  // ถ้าตรวจสอบแล้วว่า ready แล้ว ให้ return true ทันที
+  if (isSocketServerReady) {
+    return true;
+  }
+  
   try {
     const response = await fetch('/api/chat/socket', {
       method: 'GET',
@@ -14,7 +21,12 @@ export const checkSocketServerReady = async (): Promise<boolean> => {
         'Content-Type': 'application/json',
       },
     });
-    return response.ok;
+    
+    if (response.ok) {
+      isSocketServerReady = true;
+      return true;
+    }
+    return false;
   } catch (error) {
     console.log('Socket server not ready yet:', error);
     return false;
@@ -42,11 +54,16 @@ export const waitForSocketServer = async (maxAttempts: number = 10, delayMs: num
 };
 
 export const connectSocket = (userId: string): Socket<SocketEvents> => {
-  // ถ้ามี socket อยู่แล้วและเชื่อมต่ออยู่ ให้ disconnect ก่อน
+  // ถ้ามี socket อยู่แล้วและเชื่อมต่ออยู่ ให้ return socket เดิม
   if (socket && socket.connected) {
-    console.log('Disconnecting existing socket before reconnecting');
-    socket.disconnect();
-    socket = null;
+    console.log('Socket already connected, returning existing socket');
+    return socket;
+  }
+  
+  // ถ้ามี connection promise อยู่แล้ว ให้ return socket ที่มีอยู่
+  if (socketConnectionPromise && socket) {
+    console.log('Socket connection in progress, returning existing socket');
+    return socket;
   }
   
   console.log('Creating new socket connection for user:', userId);
@@ -155,6 +172,18 @@ export const disconnectSocket = (): void => {
   if (socket) {
     socket.disconnect();
     socket = null;
+  }
+  // รีเซ็ต global state เมื่อ disconnect
+  isSocketServerReady = false;
+  socketConnectionPromise = null;
+  
+  // ลบ socket state จาก localStorage
+  if (typeof window !== 'undefined') {
+    try {
+      localStorage.removeItem('socket-state');
+    } catch {
+      // Ignore localStorage errors
+    }
   }
 };
 
