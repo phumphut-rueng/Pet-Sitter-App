@@ -1,7 +1,7 @@
 import axios, { AxiosError } from "axios"
 import { Pet } from "@/types/pet.types"
 import { Sitter } from "@/types/sitter.types"
-import { OmiseErrorResponse, OmiseTokenResponse } from "@/types/omise.types"
+import { OmiseTokenResponse } from "@/types/omise.types"
 import { paymentData } from "@/types/booking.types"
 
 interface ErrorResponse {
@@ -50,8 +50,6 @@ export const getSitterById = async (id: number): Promise<Sitter | undefined> => 
 
     return undefined
 }
-
-
 
 export const postBookingAndPayment = async (paymentData: paymentData): Promise<OmiseTokenResponse | undefined> => {
     try {

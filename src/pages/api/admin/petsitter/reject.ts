@@ -6,13 +6,13 @@ import { authOptions } from "../../auth/[...nextauth]";
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== "PUT") {
     res.setHeader("Allow", ["PUT"]);
-    return res.status(405).end(`Method ${req.method} Not Allowed`);
+    return res.status(405).json({ message: "Method not allowed" });
   }
 
   try {
     // Check authentication and admin role
     const session = await getServerSession(req, res, authOptions);
-    
+
     if (!session?.user?.id) {
       return res.status(401).json({ message: "Unauthorized - Please login" });
     }
@@ -42,8 +42,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     // Validate required fields
     if (!sitterId || !adminNote) {
-      return res.status(400).json({ 
-        message: "Missing required fields: sitterId and adminNote are required" 
+      return res.status(400).json({
+        message: "Missing required fields: sitterId and adminNote are required"
       });
     }
 
@@ -106,7 +106,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
   } catch (error) {
     console.error("❌ Error rejecting pet sitter:", error);
-    return res.status(500).json({ 
+    return res.status(500).json({
       message: "Error rejecting pet sitter",
       error: process.env.NODE_ENV === "development" ? error : undefined
     });

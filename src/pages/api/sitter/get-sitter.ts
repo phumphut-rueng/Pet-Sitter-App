@@ -5,7 +5,7 @@ import { prisma } from "@/lib/prisma/prisma";
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== "GET") {
     res.setHeader("Allow", ["GET"]);
-    return res.status(405).end(`Method ${req.method} Not Allowed`);
+    return res.status(405).json({ message: "Method not allowed" });
   }
 
   try {
@@ -43,7 +43,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     // 2) Pet Types (ต้องมีทุกประเภทที่เลือก)
     if (petTypes && petTypes.length > 0) {
       const petTypeArray = Array.isArray(petTypes) ? petTypes : [petTypes];
-      
+
       // สร้าง subquery ที่ตรวจสอบว่า sitter มี pet types ทั้งหมดที่เลือก
       const petTypeConditions = petTypeArray.map((petType) => {
         const placeholder = `$${paramIndex++}`;
@@ -54,7 +54,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           WHERE spt.sitter_id = s.id AND pt.pet_type_name = ${placeholder}
         )`;
       }).join(' AND ');
-      
+
       whereConditions.push(`(${petTypeConditions})`);
     }
 
@@ -154,7 +154,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     }));
 
     if (formattedResults.length === 0) {
-      return res.status(200).json({ 
+      return res.status(200).json({
         message: "ไม่พบข้อมูล",
         data: [],
         pagination: {

@@ -9,6 +9,7 @@ import BookingConfirmation from "@/components/modal/BookingConfirmation";
 import BookingPayment from "@/components/booking/BookingPayment";
 import BookingSuccess from "@/components/booking/BookingSuccess";
 import Image from "next/image";
+import Script from "next/script";
 
 export default function BookingHandler() {
     const {
@@ -44,6 +45,13 @@ export default function BookingHandler() {
 
     return (
         <main className="relative container-1200 flex flex-col min-h-[calc(100vh-80px)] mx-auto md:px-4 md:py-8">
+            <Script
+                src="https://cdn.omise.co/omise.js"
+                strategy="lazyOnload"
+                onLoad={() => {
+                    console.log('Omise script loaded');
+                }}
+            />
             {activeStep !== 4
                 ? <>
                     <Image

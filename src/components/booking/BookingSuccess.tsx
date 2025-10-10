@@ -1,10 +1,8 @@
 import { MapPin } from 'lucide-react';
 import PrimaryButton from "../buttons/PrimaryButton";
 import { OmiseTokenResponse } from '@/types/omise.types';
-import { useEffect } from 'react';
 import { formatTodddMMyyyy, formatToddMMyyyy } from '@/lib/utils/date';
 import { formatTo12hTime } from '@/lib/utils/time';
-import { useRouter } from 'next/router';
 import { useBookingHandler } from '@/hooks/booking/useBookingHandler';
 
 export default function BookingSuccess(
@@ -17,8 +15,6 @@ export default function BookingSuccess(
         petName: string,
         bookingData: OmiseTokenResponse | undefined
     }) {
-
-    const router = useRouter()
     const data = bookingData?.booking;
 
     const {
@@ -28,9 +24,7 @@ export default function BookingSuccess(
     } = useBookingHandler()
 
     return (
-        // <div className="min-h-screen md:p-5  flex flex-col relative">
         <div className="md:w-[640px] mx-auto overflow-hidden relative pt-5">
-
             {/* Middle Section */}
             <div className="flex flex-col flex-1">
                 <div className="rounded-3xl shadow-md md:border md:border-gray-1">
@@ -39,7 +33,9 @@ export default function BookingSuccess(
                         <h1 className="text-[36px] font-bold mb-3">
                             Thank You For Booking
                         </h1>
-                        <p className="text-[16px] text-gray-4">We will send your booking information to Pet Sitter.</p>
+                        <p className="text-[16px] text-gray-4">
+                            We will send your booking information to Pet Sitter.
+                        </p>
                     </div>
 
                     {/* Booking Info */}
@@ -47,7 +43,7 @@ export default function BookingSuccess(
                         {/* Transaction Info */}
                         <div className="mb-5">
                             <div className="text-gray-4 text-[16px] mb-1">
-                                Transaction Date : {`${formatTodddMMyyyy(data?.payment_date || Date())}`}
+                                Transaction Date : {`${formatTodddMMyyyy(data?.payment_date || new Date().toISOString())}`}
                             </div>
                             <div className="text-gray-4 text-[16px]">
                                 Transaction No. : {data?.id}
@@ -94,8 +90,13 @@ export default function BookingSuccess(
 
                         {/* Total */}
                         <div className="flex justify-between items-center pt-5 border-t-2 border-gray-2 mt-5 text-black">
-                            <div className="text-[16px]">Total</div>
-                            <div className="text-[18px]">{Number((bookingData?.charge.amount) / 100).toFixed(2)}</div>
+                            <div className="text-[16px]">
+                                Total
+                            </div>
+                            <div
+                                className="text-[18px]">
+                                {Number((bookingData?.amount || 0) / 100).toFixed(2)}
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -120,7 +121,6 @@ export default function BookingSuccess(
                 </div>
             </div>
         </div>
-        // </div>
     )
 }
 

@@ -1,10 +1,8 @@
 import { Pet } from "@/types/pet.types";
 import CreateNewPetCard from "../cards/CreateNewPetCard";
 import PetCard from "../cards/PetCard";
-import { Dispatch, SetStateAction, useEffect, useState } from "react";
+import { Dispatch, SetStateAction, useState } from "react";
 import BookingCreatePet from "./bookingCreatePet";
-import PetForm from "../features/pet/PetForm";
-import { useBookingHandler } from "@/hooks/booking/useBookingHandler";
 
 export default function BookingSelectYourPet({
     pets,
@@ -16,23 +14,9 @@ export default function BookingSelectYourPet({
     onRefresh?: () => void
 }) {
     const [isOpenCreatePet, setIsOpenCreatePet] = useState(false);
-    const {
-        isMobile
-    } = useBookingHandler()
-
-    // useEffect(() => {
-    //     if (isMobile) {
-    //         window.scrollTo(0, 0);
-    //     }
-    // }, [isOpenCreatePet]);
 
     const handleCreatePetClick = () => {
         setIsOpenCreatePet(true)
-        // if (isMobile) {
-        //     requestAnimationFrame(() => {
-        //         window.scrollTo(0, 0);
-        //     });
-        // }
     }
 
     const onClick = (id: number) => {

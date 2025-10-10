@@ -5,7 +5,6 @@ import { Pet, PetStatus } from "@/types/pet.types"
 import { PetType, Sitter } from "@/types/sitter.types"
 import { getPetById, getSitterById, postBookingAndPayment } from "@/lib/booking/booking-api"
 import { useBookingForm } from "./useBookingForm"
-import axios from "axios"
 import { paymentData } from "@/types/booking.types"
 import { OmiseTokenResponse } from "@/types/omise.types"
 
@@ -188,8 +187,7 @@ export function useBookingHandler() {
         });
     };
 
-
-    const processPayment = async (): Promise<boolean> => {
+    const processPayment = useCallback(async (): Promise<boolean> => {
         setIsProcessingPayment(true);
         setPaymentError("");
 
@@ -197,14 +195,12 @@ export function useBookingHandler() {
             // Parse expiry date (MM/YY)
             const [expMonth, expYear] = formHandlers.form.expiryDate.split('/');
 
-            console.log("expiryDate", formHandlers.form, formHandlers.form.expiryDate, expMonth, expYear);
-
             // Create Omise token
             const token = await createOmiseToken({
                 name: formHandlers.form.cardName,
                 number: formHandlers.form.cardNumber.replace(/\s|-/g, ''),
                 expiration_month: expMonth,
-                expiration_year: expYear,
+                expiration_year: `20${expYear}`,
                 security_code: formHandlers.form.cvc,
             });
 
@@ -213,7 +209,7 @@ export function useBookingHandler() {
                 token,
                 amount: totalPrice * 100, // Convert to satang
                 currency: 'THB',
-                description: `Booking for ${petNames}`, //เปลี่ยนตรงนี้ด้วย
+                description: `Booking for ${formHandlers.form.name} ${new Date()}`, //เปลี่ยนตรงนี้ด้วย
                 metadata: {
                     sitterId: parsedSitterId,
                     petIds: selectedPets.map(p => p.id).join(','),
@@ -239,7 +235,21 @@ export function useBookingHandler() {
         } finally {
             setIsProcessingPayment(false);
         }
-    };
+    }, [
+        formHandlers.form.expiryDate,
+        formHandlers.form.cardName,
+        formHandlers.form.cardNumber,
+        formHandlers.form.cvc,
+        formHandlers.form.name,
+        formHandlers.form.email,
+        formHandlers.form.phone,
+        formHandlers.form.addition,
+        totalPrice,
+        parsedSitterId,
+        selectedPets,
+        startTime,
+        endTime,
+    ]);
 
     // Handlers
     const handleRefreshPets = useCallback(() => {
@@ -252,7 +262,7 @@ export function useBookingHandler() {
         } else if (activeStep > 1) {
             setActiveStep(prev => prev - 1)
         }
-    }, [activeStep, router, isMobile])
+    }, [activeStep, router])
 
     const handleNext = useCallback(() => {
         let canProceed = true
@@ -268,19 +278,21 @@ export function useBookingHandler() {
                 !errors.expiryDate && !errors.cvc
         }
 
-        if (activeStep < 3 && canProceed) {
-            setActiveStep(prev => prev + 1)
-            window.scrollTo(0, 0);
-        } else if (activeStep === 3) {
-            setIsConfirmation(true)
+        if (canProceed) {
+            if (activeStep < 3) {
+                setActiveStep(prev => prev + 1)
+                window.scrollTo(0, 0);
+            } else if (activeStep === 3) {
+                setIsConfirmation(true)
+            }
         }
-    }, [activeStep, formHandlers, isMobile])
+    }, [activeStep, formHandlers])
 
     const handleConfirmation = useCallback(() => {
         setIsConfirmation(false)
         processPayment()
         setActiveStep(4)
-    }, [formHandlers, router])
+    }, [processPayment])
 
     const handleBackToHome = useCallback(() => {
         router.push("/")
@@ -288,11 +300,11 @@ export function useBookingHandler() {
 
     const handleBookingDetail = useCallback(() => {
         alert('Showing booking details...');
-    }, [router])
+    }, [])
 
     const handleViewMap = useCallback(() => {
         alert('Opening map location...');
-    }, [router])
+    }, [])
 
 
     return {

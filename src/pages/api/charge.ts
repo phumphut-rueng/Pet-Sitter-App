@@ -5,7 +5,6 @@ import type { NextApiRequest, NextApiResponse } from 'next';
 import { getServerSession } from 'next-auth';
 import Omise from 'omise';
 import { authOptions } from './auth/[...nextauth]';
-import { Timestamp } from 'next/dist/server/lib/cache-handlers/types';
 
 const omise = Omise({
     secretKey: process.env.OMISE_SECRET_KEY!,
@@ -16,7 +15,7 @@ type ChargeRequest = {
     amount: number;
     currency: string;
     description?: string;
-    metadata?: Record<string, any>;
+    metadata?: Record<string, unknown>;
 };
 
 type ChargeResponse = {
@@ -31,7 +30,7 @@ export default async function handler(
     res: NextApiResponse
 ) {
     if (req.method !== "POST") {
-        return res.status(405).end(`Method ${req.method} not allowed`);
+        return res.status(405).json({ message: "Method not allowed" });
     }
 
     const session = await getServerSession(req, res, authOptions);
@@ -74,29 +73,29 @@ export default async function handler(
             amount: 0,
             payment_date: null
         };
-        //ปิดเพื่อเทส
-        // try {
-        //     const res = await omise.charges.create({
-        //         amount: amount, // จำนวนเงินในสตางค์
-        //         currency: currency, // THB
-        //         card: token,
-        //         description: description || 'Booking Payment',
-        //         metadata: metadata || {},
-        //     });
 
-        //     charge = {
-        //         id: res.id,
-        //         status: res.status.trim().toLowerCase(),
-        //         amount: res.amount,
-        //         payment_date: res.paid_at
-        //     }
-        // } catch {
-        charge = {
-            id: "",
-            status: "failed",
-            amount: amount
+        try {
+            const res = await omise.charges.create({
+                amount: amount, // จำนวนเงินในสตางค์
+                currency: currency, // THB
+                card: token,
+                description: description || 'Booking Payment',
+                metadata: metadata || {},
+            });
+
+            charge = {
+                id: res.id,
+                status: res.status.trim().toLowerCase(),
+                amount: res.amount,
+                payment_date: res.paid_at
+            }
+        } catch {
+            charge = {
+                id: "",
+                status: "failed",
+                amount: amount
+            }
         }
-        // }
 
         // Check charge status ว่ามีใน db หรือยัง
         let paymentStatus = 0
@@ -133,27 +132,16 @@ export default async function handler(
                 amount: charge.amount / 100,
                 payment_status_id: paymentStatus,
                 created_at: new Date(),
-
-                // Create booking_pet_detail พร้อมกัน
                 booking_pet_detail: {
                     create: data.petIds.map((petId) => ({
                         pet_detail_id: petId,
                     })),
                 },
             },
-            // ดึงข้อมูลที่ join กลับมา
+            // ดึงข้อมูลที่ join
             include: {
                 booking: true,
-                // sitter: true, 
-                // booking_status_id: true, // status สำหรับ payment
                 status_booking_payment_status_idTostatus: true,
-                // user: {
-                //     select: {
-                //         id: true,
-                //         name: true,
-                //         email: true,
-                //     },
-                // },
                 sitter: {
                     select: {
                         name: true
@@ -161,18 +149,11 @@ export default async function handler(
                 },
                 booking_pet_detail: {
                     include: {
-                        pet: true, // ดึงข้อมูล pet ด้วย
+                        pet: true,
                     },
                 },
             },
         });
-
-        // await prisma.booking_pet_detail.createMany({
-        //     data: data.petIds.map((petId) => ({
-        //         booking_id: booking.id,
-        //         pet_detail_id: petId,
-        //     })),
-        // });
 
         const bookingData = {
             ...booking,
@@ -187,12 +168,11 @@ export default async function handler(
             charge: charge,
             booking: bookingData
         });
-    } catch (error: any) {
+    } catch (error: unknown) {
         console.error('Booking error:', error);
         return res.status(500).json({
             success: false,
-            message: error.message || 'Payment processing failed',
-            error: error.toString(),
+            message: 'Payment processing failed',
         });
     }
 }

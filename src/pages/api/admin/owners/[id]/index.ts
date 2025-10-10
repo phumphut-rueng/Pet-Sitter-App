@@ -2,7 +2,9 @@ import type { NextApiRequest, NextApiResponse } from "next";
 import { prisma } from "@/lib/prisma/prisma";
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-  if (req.method !== "GET") return res.status(405).end();
+  if (req.method !== "GET") {
+    return res.status(405).json({ message: "Method not allowed" });
+  }
 
   const ownerId = Number(req.query.id);
   if (!Number.isFinite(ownerId)) return res.status(400).json({ message: "Invalid owner id" });

@@ -58,7 +58,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         prisma.user.update({
           where: { id: ownerId },
           data: {
-            status: "SUSPENDED",
+            status: "ban",
             suspended_at: now,
             suspended_by_admin_id: adminId,
             suspend_reason: reason ?? null,
@@ -72,14 +72,14 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         }),
         cascadePets
           ? prisma.pet.updateMany({
-              where: { owner_id: ownerId, NOT: { is_banned: true } },
-              data: {
-                is_banned: true,
-                banned_at: now,
-                banned_by_admin_id: adminId,
-                ban_reason: reason ? `Owner suspended: ${reason}` : "Owner suspended",
-              },
-            })
+            where: { owner_id: ownerId, NOT: { is_banned: true } },
+            data: {
+              is_banned: true,
+              banned_at: now,
+              banned_by_admin_id: adminId,
+              ban_reason: reason ? `Owner suspended: ${reason}` : "Owner suspended",
+            },
+          })
           : prisma.$executeRaw`SELECT 1`,
       ]);
 
@@ -98,7 +98,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       prisma.user.update({
         where: { id: ownerId },
         data: {
-          status: "ACTIVE",
+          status: "normal",
           suspended_at: null,
           suspended_by_admin_id: null,
           suspend_reason: null,
@@ -112,14 +112,14 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       }),
       cascadePets
         ? prisma.pet.updateMany({
-            where: { owner_id: ownerId, is_banned: true },
-            data: {
-              is_banned: false,
-              banned_at: null,
-              banned_by_admin_id: null,
-              ban_reason: null,
-            },
-          })
+          where: { owner_id: ownerId, is_banned: true },
+          data: {
+            is_banned: false,
+            banned_at: null,
+            banned_by_admin_id: null,
+            ban_reason: null,
+          },
+        })
         : prisma.$executeRaw`SELECT 1`,
     ]);
 

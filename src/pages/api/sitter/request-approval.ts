@@ -7,7 +7,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   try {
     if (req.method !== "POST") {
       res.setHeader("Allow", ["POST"]);
-      return res.status(405).end(`Method ${req.method} Not Allowed`);
+      return res.status(405).json({ message: "Method not allowed" });
     }
 
     const session = await getServerSession(req, res, authOptions);
@@ -28,8 +28,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     // หา sitter profile ของผู้ใช้
     const sitter = await prisma.sitter.findFirst({
       where: { user_sitter_id: user.id },
-      select: { 
-        id: true, 
+      select: {
+        id: true,
         approval_status_id: true,
         name: true,
         phone: true,
@@ -69,7 +69,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     if (!sitter) {
       // สถานะ Pending submission - สร้างข้อมูล sitter ใหม่
       const parsedExperience = experience ? parseInt(experience.toString()) : null;
-      
+
       await prisma.sitter.create({
         data: {
           user_sitter_id: user.id,
@@ -82,7 +82,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       });
 
       console.log("✅ Sitter profile created successfully");
-      return res.status(200).json({ 
+      return res.status(200).json({
         message: "Sitter profile created and request for approval submitted successfully",
         status: "Waiting for approve",
         action: "created"
@@ -90,7 +90,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     } else {
       // มีข้อมูล sitter อยู่แล้ว - อัปเดตสถานะและข้อมูล
       const parsedExperience = experience ? parseInt(experience.toString()) : null;
-      
+
       await prisma.sitter.update({
         where: { id: sitter.id },
         data: {
@@ -105,7 +105,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       });
 
       console.log("✅ Sitter profile updated successfully");
-      return res.status(200).json({ 
+      return res.status(200).json({
         message: "Sitter profile updated and request for approval submitted successfully",
         status: "Waiting for approve",
         action: "updated"
@@ -119,7 +119,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       stack: error instanceof Error ? error.stack : undefined,
       body: req.body
     });
-    return res.status(500).json({ 
+    return res.status(500).json({
       message: "Error requesting approval",
       error: process.env.NODE_ENV === 'development' ? (error instanceof Error ? error.message : 'Unknown error') : undefined
     });

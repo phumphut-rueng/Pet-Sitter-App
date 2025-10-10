@@ -23,18 +23,16 @@ export default async function handler(
 ) {
   // อนุญาตเฉพาะ GET method
   if (req.method !== "GET") {
-    return res.status(405).json({ 
-      message: "Method not allowed" 
-    });
+    return res.status(405).json({ message: "Method not allowed" });
   }
 
   try {
     const id = Number(req.query.id);
-    
+
     // ตรวจสอบว่า id เป็นตัวเลขที่ถูกต้อง
     if (!Number.isFinite(id)) {
-      return res.status(400).json({ 
-        message: "Invalid id" 
+      return res.status(400).json({
+        message: "Invalid id"
       });
     }
 
@@ -46,12 +44,12 @@ export default async function handler(
     const user = await prisma.user.findFirst({
       where: {
         id,
-        user_role: { 
-          some: { 
-            role: { 
-              role_name: { in: [...OWNER_ROLE_NAMES] } 
-            } 
-          } 
+        user_role: {
+          some: {
+            role: {
+              role_name: { in: [...OWNER_ROLE_NAMES] }
+            }
+          }
         },
       },
       select: {
@@ -97,8 +95,8 @@ export default async function handler(
 
     // ถ้าไม่เจอ Owner ตาม id
     if (!user) {
-      return res.status(404).json({ 
-        message: "Owner not found" 
+      return res.status(404).json({
+        message: "Owner not found"
       });
     }
 
@@ -132,14 +130,14 @@ export default async function handler(
 
     //  ส่งข้อมูลกลับไป
     return res.status(200).json(payload);
-    
+
   } catch (error) {
     console.error("get-owner-by-id error:", error);
-    
 
 
-    return res.status(500).json({ 
-      message: "Failed to load owner details" 
+
+    return res.status(500).json({
+      message: "Failed to load owner details"
     });
   }
 }

@@ -14,7 +14,7 @@ export interface OmiseTokenResponse {
     id: string;
 
     success: boolean;
-    charge?: any;
+    charge?: object;
     message?: string;
     error?: string;
 
