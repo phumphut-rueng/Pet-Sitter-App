@@ -1,13 +1,9 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import { prisma } from '@/lib/prisma/prisma';
+import { getServerSession } from 'next-auth/next';
+import { authOptions } from '../auth/[...nextauth]';
 
-interface NextApiRequestWithUser extends NextApiRequest {
-  user?: {
-    id: string;
-  };
-}
-
-export default async function handle(req: NextApiRequestWithUser, res: NextApiResponse) {
+export default async function handle(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'GET') {
     return res.status(405).json({ 
       success: false, 
@@ -15,19 +11,17 @@ export default async function handle(req: NextApiRequestWithUser, res: NextApiRe
     });
   }
 
-  // ตรวจสอบ authentication (ชั่วคราวให้ผ่านก่อน)
-  if (!req.user?.id) {
-    const testUserId = req.query.userId as string;
-    if (!testUserId) {
-      return res.status(401).json({ 
-        success: false, 
-        message: 'Unauthorized - Please add ?userId=YOUR_USER_ID to URL' 
-      });
-    }
-    req.user = { id: testUserId };
+  // ใช้ NextAuth.js session แทนการส่ง userId ใน query
+  const session = await getServerSession(req, res, authOptions);
+  
+  if (!session?.user?.id) {
+    return res.status(401).json({ 
+      success: false, 
+      message: 'Unauthorized - Please login first' 
+    });
   }
 
-  const currentUserId = parseInt(req.user.id);
+  const currentUserId = parseInt(session.user.id);
 
   try {
     // ดึงรายการ chat ที่ user มีส่วนร่วม และไม่ถูกซ่อน หรือมีข้อความที่ยังไม่ได้อ่าน
