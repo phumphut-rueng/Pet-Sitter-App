@@ -9,6 +9,7 @@ interface ChatBubbleProps {
   isImage?: boolean;
   imageUrl?: string;
   showTimestamp?: boolean; // เพิ่ม prop สำหรับควบคุมการแสดงเวลา
+  onImageClick?: (imageUrl: string) => void; // เพิ่ม prop สำหรับจัดการการคลิกรูปภาพ
 }
 
 const ChatBubble: React.FC<ChatBubbleProps> = ({
@@ -18,7 +19,8 @@ const ChatBubble: React.FC<ChatBubbleProps> = ({
   timestamp,
   isImage = false,
   imageUrl,
-  showTimestamp = false
+  showTimestamp = false,
+  onImageClick
 }) => {
   
   const isUser = sender === 'user';
@@ -62,7 +64,10 @@ const ChatBubble: React.FC<ChatBubbleProps> = ({
               }`}
             >
               {isImage && imageUrl ? (
-                <div className="overflow-hidden rounded-lg">
+                <div 
+                  className="overflow-hidden rounded-lg cursor-pointer hover:opacity-90 transition-opacity duration-200"
+                  onClick={() => onImageClick?.(imageUrl)}
+                >
                   <Image
                     src={imageUrl}
                     alt="Message image"
