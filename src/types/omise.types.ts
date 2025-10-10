@@ -14,7 +14,11 @@ export interface OmiseTokenResponse {
     id: string;
 
     success: boolean;
-    charge?: object;
+    charge?: {
+        id: string,
+        status: string,
+        amount: number
+    };
     message?: string;
     error?: string;
 
@@ -31,7 +35,7 @@ export interface OmiseTokenResponse {
         expiration_year: number;
         last_digits: string;
         name: string;
-    };
+    }
     created: string;
     booking: bookingData
 }

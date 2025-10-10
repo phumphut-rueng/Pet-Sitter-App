@@ -95,7 +95,7 @@ export default function BookingSuccess(
                             </div>
                             <div
                                 className="text-[18px]">
-                                {Number((bookingData?.amount || 0) / 100).toFixed(2)}
+                                {Number((bookingData?.charge?.amount || 0) / 100).toFixed(2)}
                             </div>
                         </div>
                     </div>
