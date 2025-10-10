@@ -284,11 +284,17 @@ const ChatContainer: React.FC<ChatContainerProps> = ({
                 />
               </div>
               <p className="text-gray-500 text-lg">
-                {hasChats ? "Start a conversation!" : "Welcome to Pet Sitter Chat!"}
+                {hasChats && selectedChat ? "Start a conversation!" : 
+                 hasChats ? "Select a conversation!" : "Welcome to Pet Sitter Chat!"}
               </p>
               {!hasChats && (
                 <p className="text-gray-400 text-sm mt-2">
                   Find a pet sitter to start chatting
+                </p>
+              )}
+              {hasChats && !selectedChat && (
+                <p className="text-gray-400 text-sm mt-2">
+                  Choose a conversation from the list to start messaging
                 </p>
               )}
             </div>
@@ -318,8 +324,8 @@ const ChatContainer: React.FC<ChatContainerProps> = ({
         )}
       </div>
 
-      {/* Message Input Area - แสดงเฉพาะเมื่อมี chat ใน chatlist */}
-      {hasChats && (
+      {/* Message Input Area - แสดงเฉพาะเมื่อมี chat ใน chatlist และเลือก chat แล้ว */}
+      {hasChats && selectedChat && (
         <div className="bg-gray-100 px-6 py-4 border-t border-gray-200">
           <div className="flex items-center space-x-3">
     

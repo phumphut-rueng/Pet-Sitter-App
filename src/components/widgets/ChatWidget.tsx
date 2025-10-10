@@ -148,7 +148,7 @@ export default function ChatWidget() {
   });
 
   // Fetch chats list
-  const fetchChats = async () => {
+  const fetchChats = async (shouldAutoSelect: boolean = true) => {
     try {
       const response = await axios.get('/api/chat/list', {
         params: {
@@ -159,8 +159,11 @@ export default function ChatWidget() {
       if (response.data.success) {
         setChats(response.data.chats);
         // Auto-select first chat if none selected และไม่มี chatId จาก URL
+        // แต่เฉพาะเมื่อ shouldAutoSelect เป็น true (เช่น เมื่อโหลดครั้งแรก)
         const { chatId } = router.query;
-        if (!selectedChatId && !chatId && response.data.chats.length > 0) {
+        console.log('fetchChats - shouldAutoSelect:', shouldAutoSelect, 'selectedChatId:', selectedChatId, 'chatId from URL:', chatId);
+        if (shouldAutoSelect && !selectedChatId && !chatId && response.data.chats.length > 0) {
+          console.log('Auto-selecting first chat:', response.data.chats[0].id);
           setSelectedChatId(response.data.chats[0].id.toString());
         }
       }
@@ -203,7 +206,8 @@ export default function ChatWidget() {
 
   useEffect(() => {
     if (userId) {
-      fetchChats();
+      console.log('Initial fetchChats called for userId:', userId);
+      fetchChats(true); // อนุญาตให้ auto-select เมื่อโหลดครั้งแรก
     }
   }, [userId]);
 
@@ -336,14 +340,16 @@ export default function ChatWidget() {
   // จัดการกับ refresh chat list event
   useEffect(() => {
     const handleRefreshChatList = (event: CustomEvent) => {
-      fetchChats(); // refresh chat list
+      fetchChats(false); // refresh chat list แต่ไม่ auto-select
     };
 
     const handleUnreadUpdate = (event: CustomEvent) => {
       const { chatId, newUnreadCount } = event.detail;
+      console.log('handleUnreadUpdate called:', { chatId, newUnreadCount, selectedChatId });
       
       // อัปเดต unread count ใน chat list เฉพาะเมื่อไม่ใช่ chat ปัจจุบันที่กำลังดูอยู่
       if (chatId.toString() !== selectedChatId) {
+        console.log('Updating unread count for chat:', chatId);
         setChats(prev => {
           const updatedChats = prev.map(chat => {
             if (chat.id === chatId) {
@@ -356,12 +362,17 @@ export default function ChatWidget() {
           });
           
           // เรียงลำดับตาม updated_at (ใหม่สุดขึ้นบน) เพื่อให้ chat ที่มีข้อความใหม่ขึ้นไปบนสุด
-          return updatedChats.sort((a, b) => {
+          const sortedChats = updatedChats.sort((a, b) => {
             const dateA = a.updated_at ? new Date(a.updated_at).getTime() : 0;
             const dateB = b.updated_at ? new Date(b.updated_at).getTime() : 0;
             return dateB - dateA;
           });
+          
+          console.log('Chat list sorted, first chat:', sortedChats[0]?.id, 'selectedChatId:', selectedChatId);
+          return sortedChats;
         });
+      } else {
+        console.log('Skipping unread update for current chat:', chatId);
       }
     };
 
@@ -375,6 +386,7 @@ export default function ChatWidget() {
   }, []);
 
   const handleChatSelect = async (chatId: string) => {
+    console.log('handleChatSelect called:', chatId);
     setSelectedChatId(chatId);
     
     // ส่ง currentChatId ไปยัง socket server

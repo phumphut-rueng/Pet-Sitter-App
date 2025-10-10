@@ -54,6 +54,13 @@ export const waitForSocketServer = async (maxAttempts: number = 10, delayMs: num
 };
 
 export const connectSocket = (userId: string): Socket<SocketEvents> => {
+  console.log('connectSocket called with userId:', userId);
+  console.log('Current socket state:', { 
+    socket: !!socket, 
+    connected: socket?.connected,
+    socketConnectionPromise: !!socketConnectionPromise 
+  });
+  
   // ถ้ามี socket อยู่แล้วและเชื่อมต่ออยู่ ให้ return socket เดิม
   if (socket && socket.connected) {
     console.log('Socket already connected, returning existing socket');
@@ -67,7 +74,7 @@ export const connectSocket = (userId: string): Socket<SocketEvents> => {
   }
   
   console.log('Creating new socket connection for user:', userId);
-  socket = io({ 
+  const socketConfig = {
     path: '/api/chat/socket',
     autoConnect: false, // ปิด auto connect เพื่อควบคุมการเชื่อมต่อ
     forceNew: true, // บังคับสร้าง connection ใหม่
@@ -77,18 +84,28 @@ export const connectSocket = (userId: string): Socket<SocketEvents> => {
     reconnectionAttempts: 3, // ลดจำนวนการ reconnect เป็น 3 ครั้ง
     reconnectionDelayMax: 3000, // ลดเวลารอสูงสุดเป็น 3 วินาที
     randomizationFactor: 0.5 // เพิ่มความสุ่มในการ reconnect
-  });
+  };
+  
+  console.log('Socket configuration:', socketConfig);
+  socket = io(socketConfig);
 
   // เชื่อมต่อ socket หลังจากสร้างเสร็จ
+  console.log('Calling socket.connect()...');
   socket.connect();
 
   socket.on('connect', () => {
-    console.log('Socket connected successfully');
+    console.log('✅ Socket connected successfully!');
+    console.log('Socket ID:', socket?.id);
+    console.log('Sending join_app for user:', userId);
     socket?.emit('join_app', userId); // ส่ง ID ไปให้ Server จัดการ Private Room และ Presence
   });
 
   socket.on('connect_error', (error) => {
-    console.error('Socket connection error:', error);
+    console.error('❌ Socket connection error:', error);
+    console.error('Error details:', {
+      message: error.message,
+      stack: error.stack
+    });
     // ส่ง event เพื่อแจ้ง frontend ว่าเกิด error
     window.dispatchEvent(new CustomEvent('socket:connection_error', { detail: error }));
   });
@@ -160,11 +177,23 @@ export const connectSocket = (userId: string): Socket<SocketEvents> => {
 
 // ฟังก์ชันสำหรับส่งข้อความ
 export const sendMessage = (data: SendMessageData): void => {
+  console.log('sendMessage called with data:', data);
+  console.log('Socket status:', { 
+    socket: !!socket, 
+    connected: socket?.connected,
+    socketId: socket?.id 
+  });
+  
   if (socket && socket.connected) {
-    console.log('Sending message:', data);
+    console.log('✅ Sending message via socket:', data);
     socket.emit('send_message', data);
   } else {
-    console.error('Socket not connected. Cannot send message.');
+    console.error('❌ Socket not connected. Cannot send message.');
+    console.error('Socket state:', { 
+      socket: !!socket, 
+      connected: socket?.connected,
+      socketId: socket?.id 
+    });
   }
 };
 
