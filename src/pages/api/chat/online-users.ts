@@ -5,7 +5,10 @@ import { prisma } from '@/lib/prisma/prisma';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'GET') {
-    return res.status(405).json({ error: 'Method not allowed' });
+    return res.status(405).json({ 
+      success: false, 
+      message: 'Method not allowed' 
+    });
   }
 
   try {
@@ -30,12 +33,13 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       success: true,
       onlineUsers: onlineUserIds,
       count: onlineUserIds.length,
+      message: 'Online users retrieved successfully'
     });
   } catch (error) {
     console.error('Error fetching online users:', error);
     return res.status(500).json({
       success: false,
-      error: 'Failed to fetch online users',
+      message: 'Failed to fetch online users'
     });
   }
 }

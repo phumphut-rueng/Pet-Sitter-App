@@ -11,14 +11,20 @@ interface NextApiRequestWithUser extends NextApiRequest {
 
 export default async function handler(req: NextApiRequestWithUser, res: NextApiResponse) {
   if (req.method !== 'POST') {
-    return res.status(405).json({ message: 'Method Not Allowed' });
+    return res.status(405).json({ 
+      success: false, 
+      message: 'Method Not Allowed' 
+    });
   }
 
   // ตรวจสอบ authentication (ชั่วคราวให้ผ่านก่อน)
   if (!req.user?.id) {
     const testUserId = req.query.userId as string;
     if (!testUserId) {
-      return res.status(401).json({ message: 'Unauthorized - Please add ?userId=YOUR_USER_ID to URL' });
+      return res.status(401).json({ 
+        success: false, 
+        message: 'Unauthorized - Please add ?userId=YOUR_USER_ID to URL' 
+      });
     }
     req.user = { id: testUserId };
   }
@@ -27,16 +33,25 @@ export default async function handler(req: NextApiRequestWithUser, res: NextApiR
   const { otherUserId } = req.body;
 
   if (!otherUserId) {
-    return res.status(400).json({ message: 'otherUserId is required' });
+    return res.status(400).json({ 
+      success: false, 
+      message: 'otherUserId is required' 
+    });
   }
 
   const otherUserIdNumber = parseInt(otherUserId);
   if (isNaN(otherUserIdNumber)) {
-    return res.status(400).json({ message: 'Invalid otherUserId format' });
+    return res.status(400).json({ 
+      success: false, 
+      message: 'Invalid otherUserId format' 
+    });
   }
 
   if (currentUserId === otherUserIdNumber) {
-    return res.status(400).json({ message: 'Cannot create chat with yourself' });
+    return res.status(400).json({ 
+      success: false, 
+      message: 'Cannot create chat with yourself' 
+    });
   }
 
   try {
@@ -69,7 +84,7 @@ export default async function handler(req: NextApiRequestWithUser, res: NextApiR
         data: { updated_at: new Date() }
       });
 
-      return res.json({
+      return res.status(200).json({
         success: true,
         chatId: existingChat.id,
         isNewChat: false,
@@ -104,7 +119,7 @@ export default async function handler(req: NextApiRequestWithUser, res: NextApiR
       ]
     });
 
-    res.json({
+    res.status(201).json({
       success: true,
       chatId: newChat.id,
       isNewChat: true,
@@ -113,6 +128,9 @@ export default async function handler(req: NextApiRequestWithUser, res: NextApiR
 
   } catch (error) {
     console.error('Error creating chat:', error);
-    res.status(500).json({ message: 'Internal server error' });
+    res.status(500).json({ 
+      success: false, 
+      message: 'Internal server error' 
+    });
   }
 }
