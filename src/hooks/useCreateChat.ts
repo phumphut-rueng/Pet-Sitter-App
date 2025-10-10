@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/router';
 import axios from 'axios';
-import { useSession } from 'next-auth/react';
+import { useSession, signIn } from 'next-auth/react';
 
 export const useCreateChat = () => {
   const [loading, setLoading] = useState(false);
@@ -12,7 +12,16 @@ export const useCreateChat = () => {
 
   const createChatAndNavigate = async (otherUserId: number) => {
     if (!session?.user?.id) {
-      console.error('User not authenticated');
+      console.log('User not authenticated, redirecting to login...');
+      
+      // สร้าง callback URL สำหรับกลับมาหน้า chat หลัง login
+      const callbackUrl = `/chat?chatId=${otherUserId}`;
+      
+      // ใช้ NextAuth's signIn function พร้อม callback URL
+      await signIn('credentials', { 
+        callbackUrl: callbackUrl,
+        redirect: true 
+      });
       return;
     }
 

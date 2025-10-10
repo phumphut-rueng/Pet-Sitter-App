@@ -67,6 +67,14 @@ export async function middleware(req: NextRequest) {
     return NextResponse.redirect(login);
   }
 
+  // โซน /chat: ต้องล็อกอิน
+  if (pathname.startsWith("/chat") && !token) {
+    const login = req.nextUrl.clone();
+    login.pathname = "/auth/login";
+    login.searchParams.set("callbackUrl", req.nextUrl.pathname + req.nextUrl.search);
+    return NextResponse.redirect(login);
+  }
+
   return NextResponse.next();
 }
 
