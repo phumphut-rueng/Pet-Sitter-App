@@ -51,7 +51,7 @@ export default function PetOwnerDetailModal({
           </div>
 
           {/* รายละเอียด */}
-          <div className="flex-1 bg-gray-1 rounded-xl p-4 space-y-6">
+          <div className="flex-1 bg-gray-1 rounded-xl p-6 space-y-6">
             <div>
               <p className="text-gray-4 text-xl font-bold">Pet Owner Name</p>
               <p className="text-black">{ownerName}</p>

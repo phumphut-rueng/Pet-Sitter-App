@@ -6,6 +6,8 @@ import { StatusBadge, StatusKey } from "@/components/badges/StatusBadge";
 import { Button } from "@/components/ui/button";
 import axios from "axios";
 import PetOwnerDetailModal from "@/components/modal/PetOwnerDetail";
+import PetCard from "@/components/cards/PetCard";
+import PetDetailModal from "@/components/modal/PetDetail";
 
 type BookingDetail = {
   id: number;
@@ -18,6 +20,19 @@ type BookingDetail = {
   transactionNo: string;
   message: string;
   status: StatusKey;
+};
+
+type Pet = {
+  name: string;
+  species: string;
+  img: string;
+  breed?: string;
+  age?: string;
+  note?: string;
+  sex?: string;
+  color?: string;
+  about?: string;
+  weight?: string;
 };
 
 // Mock ข้อมูล
@@ -96,6 +111,32 @@ const mockBookingDetails: BookingDetail[] = [
   },
 ];
 
+// Mock pet ข้อมูล
+const mockPets: Pet[] = [
+  {
+    name: "Bubba",
+    species: "Dog",
+    img: "/images/sitters/test3.svg",
+    breed: "Beagle",
+    age: "0.6 Month",
+    sex: "Male",
+    color: "white and black",
+    about: "woof woof",
+    weight: "2 Kilogram",
+  },
+  {
+    name: "Daisy",
+    species: "Cat",
+    img: "/images/sitters/test3.svg",
+    breed: "Persian",
+    age: "2 Years",
+    sex: "Female",
+    color: "white and brown",
+    about: "meow meow",
+    weight: "3 Kilogram",
+  },
+];
+
 type GetSitterResponse = {
   user: {
     id: number;
@@ -109,16 +150,31 @@ type GetSitterResponse = {
 };
 
 export default function BookingDetailPage() {
-  const [userName, setUserName] = useState("");
-  const [avatarUrl, setAvatarUrl] = useState("/icons/avatar-placeholder.svg");
-
   const router = useRouter();
   const params = useParams();
+
+  const [userName, setUserName] = useState("");
+  const [avatarUrl, setAvatarUrl] = useState("/icons/avatar-placeholder.svg");
   const [booking, setBooking] = useState<BookingDetail | null>(null);
 
+  //pet owner modal
   const [showProfileModal, setShowProfileModal] = useState(false);
   const handleOpenProfile = () => setShowProfileModal(true);
   const handleCloseProfile = () => setShowProfileModal(false);
+
+  //pet modal
+  const [showPetModal, setShowPetModal] = useState(false);
+  const [selectedPet, setSelectedPet] = useState<Pet | null>(null);
+
+  const handleOpenPetDetail = (pet: Pet) => {
+    setSelectedPet(pet);
+    setShowPetModal(true);
+  };
+
+  const handleClosePetDetail = () => {
+    setSelectedPet(null);
+    setShowPetModal(false);
+  };
 
   useEffect(() => {
     (async () => {
@@ -212,7 +268,7 @@ export default function BookingDetailPage() {
         </div>
 
         {/* Booking detail */}
-        <div className="px-8">
+        <div className="px-8 pb-10">
           <div className="bg-white rounded-2xl px-18 py-8 space-y-6">
             <h4 className="text-gray-4 font-bold text-xl mb-1">
               Pet Owner Name
@@ -251,9 +307,22 @@ export default function BookingDetailPage() {
               <h4 className="text-gray-4 font-bold text-xl">Pet(s)</h4>
               <p className="mt-1 font-medium">{booking.pets}</p>
             </div>
-
             <div>
               <h4 className="text-gray-4 font-bold text-xl">Pet Detail</h4>
+              <div className="flex gap-4 justify-start mt-2">
+                {mockPets.map((pet) => (
+                  <PetCard
+                    key={pet.name}
+                    name={pet.name}
+                    species={pet.species}
+                    img={pet.img}
+                    selected={false}
+                    disabled={false}
+                    className="!w-50 cursor-pointer"
+                    onClick={() => handleOpenPetDetail(pet)}
+                  />
+                ))}
+              </div>
             </div>
 
             <div>
@@ -293,12 +362,29 @@ export default function BookingDetailPage() {
         </div>
       </section>
 
-      {/* pet owner detail Popup */}
+      {/* Pet Owner Modal */}
       <PetOwnerDetailModal
         isOpen={showProfileModal}
         onClose={handleCloseProfile}
         ownerName={booking.ownerName}
       />
+
+      {/* Pet Detail Modal */}
+      {selectedPet && (
+        <PetDetailModal
+          isOpen={showPetModal}
+          onClose={handleClosePetDetail}
+          petName={selectedPet.name}
+          petType={selectedPet.species}
+          sex={selectedPet.sex}
+          breed={selectedPet.breed}
+          age={selectedPet.age}
+          about={selectedPet.about}
+          color={selectedPet.color}
+          weight={selectedPet.weight}
+          avatarUrl={selectedPet.img}
+        />
+      )}
     </main>
   );
 }
