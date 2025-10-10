@@ -28,7 +28,7 @@ const ChatBubble: React.FC<ChatBubbleProps> = ({
       {/* Timestamp - Center aligned like Facebook - แสดงเฉพาะเมื่อ showTimestamp เป็น true */}
       {timestamp && showTimestamp && (
         <div className="flex justify-center mb-2">
-          <span className="text-[10px] sm:text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded-full">
+          <span className="text-[10px] sm:text-xs text-gray-6 bg-gray-1 px-2 py-1 rounded-full">
             {timestamp}
           </span>
         </div>
@@ -57,8 +57,8 @@ const ChatBubble: React.FC<ChatBubbleProps> = ({
             <div
               className={`px-3 py-2 sm:px-4 sm:py-3 max-w-full break-words ${
                 isUser
-                  ? 'bg-orange-500 text-white rounded-l-2xl sm:rounded-l-3xl rounded-tr-2xl sm:rounded-tr-3xl' // Orange background for user messages
-                  : 'bg-white border border-gray-200 text-gray-900 rounded-r-2xl sm:rounded-r-3xl rounded-tl-2xl sm:rounded-tl-3xl' // White background for other messages
+                  ? 'bg-orange-5 text-white rounded-l-2xl sm:rounded-l-3xl rounded-tr-2xl sm:rounded-tr-3xl' // Orange background for user messages
+                  : 'bg-white border border-gray-2 text-gray-9 rounded-r-2xl sm:rounded-r-3xl rounded-tl-2xl sm:rounded-tl-3xl' // White background for other messages
               }`}
             >
               {isImage && imageUrl ? (

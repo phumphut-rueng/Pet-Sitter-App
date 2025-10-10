@@ -14,19 +14,28 @@ export default async function handle(req: NextApiRequestWithUser, res: NextApiRe
   
   // ตรวจสอบว่า chatId เป็น string และแปลงเป็น number
   if (!chatId || typeof chatId !== 'string') {
-    return res.status(400).json({ message: 'Invalid chat ID' });
+    return res.status(400).json({ 
+      success: false, 
+      message: 'Invalid chat ID' 
+    });
   }
 
   const chatIdNumber = parseInt(chatId);
   if (isNaN(chatIdNumber)) {
-    return res.status(400).json({ message: 'Invalid chat ID format' });
+    return res.status(400).json({ 
+      success: false, 
+      message: 'Invalid chat ID format' 
+    });
   }
 
   // ตรวจสอบ authentication (ชั่วคราวให้ผ่านก่อน)
   if (!req.user?.id) {
     const testUserId = req.query.userId as string;
     if (!testUserId) {
-      return res.status(401).json({ message: 'Unauthorized - Please add ?userId=YOUR_USER_ID to URL' });
+      return res.status(401).json({ 
+        success: false, 
+        message: 'Unauthorized - Please add ?userId=YOUR_USER_ID to URL' 
+      });
     }
     req.user = { id: testUserId };
   }
@@ -55,7 +64,10 @@ export default async function handle(req: NextApiRequestWithUser, res: NextApiRe
       });
 
       if (!chat || chat.user_chat_settings.length === 0) {
-        return res.status(403).json({ message: 'Access denied to this chat or chat is hidden' });
+        return res.status(403).json({ 
+          success: false, 
+          message: 'Access denied to this chat or chat is hidden' 
+        });
       }
 
       // 2. ดึงประวัติข้อความ
@@ -117,12 +129,22 @@ export default async function handle(req: NextApiRequestWithUser, res: NextApiRe
         }
       }));
 
-      res.json({ success: true, messages: formattedMessages });
+      res.status(200).json({ 
+        success: true, 
+        messages: formattedMessages,
+        message: 'Messages retrieved successfully'
+      });
     } catch (error) {
       console.error('Error fetching messages:', error);
-      res.status(500).json({ message: 'Internal server error' });
+      res.status(500).json({ 
+        success: false, 
+        message: 'Internal server error' 
+      });
     }
   } else {
-    res.status(405).json({ message: 'Method Not Allowed' });
+    res.status(405).json({ 
+      success: false, 
+      message: 'Method Not Allowed' 
+    });
   }
 }

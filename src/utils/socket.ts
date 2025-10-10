@@ -2,6 +2,7 @@
 
 import { io, Socket } from 'socket.io-client';
 import { SocketEvents, SendMessageData } from '@/types/socket.types';
+import axios from 'axios';
 
 let socket: Socket<SocketEvents> | null = null;
 let isSocketServerReady = false;
@@ -15,14 +16,9 @@ export const checkSocketServerReady = async (): Promise<boolean> => {
   }
   
   try {
-    const response = await fetch('/api/chat/socket', {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-    });
+    const response = await axios.get('/api/chat/socket');
     
-    if (response.ok) {
+    if (response.status === 200) {
       isSocketServerReady = true;
       return true;
     }

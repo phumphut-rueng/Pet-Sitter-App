@@ -571,7 +571,7 @@ export default function ChatWidget() {
   }
 
   return (
-    <div className="flex h-full bg-black rounded-lg shadow-lg overflow-hidden">
+    <div className="flex h-full bg-gray-9 rounded-lg shadow-lg overflow-hidden">
       {/* Left Sidebar - ChatList Component */}
       {/* แสดงเฉพาะบน desktop หรือบน mobile เมื่อไม่ได้เลือก chat */}
       <div className={`${isMobileView ? 'hidden' : 'block'} md:block w-full md:w-auto`}>

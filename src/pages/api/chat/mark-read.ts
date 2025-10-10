@@ -9,14 +9,20 @@ interface NextApiRequestWithUser extends NextApiRequest {
 
 export default async function handle(req: NextApiRequestWithUser, res: NextApiResponse) {
   if (req.method !== 'POST') {
-    return res.status(405).json({ message: 'Method Not Allowed' });
+    return res.status(405).json({ 
+      success: false, 
+      message: 'Method Not Allowed' 
+    });
   }
 
   // ตรวจสอบ authentication (ชั่วคราวให้ผ่านก่อน)
   if (!req.user?.id) {
     const testUserId = req.body.userId;
     if (!testUserId) {
-      return res.status(401).json({ message: 'Unauthorized - Please provide userId in request body' });
+      return res.status(401).json({ 
+        success: false, 
+        message: 'Unauthorized - Please provide userId in request body' 
+      });
     }
     req.user = { id: testUserId };
   }
@@ -25,7 +31,10 @@ export default async function handle(req: NextApiRequestWithUser, res: NextApiRe
   const currentUserId = parseInt(req.user.id);
 
   if (!chatId) {
-    return res.status(400).json({ message: 'Chat ID is required' });
+    return res.status(400).json({ 
+      success: false, 
+      message: 'Chat ID is required' 
+    });
   }
 
   try {
@@ -42,10 +51,16 @@ export default async function handle(req: NextApiRequestWithUser, res: NextApiRe
       }
     });
 
-    res.json({ success: true, message: 'Chat marked as read' });
+    res.status(200).json({ 
+      success: true, 
+      message: 'Chat marked as read' 
+    });
 
   } catch (error) {
     console.error('Error marking chat as read:', error);
-    res.status(500).json({ message: 'Internal server error' });
+    res.status(500).json({ 
+      success: false, 
+      message: 'Internal server error' 
+    });
   }
 }

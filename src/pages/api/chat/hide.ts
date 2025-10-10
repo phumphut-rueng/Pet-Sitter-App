@@ -9,14 +9,20 @@ interface NextApiRequestWithUser extends NextApiRequest {
 
 export default async function handler(req: NextApiRequestWithUser, res: NextApiResponse) {
   if (req.method !== 'POST') {
-    return res.status(405).json({ message: 'Method Not Allowed' });
+    return res.status(405).json({ 
+      success: false, 
+      message: 'Method Not Allowed' 
+    });
   }
 
   // ตรวจสอบ authentication (ชั่วคราวให้ผ่านก่อน)
   if (!req.user?.id) {
     const testUserId = req.body.userId;
     if (!testUserId) {
-      return res.status(401).json({ message: 'Unauthorized - Please provide userId in request body' });
+      return res.status(401).json({ 
+        success: false, 
+        message: 'Unauthorized - Please provide userId in request body' 
+      });
     }
     req.user = { id: testUserId };
   }
@@ -25,7 +31,10 @@ export default async function handler(req: NextApiRequestWithUser, res: NextApiR
   const currentUserId = parseInt(req.user.id);
 
   if (!chatId) {
-    return res.status(400).json({ message: 'Chat ID is required' });
+    return res.status(400).json({ 
+      success: false, 
+      message: 'Chat ID is required' 
+    });
   }
 
   try {
@@ -41,7 +50,10 @@ export default async function handler(req: NextApiRequestWithUser, res: NextApiR
     });
 
     if (!chat) {
-      return res.status(403).json({ message: 'Access denied to this chat' });
+      return res.status(403).json({ 
+        success: false, 
+        message: 'Access denied to this chat' 
+      });
     }
 
     // อัปเดต is_hidden เป็น true สำหรับ chat ที่เลือก
@@ -58,10 +70,16 @@ export default async function handler(req: NextApiRequestWithUser, res: NextApiR
       }
     });
 
-    res.json({ success: true, message: 'Chat hidden successfully' });
+    res.status(200).json({ 
+      success: true, 
+      message: 'Chat hidden successfully' 
+    });
 
   } catch (error) {
     console.error('Error hiding chat:', error);
-    res.status(500).json({ message: 'Internal server error' });
+    res.status(500).json({ 
+      success: false, 
+      message: 'Internal server error' 
+    });
   }
 }
