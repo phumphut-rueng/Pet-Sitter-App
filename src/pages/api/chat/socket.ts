@@ -43,12 +43,24 @@ export default async function socketHandler(req: NextApiRequest, res: NextApiRes
     });
 
     io.on('connection', (socket: SocketWithUser) => {
+      console.log('New socket connection established');
+      
       // Event: เมื่อผู้ใช้เข้าสู่แอป
-        socket.on('join_app', async (userId: string) => {
-          try {
-            (socket as SocketWithUser).userId = userId;
+      socket.on('join_app', async (userId: string) => {
+        try {
+          console.log('User joining app:', userId);
+          (socket as SocketWithUser).userId = userId;
+          
+          // ตรวจสอบว่า userId เป็นตัวเลขที่ถูกต้อง
+          const userIdNumber = parseInt(userId);
+          if (isNaN(userIdNumber)) {
+            console.error('Invalid user ID:', userId);
+            socket.emit('error', { message: 'Invalid user ID' });
+            return;
+          }
+          
           await prisma.user.update({ 
-            where: { id: parseInt(userId) }, 
+            where: { id: userIdNumber }, 
             data: { is_online: true } 
           });
           socket.join(userId); // เข้า Private Room ด้วย ID ตัวเอง
@@ -66,8 +78,10 @@ export default async function socketHandler(req: NextApiRequest, res: NextApiRes
           
           // แจ้งทุกคนว่ามี user ใหม่เข้ามา
           io.emit('user_online', userId);
+          console.log('User successfully joined app:', userId);
         } catch (error) {
           console.error('Error joining app:', error);
+          socket.emit('error', { message: 'Failed to join app' });
         }
       });
       

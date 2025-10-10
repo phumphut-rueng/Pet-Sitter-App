@@ -3,6 +3,51 @@
 
 @source "./app/**/*.{ts,tsx,mdx}" "./components/**/*.{ts,tsx}" "./pages/**/*.{ts,tsx}" "./src/**/*.{ts,tsx}";
 
+/* Custom Animations for SocketLoading */
+@keyframes fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(20px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes progress-bar {
+  0% {
+    transform: translateX(-100%);
+  }
+  50% {
+    transform: translateX(0%);
+  }
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+.animate-fade-in {
+  animation: fade-in 0.6s ease-out;
+}
+
+.animate-progress-bar {
+  animation: progress-bar 2s ease-in-out infinite;
+}
+
+.animate-float {
+  animation: float 3s ease-in-out infinite;
+}
+
 /* ---------- THEME MAPPING ---------- */
 @theme {
   /* Base Surfaces */

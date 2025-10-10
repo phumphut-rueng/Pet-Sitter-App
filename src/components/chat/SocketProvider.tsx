@@ -2,6 +2,7 @@ import React, { createContext, useContext, useEffect, useState } from 'react';
 import { useSocket } from '@/hooks/useSocket';
 import { MessagePayload, UnreadUpdateData, ChatListUpdateData } from '@/types/socket.types';
 import axios from 'axios';
+import SocketLoading from '@/components/loading/SocketLoading';
 
 interface SocketContextType {
   socket: any;
@@ -30,7 +31,7 @@ interface SocketProviderProps {
 }
 
 export const SocketProvider: React.FC<SocketProviderProps> = ({ children }) => {
-  const { socket, isConnected, isLoading, isAuthenticated, userId } = useSocket();
+  const { socket, isConnected, isLoading, isAuthenticated, userId, isSocketReady, isWaitingForSocket } = useSocket();
   const [messages, setMessages] = useState<MessagePayload[]>([]);
   const [unreadUpdates, setUnreadUpdates] = useState<UnreadUpdateData[]>([]);
   const [onlineUsers, setOnlineUsers] = useState<string[]>([]);
@@ -102,6 +103,11 @@ export const SocketProvider: React.FC<SocketProviderProps> = ({ children }) => {
       window.dispatchEvent(new CustomEvent('refresh_chat_list', { detail: event.detail }));
     };
 
+    const handleConnectionError = (event: CustomEvent<any>) => {
+      console.error('Socket connection error received:', event.detail);
+      // สามารถเพิ่ม logic สำหรับจัดการ error ได้ที่นี่
+    };
+
     // เพิ่ม event listeners
     window.addEventListener('socket:receive_message', handleReceiveMessage as EventListener);
     window.addEventListener('socket:unread_update', handleUnreadUpdate as EventListener);
@@ -109,6 +115,7 @@ export const SocketProvider: React.FC<SocketProviderProps> = ({ children }) => {
     window.addEventListener('socket:user_offline', handleUserOffline as EventListener);
     window.addEventListener('socket:online_users_list', handleOnlineUsersList as EventListener);
     window.addEventListener('socket:chat_list_update', handleChatListUpdate as EventListener);
+    window.addEventListener('socket:connection_error', handleConnectionError as EventListener);
 
     // Cleanup event listeners
     return () => {
@@ -118,6 +125,7 @@ export const SocketProvider: React.FC<SocketProviderProps> = ({ children }) => {
       window.removeEventListener('socket:user_offline', handleUserOffline as EventListener);
       window.removeEventListener('socket:online_users_list', handleOnlineUsersList as EventListener);
       window.removeEventListener('socket:chat_list_update', handleChatListUpdate as EventListener);
+      window.removeEventListener('socket:connection_error', handleConnectionError as EventListener);
     };
   }, [isConnected]);
 
@@ -132,6 +140,11 @@ export const SocketProvider: React.FC<SocketProviderProps> = ({ children }) => {
     unreadUpdates,
     onlineUsers,
   };
+
+  // แสดง loading เมื่อ user login แล้วแต่ socket ยังไม่พร้อม
+  if (isAuthenticated && isWaitingForSocket && !isSocketReady) {
+    return <SocketLoading message="Establishing secure connection to chat servers..." />;
+  }
 
   return (
     <SocketContext.Provider value={value}>
