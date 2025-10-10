@@ -42,6 +42,7 @@ model sitter {
   admin_note              String?                   @db.VarChar(1000)
   latitude                Float?
   longitude               Float?
+  booking                 booking[]
   reviews                 review[]
   sitter_approval_status  sitter_approval_status    @relation(fields: [approval_status_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   user                    user                      @relation(fields: [user_sitter_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
@@ -137,15 +138,15 @@ model review {
 
 model pet {
   id                 Int       @id @default(autoincrement())
-  id                 Int       @id @default(autoincrement())
+  id                 Int                  @id @default(autoincrement())
   owner_id           Int
   pet_type_id        Int
   name               String    @db.VarChar(100)
   breed              String    @db.VarChar(100)
   sex                String    @db.VarChar(10)
-  name               String    @db.VarChar(100)
-  breed              String    @db.VarChar(100)
-  sex                String    @db.VarChar(10)
+  name               String               @db.VarChar(100)
+  breed              String               @db.VarChar(100)
+  sex                String               @db.VarChar(10)
   age_month          Int
   color              String    @db.VarChar(100)
   weight_kg          Decimal   @db.Decimal(6, 2)
@@ -156,22 +157,23 @@ model pet {
   image_public_id    String?   @db.VarChar(255)
   is_banned          Boolean?  @default(false)
   banned_at          DateTime? @db.Timestamp(6)
-  color              String    @db.VarChar(100)
-  weight_kg          Decimal   @db.Decimal(6, 2)
-  about              String?   @db.VarChar(1000)
-  image_url          String?   @db.VarChar(255)
-  created_at         DateTime  @default(now()) @db.Timestamp(6)
-  updated_at         DateTime? @db.Timestamp(6)
-  image_public_id    String?   @db.VarChar(255)
-  is_banned          Boolean?  @default(false)
-  banned_at          DateTime? @db.Timestamp(6)
+  color              String               @db.VarChar(100)
+  weight_kg          Decimal              @db.Decimal(6, 2)
+  about              String?              @db.VarChar(1000)
+  image_url          String?              @db.VarChar(255)
+  created_at         DateTime             @default(now()) @db.Timestamp(6)
+  updated_at         DateTime?            @db.Timestamp(6)
+  image_public_id    String?              @db.VarChar(255)
+  is_banned          Boolean?             @default(false)
+  banned_at          DateTime?            @db.Timestamp(6)
   banned_by_admin_id Int?
-  ban_reason         String?   @db.VarChar(1000)
+  ban_reason         String?              @db.VarChar(1000)
+  booking_pet_detail booking_pet_detail[]
 
   booking_pet_detail booking_pet_detail[]
   banned_by_admin    admin?               @relation("BannedPets", fields: [banned_by_admin_id], references: [id], onUpdate: NoAction)
-  owner              user                 @relation(fields: [owner_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
-  pet_type           pet_type             @relation(fields: [pet_type_id], references: [id], onUpdate: NoAction)
+  owner              user                            @relation(fields: [owner_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  pet_type           pet_type                        @relation(fields: [pet_type_id], references: [id], onUpdate: NoAction)
 
   @@index([name], map: "idx_pet_name")
   @@index([owner_id], map: "idx_pet_owner_id")
