@@ -54,6 +54,7 @@ export default function ChatWidget() {
   const [chats, setChats] = useState<Chat[]>([]);
   const [messages, setMessages] = useState<Message[]>([]);
   const [loading, setLoading] = useState(true);
+  const [isMobileView, setIsMobileView] = useState(false); // State สำหรับ mobile view
   const { isConnected, sendMessage, userId, onlineUsers, messages: socketMessages, socket } = useSocketContext();
   const router = useRouter();
 
@@ -388,6 +389,7 @@ export default function ChatWidget() {
   const handleChatSelect = async (chatId: string) => {
     console.log('handleChatSelect called:', chatId);
     setSelectedChatId(chatId);
+    setIsMobileView(true); // เปิด mobile view เมื่อเลือก chat
     
     // ส่ง currentChatId ไปยัง socket server
     if (socket && userId) {
@@ -508,6 +510,11 @@ export default function ChatWidget() {
     }, 100);
   };
 
+  // ฟังก์ชันสำหรับย้อนกลับไปที่ chat list บน mobile
+  const handleBackToList = () => {
+    setIsMobileView(false);
+  };
+
   // ฟังก์ชันสำหรับซ่อน chat
   const handleHideChat = async (chatId: string) => {
     try {
@@ -542,6 +549,7 @@ export default function ChatWidget() {
             // ถ้าไม่มี chat เหลือแล้ว ให้ล้าง selectedChatId
             setSelectedChatId('');
             setMessages([]);
+            setIsMobileView(false); // กลับไปที่ chat list
           }
         }
         
@@ -563,16 +571,20 @@ export default function ChatWidget() {
   }
 
   return (
-    <div className="flex h-full bg-white rounded-lg shadow-lg overflow-hidden">
+    <div className="flex h-full bg-black rounded-lg shadow-lg overflow-hidden">
       {/* Left Sidebar - ChatList Component */}
-      <ChatList
-        selectedChatId={selectedChatId}
-        onChatSelect={handleChatSelect}
-        chats={chatListItems}
-      />
+      {/* แสดงเฉพาะบน desktop หรือบน mobile เมื่อไม่ได้เลือก chat */}
+      <div className={`${isMobileView ? 'hidden' : 'block'} md:block w-full md:w-auto`}>
+        <ChatList
+          selectedChatId={selectedChatId}
+          onChatSelect={handleChatSelect}
+          chats={chatListItems}
+        />
+      </div>
 
       {/* Right Main Area - Chat Container */}
-      <div className="flex-1">
+      {/* แสดงเฉพาะบน desktop หรือบน mobile เมื่อเลือก chat แล้ว */}
+      <div className={`${isMobileView ? 'block' : 'hidden'} md:block flex-1 w-full`}>
         <ChatContainer
           selectedChat={selectedChat ? {
             id: selectedChat.id.toString(),
@@ -595,6 +607,7 @@ export default function ChatWidget() {
           onSendMessage={handleSendMessage}
           hasChats={chats.length > 0} // ส่งข้อมูลว่ามี chat ใน chatlist หรือไม่
           onHideChat={handleHideChat} // ส่งฟังก์ชันสำหรับซ่อน chat
+          onBackToList={handleBackToList} // ส่งฟังก์ชันสำหรับกลับไปที่ chat list
         />
       </div>
     </div>
