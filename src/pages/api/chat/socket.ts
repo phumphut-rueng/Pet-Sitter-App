@@ -4,12 +4,15 @@ import { Server } from 'socket.io';
 import { NextApiRequest, NextApiResponse } from 'next';
 import { Socket } from 'socket.io';
 import { prisma } from '@/lib/prisma/prisma';
-import { SocketEvents, SendMessageData, MessagePayload, UnreadUpdateData } from '@/types/socket.types';
+import { SendMessageData, MessagePayload } from '@/types/socket.types';
 
-// Use any type for socket server to avoid type conflicts
+// Type for Next.js API response with socket server
 type NextApiResponseWithSocket = NextApiResponse & {
   socket: {
-    server: any;
+    server: {
+      io?: Server;
+      [key: string]: unknown;
+    };
   } | null;
 };
 
