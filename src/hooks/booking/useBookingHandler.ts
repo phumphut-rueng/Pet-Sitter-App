@@ -6,7 +6,8 @@ import { PetType, Sitter } from "@/types/sitter.types"
 import { getPetById, getSitterById, postBookingAndPayment } from "@/lib/booking/booking-api"
 import { useBookingForm } from "./useBookingForm"
 import axios from "axios"
-import { bookingData } from "@/types/booking.types"
+import { paymentData } from "@/types/booking.types"
+import { OmiseTokenResponse } from "@/types/omise.types"
 
 export function useBookingHandler() {
     const router = useRouter()
@@ -19,6 +20,7 @@ export function useBookingHandler() {
     const parsedSitterId = sitterId ? Number(sitterId) : undefined
 
     // States
+    const [isMobile, setIsMobile] = useState(false);
     const [activeStep, setActiveStep] = useState(1)
     const [pets, setPets] = useState<Pet[]>([])
     const [sitter, setSitter] = useState<Sitter>()
@@ -29,6 +31,7 @@ export function useBookingHandler() {
     // Payment states
     const [isProcessingPayment, setIsProcessingPayment] = useState(false)
     const [paymentError, setPaymentError] = useState<string>("")
+    const [bookingData, setBookingData] = useState<OmiseTokenResponse>()
 
     // Form handling
     const formHandlers = useBookingForm()
@@ -51,6 +54,16 @@ export function useBookingHandler() {
             hasFetched.current = false
         }
     }, [refreshKey])
+
+    useEffect(() => {
+        if (isMobile) {
+            setTimeout(() => {
+                window.scrollTo(0, 0);
+                // document.documentElement.scrollTop = 0;
+                document.body.scrollTop = 0;
+            }, 10);
+        }
+    }, [activeStep, isMobile]);
 
     useEffect(() => {
         const fetchData = async () => {
@@ -88,6 +101,18 @@ export function useBookingHandler() {
 
         fetchData()
     }, [currentUserId, parsedSitterId, refreshKey])
+
+    // ตรวจสอบว่าเป็น mobile หรือไม่
+    useEffect(() => {
+        const checkMobile = () => {
+            setIsMobile(window.innerWidth < 768); // 768px = md breakpoint ของ Tailwind
+        };
+
+        checkMobile();
+        window.addEventListener('resize', checkMobile);
+
+        return () => window.removeEventListener('resize', checkMobile);
+    }, []);
 
     // Calculate selection
     const selectedPets = pets.filter(pet => pet.status === "selected")
@@ -172,6 +197,8 @@ export function useBookingHandler() {
             // Parse expiry date (MM/YY)
             const [expMonth, expYear] = formHandlers.form.expiryDate.split('/');
 
+            console.log("expiryDate", formHandlers.form, formHandlers.form.expiryDate, expMonth, expYear);
+
             // Create Omise token
             const token = await createOmiseToken({
                 name: formHandlers.form.cardName,
@@ -182,7 +209,7 @@ export function useBookingHandler() {
             });
 
             // Prepare booking data
-            const bookingData: bookingData = {
+            const bookingData: paymentData = {
                 token,
                 amount: totalPrice * 100, // Convert to satang
                 currency: 'THB',
@@ -199,7 +226,9 @@ export function useBookingHandler() {
                 }
             };
 
-            await postBookingAndPayment(bookingData);
+            const result = await postBookingAndPayment(bookingData);
+
+            setBookingData(result)
             return true
         } catch (err) {
             console.error('Payment error:', err);
@@ -223,7 +252,7 @@ export function useBookingHandler() {
         } else if (activeStep > 1) {
             setActiveStep(prev => prev - 1)
         }
-    }, [activeStep, router])
+    }, [activeStep, router, isMobile])
 
     const handleNext = useCallback(() => {
         let canProceed = true
@@ -241,15 +270,30 @@ export function useBookingHandler() {
 
         if (activeStep < 3 && canProceed) {
             setActiveStep(prev => prev + 1)
+            window.scrollTo(0, 0);
         } else if (activeStep === 3) {
             setIsConfirmation(true)
         }
-    }, [activeStep, formHandlers])
+    }, [activeStep, formHandlers, isMobile])
 
     const handleConfirmation = useCallback(() => {
         setIsConfirmation(false)
-        const result = processPayment()
-    }, [])
+        processPayment()
+        setActiveStep(4)
+    }, [formHandlers, router])
+
+    const handleBackToHome = useCallback(() => {
+        router.push("/")
+    }, [router])
+
+    const handleBookingDetail = useCallback(() => {
+        alert('Showing booking details...');
+    }, [router])
+
+    const handleViewMap = useCallback(() => {
+        alert('Opening map location...');
+    }, [router])
+
 
     return {
         // Router data
@@ -257,6 +301,7 @@ export function useBookingHandler() {
         endTime,
 
         // States
+        isMobile,
         activeStep,
         pets,
         setPets,
@@ -268,6 +313,7 @@ export function useBookingHandler() {
         // Payment states
         isProcessingPayment,
         paymentError,
+        bookingData,
 
         // Selection
         hasSelection,
@@ -281,6 +327,9 @@ export function useBookingHandler() {
         handleRefreshPets,
         handleConfirmation,
 
+        handleBackToHome,
+        handleBookingDetail,
+        handleViewMap,
         // Form
         ...formHandlers
     }

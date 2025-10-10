@@ -281,12 +281,12 @@ model booking {
   user_id                                  Int
   payment_id                               String?
   payment_date                             DateTime?            @db.Timestamp(6)
-  booking_status                           Int
+  booking_status_id                        Int
   amount                                   Decimal              @db.Decimal(10, 2)
   created_at                               DateTime             @default(now()) @db.Timestamp(6)
   updated_at                               DateTime             @default(now()) @db.Timestamp(6)
   payment_status_id                        Int?
-  status_booking_booking_statusTostatus    status               @relation("booking_booking_statusTostatus", fields: [booking_status], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "booking_status")
+  status_booking_booking_status_idTostatus status               @relation("booking_booking_status_idTostatus", fields: [booking_status_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "booking_status")
   status_booking_payment_status_idTostatus status?              @relation("booking_payment_status_idTostatus", fields: [payment_status_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "payment_status_id")
   sitter                                   sitter               @relation(fields: [pet_sitter_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "pet_sitter_id")
   booking                                  user                 @relation("bookingTobooking", fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "user_id ")
@@ -294,7 +294,7 @@ model booking {
 
   @@index([date_start, date_end], map: "idx_booking_dates")
   @@index([pet_sitter_id], map: "idx_booking_pet_sitter")
-  @@index([booking_status], map: "idx_booking_status")
+  @@index([booking_status_id], map: "idx_booking_status")
   @@index([user_id], map: "idx_booking_user")
 }
 
@@ -313,7 +313,7 @@ model status {
   id                                        Int       @id @default(autoincrement())
   name                                      String    @db.VarChar
   type                                      String    @db.VarChar
-  booking_booking_booking_statusTostatus    booking[] @relation("booking_booking_statusTostatus")
+  booking_booking_booking_status_idTostatus booking[] @relation("booking_booking_status_idTostatus")
   booking_booking_payment_status_idTostatus booking[] @relation("booking_payment_status_idTostatus")
 }
 

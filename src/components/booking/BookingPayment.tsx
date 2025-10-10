@@ -2,7 +2,7 @@ import InputText from "../input/InputText";
 import { FormEvent } from "react";
 import { BookingForm } from "@/types/booking.types";
 
-export default function BookingSelectPayment(
+export default function BookingPayment(
     {
         form,
         error,

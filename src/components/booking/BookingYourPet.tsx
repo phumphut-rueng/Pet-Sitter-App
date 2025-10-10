@@ -1,8 +1,10 @@
 import { Pet } from "@/types/pet.types";
 import CreateNewPetCard from "../cards/CreateNewPetCard";
 import PetCard from "../cards/PetCard";
-import { Dispatch, SetStateAction, useState } from "react";
+import { Dispatch, SetStateAction, useEffect, useState } from "react";
 import BookingCreatePet from "./bookingCreatePet";
+import PetForm from "../features/pet/PetForm";
+import { useBookingHandler } from "@/hooks/booking/useBookingHandler";
 
 export default function BookingSelectYourPet({
     pets,
@@ -14,6 +16,24 @@ export default function BookingSelectYourPet({
     onRefresh?: () => void
 }) {
     const [isOpenCreatePet, setIsOpenCreatePet] = useState(false);
+    const {
+        isMobile
+    } = useBookingHandler()
+
+    // useEffect(() => {
+    //     if (isMobile) {
+    //         window.scrollTo(0, 0);
+    //     }
+    // }, [isOpenCreatePet]);
+
+    const handleCreatePetClick = () => {
+        setIsOpenCreatePet(true)
+        // if (isMobile) {
+        //     requestAnimationFrame(() => {
+        //         window.scrollTo(0, 0);
+        //     });
+        // }
+    }
 
     const onClick = (id: number) => {
         setPets((prevPets) =>
@@ -29,7 +49,7 @@ export default function BookingSelectYourPet({
     }
 
     return (
-        <div className="grid grid-cols-2 md:grid-cols-3 gap-4 min-w-0">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 min-w-0">
             {pets.map((p) => (
                 <div
                     key={`p-${p.id}`}
@@ -40,18 +60,21 @@ export default function BookingSelectYourPet({
                         img={p.imageUrl ?? ""}
                         selected={p.status === 'selected'}
                         disabled={p.status === 'disabled'}
-                        width={207}
-                        height={240}
+                        // width={207}
+                        // height={240}
                         avatarSize={104}
                         onClick={() => onClick(p.id)}
+                        className={`w-full`}
                     />
                 </div>
             ))}
+
             <CreateNewPetCard
                 height={240}
-                className="w-[207px]"
-                onClick={() => setIsOpenCreatePet(true)}
+                className="w-full"
+                onClick={handleCreatePetClick}
             />
+
             <BookingCreatePet
                 open={isOpenCreatePet}
                 onOpenChange={setIsOpenCreatePet}

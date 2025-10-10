@@ -129,25 +129,63 @@ export default async function handler(
                 user_id: userId,
                 payment_id: charge.id || null,
                 payment_date: charge.payment_date,
-                booking_status: 5, //Waiting for confirm
-                amount: charge.amount,
+                booking_status_id: 5, //Waiting for confirm
+                amount: charge.amount / 100,
                 payment_status_id: paymentStatus,
                 created_at: new Date(),
-                updated_at: new Date(),
-            }
+
+                // Create booking_pet_detail พร้อมกัน
+                booking_pet_detail: {
+                    create: data.petIds.map((petId) => ({
+                        pet_detail_id: petId,
+                    })),
+                },
+            },
+            // ดึงข้อมูลที่ join กลับมา
+            include: {
+                booking: true,
+                // sitter: true, 
+                // booking_status_id: true, // status สำหรับ payment
+                status_booking_payment_status_idTostatus: true,
+                // user: {
+                //     select: {
+                //         id: true,
+                //         name: true,
+                //         email: true,
+                //     },
+                // },
+                sitter: {
+                    select: {
+                        name: true
+                    }
+                },
+                booking_pet_detail: {
+                    include: {
+                        pet: true, // ดึงข้อมูล pet ด้วย
+                    },
+                },
+            },
         });
 
-        await prisma.booking_pet_detail.createMany({
-            data: data.petIds.map((petId) => ({
-                booking_id: booking.id,
-                pet_detail_id: petId,
-            })),
-        });
+        // await prisma.booking_pet_detail.createMany({
+        //     data: data.petIds.map((petId) => ({
+        //         booking_id: booking.id,
+        //         pet_detail_id: petId,
+        //     })),
+        // });
+
+        const bookingData = {
+            ...booking,
+            payment_status: booking.status_booking_payment_status_idTostatus,
+            // ลบ field เดิมออก
+            status_booking_payment_status_idTostatus: undefined,
+        };
+        console.log("booking", bookingData);
 
         return res.status(200).json({
             success: true,
             charge: charge,
-            booking: booking
+            booking: bookingData
         });
     } catch (error: any) {
         console.error('Booking error:', error);

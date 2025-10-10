@@ -1,3 +1,6 @@
+import { pet, status } from "@prisma/client";
+import { Sitter } from "./sitter.types";
+
 export interface BookingForm {
     name: string;
     email: string;
@@ -9,7 +12,7 @@ export interface BookingForm {
     cvc: string;
 }
 
-export interface bookingData {
+export interface paymentData {
     token: string;
     amount: number;
     currency: string;
@@ -24,4 +27,26 @@ export interface bookingData {
         customerPhone: string;
         additionalMessage: string;
     };
+}
+
+export interface bookingData {
+    id: number;
+    user_id: number;
+    pet_sitter_id: number;
+    name: string;
+    email: string;
+    phone: string;
+    date_start: string;
+    date_end: string;
+    amount: number;
+    booking_status: number;
+    payment_status_id: number;
+    payment_id: string | null;
+    payment_date: string | null;
+    additional: string | null;
+    created_at: string;
+    updated_at: string;
+    sitter: Sitter;
+    payment_status: status;
+    booking_pet_detail: pet;
 }
