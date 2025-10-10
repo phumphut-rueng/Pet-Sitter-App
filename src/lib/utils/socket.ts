@@ -23,7 +23,7 @@ export const checkSocketServerReady = async (): Promise<boolean> => {
       return true;
     }
     return false;
-  } catch (error) {
+  } catch {
     return false;
   }
 };
@@ -86,25 +86,25 @@ export const connectSocket = (userId: string): Socket<SocketEvents> => {
     window.dispatchEvent(new CustomEvent('socket:connection_error', { detail: error }));
   });
 
-  socket.on('disconnect', (reason) => {
+  socket.on('disconnect', () => {
     // Socket disconnected
   });
 
-  // เพิ่มการจัดการ reconnect events (ใช้ any type เพื่อหลีกเลี่ยง type errors)
-  (socket as any).on('reconnect', (attemptNumber: number) => {
+  // เพิ่มการจัดการ reconnect events
+  (socket as Socket & { on: (event: string, callback: (...args: unknown[]) => void) => void }).on('reconnect', () => {
     // ส่ง join_app อีกครั้งหลังจาก reconnect
     socket?.emit('join_app', userId);
   });
 
-  (socket as any).on('reconnect_attempt', (attemptNumber: number) => {
+  (socket as Socket & { on: (event: string, callback: (...args: unknown[]) => void) => void }).on('reconnect_attempt', () => {
     // Attempting to reconnect
   });
 
-  (socket as any).on('reconnect_error', (error: any) => {
+  (socket as Socket & { on: (event: string, callback: (...args: unknown[]) => void) => void }).on('reconnect_error', (error: Error) => {
     console.error('Reconnection error:', error);
   });
 
-  (socket as any).on('reconnect_failed', () => {
+  (socket as Socket & { on: (event: string, callback: (...args: unknown[]) => void) => void }).on('reconnect_failed', () => {
     console.error('Reconnection failed after all attempts');
     // แสดงข้อความแจ้งผู้ใช้
     window.dispatchEvent(new CustomEvent('socket:reconnect_failed'));
@@ -136,7 +136,7 @@ export const connectSocket = (userId: string): Socket<SocketEvents> => {
   });
 
   // เพิ่ม error handler สำหรับ error ที่ส่งมาจาก server
-  (socket as any).on('error', (error: any) => {
+  (socket as Socket & { on: (event: string, callback: (...args: unknown[]) => void) => void }).on('error', (error: Error) => {
     console.error('Server error:', error);
     window.dispatchEvent(new CustomEvent('socket:server_error', { detail: error }));
   });

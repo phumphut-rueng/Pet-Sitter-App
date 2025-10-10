@@ -3,7 +3,10 @@ import { NextApiRequest, NextApiResponse } from 'next';
 
 type NextApiResponseWithSocket = NextApiResponse & {
   socket: {
-    server: any;
+    server: {
+      io?: unknown;
+      [key: string]: unknown;
+    };
   } | null;
 };
 

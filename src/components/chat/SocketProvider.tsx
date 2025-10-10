@@ -1,16 +1,17 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { useSocket } from '@/hooks/useSocket';
-import { MessagePayload, UnreadUpdateData, ChatListUpdateData } from '@/types/socket.types';
+import { MessagePayload, UnreadUpdateData, ChatListUpdateData, SendMessageData } from '@/types/socket.types';
 import axios from 'axios';
 import SocketLoading from '@/components/loading/SocketLoading';
+import { Socket } from 'socket.io-client';
 
 interface SocketContextType {
-  socket: any;
+  socket: Socket | null;
   isConnected: boolean;
   isLoading: boolean;
   isAuthenticated: boolean;
   userId: string | undefined;
-  sendMessage: (data: any) => void;
+  sendMessage: (data: SendMessageData) => void;
   messages: MessagePayload[];
   unreadUpdates: UnreadUpdateData[];
   onlineUsers: string[];
@@ -37,7 +38,7 @@ export const SocketProvider: React.FC<SocketProviderProps> = ({ children }) => {
   const [onlineUsers, setOnlineUsers] = useState<string[]>([]);
 
   // ฟังก์ชันสำหรับส่งข้อความ
-  const sendMessage = (data: any) => {
+  const sendMessage = (data: SendMessageData) => {
     if (socket && socket.connected) {
       socket.emit('send_message', data);
     } else {
@@ -96,7 +97,7 @@ export const SocketProvider: React.FC<SocketProviderProps> = ({ children }) => {
       window.dispatchEvent(new CustomEvent('refresh_chat_list', { detail: event.detail }));
     };
 
-    const handleConnectionError = (event: CustomEvent<any>) => {
+    const handleConnectionError = (event: CustomEvent<Error>) => {
       console.error('Socket connection error received:', event.detail);
       // สามารถเพิ่ม logic สำหรับจัดการ error ได้ที่นี่
     };
