@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import Image from 'next/image';
 import ChatBubble from './ChatBubble';
 import { uploadAndGetPublicId } from '@/lib/cloudinary/image-upload';
+import ImageModal from '../modal/ImageModal';
 
 interface Message {
   id: string;
@@ -41,6 +42,20 @@ const ChatContainer: React.FC<ChatContainerProps> = ({
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [messageInput, setMessageInput] = useState('');
   const [isUploading, setIsUploading] = useState(false);
+  const [isImageModalOpen, setIsImageModalOpen] = useState(false);
+  const [selectedImageUrl, setSelectedImageUrl] = useState('');
+
+  // ฟังก์ชันสำหรับจัดการการคลิกรูปภาพ
+  const handleImageClick = (imageUrl: string) => {
+    setSelectedImageUrl(imageUrl);
+    setIsImageModalOpen(true);
+  };
+
+  // ฟังก์ชันสำหรับปิด modal รูปภาพ
+  const handleCloseImageModal = () => {
+    setIsImageModalOpen(false);
+    setSelectedImageUrl('');
+  };
 
   // ฟังก์ชันสำหรับตรวจสอบว่าควรแสดงเวลาหรือไม่ (เหมือน Facebook)
   const shouldShowTimestamp = (currentMessage: Message, previousMessage: Message | undefined, isFirstMessage: boolean): boolean => {
@@ -332,6 +347,7 @@ const ChatContainer: React.FC<ChatContainerProps> = ({
                   isImage={msg.isImage}
                   imageUrl={msg.imageUrl}
                   showTimestamp={shouldShow}
+                  onImageClick={handleImageClick}
                 />
               );
             })}
@@ -392,6 +408,14 @@ const ChatContainer: React.FC<ChatContainerProps> = ({
           </div>
         </div>
       )}
+      
+      {/* Image Modal */}
+      <ImageModal
+        isOpen={isImageModalOpen}
+        onClose={handleCloseImageModal}
+        imageUrl={selectedImageUrl}
+        alt="Chat image"
+      />
     </div>
   );
 };
