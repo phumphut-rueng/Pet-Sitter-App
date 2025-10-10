@@ -161,12 +161,12 @@ function dataUrlToFile(dataUrl: string, filename = "pet.png"): File {
   if (!m) throw new Error("Invalid data URL");
   const mime = m[1] || "image/png";
   const b64 = m[2];
-  
+
   // ใช้ atob แปลง base64 เป็น binary string (ไม่ใช้ fetch)
   const bin = atob(b64);
   const bytes = new Uint8Array(bin.length);
   for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
-  
+
   const blob = new Blob([bytes], { type: mime });
   return new File([blob], filename, { type: mime });
 }

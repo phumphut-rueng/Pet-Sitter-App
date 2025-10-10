@@ -1,20 +1,37 @@
-import { useBookingForm } from "@/hooks/useBookingForm"
 import InputText from "../input/InputText";
+import { FormEvent } from "react";
+import { BookingForm } from "@/types/booking.types";
 
-export default function BookingSelectPayment() {
-    const {
+export default function BookingSelectPayment(
+    {
         form,
         error,
-        handleChange,
-        handlePhoneChange,
-    } = useBookingForm();
+        handleSubmit,
+        handleCardNumberChange,
+        handleCardNameChange,
+        handleExpiryDateChange,
+        handleCVCChange,
+    }: {
+        form: BookingForm
+        error: BookingForm
+        handleSubmit: (e: FormEvent<Element>) => void
+
+        handleCardNumberChange: (e: React.ChangeEvent<HTMLInputElement>) => void
+        handleCardNameChange: (e: React.ChangeEvent<HTMLInputElement>) => void
+        handleExpiryDateChange: (e: React.ChangeEvent<HTMLInputElement>) => void
+        handleCVCChange: (e: React.ChangeEvent<HTMLInputElement>) => void
+    }) {
 
     return (
-        <div>
+        <div >
             <span className="font-[700] text-[24px] text-gray-9">
                 Credit Card
             </span>
-            <form className="mt-6 space-y-6">
+            <form
+                className="mt-6 space-y-6"
+                onSubmit={handleSubmit}
+                autoComplete="off"
+                name="fakeForm">
                 {/* Name */}
                 <div className="flex flex-col md:flex-row gap-6">
                     <div className="flex-1">
@@ -24,11 +41,13 @@ export default function BookingSelectPayment() {
                             name="cardNumber"
                             value={form.cardNumber}
                             placeholder="xxx-xxxx-x-xx-xx"
-                            type="number"
+                            type="text"
                             variant={!error.cardNumber ? "default" : "error"}
                             inputMode="numeric"
-                            onChange={handleChange}
+                            onChange={handleCardNumberChange}
                             errorText={error.cardNumber}
+                            maxLength={19}
+                            autoComplete="off"
                         />
                     </div>
                     <div className="flex-1">
@@ -40,8 +59,9 @@ export default function BookingSelectPayment() {
                             placeholder="Card owner name"
                             type="text"
                             variant={!error.cardName ? "default" : "error"}
-                            onChange={handleChange}
+                            onChange={handleCardNameChange}
                             errorText={error.cardName}
+                            autoComplete="off"
                         />
                     </div>
                 </div>
@@ -58,8 +78,10 @@ export default function BookingSelectPayment() {
                             type="text"
                             variant={!error.expiryDate ? "default" : "error"}
                             inputMode="numeric"
-                            onChange={handleChange}
+                            onChange={handleExpiryDateChange}
                             errorText={error.expiryDate}
+                            maxLength={7}
+                            autoComplete="off"
                         />
                     </div>
                     <div className="flex-1">
@@ -69,11 +91,13 @@ export default function BookingSelectPayment() {
                             name="cvc"
                             value={form.cvc}
                             placeholder="xxx"
-                            type="number"
+                            type="text"
                             variant={!error.cvc ? "default" : "error"}
                             inputMode="numeric"
-                            onChange={handlePhoneChange}
+                            onChange={handleCVCChange}
                             errorText={error.cvc}
+                            maxLength={4}
+                            autoComplete="off"
                         />
                     </div>
                 </div>

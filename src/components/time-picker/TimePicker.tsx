@@ -99,7 +99,10 @@ export default function TimePicker({
             // ถ้าเป็นวันเดียวกัน ให้เช็คเวลา
             if (date.toDateString() === startDate.toDateString()) {
                 const startMinutes = dateToMinutes(startTimeValue)
-                if (currentMinutes <= startMinutes) status.isPastStartTime = true
+
+                const minAllowedMinutes = startMinutes + 60 // เพิ่มขั้นต่ำ 1 ชั่วโมง
+                if (currentMinutes < minAllowedMinutes)
+                    status.isPastStartTime = true
             }
             // ถ้า endDate น้อยกว่า startDate ให้ disable ทั้งหมด
             else if (date < startDate) {

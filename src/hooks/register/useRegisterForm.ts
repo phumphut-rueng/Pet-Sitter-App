@@ -1,6 +1,6 @@
 import { useState, useCallback } from "react"
 import { RegisterForm } from "@/types/register.types"
-import { validateEmail, validatePhone, validatePassword } from "@/lib/validators/validation"
+import { validateEmail, validatePhone, validatePassword, numRegex } from "@/lib/validators/validation"
 
 // จัดการฟอร์ม + validation
 export function useRegisterForm() {
@@ -27,7 +27,7 @@ export function useRegisterForm() {
     )
 
     const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const onlyNums = e.target.value.replace(/\D/g, "")
+        const onlyNums = e.target.value.replace(numRegex, "")
         if (onlyNums.length <= 10) {
             handleChange({
                 ...e,
@@ -39,7 +39,7 @@ export function useRegisterForm() {
     const validateForm = async (role: number) => {
         const checkMail = await validateEmail(form.email, role, true)
         const checkPhone = await validatePhone(form.phone)
-        const checkPassword = await validatePassword(form.password)
+        const checkPassword = validatePassword(form.password)
 
         return {
             name: "",
@@ -49,5 +49,13 @@ export function useRegisterForm() {
         }
     }
 
-    return { form, setForm, error, setError, handleChange, handlePhoneChange, validateForm }
+    return {
+        form,
+        setForm,
+        error,
+        setError,
+        handleChange,
+        handlePhoneChange,
+        validateForm
+    }
 }

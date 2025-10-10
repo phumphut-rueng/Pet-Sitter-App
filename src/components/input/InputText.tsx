@@ -38,7 +38,6 @@ const InputText = ({
       </label>
       <div className="relative">
         <Input
-          {...props}
           id={label}
           type={type}
           placeholder={placeholder}
@@ -50,6 +49,7 @@ const InputText = ({
             className,
             "h-12 bg-white border border-gray-2 rounded-2 px-4 py-3 placeholder:text-gray-6 placeholder:text-[16px] placeholder:font-weight-400 placeholder:font-regular disabled:opacity-50 disabled:cursor-not-allowed disabled:bg-gray-1"
           )}
+          {...props}
         />
         {variant === "error" && (
           <div className="absolute right-4 top-1/2 transform -translate-y-1/2 pointer-events-none">

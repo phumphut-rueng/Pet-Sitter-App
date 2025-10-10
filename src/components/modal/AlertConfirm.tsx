@@ -14,12 +14,12 @@ interface AlertConfirmProps {
 }
 
 export default function AlertConfirm(
-    { title, open, width = 400, onOpenChange, description }: AlertConfirmProps
+    { title, open, width, onOpenChange, description }: AlertConfirmProps
 ) {
     return (
         <AlertDialog open={open} onOpenChange={onOpenChange}>
             <AlertDialogContent
-                style={{ width: `${width}px` }}
+                style={{ width: `${width || 400}px` }}
                 className={"p-0 rounded-xl font-[700] border-transparent"}>
                 {/* Header */}
                 <div className="p-3 pl-5 flex justify-between items-center border-b border-gray-2">

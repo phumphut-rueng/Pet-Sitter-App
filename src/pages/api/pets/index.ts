@@ -21,6 +21,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         include: { pet_type: true },
       });
 
+
       return res.status(200).json(
         pets.map((p) => ({
           id: p.id,
@@ -40,13 +41,13 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     if (req.method === "POST") {
       const parsed = petSchema.safeParse(req.body);
+
       if (!parsed.success) {
         return res
           .status(400)
           .json({ error: "Validation", details: parsed.error.flatten() });
       }
       const data = parsed.data;
-
       const created = await prisma.pet.create({
         data: {
           owner_id: ownerId,

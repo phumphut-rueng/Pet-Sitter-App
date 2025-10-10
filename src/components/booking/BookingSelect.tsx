@@ -1,7 +1,7 @@
 import {
     AlertDialogDescription,
 } from "@/components/ui/alert-dialog"
-import AlertConfirm from "./AlertConfirm"
+import AlertConfirm from "../modal/AlertConfirm"
 import PrimaryButton from "../buttons/PrimaryButton"
 import { useDatePicker } from "@/hooks/useDatePicker"
 import { useTimePicker } from "@/hooks/useTimePicker"
@@ -31,8 +31,6 @@ export default function BookingSelect({
     const [errorText, setErrorText] = useState<string>("")
 
     const hendleOnSubmit = () => {
-        console.log("date", date);
-
         if (!date || !startTime || !endTime) {
             setErrorText("Please select a date and time to continue");
             return
@@ -47,7 +45,10 @@ export default function BookingSelect({
                 endTime: endTime.toISOString(),
                 sitterId: sitterId
             }
-        })
+        },
+            '/booking', // URL ที่แสดงบน browser (ไม่มี query)
+            { shallow: true }
+        )
     }
 
     return (

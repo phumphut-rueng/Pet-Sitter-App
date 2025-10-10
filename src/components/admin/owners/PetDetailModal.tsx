@@ -72,11 +72,11 @@ export default function PetDetailModal({
         className="fixed w-[800px] p-0 rounded-2xl bg-white shadow-xl"
       >
         {/* Header */}
-        <div className="h-[80px] px-10 py-6 border-b flex items-center justify-between">
+        <div className="h-[80px] px-10 py-6 border-b border-gray-2 flex items-center justify-between">
           <h2 className="text-2xl font-bold leading-8">{pet.name || "Pet"}</h2>
           <button
             onClick={() => onOpenChange(false)}
-            className="text-gray-400 hover:text-gray-600"
+            className="text-gray-4 hover:text-gray-6"
             aria-label="Close"
           >
             <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">

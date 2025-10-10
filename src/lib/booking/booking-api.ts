@@ -31,7 +31,7 @@ export const getPetById = async (): Promise<Pet[] | undefined> => {
 
 export const getSitterById = async (id: number): Promise<Sitter | undefined> => {
     try {
-        const result = await axios.get<{ data: Sitter }>(`/api/user/sitter/${id}`)
+        const result = await axios.get<{ data: Sitter }>(`/api/sitter/${id}`)
 
         if (result?.status === 200) {
             return result.data.data
