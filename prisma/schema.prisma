@@ -72,7 +72,7 @@ model user {
   created_at               DateTime                  @default(now()) @db.Timestamp(6)
   updated_at               DateTime?                 @db.Timestamp(6)
   profile_image_public_id  String?                   @db.VarChar(255)
-  status                   user_status               @default(ACTIVE)
+  status                   user_status               @default(normal)
   approval_status_id       Int                       @default(1)
   status_updated_at        DateTime?                 @db.Timestamp(6)
   admin_note               String?                   @db.VarChar(1000)
@@ -82,6 +82,7 @@ model user {
   is_online                Boolean?                  @default(false)
   last_seen                DateTime?                 @default(now()) @db.Timestamp(6)
   admin                    admin?
+  other_booking            booking[]                 @relation("bookingTobooking")
   chat_chat_user1_idTouser chat[]                    @relation("chat_user1_idTouser")
   chat_chat_user2_idTouser chat[]                    @relation("chat_user2_idTouser")
   message                  message[]
@@ -201,7 +202,7 @@ model report {
   id                  Int           @id @default(autoincrement())
   reporter_id         Int
   handled_by_admin_id Int?
-  status              report_status @default(NEW)
+  status              report_status @default(new)
   title               String        @db.VarChar(150)
   description         String?       @db.VarChar(2000)
   attachments_json    Json?
@@ -269,27 +270,27 @@ model user_chat_settings {
 }
 
 model booking {
-  id                                    Int                  @id @default(autoincrement())
-  name                                  String               @db.VarChar
-  email                                 String               @db.VarChar
-  phone                                 String               @db.VarChar
-  additional                            String?              @db.VarChar
-  date_start                            DateTime             @db.Timestamp(6)
-  date_end                              DateTime             @db.Timestamp(6)
-  pet_sitter_id                         Int
-  user_id                               Int
-  payment_id                            Int?
-  payment_date                          DateTime?            @db.Timestamp(6)
-  booking_status                        Int
-  amount                                Decimal              @db.Decimal(10, 2)
-  created_at                            DateTime             @default(now()) @db.Timestamp(6)
-  updated_at                            DateTime             @default(now()) @db.Timestamp(6)
-  status_booking_booking_statusTostatus status               @relation("booking_booking_statusTostatus", fields: [booking_status], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "booking_status")
-  status_booking_payment_idTostatus     status?              @relation("booking_payment_idTostatus", fields: [payment_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "payment_id")
-  sitter                                sitter               @relation(fields: [pet_sitter_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "pet_sitter_id")
-  booking                               booking              @relation("bookingTobooking", fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "user_id ")
-  other_booking                         booking[]            @relation("bookingTobooking")
-  booking_pet_detail                    booking_pet_detail[]
+  id                                       Int                  @id @default(autoincrement())
+  name                                     String               @db.VarChar
+  email                                    String               @db.VarChar
+  phone                                    String               @db.VarChar
+  additional                               String?              @db.VarChar
+  date_start                               DateTime             @db.Timestamp(6)
+  date_end                                 DateTime             @db.Timestamp(6)
+  pet_sitter_id                            Int
+  user_id                                  Int
+  payment_id                               String?
+  payment_date                             DateTime?            @db.Timestamp(6)
+  booking_status                           Int
+  amount                                   Decimal              @db.Decimal(10, 2)
+  created_at                               DateTime             @default(now()) @db.Timestamp(6)
+  updated_at                               DateTime             @default(now()) @db.Timestamp(6)
+  payment_status_id                        Int?
+  status_booking_booking_statusTostatus    status               @relation("booking_booking_statusTostatus", fields: [booking_status], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "booking_status")
+  status_booking_payment_status_idTostatus status?              @relation("booking_payment_status_idTostatus", fields: [payment_status_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "payment_status_id")
+  sitter                                   sitter               @relation(fields: [pet_sitter_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "pet_sitter_id")
+  booking                                  user                 @relation("bookingTobooking", fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "user_id ")
+  booking_pet_detail                       booking_pet_detail[]
 
   @@index([date_start, date_end], map: "idx_booking_dates")
   @@index([pet_sitter_id], map: "idx_booking_pet_sitter")
@@ -309,21 +310,21 @@ model booking_pet_detail {
 }
 
 model status {
-  id                                     Int       @id @default(autoincrement())
-  name                                   String    @db.VarChar
-  type                                   String    @db.VarChar
-  booking_booking_booking_statusTostatus booking[] @relation("booking_booking_statusTostatus")
-  booking_booking_payment_idTostatus     booking[] @relation("booking_payment_idTostatus")
+  id                                        Int       @id @default(autoincrement())
+  name                                      String    @db.VarChar
+  type                                      String    @db.VarChar
+  booking_booking_booking_statusTostatus    booking[] @relation("booking_booking_statusTostatus")
+  booking_booking_payment_status_idTostatus booking[] @relation("booking_payment_status_idTostatus")
 }
 
 enum report_status {
-  NEW
-  PENDING
-  RESOLVED
-  CANCELED
+  new
+  pending
+  resolved
+  canceled
 }
 
 enum user_status {
-  ACTIVE
-  SUSPENDED
+  normal
+  ban
 }

@@ -3,8 +3,10 @@ import { useRouter } from "next/router"
 import { useSession } from "next-auth/react"
 import { Pet, PetStatus } from "@/types/pet.types"
 import { PetType, Sitter } from "@/types/sitter.types"
-import { getPetById, getSitterById } from "@/lib/booking/booking-api"
+import { getPetById, getSitterById, postBookingAndPayment } from "@/lib/booking/booking-api"
 import { useBookingForm } from "./useBookingForm"
+import axios from "axios"
+import { bookingData } from "@/types/booking.types"
 
 export function useBookingHandler() {
     const router = useRouter()
@@ -22,6 +24,11 @@ export function useBookingHandler() {
     const [sitter, setSitter] = useState<Sitter>()
     const [loading, setLoading] = useState(true)
     const [refreshKey, setRefreshKey] = useState(0)
+    const [isConfirmation, setIsConfirmation] = useState(false)
+
+    // Payment states
+    const [isProcessingPayment, setIsProcessingPayment] = useState(false)
+    const [paymentError, setPaymentError] = useState<string>("")
 
     // Form handling
     const formHandlers = useBookingForm()
@@ -127,6 +134,84 @@ export function useBookingHandler() {
     };
     const duration = calculateDuration();
 
+    const createOmiseToken = (cardData: {
+        name: string;
+        number: string;
+        expiration_month: string;
+        expiration_year: string;
+        security_code: string;
+    }): Promise<string> => {
+        return new Promise((resolve, reject) => {
+            if (!window.Omise) {
+                reject(new Error('Omise library not loaded'));
+                return;
+            }
+
+            window.Omise.setPublicKey(
+                process.env.NEXT_PUBLIC_OMISE_PUBLIC_KEY || ''
+            );
+
+            window.Omise.createToken('card', cardData, (statusCode, response) => {
+                // Type guard: เช็คว่าเป็น error หรือไม่
+                if (response.object === 'error') {
+                    reject(new Error(response.message));
+                } else {
+                    // TypeScript รู้ว่าตรงนี้เป็น OmiseTokenResponse แน่นอน
+                    resolve(response.id);
+                }
+            });
+        });
+    };
+
+
+    const processPayment = async (): Promise<boolean> => {
+        setIsProcessingPayment(true);
+        setPaymentError("");
+
+        try {
+            // Parse expiry date (MM/YY)
+            const [expMonth, expYear] = formHandlers.form.expiryDate.split('/');
+
+            // Create Omise token
+            const token = await createOmiseToken({
+                name: formHandlers.form.cardName,
+                number: formHandlers.form.cardNumber.replace(/\s|-/g, ''),
+                expiration_month: expMonth,
+                expiration_year: expYear,
+                security_code: formHandlers.form.cvc,
+            });
+
+            // Prepare booking data
+            const bookingData: bookingData = {
+                token,
+                amount: totalPrice * 100, // Convert to satang
+                currency: 'THB',
+                description: `Booking for ${petNames}`, //เปลี่ยนตรงนี้ด้วย
+                metadata: {
+                    sitterId: parsedSitterId,
+                    petIds: selectedPets.map(p => p.id).join(','),
+                    startTime: startTime,
+                    endTime: endTime,
+                    customerName: formHandlers.form.name,
+                    customerEmail: formHandlers.form.email,
+                    customerPhone: formHandlers.form.phone,
+                    additionalMessage: formHandlers.form.addition,
+                }
+            };
+
+            await postBookingAndPayment(bookingData);
+            return true
+        } catch (err) {
+            console.error('Payment error:', err);
+            setPaymentError(
+                err instanceof Error ? err.message : 'เกิดข้อผิดพลาดในการชำระเงิน'
+            );
+            return false
+        } finally {
+            setIsProcessingPayment(false);
+        }
+    };
+
     // Handlers
     const handleRefreshPets = useCallback(() => {
         setRefreshKey(prev => prev + 1)
@@ -156,8 +241,15 @@ export function useBookingHandler() {
 
         if (activeStep < 3 && canProceed) {
             setActiveStep(prev => prev + 1)
+        } else if (activeStep === 3) {
+            setIsConfirmation(true)
         }
     }, [activeStep, formHandlers])
+
+    const handleConfirmation = useCallback(() => {
+        setIsConfirmation(false)
+        const result = processPayment()
+    }, [])
 
     return {
         // Router data
@@ -170,6 +262,12 @@ export function useBookingHandler() {
         setPets,
         sitter,
         loading,
+        isConfirmation,
+        setIsConfirmation,
+
+        // Payment states
+        isProcessingPayment,
+        paymentError,
 
         // Selection
         hasSelection,
@@ -181,6 +279,7 @@ export function useBookingHandler() {
         handleBack,
         handleNext,
         handleRefreshPets,
+        handleConfirmation,
 
         // Form
         ...formHandlers
