@@ -1,40 +1,25 @@
 import { useEffect, useRef, useState } from 'react';
 import { useSession } from 'next-auth/react';
-import { connectSocket, disconnectSocket, getSocket, initVisibilityListener, waitForSocketServer } from '@/utils/socket';
+import { connectSocket, disconnectSocket, getSocket, initVisibilityListener } from '@/utils/socket';
 import { SocketEvents } from '@/types/socket.types';
 import { Socket } from 'socket.io-client';
+import axios from 'axios';
 
-// Global state to track socket readiness across components
-let globalSocketReady = false;
-let globalSocketConnecting = false;
-
-// Helper functions to manage socket state in localStorage
-const getSocketState = () => {
-  if (typeof window === 'undefined') return { ready: false, connecting: false };
+// ฟังก์ชันเช็คว่า socket server instance ถูกสร้างแล้วหรือยัง
+const checkSocketServerStatus = async (): Promise<boolean> => {
   try {
-    const state = localStorage.getItem('socket-state');
-    return state ? JSON.parse(state) : { ready: false, connecting: false };
-  } catch {
-    return { ready: false, connecting: false };
-  }
-};
-
-const setSocketState = (ready: boolean, connecting: boolean) => {
-  if (typeof window === 'undefined') return;
-  try {
-    localStorage.setItem('socket-state', JSON.stringify({ ready, connecting }));
-  } catch {
-    // Ignore localStorage errors
+    const response = await axios.get('/api/chat/socket-status');
+    return response.data.isReady || false;
+  } catch (error) {
+    console.error('Error checking socket server status:', error);
+    return false;
   }
 };
 
 export const useSocket = () => {
   const { data: session, status } = useSession();
   const socketRef = useRef<Socket<SocketEvents> | null>(null);
-  const [isSocketReady, setIsSocketReady] = useState(() => {
-    const state = getSocketState();
-    return state.ready;
-  });
+  const [isSocketReady, setIsSocketReady] = useState(false);
   const [isWaitingForSocket, setIsWaitingForSocket] = useState(false);
 
   useEffect(() => {
@@ -42,74 +27,47 @@ export const useSocket = () => {
     if (status === 'authenticated' && session?.user?.id) {
       console.log('Connecting socket for user:', session.user.id);
       
-      // ตรวจสอบสถานะจาก localStorage
-      const socketState = getSocketState();
-      console.log('Current socket state from localStorage:', socketState);
-      
-      // ถ้า socket ยังไม่ได้เชื่อมต่อจริง ให้ลองเชื่อมต่อใหม่
-      if (socketState.ready && socketRef.current?.connected) {
-        console.log('Socket already ready and connected, skipping');
+      // ถ้า socket ยังเชื่อมต่ออยู่ ไม่ต้องทำอะไร
+      if (socketRef.current?.connected) {
+        console.log('Socket already connected, skipping');
         setIsSocketReady(true);
         setIsWaitingForSocket(false);
         return;
-      } else if (socketState.ready && !socketRef.current?.connected) {
-        console.log('Socket state says ready but not actually connected, reconnecting...');
-        // รีเซ็ต localStorage state
-        setSocketState(false, false);
       }
       
       const connectSocketWithRetry = async () => {
-        setSocketState(false, true);
-        globalSocketConnecting = true;
-        setIsWaitingForSocket(true);
-        setIsSocketReady(false);
-        
-        // เพิ่ม fallback timeout 8 วินาที
-        const fallbackTimeout = setTimeout(() => {
-          console.warn('Socket connection timeout, proceeding without socket');
-          setSocketState(true, false);
-          globalSocketReady = true;
-          globalSocketConnecting = false;
+        try {
+          // เช็คว่า socket server instance ถูกสร้างแล้วหรือยัง
+          console.log('Checking socket server status...');
+          const isServerReady = await checkSocketServerStatus();
+          
+          if (!isServerReady) {
+            // ถ้า server instance ยังไม่ถูกสร้าง แสดง loading
+            console.log('Socket server instance not created yet, showing loading...');
+            setIsWaitingForSocket(true);
+            setIsSocketReady(false);
+            
+            // เรียก API เพื่อกระตุ้นให้สร้าง socket server instance
+            console.log('Triggering socket server initialization...');
+            await axios.get('/api/chat/socket');
+            
+            // รอสักครู่เพื่อให้ server instance ถูกสร้างเสร็จ
+            await new Promise(resolve => setTimeout(resolve, 1000));
+          } else {
+            // ถ้า server instance ถูกสร้างแล้ว ไม่ต้องแสดง loading
+            console.log('Socket server instance already exists, skipping loading...');
+          }
+          
+          // สร้าง socket connection (ไม่แสดง loading ในขั้นตอนนี้)
+          console.log('Creating socket connection for user:', session.user.id);
+          socketRef.current = connectSocket(session.user.id);
+          
           setIsSocketReady(true);
           setIsWaitingForSocket(false);
-        }, 8000);
-        
-        try {
-          console.log('Starting socket server readiness check...');
-          // รอ socket server พร้อม (ลด timeout เป็น 3 วินาที)
-          const serverReady = await waitForSocketServer(6, 500); // ลดจำนวนครั้งและเพิ่ม delay
-          
-          clearTimeout(fallbackTimeout); // ยกเลิก fallback timeout
-          console.log('Socket server readiness check result:', serverReady);
-          
-          if (serverReady) {
-            console.log('Server is ready, creating socket connection...');
-            // เพิ่ม delay เล็กน้อยเพื่อให้ authentication เสร็จสมบูรณ์
-            setTimeout(() => {
-              console.log('Creating socket connection for user:', session.user.id);
-              socketRef.current = connectSocket(session.user.id);
-              setSocketState(true, false);
-              globalSocketReady = true;
-              globalSocketConnecting = false;
-              setIsSocketReady(true);
-              setIsWaitingForSocket(false);
-            }, 100);
-          } else {
-            console.warn('Socket server not ready, proceeding without socket');
-            // ถ้า socket server ไม่พร้อม ให้ข้ามไปเลย
-            setSocketState(true, false);
-            globalSocketReady = true;
-            globalSocketConnecting = false;
-            setIsSocketReady(true); // ตั้งเป็น true เพื่อให้ loading หาย
-            setIsWaitingForSocket(false);
-          }
+          console.log('Socket initialized successfully');
         } catch (error) {
-          console.error('Error waiting for socket server:', error);
-          clearTimeout(fallbackTimeout); // ยกเลิก fallback timeout
-          // ถ้าเกิด error ให้ข้ามไปเลย
-          setSocketState(true, false);
-          globalSocketReady = true;
-          globalSocketConnecting = false;
+          console.error('Error initializing socket:', error);
+          // แม้เกิด error ก็ปิด loading
           setIsSocketReady(true);
           setIsWaitingForSocket(false);
         }
@@ -132,16 +90,12 @@ export const useSocket = () => {
         cleanupVisibilityListener();
       };
     } else if (status === 'unauthenticated') {
-      // ถ้า user logout ให้ disconnect socket และรีเซ็ต global state
+      // ถ้า user logout ให้ disconnect socket
       if (socketRef.current) {
         console.log('User logged out, disconnecting socket');
         disconnectSocket();
         socketRef.current = null;
       }
-      // รีเซ็ต global state และ localStorage เมื่อ logout
-      setSocketState(false, false);
-      globalSocketReady = false;
-      globalSocketConnecting = false;
       setIsSocketReady(false);
       setIsWaitingForSocket(false);
     }

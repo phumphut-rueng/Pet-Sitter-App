@@ -28,7 +28,10 @@ interface SocketWithUser extends Socket {
 
 export default async function socketHandler(req: NextApiRequest, res: NextApiResponseWithSocket) {
   if (!res.socket?.server?.io) {
-    // 1. สร้าง Socket.io Server Instance (Magic Part)
+    // ⚠️ สร้าง Socket.io Server Instance ครั้งแรก (Magic Part)
+    // SocketLoading จะแสดงเฉพาะตอนนี้เท่านั้น (เมื่อ !res.socket?.server?.io === true)
+    // หลังจากนี้ instance จะถูกเก็บไว้และไม่ต้องสร้างใหม่อีก
+    console.log('🚀 Creating Socket.io Server Instance for the first time...');
     const httpServer = res.socket!.server;
     io = new Server(httpServer, { 
       path: '/api/chat/socket', 
@@ -210,6 +213,9 @@ export default async function socketHandler(req: NextApiRequest, res: NextApiRes
       });
     });
     res.socket!.server.io = io;
+    console.log('✅ Socket.io Server Instance created successfully!');
+  } else {
+    console.log('♻️ Socket.io Server Instance already exists, reusing...');
   }
   res.status(200).end();
 }
