@@ -10,7 +10,7 @@ export const useCreateChat = () => {
   const router = useRouter();
   const { data: session } = useSession();
 
-  const createChatAndNavigate = async (otherUserId: number) => {
+  const createChatAndNavigate = async (otherUserId: number, onSelfMessage?: () => void) => {
     if (!session?.user?.id) {
       console.log('User not authenticated, redirecting to login...');
       
@@ -22,6 +22,15 @@ export const useCreateChat = () => {
         callbackUrl: callbackUrl,
         redirect: true 
       });
+      return;
+    }
+
+    // ตรวจสอบว่าผู้ใช้กำลังพยายามส่งข้อความให้ตัวเองหรือไม่
+    if (parseInt(session.user.id) === otherUserId) {
+      console.log('User trying to message themselves, showing warning modal');
+      if (onSelfMessage) {
+        onSelfMessage();
+      }
       return;
     }
 
