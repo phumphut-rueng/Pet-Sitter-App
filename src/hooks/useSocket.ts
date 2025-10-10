@@ -44,11 +44,18 @@ export const useSocket = () => {
       
       // ตรวจสอบสถานะจาก localStorage
       const socketState = getSocketState();
-      if (socketState.ready || socketState.connecting) {
-        console.log('Socket already ready or connecting, skipping');
+      console.log('Current socket state from localStorage:', socketState);
+      
+      // ถ้า socket ยังไม่ได้เชื่อมต่อจริง ให้ลองเชื่อมต่อใหม่
+      if (socketState.ready && socketRef.current?.connected) {
+        console.log('Socket already ready and connected, skipping');
         setIsSocketReady(true);
         setIsWaitingForSocket(false);
         return;
+      } else if (socketState.ready && !socketRef.current?.connected) {
+        console.log('Socket state says ready but not actually connected, reconnecting...');
+        // รีเซ็ต localStorage state
+        setSocketState(false, false);
       }
       
       const connectSocketWithRetry = async () => {
@@ -68,14 +75,18 @@ export const useSocket = () => {
         }, 8000);
         
         try {
+          console.log('Starting socket server readiness check...');
           // รอ socket server พร้อม (ลด timeout เป็น 3 วินาที)
           const serverReady = await waitForSocketServer(6, 500); // ลดจำนวนครั้งและเพิ่ม delay
           
           clearTimeout(fallbackTimeout); // ยกเลิก fallback timeout
+          console.log('Socket server readiness check result:', serverReady);
           
           if (serverReady) {
+            console.log('Server is ready, creating socket connection...');
             // เพิ่ม delay เล็กน้อยเพื่อให้ authentication เสร็จสมบูรณ์
             setTimeout(() => {
+              console.log('Creating socket connection for user:', session.user.id);
               socketRef.current = connectSocket(session.user.id);
               setSocketState(true, false);
               globalSocketReady = true;
