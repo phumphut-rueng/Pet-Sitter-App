@@ -3,6 +3,7 @@ import Image from 'next/image';
 import ChatBubble from './ChatBubble';
 import { uploadAndGetPublicId } from '@/lib/cloudinary/image-upload';
 import ImageModal from '../modal/ImageModal';
+import { PetPawLoadingSmall } from '@/components/loading/PetPawLoadingSmall';
 
 interface Message {
   id: string;
@@ -27,6 +28,7 @@ interface ChatContainerProps {
   hasChats?: boolean; // เพิ่ม prop เพื่อตรวจสอบว่ามี chat ใน chatlist หรือไม่
   onHideChat?: (chatId: string) => void; // เพิ่ม prop สำหรับซ่อน chat
   onBackToList?: () => void; // เพิ่ม prop สำหรับกลับไปที่ chat list บน mobile
+  isLoadingMessages?: boolean; // เพิ่ม prop สำหรับ loading state
 }
 
 const ChatContainer: React.FC<ChatContainerProps> = ({ 
@@ -36,7 +38,8 @@ const ChatContainer: React.FC<ChatContainerProps> = ({
   onSendMessage,
   hasChats = true,
   onHideChat,
-  onBackToList
+  onBackToList,
+  isLoadingMessages = false
 }) => {
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -300,7 +303,12 @@ const ChatContainer: React.FC<ChatContainerProps> = ({
 
       {/* Messages Area */}
       <div ref={scrollContainerRef} className="flex-1 overflow-y-auto p-3 sm:p-4">
-        {messages.length === 0 ? (
+        {isLoadingMessages ? (
+          // Loading State
+          <div className="flex items-center justify-center h-full">
+            <PetPawLoadingSmall message="Loading messages..." />
+          </div>
+        ) : messages.length === 0 ? (
           // Empty State
           <div className="flex items-center justify-center h-full">
             <div className="text-center px-4">

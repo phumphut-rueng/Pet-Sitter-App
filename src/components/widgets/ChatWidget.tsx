@@ -54,6 +54,7 @@ export default function ChatWidget() {
   const [chats, setChats] = useState<Chat[]>([]);
   const [messages, setMessages] = useState<Message[]>([]);
   const [loading, setLoading] = useState(true);
+  const [isLoadingMessages, setIsLoadingMessages] = useState(false); // เพิ่ม loading state สำหรับ messages
   const [isMobileView, setIsMobileView] = useState(false); // State สำหรับ mobile view
   const { isConnected, sendMessage, userId, onlineUsers, messages: socketMessages, socket } = useSocketContext();
   const router = useRouter();
@@ -194,6 +195,8 @@ export default function ChatWidget() {
             setMessages([]); // ล้างข้อความถ้าไม่มีสิทธิ์เข้าถึง
         }
       }
+    } finally {
+      setIsLoadingMessages(false); // หยุด loading หลังจาก fetch เสร็จ (ทั้งสำเร็จและ error)
     }
   };
 
@@ -380,6 +383,12 @@ export default function ChatWidget() {
 
   const handleChatSelect = async (chatId: string) => {
     console.log('handleChatSelect called:', chatId);
+    
+    // เริ่ม loading เฉพาะตอนเปลี่ยน chat (selectedChatId เปลี่ยน)
+    if (selectedChatId !== chatId) {
+      setIsLoadingMessages(true);
+    }
+    
     setSelectedChatId(chatId);
     setIsMobileView(true); // เปิด mobile view เมื่อเลือก chat
     
@@ -598,6 +607,7 @@ export default function ChatWidget() {
           hasChats={chats.length > 0} // ส่งข้อมูลว่ามี chat ใน chatlist หรือไม่
           onHideChat={handleHideChat} // ส่งฟังก์ชันสำหรับซ่อน chat
           onBackToList={handleBackToList} // ส่งฟังก์ชันสำหรับกลับไปที่ chat list
+          isLoadingMessages={isLoadingMessages} // ส่ง loading state สำหรับ messages
         />
       </div>
     </div>
