@@ -11,12 +11,10 @@ export const useUnreadCount = (userId: string | undefined) => {
     
     setLoading(true);
     try {
-      console.log('Fetching unread count for user:', userId);
       const response = await axios.get('/api/chat/unread-count');
       
       if (response.data.success) {
         const newCount = response.data.totalUnreadCount || 0;
-        console.log('Unread count updated:', newCount);
         setUnreadCount(newCount);
       }
     } catch (error) {
@@ -36,15 +34,11 @@ export const useUnreadCount = (userId: string | undefined) => {
   // ฟัง unread_update event จาก custom events
   useEffect(() => {
     const handleUnreadUpdate = (event: CustomEvent) => {
-      const data = event.detail;
-      console.log('Received unread_update in navbar via custom event:', data);
       // Fetch ข้อมูลใหม่จาก API เพื่อความแม่นยำ
       fetchUnreadCount();
     };
 
     const handleReceiveMessage = (event: CustomEvent) => {
-      const message = event.detail;
-      console.log('Received message in navbar via custom event:', message);
       // เมื่อได้รับข้อความใหม่ ให้ refresh unread count
       fetchUnreadCount();
     };

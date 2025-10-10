@@ -25,11 +25,8 @@ export const useSocket = () => {
   useEffect(() => {
     // เชื่อมต่อ socket เมื่อ user login แล้ว
     if (status === 'authenticated' && session?.user?.id) {
-      console.log('Connecting socket for user:', session.user.id);
-      
       // ถ้า socket ยังเชื่อมต่ออยู่ ไม่ต้องทำอะไร
       if (socketRef.current?.connected) {
-        console.log('Socket already connected, skipping');
         setIsSocketReady(true);
         setIsWaitingForSocket(false);
         return;
@@ -38,33 +35,25 @@ export const useSocket = () => {
       const connectSocketWithRetry = async () => {
         try {
           // เช็คว่า socket server instance ถูกสร้างแล้วหรือยัง
-          console.log('Checking socket server status...');
           const isServerReady = await checkSocketServerStatus();
           
           if (!isServerReady) {
             // ถ้า server instance ยังไม่ถูกสร้าง แสดง loading
-            console.log('Socket server instance not created yet, showing loading...');
             setIsWaitingForSocket(true);
             setIsSocketReady(false);
             
             // เรียก API เพื่อกระตุ้นให้สร้าง socket server instance
-            console.log('Triggering socket server initialization...');
             await axios.get('/api/chat/socket');
             
             // รอสักครู่เพื่อให้ server instance ถูกสร้างเสร็จ
             await new Promise(resolve => setTimeout(resolve, 1000));
-          } else {
-            // ถ้า server instance ถูกสร้างแล้ว ไม่ต้องแสดง loading
-            console.log('Socket server instance already exists, skipping loading...');
           }
           
           // สร้าง socket connection (ไม่แสดง loading ในขั้นตอนนี้)
-          console.log('Creating socket connection for user:', session.user.id);
           socketRef.current = connectSocket(session.user.id);
           
           setIsSocketReady(true);
           setIsWaitingForSocket(false);
-          console.log('Socket initialized successfully');
         } catch (error) {
           console.error('Error initializing socket:', error);
           // แม้เกิด error ก็ปิด loading
@@ -81,7 +70,6 @@ export const useSocket = () => {
       // disconnect เมื่อ user logout หรือ component unmount
       return () => {
         if (socketRef.current) {
-          console.log('Disconnecting socket');
           disconnectSocket();
           socketRef.current = null;
         }
@@ -92,7 +80,6 @@ export const useSocket = () => {
     } else if (status === 'unauthenticated') {
       // ถ้า user logout ให้ disconnect socket
       if (socketRef.current) {
-        console.log('User logged out, disconnecting socket');
         disconnectSocket();
         socketRef.current = null;
       }
