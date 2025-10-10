@@ -35,7 +35,7 @@ export default async function socketHandler(req: NextApiRequest, res: NextApiRes
     // SocketLoading จะแสดงเฉพาะตอนนี้เท่านั้น (เมื่อ !res.socket?.server?.io === true)
     // หลังจากนี้ instance จะถูกเก็บไว้และไม่ต้องสร้างใหม่อีก
     console.log('🚀 Creating Socket.io Server Instance for the first time...');
-    const httpServer = res.socket!.server;
+    const httpServer = res.socket!.server as unknown as import('http').Server;
     io = new Server(httpServer, { 
       path: '/api/chat/socket', 
       cors: { 

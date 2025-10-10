@@ -72,7 +72,7 @@ model user {
   created_at               DateTime                  @default(now()) @db.Timestamp(6)
   updated_at               DateTime?                 @db.Timestamp(6)
   profile_image_public_id  String?                   @db.VarChar(255)
-  status                   user_status               @default(normal)
+  status                   user_status               @default(ACTIVE)
   approval_status_id       Int                       @default(1)
   status_updated_at        DateTime?                 @db.Timestamp(6)
   admin_note               String?                   @db.VarChar(1000)
@@ -201,7 +201,7 @@ model report {
   id                  Int           @id @default(autoincrement())
   reporter_id         Int
   handled_by_admin_id Int?
-  status              report_status @default(new)
+  status              report_status @default(NEW)
   title               String        @db.VarChar(150)
   description         String?       @db.VarChar(2000)
   attachments_json    Json?
@@ -317,13 +317,13 @@ model status {
 }
 
 enum report_status {
-  new
-  pending
-  resolved
-  canceled
+  NEW
+  PENDING
+  RESOLVED
+  CANCELED
 }
 
 enum user_status {
-  normal
-  ban
+  ACTIVE
+  SUSPENDED
 }
