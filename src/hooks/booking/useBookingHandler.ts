@@ -3,8 +3,10 @@ import { useRouter } from "next/router"
 import { useSession } from "next-auth/react"
 import { Pet, PetStatus } from "@/types/pet.types"
 import { PetType, Sitter } from "@/types/sitter.types"
-import { getPetById, getSitterById } from "@/lib/booking/booking-api"
+import { getPetById, getSitterById, postBookingAndPayment } from "@/lib/booking/booking-api"
 import { useBookingForm } from "./useBookingForm"
+import { paymentData } from "@/types/booking.types"
+import { OmiseTokenResponse } from "@/types/omise.types"
 
 export function useBookingHandler() {
     const router = useRouter()
@@ -17,11 +19,18 @@ export function useBookingHandler() {
     const parsedSitterId = sitterId ? Number(sitterId) : undefined
 
     // States
+    const [isMobile, setIsMobile] = useState(false);
     const [activeStep, setActiveStep] = useState(1)
     const [pets, setPets] = useState<Pet[]>([])
     const [sitter, setSitter] = useState<Sitter>()
     const [loading, setLoading] = useState(true)
     const [refreshKey, setRefreshKey] = useState(0)
+    const [isConfirmation, setIsConfirmation] = useState(false)
+
+    // Payment states
+    const [isProcessingPayment, setIsProcessingPayment] = useState(false)
+    const [paymentError, setPaymentError] = useState<string>("")
+    const [bookingData, setBookingData] = useState<OmiseTokenResponse>()
 
     // Form handling
     const formHandlers = useBookingForm()
@@ -44,6 +53,16 @@ export function useBookingHandler() {
             hasFetched.current = false
         }
     }, [refreshKey])
+
+    useEffect(() => {
+        if (isMobile) {
+            setTimeout(() => {
+                window.scrollTo(0, 0);
+                // document.documentElement.scrollTop = 0;
+                document.body.scrollTop = 0;
+            }, 10);
+        }
+    }, [activeStep, isMobile]);
 
     useEffect(() => {
         const fetchData = async () => {
@@ -81,6 +100,18 @@ export function useBookingHandler() {
 
         fetchData()
     }, [currentUserId, parsedSitterId, refreshKey])
+
+    // ตรวจสอบว่าเป็น mobile หรือไม่
+    useEffect(() => {
+        const checkMobile = () => {
+            setIsMobile(window.innerWidth < 768); // 768px = md breakpoint ของ Tailwind
+        };
+
+        checkMobile();
+        window.addEventListener('resize', checkMobile);
+
+        return () => window.removeEventListener('resize', checkMobile);
+    }, []);
 
     // Calculate selection
     const selectedPets = pets.filter(pet => pet.status === "selected")
@@ -127,6 +158,99 @@ export function useBookingHandler() {
     };
     const duration = calculateDuration();
 
+    const createOmiseToken = (cardData: {
+        name: string;
+        number: string;
+        expiration_month: string;
+        expiration_year: string;
+        security_code: string;
+    }): Promise<string> => {
+        return new Promise((resolve, reject) => {
+            if (!window.Omise) {
+                reject(new Error('Omise library not loaded'));
+                return;
+            }
+
+            window.Omise.setPublicKey(
+                process.env.NEXT_PUBLIC_OMISE_PUBLIC_KEY || ''
+            );
+
+            window.Omise.createToken('card', cardData, (statusCode, response) => {
+                // Type guard: เช็คว่าเป็น error หรือไม่
+                if (response.object === 'error') {
+                    reject(new Error(response.message));
+                } else {
+                    // TypeScript รู้ว่าตรงนี้เป็น OmiseTokenResponse แน่นอน
+                    resolve(response.id);
+                }
+            });
+        });
+    };
+
+    const processPayment = useCallback(async (): Promise<boolean> => {
+        setIsProcessingPayment(true);
+        setPaymentError("");
+
+        try {
+            // Parse expiry date (MM/YY)
+            const [expMonth, expYear] = formHandlers.form.expiryDate.split('/');
+
+            // Create Omise token
+            const token = await createOmiseToken({
+                name: formHandlers.form.cardName,
+                number: formHandlers.form.cardNumber.replace(/\s|-/g, ''),
+                expiration_month: expMonth,
+                expiration_year: `20${expYear}`,
+                security_code: formHandlers.form.cvc,
+            });
+
+            // Prepare booking data
+            const bookingData: paymentData = {
+                token,
+                amount: totalPrice * 100, // Convert to satang
+                currency: 'THB',
+                description: `Booking for ${formHandlers.form.name} ${new Date()}`, //เปลี่ยนตรงนี้ด้วย
+                metadata: {
+                    sitterId: parsedSitterId,
+                    petIds: selectedPets.map(p => p.id).join(','),
+                    startTime: startTime,
+                    endTime: endTime,
+                    customerName: formHandlers.form.name,
+                    customerEmail: formHandlers.form.email,
+                    customerPhone: formHandlers.form.phone,
+                    additionalMessage: formHandlers.form.addition,
+                }
+            };
+
+            const result = await postBookingAndPayment(bookingData);
+
+            setBookingData(result)
+            return true
+        } catch (err) {
+            console.error('Payment error:', err);
+            setPaymentError(
+                err instanceof Error ? err.message : 'เกิดข้อผิดพลาดในการชำระเงิน'
+            );
+            return false
+        } finally {
+            setIsProcessingPayment(false);
+        }
+    }, [
+        formHandlers.form.expiryDate,
+        formHandlers.form.cardName,
+        formHandlers.form.cardNumber,
+        formHandlers.form.cvc,
+        formHandlers.form.name,
+        formHandlers.form.email,
+        formHandlers.form.phone,
+        formHandlers.form.addition,
+        totalPrice,
+        parsedSitterId,
+        selectedPets,
+        startTime,
+        endTime,
+    ]);
+
     // Handlers
     const handleRefreshPets = useCallback(() => {
         setRefreshKey(prev => prev + 1)
@@ -154,10 +278,34 @@ export function useBookingHandler() {
                 !errors.expiryDate && !errors.cvc
         }
 
-        if (activeStep < 3 && canProceed) {
-            setActiveStep(prev => prev + 1)
+        if (canProceed) {
+            if (activeStep < 3) {
+                setActiveStep(prev => prev + 1)
+                window.scrollTo(0, 0);
+            } else if (activeStep === 3) {
+                setIsConfirmation(true)
+            }
         }
     }, [activeStep, formHandlers])
+
+    const handleConfirmation = useCallback(() => {
+        setIsConfirmation(false)
+        processPayment()
+        setActiveStep(4)
+    }, [processPayment])
+
+    const handleBackToHome = useCallback(() => {
+        router.push("/")
+    }, [router])
+
+    const handleBookingDetail = useCallback(() => {
+        alert('Showing booking details...');
+    }, [])
+
+    const handleViewMap = useCallback(() => {
+        alert('Opening map location...');
+    }, [])
+
 
     return {
         // Router data
@@ -165,11 +313,19 @@ export function useBookingHandler() {
         endTime,
 
         // States
+        isMobile,
         activeStep,
         pets,
         setPets,
         sitter,
         loading,
+        isConfirmation,
+        setIsConfirmation,
+
+        // Payment states
+        isProcessingPayment,
+        paymentError,
+        bookingData,
 
         // Selection
         hasSelection,
@@ -181,7 +337,11 @@ export function useBookingHandler() {
         handleBack,
         handleNext,
         handleRefreshPets,
+        handleConfirmation,
 
+        handleBackToHome,
+        handleBookingDetail,
+        handleViewMap,
         // Form
         ...formHandlers
     }

@@ -7,7 +7,7 @@ export default async function handler(
 ) {
   if (req.method !== "POST") {
     res.setHeader("Allow", ["POST"]);
-    return res.status(405).end(`Method ${req.method} Not Allowed`);
+    return res.status(405).json({ message: `Method ${req.method} not allowed` });
   }
 
   try {
@@ -34,7 +34,7 @@ export default async function handler(
         },
         sitter_pet_type: {
           create: data.petTypeIds?.map((id: number) => ({
-            pet_type: { connect: { id } },  
+            pet_type: { connect: { id } },
           })) || [],
         },
       },
@@ -43,7 +43,7 @@ export default async function handler(
         sitter_pet_type: { include: { pet_type: true } },
       },
     });
-    
+
 
     return res.status(201).json(sitter);
   } catch (error) {

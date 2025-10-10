@@ -7,7 +7,7 @@ export const allowMethods = (
 ): boolean => {
   if (!methods.includes(req.method ?? "")) {
     res.setHeader("Allow", methods);
-    res.status(405).json({ error: "Method not allowed" });
+    res.status(405).json({ error: `Method ${req.method} not allowed` });
     return false;
   }
   return true;

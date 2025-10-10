@@ -4,7 +4,7 @@ import { prisma } from "@/lib/prisma/prisma";
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== "GET") {
     res.setHeader("Allow", ["GET"]);
-    return res.status(405).end(`Method ${req.method} Not Allowed`);
+    return res.status(405).json({ message: `Method ${req.method} not allowed` });
   }
 
   try {
@@ -15,7 +15,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     }
 
     const searchTerm = query.trim();
-    
+
     if (searchTerm.length < 2) {
       return res.status(200).json({ suggestions: [] });
     }
@@ -70,7 +70,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     // Format results
     const formattedSuggestions = suggestions.map(sitter => {
       const results = [];
-      
+
       // เพิ่ม Pet Sitter Name ถ้าตรงกับคำค้นหา
       if (sitter.name && sitter.name.toLowerCase().includes(searchTerm.toLowerCase())) {
         results.push({
@@ -79,17 +79,17 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           type: 'sitter'
         });
       }
-      
+
       // เพิ่ม Full Name ถ้าตรงกับคำค้นหา
-      if (sitter.user?.name && 
-          sitter.user.name.toLowerCase().includes(searchTerm.toLowerCase())) {
+      if (sitter.user?.name &&
+        sitter.user.name.toLowerCase().includes(searchTerm.toLowerCase())) {
         results.push({
           sitterName: sitter.name || '',
           userName: sitter.user.name,
           type: 'user'
         });
       }
-      
+
       return results;
     }).flat().slice(0, 5); // จำกัดไม่เกิน 5 รายการ
 

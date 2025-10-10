@@ -4,7 +4,7 @@ import { prisma } from "@/lib/prisma/prisma";
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== "GET") {
     res.setHeader("Allow", ["GET"]);
-    return res.status(405).end(`Method ${req.method} Not Allowed`);
+    return res.status(405).json({ message: `Method ${req.method} not allowed` });
   }
 
   try {
@@ -54,7 +54,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         default:
           statusName = String(status);
       }
-      
+
       whereConditions.push(`sas.status_name = $${paramIndex}`);
       queryParams.push(statusName);
       paramIndex++;
@@ -133,7 +133,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     }));
 
     if (formattedResults.length === 0) {
-      return res.status(200).json({ 
+      return res.status(200).json({
         message: "ไม่พบข้อมูล",
         data: [],
         pagination: {

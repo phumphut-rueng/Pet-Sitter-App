@@ -6,18 +6,20 @@ import { Prisma } from "@prisma/client";
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   try {
-    if (req.method !== "GET") return res.status(405).end("Method Not Allowed");
+    if (req.method !== "GET") {
+      return res.status(405).json({ message: `Method ${req.method} not allowed` });
+    }
 
     const session = await getServerSession(req, res, authOptions);
     if (!session?.user?.email) return res.status(401).json({ message: "Unauthorized" });
 
     const user = await prisma.user.findUnique({
       where: { email: session.user.email },
-      select: { 
-        id: true, 
-        email: true, 
-        phone: true, 
-        name: true, 
+      select: {
+        id: true,
+        email: true,
+        phone: true,
+        name: true,
         profile_image: true,
         approval_status_id: true,
         sitter_approval_status: {
@@ -44,13 +46,13 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     }>;
 
     if (!sitter) {
-      return res.status(200).json({ 
-        exists: false, 
+      return res.status(200).json({
+        exists: false,
         user: {
           ...user,
           sitter_approval_status: user.sitter_approval_status
-        }, 
-        sitter: null 
+        },
+        sitter: null
       });
     }
 

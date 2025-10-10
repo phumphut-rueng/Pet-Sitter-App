@@ -2,7 +2,7 @@ import InputText from "../input/InputText";
 import { FormEvent } from "react";
 import { BookingForm } from "@/types/booking.types";
 
-export default function BookingSelectPayment(
+export default function BookingPayment(
     {
         form,
         error,
@@ -74,13 +74,13 @@ export default function BookingSelectPayment(
                             id="expiryDate"
                             name="expiryDate"
                             value={form.expiryDate}
-                            placeholder="xxx-xxx-xxxx"
+                            placeholder="xx/xx"
                             type="text"
                             variant={!error.expiryDate ? "default" : "error"}
                             inputMode="numeric"
                             onChange={handleExpiryDateChange}
                             errorText={error.expiryDate}
-                            maxLength={7}
+                            maxLength={5}
                             autoComplete="off"
                         />
                     </div>

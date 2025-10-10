@@ -148,7 +148,7 @@ export default async function handler(
         return handleUpdateProfile(userId, req, res);
       default:
         res.setHeader("Allow", ["GET", "PUT"]);
-        return json(res, HTTP_STATUS.METHOD_NOT_ALLOWED, { error: "Method not allowed" });
+        return json(res, HTTP_STATUS.METHOD_NOT_ALLOWED, { error: `Method ${req.method} not allowed` });
     }
   } catch (error: unknown) {
     console.error("Profile API error:", error);

@@ -4,7 +4,8 @@ import { satoshi, notoThai } from "@/fonts";
 export default function Document() {
   return (
     <Html className={`${satoshi.variable} ${notoThai.variable}`}>
-      <Head />
+      <Head>
+      </Head>
       <body>
         <Main />
         <NextScript />

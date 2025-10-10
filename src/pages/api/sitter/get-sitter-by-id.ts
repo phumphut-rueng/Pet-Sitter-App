@@ -4,16 +4,16 @@ import { prisma } from "@/lib/prisma/prisma";
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== "GET") {
     res.setHeader("Allow", ["GET"]);
-    return res.status(405).end(`Method ${req.method} Not Allowed`);
+    return res.status(405).json({ message: `Method ${req.method} not allowed` });
   }
 
   try {
     const { id, page = "1", limit = "5" } = req.query;
 
     if (!id || isNaN(Number(id))) {
-      return res.status(400).json({ 
+      return res.status(400).json({
         message: "Invalid sitter ID",
-        data: null 
+        data: null
       });
     }
 
@@ -25,19 +25,19 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     // ดึงข้อมูล sitter พื้นฐานก่อน
     const sitter = await prisma.sitter.findUnique({
       where: { id: sitterId },
-  include: {
-    user: {
-      select: {
-        id: true,
-        name: true,
-        profile_image: true,
+      include: {
+        user: {
+          select: {
+            id: true,
+            name: true,
+            profile_image: true,
+          },
+        },
       },
-    },
-  },
     });
 
     if (!sitter) {
-      return res.status(404).json({ 
+      return res.status(404).json({
         message: "ไม่พบข้อมูล pet sitter",
         data: null
       });
@@ -69,11 +69,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     ]);
 
     // คำนวณคะแนนเฉลี่ย
-    const averageRating = totalReviews > 0 
+    const averageRating = totalReviews > 0
       ? (await prisma.review.aggregate({
-          where: { sitter_id: sitterId },
-          _avg: { rating: true }
-        }))._avg.rating || 0
+        where: { sitter_id: sitterId },
+        _avg: { rating: true }
+      }))._avg.rating || 0
       : 0;
 
     // Format results
@@ -97,7 +97,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     });
   } catch (error) {
     console.error("❌ Error fetching sitter by ID:", error);
-    return res.status(500).json({ 
+    return res.status(500).json({
       message: "Error fetching sitter",
       error: error instanceof Error ? error.message : "Unknown error"
     });

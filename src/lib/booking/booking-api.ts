@@ -1,6 +1,8 @@
 import axios, { AxiosError } from "axios"
 import { Pet } from "@/types/pet.types"
 import { Sitter } from "@/types/sitter.types"
+import { OmiseTokenResponse } from "@/types/omise.types"
+import { paymentData } from "@/types/booking.types"
 
 interface ErrorResponse {
     error: string
@@ -49,3 +51,26 @@ export const getSitterById = async (id: number): Promise<Sitter | undefined> => 
     return undefined
 }
 
+export const postBookingAndPayment = async (paymentData: paymentData): Promise<OmiseTokenResponse | undefined> => {
+    try {
+        const result = await axios.post<OmiseTokenResponse>(
+            `/api/charge`,
+            paymentData
+        )
+        console.log("postBookingAndPayment", result.data);
+
+        if (result?.status === 200) {
+            return result.data
+        }
+    } catch (error) {
+        const axiosError = error as AxiosError<ErrorResponse>
+
+        if (axiosError.response?.status === 404) {
+            console.log(axiosError.response?.data?.error)
+        } else {
+            console.error("Error fetching sitter:", axiosError.response?.data || axiosError.message)
+        }
+    }
+
+    return undefined
+}
