@@ -52,7 +52,6 @@ export const SocketProvider: React.FC<SocketProviderProps> = ({ children }) => {
         const response = await axios.get('/api/chat/online-users');
         
         if (response.data.success) {
-          console.log('Loaded initial online users:', response.data.onlineUsers);
           setOnlineUsers(response.data.onlineUsers);
         }
       } catch (error) {
@@ -67,17 +66,14 @@ export const SocketProvider: React.FC<SocketProviderProps> = ({ children }) => {
 
     // ฟังก์ชันสำหรับจัดการ custom events
     const handleReceiveMessage = (event: CustomEvent<MessagePayload>) => {
-      console.log('Received message via custom event:', event.detail);
       setMessages(prev => [...prev, event.detail]);
     };
 
     const handleUnreadUpdate = (event: CustomEvent<UnreadUpdateData>) => {
-      console.log('Unread update via custom event:', event.detail);
       setUnreadUpdates(prev => [...prev, event.detail]);
     };
 
     const handleUserOnline = (event: CustomEvent<string>) => {
-      console.log('User online via custom event:', event.detail);
       setOnlineUsers(prev => {
         // ตรวจสอบว่า user ID นี้ยังไม่อยู่ในรายการ
         if (!prev.includes(event.detail)) {
@@ -88,17 +84,14 @@ export const SocketProvider: React.FC<SocketProviderProps> = ({ children }) => {
     };
 
     const handleUserOffline = (event: CustomEvent<string>) => {
-      console.log('User offline via custom event:', event.detail);
       setOnlineUsers(prev => prev.filter(id => id !== event.detail));
     };
 
     const handleOnlineUsersList = (event: CustomEvent<string[]>) => {
-      console.log('Online users list via custom event:', event.detail);
       setOnlineUsers(event.detail);
     };
 
     const handleChatListUpdate = (event: CustomEvent<ChatListUpdateData>) => {
-      console.log('Chat list update via custom event:', event.detail);
       // ส่ง event ไปให้ ChatWidget เพื่อ refresh chat list
       window.dispatchEvent(new CustomEvent('refresh_chat_list', { detail: event.detail }));
     };
