@@ -13,7 +13,9 @@
   --color-border: var(--border);
 
   /* NEW: ink (Figma black) */
+  
   --color-ink: var(--ink);
+  --color-black:var(--black);
 
   /* Brand */
   --color-brand: var(--brand);
@@ -274,6 +276,24 @@ img, video, canvas, svg, iframe { max-width: 100%; height: auto; }
   .h2-medium { font: 500 36px/44px var(--font-sans); }
   .h3-medium { font: 500 24px/32px var(--font-sans); }
   .h4-medium { font: 500 20px/28px var(--font-sans); }
+
+   /* เพิ่ม Body Variants (แบบเดียวกับ Heading)  */
+   .body1-bold    { font: 700 18px/150% var(--font-sans); }  /* 18px/27px */
+   .body1-medium  { font: 500 18px/150% var(--font-sans); }
+   .body1-regular { font: 400 18px/150% var(--font-sans); }
+ 
+   .body2-bold    { font: 700 16px/150% var(--font-sans); }  /* 16px/24px */
+   .body2-medium  { font: 500 16px/150% var(--font-sans); }
+   .body2-regular { font: 400 16px/150% var(--font-sans); }
+ 
+   .body3-bold    { font: 700 14px/150% var(--font-sans); }  /* 14px/21px */
+   .body3-medium  { font: 500 14px/150% var(--font-sans); }
+   .body3-regular { font: 400 14px/150% var(--font-sans); }
+ 
+   /* เพิ่ม Gray-5 */
+   .text-gray-5 { color: #AEB1C3; }
+   .bg-gray-5 { background-color: #AEB1C3; }
+   .border-gray-5 { border-color: #AEB1C3; }
 
   /* Responsive Typography */
   @media (max-width: 768px) {

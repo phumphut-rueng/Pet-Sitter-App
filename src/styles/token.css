@@ -14,7 +14,8 @@
   --white-1: #FAFAFB;
 
     /* NEW: Figma Black for body text */
-    --ink: #060D18; /* <— ใช้กับ text-ink */
+    --ink: #060D18; /*  ใช้กับ text-ink */
+    --black:#000000;
 
   /* Brand Colors */
   --orange-6: #E44A0C;  /* darker */

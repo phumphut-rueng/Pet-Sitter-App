@@ -16,18 +16,20 @@ import toast from "react-hot-toast";
 import { api } from "@/lib/api/axios";
 import type { PetItem } from "@/types/admin/owners";
 
+type AxiosLikeError = {
+  message?: string;
+  response?: { data?: unknown; status?: number };
+};
+
 export default function OwnerDetailPage() {
   const router = useRouter();
   const ownerIdParam = router.query.ownerId as string | undefined;
 
-  // รอให้ router พร้อมก่อนส่ง id ไปยัง hooks
   const effectiveOwnerId = router.isReady ? ownerIdParam : undefined;
 
-  // Owner data - ใช้ effectiveOwnerId
   const { loading, error, owner, tab, setTab, refetch } = useOwnerDetail(effectiveOwnerId);
   const isSuspended = owner?.status === "ban";
 
-  // Reviews - ใช้ effectiveOwnerId
   const {
     loading: reviewsLoading,
     error: reviewsError,
@@ -35,19 +37,16 @@ export default function OwnerDetailPage() {
     meta: reviewsMeta,
   } = useOwnerReviews(effectiveOwnerId);
 
-  // Dialog states
   const [dialogOpen, setDialogOpen] = React.useState(false);
   const [dialogLoading, setDialogLoading] = React.useState(false);
   const [mode, setMode] = React.useState<"ban" | "unban">("ban");
 
-  // Pet modal states
   const [selectedPet, setSelectedPet] = React.useState<PetItem | null>(null);
   const [petModalOpen, setPetModalOpen] = React.useState(false);
+  const [petActionLoading, setPetActionLoading] = React.useState(false);
 
-  // Optimistic hide: เก็บ id ของ pet ที่กด Suspend เพื่อให้การ์ดหายทันที
   const [hiddenPetIds, setHiddenPetIds] = React.useState<number[]>([]);
 
-  /** Ban / Unban owner (cascade pets ทั้งคู่) */
   async function handleBanUnban() {
     if (!ownerIdParam) return;
     setDialogLoading(true);
@@ -62,7 +61,7 @@ export default function OwnerDetailPage() {
       await refetch();
 
       if (mode === "unban") setHiddenPetIds([]);
-    } catch (err) {
+    } catch (err: unknown) {
       toast.error(getErrorMessage(err));
     } finally {
       setDialogLoading(false);
@@ -71,38 +70,62 @@ export default function OwnerDetailPage() {
 
   /** Toggle Pet Ban (optimistic hide เมื่อ suspend) */
   async function handlePetToggleSuspend(petId: number, shouldBan: boolean) {
-    // optimistic: ถ้าจะ ban ให้ซ่อนการ์ดก่อน
-    if (shouldBan) setHiddenPetIds((prev) => (prev.includes(petId) ? prev : [...prev, petId]));
+    console.log(" Frontend: handlePetToggleSuspend called!", { petId, shouldBan });
+
+    if (shouldBan) {
+      setHiddenPetIds((prev) => (prev.includes(petId) ? prev : [...prev, petId]));
+      console.log(" Frontend: Hidden pet:", petId);
+    }
+
+    setPetActionLoading(true);
 
     try {
-      await api.post(`admin/pets/${petId}/ban`, {
+      console.log(" Frontend: Calling API...");
+      console.log(" Frontend: URL:", `admin/pets/${petId}/ban`);
+      console.log(" Frontend: Body:", { action: shouldBan ? "ban" : "unban" });
+
+      const response = await api.post(`admin/pets/${petId}/ban`, {
         action: shouldBan ? "ban" : "unban",
+        reason: shouldBan ? "Violated policy" : undefined,
       });
 
-      // ถ้า unban สำเร็จและตัวนี้เคยถูกซ่อนด้วย optimistic จากก่อนหน้า ให้ปลดซ่อน
+      console.log(" Frontend: API Response:", response.data);
+
+      console.log(" Frontend: Starting refetch...");
+      await refetch();
+      console.log(" Frontend: Refetch done");
+
+      toast.success(shouldBan ? "Pet suspended" : "Pet unsuspended");
+
+      setPetModalOpen(false);
+      setSelectedPet(null);
+
       if (!shouldBan) {
         setHiddenPetIds((prev) => prev.filter((id) => id !== petId));
       }
+    } catch (err: unknown) {
+      // ปลอด any: แปลงเป็นชนิดที่เราตรวจสอบได้
+      const ax = err as AxiosLikeError;
+      console.error(" Frontend: ERROR:", err);
+      if (ax.message) console.error(" Frontend: ERROR Message:", ax.message);
+      if (ax.response) {
+        console.error(" Frontend: ERROR Response:", ax.response.data);
+        console.error(" Frontend: ERROR Status:", ax.response.status);
+      }
 
-      // อัปเดตข้อมูลจริง
-      await refetch();
-      toast.success(shouldBan ? "Pet banned" : "Pet unbanned");
-      setPetModalOpen(false);
-    } catch (err) {
-      // ย้อนกลับ optimistic เมื่อ error
       if (shouldBan) {
         setHiddenPetIds((prev) => prev.filter((id) => id !== petId));
       }
-      console.error("Failed to update pet:", err);
       toast.error(getErrorMessage(err, "Failed to update pet status"));
+      throw err;
+    } finally {
+      setPetActionLoading(false);
+      console.log(" Frontend: Loading done");
     }
   }
 
-  // กรองรายการที่จะโชว์: ไม่แสดงตัวที่ถูกแบน + ไม่แสดงตัวที่ถูกซ่อนแบบ optimistic
   const visiblePets: PetItem[] =
-    owner?.pets
-      ?.filter((p) => !p.is_banned) // ไม่โชว์ตัวที่ถูกแบน
-      .filter((p) => !hiddenPetIds.includes(p.id)) ?? []; // ไม่โชว์ตัวที่เพิ่งซ่อน
+    owner?.pets?.filter((p) => !p.is_banned).filter((p) => !hiddenPetIds.includes(p.id)) ?? [];
 
   return (
     <>
@@ -112,32 +135,23 @@ export default function OwnerDetailPage() {
 
       <div className="mx-auto w-full max-w-[1200px]">
         <div className="flex gap-6">
-          {/* Sidebar */}
           <aside className="hidden shrink-0 md:block md:w-[240px]">
             <AdminSidebar sticky />
           </aside>
 
-          {/* Main */}
           <main className="min-w-0 flex-1 px-4 py-6 lg:px-6">
-            {/* Loading */}
-            {loading && (
-              <PetPawLoading message="Loading Owner Details" size="md" />
-            )}
+            {loading && <PetPawLoading message="Loading Owner Details" size="md" />}
 
-            {/* Error */}
             {!loading && error && <div className="py-16 text-center text-danger">{error}</div>}
 
-            {/* Not Found */}
             {!loading && !error && !owner && router.isReady && ownerIdParam && (
               <div className="py-16 text-center text-ink">Not found</div>
             )}
 
-            {/* Data */}
             {!loading && owner && (
               <section>
                 <OwnerHeader title={owner?.name ?? "-"} tab={tab} onTabChange={setTab} showBack />
 
-                {/* Profile */}
                 {tab === "profile" && (
                   <OwnerProfileCard
                     owner={owner}
@@ -149,7 +163,6 @@ export default function OwnerDetailPage() {
                   />
                 )}
 
-                {/* Pets */}
                 {tab === "pets" && (
                   <OwnerPetsList
                     pets={visiblePets}
@@ -160,7 +173,6 @@ export default function OwnerDetailPage() {
                   />
                 )}
 
-                {/* Reviews */}
                 {tab === "reviews" && (
                   <OwnerReviewsList
                     reviews={reviews}
@@ -175,7 +187,6 @@ export default function OwnerDetailPage() {
         </div>
       </div>
 
-      {/* Ban Confirmation Dialog */}
       <BanConfirm
         open={dialogOpen}
         loading={dialogLoading}
@@ -184,13 +195,12 @@ export default function OwnerDetailPage() {
         onConfirm={handleBanUnban}
       />
 
-      {/* Pet Detail Modal */}
       <PetDetailModal
         open={petModalOpen}
         onOpenChange={setPetModalOpen}
         pet={selectedPet}
         onToggleSuspend={handlePetToggleSuspend}
-        loading={loading}
+        loading={petActionLoading}
       />
     </>
   );
