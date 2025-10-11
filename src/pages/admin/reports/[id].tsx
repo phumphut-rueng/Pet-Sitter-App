@@ -3,12 +3,13 @@ import { useRouter } from "next/router";
 import AdminLayout from "@/components/layout/AdminLayout";
 import ConfirmDialog from "@/components/admin/shared/ConfirmDialog";
 import { StatusBadge } from "@/components/badges/StatusBadge";
+import { PetPawLoading } from "@/components/loading/PetPawLoading";
 import { api } from "@/lib/api/axios";
 import type { Report, ReportStatus } from "@/types/admin/reports";
 import { toUIStatus } from "@/types/admin/reports";
 import { getErrorMessage } from "@/lib/api/api-utils"; 
 
-//  Component สำหรับแสดงข้อมูล
+// Component สำหรับแสดงข้อมูล
 function Field({
   label,
   value,
@@ -20,11 +21,11 @@ function Field({
 }) {
   return (
     <div className="pb-6">
-      {/*  Label */}
+      {/* Label */}
       <div className="h4-bold text-gray-5 mb-2">{label}</div>
-      {/*  Value */}
+      {/* Value */}
       <div className="body1-regular text-ink">{value}</div>
-      {/*  เส้นใต้ (อยู่ใต้ Value) */}
+      {/* เส้นใต้ (อยู่ใต้ Value) */}
       {showDivider && <div className="w-full h-[1px] bg-gray-2 mt-4" />}
     </div>
   );
@@ -87,10 +88,11 @@ export default function ReportDetailPage() {
     }
   };
 
+  //  Loading State with PetPawLoading
   if (loading) {
     return (
       <AdminLayout>
-        <div className="body1-regular text-gray-6">Loading...</div>
+        <PetPawLoading message="Loading Report Details" size="md" />
       </AdminLayout>
     );
   }
@@ -148,16 +150,16 @@ export default function ReportDetailPage() {
         )}
       </div>
 
-      {/*  Content Card */}
+      {/* Content Card */}
       <div className="bg-white rounded-2xl border border-gray-2 p-10 space-y-0">
-        {/*  Reported by - มีเส้นใต้ */}
+        {/* Reported by - มีเส้นใต้ */}
         <Field
           label="Reported by"
           value={`${report.reporter.name} (${report.reporter.email})`}
           showDivider={true}
         />
 
-        {/*  ฟิลด์อื่นๆ - ไม่มีเส้นใต้ */}
+        {/* ฟิลด์อื่นๆ - ไม่มีเส้นใต้ */}
         {report.reportedUser && (
           <Field
             label="Reported Person"

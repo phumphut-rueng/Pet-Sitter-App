@@ -3,11 +3,11 @@ import AdminLayout from "@/components/layout/AdminLayout";
 import PageHeader from "@/components/admin/owners/PageHeader";
 import ReportsTable from "@/components/admin/reports/ReportsTable";
 import StatusFilter from "@/components/admin/reports/StatusFilter";
+import { PetPawLoading } from "@/components/loading/PetPawLoading";
 import { api } from "@/lib/api/axios";
 import { getErrorMessage } from "@/lib/api/api-utils";
 import type { ReportsResponse, ReportRow, ReportStatusUI } from "@/types/admin/reports";
 import { toReportRow, toDBStatus } from "@/types/admin/reports";
-
 
 function SearchBar({
   value,
@@ -86,8 +86,6 @@ function PaginationBar({
   );
 }
 
-
-
 export default function ReportsListPage() {
   // filters & query
   const [statusFilter, setStatusFilter] = React.useState<ReportStatusUI | "all">("all");
@@ -105,7 +103,6 @@ export default function ReportsListPage() {
   // ui state
   const [loading, setLoading] = React.useState(false);
   const [errorMsg, setErrorMsg] = React.useState<string | null>(null);
-
 
   const params = React.useMemo(
     () => ({
@@ -158,21 +155,26 @@ export default function ReportsListPage() {
         onChange={setQ}
         placeholder="Search by title, description, reporter name/email"
       />
-      {loading && <div className="mb-4 text-sm2-regular text-gray-6">Loading...</div>}
+
+      {/*  Loading State with PetPawLoading */}
+      {loading && <PetPawLoading message="Loading Reports" size="md" />}
+      
       {errorMsg && <ErrorAlert message={errorMsg} />}
 
-      {/* Table */}
-      <ReportsTable reports={rows} />
+      {/* Table - แสดงเฉพาะตอนไม่ loading */}
+      {!loading && <ReportsTable reports={rows} />}
 
       {/* Pagination */}
-      <PaginationBar
-        page={page}
-        total={total}
-        totalPages={totalPages}
-        limit={limit}
-        loading={loading}
-        onPageChange={setPage}
-      />
+      {!loading && (
+        <PaginationBar
+          page={page}
+          total={total}
+          totalPages={totalPages}
+          limit={limit}
+          loading={loading}
+          onPageChange={setPage}
+        />
+      )}
     </AdminLayout>
   );
 }
