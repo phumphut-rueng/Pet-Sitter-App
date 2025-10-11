@@ -43,7 +43,7 @@ const mockBookingDetails: BookingDetail[] = [
     pets: 2,
     duration: "3 hours",
     bookingDate: "25 Aug 2024 | 7 AM - 10 AM",
-    totalPaid: "900.00 THB",
+    totalPaid: "900.00",
     transactionDate: "25 Aug 2024",
     transactionNo: "122312",
     message: "I love my dogs, care",
@@ -55,7 +55,7 @@ const mockBookingDetails: BookingDetail[] = [
     pets: 1,
     duration: "24 hours",
     bookingDate: "12 Aug 2024 | 7 AM - 11 AM",
-    totalPaid: "300.00 THB",
+    totalPaid: "300.00",
     transactionDate: "12 Aug 2024",
     transactionNo: "122332",
     message: "I love my cats, care",
@@ -67,7 +67,7 @@ const mockBookingDetails: BookingDetail[] = [
     pets: 6,
     duration: "2 hours",
     bookingDate: "2 Aug 2023 | 7 AM - 9 AM",
-    totalPaid: "1200.00 THB",
+    totalPaid: "1200.00",
     transactionDate: "16 Oct 2022",
     transactionNo: "122319",
     message: "I love my dogs, care",
@@ -79,7 +79,7 @@ const mockBookingDetails: BookingDetail[] = [
     pets: 4,
     duration: "3 hours",
     bookingDate: "25 Aug 2024 | 7 AM - 10 AM",
-    totalPaid: "900.00 THB",
+    totalPaid: "900.00",
     transactionDate: "25 Aug 2024",
     transactionNo: "122352",
     message: "I love my dogs, care",
@@ -91,7 +91,7 @@ const mockBookingDetails: BookingDetail[] = [
     pets: 2,
     duration: "3 hours",
     bookingDate: "25 Aug 2024 | 7 AM - 9 AM",
-    totalPaid: "900.00 THB",
+    totalPaid: "900.00",
     transactionDate: "25 Aug 2024",
     transactionNo: "122305",
     message: "I love my dogs, care",
@@ -103,7 +103,7 @@ const mockBookingDetails: BookingDetail[] = [
     pets: 2,
     duration: "3 hours",
     bookingDate: "29 July 2024 | 7 AM - 11 AM",
-    totalPaid: "900.00 THB",
+    totalPaid: "900.00",
     transactionDate: "29 July 2024",
     transactionNo: "122325",
     message: "I love my dogs, care",
@@ -118,22 +118,22 @@ const mockPets: Pet[] = [
     species: "Dog",
     img: "/images/sitters/test3.svg",
     breed: "Beagle",
-    age: "0.6 Month",
+    age: "0.6",
     sex: "Male",
     color: "white and black",
     about: "woof woof",
-    weight: "2 Kilogram",
+    weight: "2",
   },
   {
     name: "Daisy",
     species: "Cat",
     img: "/images/sitters/test3.svg",
     breed: "Persian",
-    age: "2 Years",
+    age: "2",
     sex: "Female",
     color: "white and brown",
     about: "meow meow",
-    weight: "3 Kilogram",
+    weight: "3",
   },
 ];
 
@@ -337,7 +337,7 @@ export default function BookingDetailPage() {
 
             <div>
               <h4 className="text-gray-4 font-bold text-xl">Total Paid</h4>
-              <p className="mt-1 font-medium">{booking.totalPaid}</p>
+              <p className="mt-1 font-medium">{booking.totalPaid} THB</p>
             </div>
 
             <div>

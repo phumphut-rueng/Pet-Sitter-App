@@ -84,11 +84,11 @@ export default function PetDetailModal({
             </div>
             <div>
               <p className="text-gray-4 text-xl font-bold">Age</p>
-              <p className="text-black">{age}</p>
+              <p className="text-black">{age} Month</p>
             </div>
             <div>
               <p className="text-gray-4 text-xl font-bold">Weight</p>
-              <p className="text-black">{weight}</p>
+              <p className="text-black">{weight} Kilogram</p>
             </div>
             </div>
           </div>
