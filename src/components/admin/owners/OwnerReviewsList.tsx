@@ -47,7 +47,7 @@ const SitterAvatar: React.FC<SitterAvatarProps> = ({ avatarUrl, name }) => {
       {avatarUrl ? (
         <Image src={avatarUrl} alt={name} fill className="object-cover" />
       ) : (
-        <div className="flex h-full w-full items-center justify-center bg-orange-1 text-brand font-semibold text-lg">
+        <div className="flex h-full w-full items-center justify-center bg-orange-1 text-orange-5 text-base-bold">
           {initial}
         </div>
       )}
@@ -77,7 +77,7 @@ const ReviewCard: React.FC<ReviewCardProps> = ({ review }) => {
         </div>
 
         <div>
-          <div className="mb-[16px]">
+          <div className="mb-4">
             <StarRating rating={review.rating} />
           </div>
 
@@ -128,8 +128,8 @@ const EmptyState: React.FC = () => (
           d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"
         />
       </svg>
-      <p className="mt-4 text-ink font-medium">No reviews yet</p>
-      <p className="mt-1 text-sm text-gray-6">
+      <p className="mt-4 text-base-medium text-ink">No reviews yet</p>
+      <p className="mt-1 text-sm2-regular text-gray-6">
         This owner hasn&apos;t received any reviews from sitters
       </p>
     </div>
@@ -143,7 +143,7 @@ type ErrorStateProps = {
 const ErrorState: React.FC<ErrorStateProps> = ({ message }) => (
   <div className="px-10 pb-10 pt-6" role="alert">
     <div className="rounded-lg border border-red bg-pink-bg p-6 text-center">
-      <p className="text-red font-medium">{message}</p>
+      <p className="text-base-medium text-red">{message}</p>
     </div>
   </div>
 );
