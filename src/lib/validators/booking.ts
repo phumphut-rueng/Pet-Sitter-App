@@ -1,6 +1,7 @@
 import { z } from "zod";
 
 const ERROR_MESSAGES = {
+    isCreditCard: "Payment method is required",
     sitterId: "Sitter ID is required",
     petIds: "Pet ID(s) are required",
     customerName: "Customer name is required",
@@ -16,6 +17,8 @@ const ERROR_MESSAGES = {
  * ใช้ z.coerce เพื่อให้ค่าที่มาจาก form (string) แปลงอัตโนมัติเป็นชนิดที่ต้องการ
 */
 const validators = {
+    isCreditCard: z.boolean({ message: ERROR_MESSAGES.isCreditCard }),
+
     sitterId: z.coerce.number().int().positive(ERROR_MESSAGES.sitterId),
 
     // petIds อาจมาหลายตัวในรูป string เช่น "1,2,3" → แปลงเป็น array<number>
@@ -65,6 +68,7 @@ const validators = {
 */
 export const bookingMetadataSchema = z
     .object({
+        isCreditCard: validators.isCreditCard,
         sitterId: validators.sitterId,
         petIds: validators.petIds,
         startTime: validators.startTime,

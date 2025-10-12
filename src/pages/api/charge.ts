@@ -48,7 +48,7 @@ export default async function handler(
         const { token, amount, currency, description, metadata }: ChargeRequest = req.body;
 
         // Validate input
-        if (!token || !amount || !currency) {
+        if (!amount || !currency) {
             return res.status(400).json({
                 success: false,
                 message: 'Missing required fields: token, amount, currency',
@@ -69,25 +69,34 @@ export default async function handler(
         // Create charge
         let charge: ChargeResponse = {
             id: "",
-            status: "",
-            amount: 0,
+            status: "cash",
+            amount: amount,
             payment_date: null
         };
 
         try {
-            const res = await omise.charges.create({
-                amount: amount, // จำนวนเงินในสตางค์
-                currency: currency, // THB
-                card: token,
-                description: description || 'Booking Payment',
-                metadata: metadata || {},
-            });
+            if (parsed.data.isCreditCard) {
+                if (!token) {
+                    return res.status(400).json({
+                        success: false,
+                        message: 'Missing required fields: token, amount, currency',
+                    });
+                } else {
+                    const res = await omise.charges.create({
+                        amount: amount, // จำนวนเงินในสตางค์
+                        currency: currency, // THB
+                        card: token,
+                        description: description || 'Booking Payment',
+                        metadata: metadata || {},
+                    });
 
-            charge = {
-                id: res.id,
-                status: res.status.trim().toLowerCase(),
-                amount: res.amount,
-                payment_date: res.paid_at
+                    charge = {
+                        id: res.id,
+                        status: res.status.trim().toLowerCase(),
+                        amount: res.amount,
+                        payment_date: res.paid_at
+                    }
+                }
             }
         } catch {
             charge = {

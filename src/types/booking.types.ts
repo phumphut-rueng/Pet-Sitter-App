@@ -18,6 +18,7 @@ export interface paymentData {
     currency: string;
     description: string;
     metadata: {
+        isCreditCard: boolean,
         sitterId: number | undefined;
         petIds: string;
         startTime: string | string[] | undefined;

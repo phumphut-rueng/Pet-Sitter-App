@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, useCallback } from "react"
+import { useEffect, useRef, useState, useCallback, useMemo } from "react"
 import { useRouter } from "next/router"
 import { useSession } from "next-auth/react"
 import { Pet, PetStatus } from "@/types/pet.types"
@@ -15,8 +15,12 @@ export function useBookingHandler() {
 
     // Parse query params
     const { startTime, endTime, sitterId } = router.query
-    const currentUserId = session?.user?.id ? Number(session.user.id) : undefined
     const parsedSitterId = sitterId ? Number(sitterId) : undefined
+    const currentUserId = session?.user?.id ? Number(session.user.id) : undefined
+    const initialFormValues = useMemo(() => ({
+        name: session?.user?.name || "",
+        email: session?.user?.email || "",
+    }), [session?.user?.name, session?.user?.email])
 
     // States
     const [isMobile, setIsMobile] = useState(false);
@@ -26,6 +30,7 @@ export function useBookingHandler() {
     const [loading, setLoading] = useState(true)
     const [refreshKey, setRefreshKey] = useState(0)
     const [isConfirmation, setIsConfirmation] = useState(false)
+    const [isCreditCard, setIsCreditCard] = useState(true)
 
     // Payment states
     const [isProcessingPayment, setIsProcessingPayment] = useState(false)
@@ -33,19 +38,18 @@ export function useBookingHandler() {
     const [bookingData, setBookingData] = useState<OmiseTokenResponse>()
 
     // Form handling
-    const formHandlers = useBookingForm()
+    const formHandlers = useBookingForm(initialFormValues)
 
-    //ปิดก่อนเพราะว่าจะเทส
-    // // เช็คว่ามี query ที่จำเป็นหรือไม่ ถ้าไม่มีให้กลับไปหน้าอื่น
-    // useEffect(() => {
-    //     // รอให้ router พร้อม
-    //     if (!router.isReady) return
+    // เช็คว่ามี query ที่จำเป็นหรือไม่ ถ้าไม่มีให้กลับไปหน้าอื่น
+    useEffect(() => {
+        // รอให้ router พร้อม
+        if (!router.isReady) return
 
-    //     // เช็คว่ามี query ที่จำเป็นหรือไม่
-    //     if (!startTime || !endTime || !sitterId) {
-    //         router.back()
-    //     }
-    // }, [router.isReady, startTime, endTime, sitterId, router])
+        // เช็คว่ามี query ที่จำเป็นหรือไม่
+        if (!startTime || !endTime || !sitterId) {
+            router.back()
+        }
+    }, [router.isReady, startTime, endTime, sitterId, router])
 
     // Fetch data
     useEffect(() => {
@@ -196,13 +200,16 @@ export function useBookingHandler() {
             const [expMonth, expYear] = formHandlers.form.expiryDate.split('/');
 
             // Create Omise token
-            const token = await createOmiseToken({
-                name: formHandlers.form.cardName,
-                number: formHandlers.form.cardNumber.replace(/\s|-/g, ''),
-                expiration_month: expMonth,
-                expiration_year: `20${expYear}`,
-                security_code: formHandlers.form.cvc,
-            });
+            let token: string = "";
+            if (isCreditCard) {
+                token = await createOmiseToken({
+                    name: formHandlers.form.cardName,
+                    number: formHandlers.form.cardNumber.replace(/\s|-/g, ''),
+                    expiration_month: expMonth,
+                    expiration_year: `20${expYear}`,
+                    security_code: formHandlers.form.cvc,
+                });
+            }
 
             // Prepare booking data
             const bookingData: paymentData = {
@@ -211,6 +218,7 @@ export function useBookingHandler() {
                 currency: 'THB',
                 description: `Booking for ${formHandlers.form.name} ${new Date()}`, //เปลี่ยนตรงนี้ด้วย
                 metadata: {
+                    isCreditCard: isCreditCard,
                     sitterId: parsedSitterId,
                     petIds: selectedPets.map(p => p.id).join(','),
                     startTime: startTime,
@@ -244,6 +252,7 @@ export function useBookingHandler() {
         formHandlers.form.email,
         formHandlers.form.phone,
         formHandlers.form.addition,
+        isCreditCard,
         totalPrice,
         parsedSitterId,
         selectedPets,
@@ -272,7 +281,7 @@ export function useBookingHandler() {
             canProceed = !errors.name && !errors.email && !errors.phone
         }
 
-        if (activeStep === 3) {
+        if (activeStep === 3 && isCreditCard) {
             const errors = formHandlers.validatePaymentForm()
             canProceed = !errors.cardNumber && !errors.cardName &&
                 !errors.expiryDate && !errors.cvc
@@ -286,7 +295,7 @@ export function useBookingHandler() {
                 setIsConfirmation(true)
             }
         }
-    }, [activeStep, formHandlers])
+    }, [activeStep, formHandlers, isCreditCard])
 
     const handleConfirmation = useCallback(() => {
         setIsConfirmation(false)
@@ -321,6 +330,8 @@ export function useBookingHandler() {
         loading,
         isConfirmation,
         setIsConfirmation,
+        isCreditCard,
+        setIsCreditCard,
 
         // Payment states
         isProcessingPayment,

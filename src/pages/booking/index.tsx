@@ -23,6 +23,8 @@ export default function BookingHandler() {
         bookingData,
         isConfirmation,
         setIsConfirmation,
+        isCreditCard,
+        setIsCreditCard,
         isProcessingPayment,
         hasSelection,
         duration,
@@ -142,6 +144,9 @@ export default function BookingHandler() {
                                                     <BookingPayment
                                                         form={form}
                                                         error={error}
+
+                                                        isCreditCard={isCreditCard}
+                                                        setIsCreditCard={setIsCreditCard}
                                                         handleSubmit={handleNext}
                                                         handleCardNumberChange={handleCardNumberChange}
                                                         handleCardNameChange={handleCardNameChange}
