@@ -8,6 +8,7 @@ import axios from "axios";
 import PetOwnerDetailModal from "@/components/modal/PetOwnerDetail";
 import PetCard from "@/components/cards/PetCard";
 import PetDetailModal from "@/components/modal/PetDetail";
+import { PetPawLoading } from "@/components/loading/PetPawLoading";
 
 type BookingDetail = {
   id: number;
@@ -20,122 +21,26 @@ type BookingDetail = {
   transactionNo: string;
   message: string;
   status: StatusKey;
+  petsDetail: Pet[];
+  ownerEmail: string;
+  ownerPhone: string;
+  ownerIdNumber: string;
+  ownerDOB: string;
+  avatarUrl: string;
 };
 
 type Pet = {
+  id: number;
   name: string;
   species: string;
   img: string;
   breed?: string;
-  age?: string;
-  note?: string;
   sex?: string;
+  age?: string;
   color?: string;
   about?: string;
   weight?: string;
 };
-
-// Mock ข้อมูล
-const mockBookingDetails: BookingDetail[] = [
-  {
-    id: 1,
-    ownerName: "John Wick",
-    pets: 2,
-    duration: "3 hours",
-    bookingDate: "25 Aug 2024 | 7 AM - 10 AM",
-    totalPaid: "900.00",
-    transactionDate: "25 Aug 2024",
-    transactionNo: "122312",
-    message: "I love my dogs, care",
-    status: "waitingConfirm",
-  },
-  {
-    id: 2,
-    ownerName: "Robert Jr.",
-    pets: 1,
-    duration: "24 hours",
-    bookingDate: "12 Aug 2024 | 7 AM - 11 AM",
-    totalPaid: "300.00",
-    transactionDate: "12 Aug 2024",
-    transactionNo: "122332",
-    message: "I love my cats, care",
-    status: "waitingConfirm",
-  },
-  {
-    id: 3,
-    ownerName: "Maren Press",
-    pets: 6,
-    duration: "2 hours",
-    bookingDate: "2 Aug 2023 | 7 AM - 9 AM",
-    totalPaid: "1200.00",
-    transactionDate: "16 Oct 2022",
-    transactionNo: "122319",
-    message: "I love my dogs, care",
-    status: "waitingService",
-  },
-  {
-    id: 4,
-    ownerName: "Lincoln Vaccaro",
-    pets: 4,
-    duration: "3 hours",
-    bookingDate: "25 Aug 2024 | 7 AM - 10 AM",
-    totalPaid: "900.00",
-    transactionDate: "25 Aug 2024",
-    transactionNo: "122352",
-    message: "I love my dogs, care",
-    status: "inService",
-  },
-  {
-    id: 5,
-    ownerName: "Andaman R",
-    pets: 2,
-    duration: "3 hours",
-    bookingDate: "25 Aug 2024 | 7 AM - 9 AM",
-    totalPaid: "900.00",
-    transactionDate: "25 Aug 2024",
-    transactionNo: "122305",
-    message: "I love my dogs, care",
-    status: "success",
-  },
-  {
-    id: 6,
-    ownerName: "Chatchai Haithong",
-    pets: 2,
-    duration: "3 hours",
-    bookingDate: "29 July 2024 | 7 AM - 11 AM",
-    totalPaid: "900.00",
-    transactionDate: "29 July 2024",
-    transactionNo: "122325",
-    message: "I love my dogs, care",
-    status: "canceled",
-  },
-];
-
-// Mock pet ข้อมูล
-const mockPets: Pet[] = [
-  {
-    name: "Bubba",
-    species: "Dog",
-    img: "/images/sitters/test3.svg",
-    breed: "Beagle",
-    age: "0.6",
-    sex: "Male",
-    color: "white and black",
-    about: "woof woof",
-    weight: "2",
-  },
-  {
-    name: "Daisy",
-    species: "Cat",
-    img: "/images/sitters/test3.svg",
-    breed: "Persian",
-    age: "2",
-    sex: "Female",
-    color: "white and brown",
-    about: "meow meow",
-    weight: "3",
-  },
-];
 
 type GetSitterResponse = {
   user: {
@@ -156,6 +61,7 @@ export default function BookingDetailPage() {
   const [userName, setUserName] = useState("");
   const [avatarUrl, setAvatarUrl] = useState("/icons/avatar-placeholder.svg");
   const [booking, setBooking] = useState<BookingDetail | null>(null);
+  const [loading, setLoading] = useState(true);
 
   //pet owner modal
   const [showProfileModal, setShowProfileModal] = useState(false);
@@ -192,21 +98,37 @@ export default function BookingDetailPage() {
     })();
   }, []);
 
-  // โหลด mock ข้อมูล จาก params.id
   useEffect(() => {
     if (!params?.id) return;
-    const id = Number(params.id);
-    const found = mockBookingDetails.find((b) => b.id === id);
-    setBooking(found || null);
+    (async () => {
+      try {
+        setLoading(true);
+        const { data } = await axios.get(`/api/sitter/get-booking?id=${params.id}`);
+        setBooking(data);
+      } catch (error: any) {
+        if (error.response?.status === 404) {
+          router.replace("/404");
+        }
+      } finally {
+        setLoading(false);
+      }
+    })();
   }, [params?.id]);
+  
 
-  if (!booking) {
+  if (loading) {
     return (
       <div className="flex items-center justify-center h-screen">
-        <p>Booking not found</p>
+        <PetPawLoading
+          message="Loading Pet"
+          size="lg"
+          baseStyleCustum="flex items-center justify-center w-full h-full"
+        />
       </div>
     );
   }
+
+  if (!booking) return null;
 
   // ปุ่ม เปลี่ยนตาม status
   const renderActionButtons = () => {
@@ -245,10 +167,8 @@ export default function BookingDetailPage() {
     <main className="flex container-1200 !px-0 bg-gray-1">
       <SitterSidebar className="min-w-0" />
       <section className="flex-1 min-w-0">
-        {/* Navbar */}
         <PetSitterNavbar avatarUrl={avatarUrl} name={userName} />
 
-        {/* Header */}
         <div className="flex items-center justify-between px-8 py-6">
           <div className="flex items-center gap-3">
             <button
@@ -262,12 +182,9 @@ export default function BookingDetailPage() {
             </h2>
             <StatusBadge status={booking.status} className="text-base" />
           </div>
-
-          {/* ปุ่มด้านขวา */}
           {renderActionButtons()}
         </div>
 
-        {/* Booking detail */}
         <div className="px-8 pb-10">
           <div className="bg-white rounded-2xl px-18 py-8 space-y-6">
             <h4 className="text-gray-4 font-bold text-xl mb-1">
@@ -309,16 +226,16 @@ export default function BookingDetailPage() {
             </div>
             <div>
               <h4 className="text-gray-4 font-bold text-xl">Pet Detail</h4>
-              <div className="flex gap-4 justify-start mt-2">
-                {mockPets.map((pet) => (
+              <div className="grid grid-cols-4 gap-2 mt-2">
+                {booking.petsDetail.map((pet) => (
                   <PetCard
-                    key={pet.name}
+                    key={pet.id}
                     name={pet.name}
                     species={pet.species}
                     img={pet.img}
                     selected={false}
                     disabled={false}
-                    className="!w-50 cursor-pointer"
+                    className="!w-45 !h-60 gap-2 cursor-pointer"
                     onClick={() => handleOpenPetDetail(pet)}
                   />
                 ))}
@@ -367,6 +284,11 @@ export default function BookingDetailPage() {
         isOpen={showProfileModal}
         onClose={handleCloseProfile}
         ownerName={booking.ownerName}
+        email={booking.ownerEmail}
+        phone={booking.ownerPhone}
+        idNumber={booking.ownerIdNumber}
+        dateOfBirth={booking.ownerDOB}
+        avatarUrl={booking.avatarUrl}
       />
 
       {/* Pet Detail Modal */}

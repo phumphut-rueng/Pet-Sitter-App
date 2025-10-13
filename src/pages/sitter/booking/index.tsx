@@ -13,6 +13,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { StatusBadge, StatusKey } from "@/components/badges/StatusBadge";
+import { PetPawLoading } from "@/components/loading/PetPawLoading";
 
 type Booking = {
   id: number;
@@ -35,7 +36,7 @@ export default function PetSitterBookingPage() {
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("All");
-  const { data: session, status } = useSession();
+  const { status } = useSession();
 
   useEffect(() => {
     (async () => {
@@ -48,13 +49,21 @@ export default function PetSitterBookingPage() {
   useEffect(() => {
     if (status === "authenticated") {
       (async () => {
-        const { data } = await axios.get("/api/sitter/booking/booking-list");
+        const { data } = await axios.get("/api/sitter/get-booking");
         setBookings(data);
       })();
     }
   }, [status]);
 
-  if (status === "loading") return <p>Loading...</p>;
+  if (status === "loading") return (
+    <div className="flex items-center justify-center h-screen">
+      <PetPawLoading
+        message="Loading Pet"
+        size="lg"
+        baseStyleCustum="flex items-center justify-center w-full h-full"
+      />
+    </div>
+  );
 
   const filteredBookings = bookings.filter((b) => {
     const matchesSearch = b.ownerName.toLowerCase().includes(search.toLowerCase());
