@@ -2,11 +2,14 @@ import React, { useEffect } from "react";
 import AccountPageShell from "@/components/layout/AccountPageShell";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/router";
-import BookingCard, { type BookingCardProps } from "@/components/cards/ATestBookingCard";
+import BookingCard, {
+  type BookingCardProps,
+} from "@/components/cards/ATestBookingCard";
 import ReportDialog from "@/components/modal/BookingReport";
 import RatingReviewDialog from "@/components/modal/RatingReview";
 import ReviewSummaryDialog from "@/components/modal/ReviewSummary";
 import BookingDetailDialog from "@/components/modal/BookingDetail";
+import BookingChange from "@/components/modal/BookingChange";
 
 export default function BookingHistoryPage() {
   const { data: session, status } = useSession();
@@ -16,13 +19,15 @@ export default function BookingHistoryPage() {
   const [openReview, setOpenReview] = React.useState(false);
   const [openSummary, setOpenSummary] = React.useState(false);
   const [openDetail, setOpenDetail] = React.useState(false);
-  
-const [reviewData, setReviewData] = React.useState<{
-  rating: number;
-  review: string;
-  date: string;
-} | null>(null);
-  const [selectedBooking, setSelectedBooking] = React.useState<BookingCardProps | null>(null);
+  const [openChangeDialog, setOpenChangeDialog] = React.useState(false);
+
+  const [reviewData, setReviewData] = React.useState<{
+    rating: number;
+    review: string;
+    date: string;
+  } | null>(null);
+  const [selectedBooking, setSelectedBooking] =
+    React.useState<BookingCardProps | null>(null);
 
   useEffect(() => {
     if (status === "loading") return; // รอโหลด session ก่อน
@@ -81,20 +86,17 @@ const [reviewData, setReviewData] = React.useState<{
     },
   ];
 
-  const handleReportSubmit =(data: {issue: string; description: string}) => {
-    if(!selectedBooking) return;
+  const handleReportSubmit = (data: { issue: string; description: string }) => {
+    if (!selectedBooking) return;
 
-    console.log("Report submitted:",
-      {
-        bookingId: selectedBooking.id,
-        title: selectedBooking.title,
-        sitter: selectedBooking.sitterName,
-        ...data
-      }
-    );
+    console.log("Report submitted:", {
+      bookingId: selectedBooking.id,
+      title: selectedBooking.title,
+      sitter: selectedBooking.sitterName,
+      ...data,
+    });
     setOpenReport(false);
-  }
-
+  };
 
   const handleReviewSubmit = (data: { rating: number; review: string }) => {
     const now = new Date();
@@ -122,42 +124,63 @@ const [reviewData, setReviewData] = React.useState<{
     setOpenSummary(true);
   };
 
+  const handleChangeDateTime = (booking: BookingCardProps) => {
+    setSelectedBooking(booking);
+    setOpenChangeDialog(true);
+  };
+
   return (
     <AccountPageShell title="Booking History">
       <div className="flex min-h-screen">
-        <main className="flex-1 p-8 bg-white rounded-xl">
+        <main className="flex-1 py-4 px-2 max-w-[343px] bg-white rounded-xl md:p-8 md:max-w-none">
           <h1 className="text-2xl font-bold mb-6">Booking History</h1>
           <div className="space-y-6">
             {bookings.map((b) => (
-               <div key={b.id} onClick={(e) => {
-              const target = e.target as HTMLElement;
-              if(target.closest("button")) return;
+              <div
+                key={b.id}
+                onClick={(e) => {
+                  const target = e.target as HTMLElement;
+                  if (target.closest("button")) return;
 
-              setOpenDetail(true);
-              setSelectedBooking(b);
-            }}
-               className="cursor-pointer"
-            >
-              <BookingCard key={b.id} layout="wide" {...b} 
-              onReport={()=> {
-                setOpenReport(true);
-                setSelectedBooking(b);
-              }}
-              onReview={() => {
-                setOpenReview(true);
-                setSelectedBooking(b);
-              }}
-              />
-            </div>
+                  setOpenDetail(true);
+                  setSelectedBooking(b);
+                }}
+                className="cursor-pointer"
+              >
+                <BookingCard
+                  key={b.id}
+                  {...b}  
+                  onReport={() => {
+                    setOpenReport(true);
+                    setSelectedBooking(b);
+                  }}
+                  onReview={() => {
+                    setOpenReview(true);
+                    setSelectedBooking(b);
+                  }}
+                  onChange={() => handleChangeDateTime(b)}
+                />
+              </div>
             ))}
           </div>
         </main>
       </div>
       <BookingDetailDialog
-  open={openDetail}
-  onOpenChange={setOpenDetail}
-  booking={selectedBooking}
-/>
+        open={openDetail}
+        onOpenChange={setOpenDetail}
+        booking={selectedBooking}
+        onChangeDateTime={() => {
+          setOpenDetail(false);
+          setOpenChangeDialog(true);
+        }}
+      />
+
+      <BookingChange
+        sitterId={selectedBooking?.id ?? 0}
+        open={openChangeDialog}
+        onOpenChange={setOpenChangeDialog}
+        disabledDates={[]}
+      />
 
       <ReportDialog
         open={openReport}
@@ -165,21 +188,21 @@ const [reviewData, setReviewData] = React.useState<{
         onSubmit={handleReportSubmit}
       />
 
-<RatingReviewDialog
-  open={openReview}
-  onOpenChange={setOpenReview}
-  onSubmit={handleReviewSubmit}
-/>
+      <RatingReviewDialog
+        open={openReview}
+        onOpenChange={setOpenReview}
+        onSubmit={handleReviewSubmit}
+      />
 
-<ReviewSummaryDialog
-  open={openSummary}
-  onOpenChange={setOpenSummary}
-  user={{
-    name: session?.user?.name || "John Wick",
-    avatarUrl: session?.user?.image || "/Icons/bubba.svg",  
-  }}
-  data={reviewData}
-/>
+      <ReviewSummaryDialog
+        open={openSummary}
+        onOpenChange={setOpenSummary}
+        user={{
+          name: session?.user?.name || "John Wick",
+          avatarUrl: session?.user?.image || "/Icons/bubba.svg",
+        }}
+        data={reviewData}
+      />
     </AccountPageShell>
   );
 }
