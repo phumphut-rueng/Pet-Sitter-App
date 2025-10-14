@@ -44,47 +44,46 @@ export default function PetDetailModal({
         </div>
 
         <div className="flex items-start justify-around gap-7 px-8 mt-7">
-          <div className="flex-shrink-0 flex flex-col items-center gap-4">
+          <div className="w-42 h-42 flex-shrink-0 rounded-full overflow-hidden bg-gray-1">
             <img
               src={avatarUrl}
               alt={petName}
-              className="w-42 h-42 bg-gray-1 rounded-full object-cover"
+              className="w-full h-full object-cover object-top"
             />
-            <p className="text-black font-semibold">{petName}</p>
           </div>
 
-          <div className="flex bg-gray-1 rounded-xl pl-6 pr-18 py-6 gap-16">
+          <div className="flex bg-gray-1 rounded-xl pl-6 pr-18 py-6 gap-6">
             <div className="flex flex-col gap-6">
-            <div>
-              <p className="text-gray-4 text-xl font-bold">Pet Type</p>
-              <p className="text-black">{petType}</p>
-            </div>
-            <div>
-              <p className="text-gray-4 text-xl font-bold">Sex</p>
-              <p className="text-black">{sex}</p>
-            </div>
-            <div>
-              <p className="text-gray-4 text-xl font-bold">Color</p>
-              <p className="text-black">{color}</p>
-            </div>
-            <div>
-              <p className="text-gray-4 text-xl font-bold">About</p>
-              <p className="text-black">{about}</p>
-            </div>
+              <div>
+                <p className="text-gray-4 text-xl font-bold">Pet Type</p>
+                <p className="text-black">{petType}</p>
+              </div>
+              <div>
+                <p className="text-gray-4 text-xl font-bold">Sex</p>
+                <p className="text-black">{sex}</p>
+              </div>
+              <div>
+                <p className="text-gray-4 text-xl font-bold">Color</p>
+                <p className="text-black">{color}</p>
+              </div>
+              <div>
+                <p className="text-gray-4 text-xl font-bold">About</p>
+                <p className="text-black">{about}</p>
+              </div>
             </div>
             <div className="flex flex-col gap-6">
-            <div>
-              <p className="text-gray-4 text-xl font-bold">Breed</p>
-              <p className="text-black">{breed}</p>
-            </div>
-            <div>
-              <p className="text-gray-4 text-xl font-bold">Age</p>
-              <p className="text-black">{age} Month</p>
-            </div>
-            <div>
-              <p className="text-gray-4 text-xl font-bold">Weight</p>
-              <p className="text-black">{weight} Kilogram</p>
-            </div>
+              <div>
+                <p className="text-gray-4 text-xl font-bold">Breed</p>
+                <p className="text-black">{breed}</p>
+              </div>
+              <div>
+                <p className="text-gray-4 text-xl font-bold">Age</p>
+                <p className="text-black">{age} Month</p>
+              </div>
+              <div>
+                <p className="text-gray-4 text-xl font-bold">Weight</p>
+                <p className="text-black">{weight} Kilogram</p>
+              </div>
             </div>
           </div>
         </div>

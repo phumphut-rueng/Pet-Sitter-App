@@ -61,11 +61,29 @@ function formatDetailDateRange(start: Date, end: Date) {
   return `${formatDate(start)} | ${formatTime(start)} - ${formatTime(end)}`;
 }
 
+// คำนวณเวลา duration
+function calculateDuration(start: Date, end: Date): string {
+  const diffMs = end.getTime() - start.getTime();
+  const totalMinutes = Math.floor(diffMs / (1000 * 60));
+  let hours = Math.floor(totalMinutes / 60);
+  const minutes = totalMinutes % 60;
+  // ถ้านาทีเป็น 30 → แสดง ชั่วโมง + 30 นาที
+  if (minutes === 30) {
+    return `${hours} hours 30 min`;
+  }
+  // ถ้านาทีมากกว่า 30 → ปัดเป็นชั่วโมงถัดไป
+  if (minutes > 30) {
+    hours += 1;
+  }
+  return `${hours} ${hours > 1 ? "hours" : "hour"}`;
+}
+
 export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse
 ) {
   const session = await getServerSession(req, res, authOptions);
+  console.log("SESSION", session);
   if (!session?.user?.email)
     return res.status(401).json({ message: "Unauthorized" });
 
@@ -93,7 +111,7 @@ export default async function handler(
               },
             },
           },
-          booking: true,
+          user: true,
         },
       });
 
@@ -116,14 +134,24 @@ export default async function handler(
         id: b.id,
         ownerName: b.name,
         pets: pets.length,
-        duration: "3 hours",
+        duration: calculateDuration(
+          new Date(b.date_start),
+          new Date(b.date_end)
+        ),
         bookingDate: formatDetailDateRange(
           new Date(b.date_start),
           new Date(b.date_end)
         ),
         totalPaid: b.amount.toFixed(2),
-        transactionDate: "122312",
-        transactionNo: "122312",
+        paymentMethod: b.payment_type ?? "-",
+        transactionDate: b.transaction_date
+          ? new Date(b.transaction_date).toLocaleDateString("en-GB", {
+              day: "numeric",
+              month: "short",
+              year: "numeric",
+            })
+          : "-",
+        transactionId: b.transaction_id ?? "-",
         message: b.additional ?? "-",
         status: mapStatusNameToKey(
           b.status_booking_booking_status_idTostatus?.name ??
@@ -132,15 +160,15 @@ export default async function handler(
         petsDetail: pets,
         ownerEmail: b.email,
         ownerPhone: b.phone,
-        ownerIdNumber: "1122 21 236 8654",
-        ownerDOB: b.booking?.dob
-          ? new Date(b.booking.dob).toLocaleDateString("en-GB", {
+        ownerIdNumber: b.user?.id_number ?? "-",
+        ownerDOB: b.user?.dob
+          ? new Date(b.user.dob).toLocaleDateString("en-GB", {
               day: "numeric",
               month: "short",
               year: "numeric",
             })
           : "-",
-        avatarUrl: b.booking?.profile_image || "/icons/avatar-placeholder.svg",
+        avatarUrl: b.user?.profile_image || "/icons/avatar-placeholder.svg",
       };
 
       return res.status(200).json(detail);
@@ -159,7 +187,10 @@ export default async function handler(
         id: b.id,
         ownerName: b.name,
         pets: b.booking_pet_detail.length,
-        duration: "3 hours",
+        duration: calculateDuration(
+          new Date(b.date_start),
+          new Date(b.date_end)
+        ),
         bookedDate: formatListDateRange(
           new Date(b.date_start),
           new Date(b.date_end)

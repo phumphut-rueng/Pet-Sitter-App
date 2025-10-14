@@ -81,6 +81,7 @@ model user {
   suspend_reason                       String?                   @db.VarChar(1000)
   is_online                            Boolean?                  @default(false)
   last_seen                            DateTime?                 @default(now()) @db.Timestamp(6)
+  id_number                            String?                   @unique(map: "unique_id_number") @db.VarChar(20)
   admin                                admin?
   other_booking                        booking[]                 @relation("bookingTobooking")
   chat_chat_user1_idTouser             chat[]                    @relation("chat_user1_idTouser")
@@ -301,17 +302,18 @@ model booking {
   date_end                                 DateTime             @db.Timestamp(6)
   pet_sitter_id                            Int
   user_id                                  Int
-  payment_id                               String?
-  payment_date                             DateTime?            @db.Timestamp(6)
+  transaction_id                           String?
+  transaction_date                         DateTime?            @db.Timestamp(6)
   booking_status_id                        Int
   amount                                   Decimal              @db.Decimal(10, 2)
   created_at                               DateTime             @default(now()) @db.Timestamp(6)
   updated_at                               DateTime             @default(now()) @db.Timestamp(6)
   payment_status_id                        Int?
+  payment_type                             String?
   status_booking_booking_status_idTostatus status               @relation("booking_booking_status_idTostatus", fields: [booking_status_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "booking_status_id")
   status_booking_payment_status_idTostatus status?              @relation("booking_payment_status_idTostatus", fields: [payment_status_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "payment_status_id")
   sitter                                   sitter               @relation(fields: [pet_sitter_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "pet_sitter_id")
-  booking                                  user                 @relation("bookingTobooking", fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "user_id ")
+  user                                     user                 @relation("bookingTobooking", fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "user_id ")
   booking_pet_detail                       booking_pet_detail[]
 
   @@index([date_start, date_end], map: "idx_booking_dates")

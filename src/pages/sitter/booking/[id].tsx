@@ -17,8 +17,9 @@ type BookingDetail = {
   duration: string;
   bookingDate: string;
   totalPaid: string;
+  paymentMethod: string;
   transactionDate: string;
-  transactionNo: string;
+  transactionId: string;
   message: string;
   status: StatusKey;
   petsDetail: Pet[];
@@ -258,6 +259,11 @@ export default function BookingDetailPage() {
             </div>
 
             <div>
+            <h4 className="text-gray-4 font-bold text-xl">Payment Method</h4>
+            <p className="mt-1 font-medium">{booking.paymentMethod}</p>
+            </div>
+
+            <div>
               <h4 className="text-gray-4 font-bold text-xl">
                 Transaction Date
               </h4>
@@ -266,7 +272,7 @@ export default function BookingDetailPage() {
 
             <div>
               <h4 className="text-gray-4 font-bold text-lg">Transaction No.</h4>
-              <p className="mt-1 font-medium">{booking.transactionNo}</p>
+              <p className="mt-1 font-medium">{booking.transactionId}</p>
             </div>
 
             <div>

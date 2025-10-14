@@ -49,8 +49,12 @@ export default function PetSitterBookingPage() {
   useEffect(() => {
     if (status === "authenticated") {
       (async () => {
-        const { data } = await axios.get("/api/sitter/get-booking");
-        setBookings(data);
+        try {
+          const { data } = await axios.get("/api/sitter/get-booking");
+          setBookings(data);
+        } catch (error) {
+          console.error("Failed to fetch bookings:", error);
+        }
       })();
     }
   }, [status]);
