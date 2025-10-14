@@ -42,8 +42,8 @@ export interface bookingData {
     amount: number;
     booking_status: number;
     payment_status_id: number;
-    payment_id: string | null;
-    payment_date: string | null;
+    transaction_id: string | null;
+    transaction_date: string | null;
     additional: string | null;
     created_at: string;
     updated_at: string;

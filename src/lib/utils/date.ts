@@ -1,9 +1,20 @@
-export const formatDate = (date: Date) => {
-    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
-    const day = date.getDate().toString().padStart(2, '0')
-    const month = months[date.getMonth()]
-    const year = date.getFullYear()
-    return `${day} ${month}, ${year}`
+// "14 Oct, 2025"
+// export const formatDate = (date: Date) => {
+//     const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+//     const day = date.getDate().toString().padStart(2, '0')
+//     const month = months[date.getMonth()]
+//     const year = date.getFullYear()
+//     return `${day} ${month}, ${year}`
+// }
+
+// "October 14, 2025"
+export function formatDateLocale(date: Date | undefined) {
+    if (!date) return ""
+    return date.toLocaleDateString("en-US", {
+        day: "2-digit",
+        month: "long",
+        year: "numeric",
+    })
 }
 
 // หาจำนวนวันในเดือน

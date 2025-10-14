@@ -22,7 +22,8 @@ type ChargeResponse = {
     id: string,
     status: string,
     amount: number,
-    payment_date?: string | null,
+    transaction_date?: string | null,
+    payment_type?: string | null,
 }
 
 export default async function handler(
@@ -71,8 +72,10 @@ export default async function handler(
             id: "",
             status: "cash",
             amount: amount,
-            payment_date: null
+            transaction_date: null,
+            payment_type: "Cash"
         };
+
 
         try {
             if (parsed.data.isCreditCard) {
@@ -94,7 +97,8 @@ export default async function handler(
                         id: res.id,
                         status: res.status.trim().toLowerCase(),
                         amount: res.amount,
-                        payment_date: res.paid_at
+                        transaction_date: res.paid_at,
+                        payment_type: "Credit",
                     }
                 }
             }
@@ -108,14 +112,15 @@ export default async function handler(
 
         // Check charge status ว่ามีใน db หรือยัง
         let paymentStatus = 0
+        const strstatus = charge.status.toLowerCase().trim()
         const statusData = await prisma.status.findFirst({
-            where: { name: charge.status }
+            where: { name: strstatus }
         })
 
         if (!statusData) {
             const result = await prisma.status.create({
                 data: {
-                    name: charge.status,
+                    name: strstatus,
                     type: "payment"
                 }
             })
@@ -135,11 +140,12 @@ export default async function handler(
                 date_end: data.endTime,
                 pet_sitter_id: data.sitterId,
                 user_id: userId,
-                payment_id: charge.id || null,
-                payment_date: charge.payment_date,
+                transaction_id: charge.id || null,
+                transaction_date: charge.transaction_date,
                 booking_status_id: 5, //Waiting for confirm
                 amount: charge.amount / 100,
-                payment_status_id: paymentStatus,
+                payment_status_id: paymentStatus == 0 ? null : paymentStatus,
+                payment_type: charge.payment_type,
                 created_at: new Date(),
                 booking_pet_detail: {
                     create: data.petIds.map((petId) => ({
@@ -170,7 +176,6 @@ export default async function handler(
             // ลบ field เดิมออก
             status_booking_payment_status_idTostatus: undefined,
         };
-        console.log("booking", bookingData);
 
         return res.status(200).json({
             success: true,

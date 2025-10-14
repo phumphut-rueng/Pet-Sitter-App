@@ -43,10 +43,10 @@ export default function BookingSuccess(
                         {/* Transaction Info */}
                         <div className="mb-5">
                             <div className="text-gray-4 text-[16px] mb-1">
-                                Transaction Date : {`${formatTodddMMyyyy(data?.payment_date || new Date().toISOString())}`}
+                                Transaction Date : {`${formatTodddMMyyyy(data?.transaction_date || new Date().toISOString())}`}
                             </div>
                             <div className="text-gray-4 text-[16px]">
-                                Transaction No. : {data?.id}
+                                Transaction No. : {data?.transaction_id}
                             </div>
                         </div>
 

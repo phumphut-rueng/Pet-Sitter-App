@@ -60,40 +60,42 @@ model sitter_image {
 
 /// This model contains an expression index which requires additional setup for migrations. Visit https://pris.ly/d/expression-indexes for more info.
 model user {
-  id                       Int                       @id @default(autoincrement())
-  name                     String?                   @db.VarChar(100)
-  email                    String                    @unique @db.VarChar(100)
-  password                 String                    @db.VarChar(255)
-  phone                    String?                   @db.VarChar(20)
-  profile_image            String?                   @db.VarChar(255)
-  dob                      DateTime?                 @db.Date
-  bank_name                String?                   @db.VarChar(100)
-  bank_number              String?                   @db.VarChar(50)
-  created_at               DateTime                  @default(now()) @db.Timestamp(6)
-  updated_at               DateTime?                 @db.Timestamp(6)
-  profile_image_public_id  String?                   @db.VarChar(255)
-  status                   user_status               @default(normal)
-  approval_status_id       Int                       @default(1)
-  status_updated_at        DateTime?                 @db.Timestamp(6)
-  admin_note               String?                   @db.VarChar(1000)
-  suspended_at             DateTime?                 @db.Timestamp(6)
-  suspended_by_admin_id    Int?
-  suspend_reason           String?                   @db.VarChar(1000)
-  is_online                Boolean?                  @default(false)
-  last_seen                DateTime?                 @default(now()) @db.Timestamp(6)
-  admin                    admin?
-  other_booking            booking[]                 @relation("bookingTobooking")
-  chat_chat_user1_idTouser chat[]                    @relation("chat_user1_idTouser")
-  chat_chat_user2_idTouser chat[]                    @relation("chat_user2_idTouser")
-  message                  message[]
-  pets                     pet[]
-  report                   report[]
-  reviews                  review[]
-  sitter                   sitter[]
-  sitter_approval_history  sitter_approval_history[]
-  sitter_approval_status   sitter_approval_status    @relation(fields: [approval_status_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  user_chat_settings       user_chat_settings[]
-  user_role                user_role[]
+  id                                   Int                       @id @default(autoincrement())
+  name                                 String?                   @db.VarChar(100)
+  email                                String                    @unique @db.VarChar(100)
+  password                             String                    @db.VarChar(255)
+  phone                                String?                   @db.VarChar(20)
+  profile_image                        String?                   @db.VarChar(255)
+  dob                                  DateTime?                 @db.Date
+  bank_name                            String?                   @db.VarChar(100)
+  bank_number                          String?                   @db.VarChar(50)
+  created_at                           DateTime                  @default(now()) @db.Timestamp(6)
+  updated_at                           DateTime?                 @db.Timestamp(6)
+  profile_image_public_id              String?                   @db.VarChar(255)
+  status                               user_status               @default(normal)
+  approval_status_id                   Int                       @default(1)
+  status_updated_at                    DateTime?                 @db.Timestamp(6)
+  admin_note                           String?                   @db.VarChar(1000)
+  suspended_at                         DateTime?                 @db.Timestamp(6)
+  suspended_by_admin_id                Int?
+  suspend_reason                       String?                   @db.VarChar(1000)
+  is_online                            Boolean?                  @default(false)
+  last_seen                            DateTime?                 @default(now()) @db.Timestamp(6)
+  id_number                            String?                   @unique(map: "unique_id_number") @db.VarChar(20)
+  admin                                admin?
+  other_booking                        booking[]                 @relation("bookingTobooking")
+  chat_chat_user1_idTouser             chat[]                    @relation("chat_user1_idTouser")
+  chat_chat_user2_idTouser             chat[]                    @relation("chat_user2_idTouser")
+  message                              message[]
+  pets                                 pet[]
+  report_report_reported_user_idTouser report[]                  @relation("report_reported_user_idTouser")
+  report                               report[]
+  reviews                              review[]
+  sitter                               sitter[]
+  sitter_approval_history              sitter_approval_history[]
+  sitter_approval_status               sitter_approval_status    @relation(fields: [approval_status_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  user_chat_settings                   user_chat_settings[]
+  user_role                            user_role[]
 
   @@index([approval_status_id], map: "idx_user_approval_status_id")
   @@index([name], map: "idx_user_name")
@@ -153,6 +155,7 @@ model pet {
   banned_by_admin_id Int?
   ban_reason         String?              @db.VarChar(1000)
   booking_pet_detail booking_pet_detail[]
+  admin              admin?               @relation(fields: [banned_by_admin_id], references: [id], onUpdate: NoAction)
   owner              user                 @relation(fields: [owner_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
   pet_type           pet_type             @relation(fields: [pet_type_id], references: [id], onUpdate: NoAction)
 
@@ -161,17 +164,22 @@ model pet {
   @@index([pet_type_id], map: "idx_pet_pet_type_id")
   @@index([created_at], map: "idx_pet_created_at")
   @@index([is_banned], map: "idx_pet_is_banned")
+  @@index([banned_by_admin_id], map: "idx_pet_banned_by_admin")
 }
 
 model admin {
-  id                       Int                       @id @default(autoincrement())
-  user_id                  Int                       @unique
-  is_active                Boolean                   @default(true)
-  created_at               DateTime                  @default(now()) @db.Timestamp(6)
-  updated_at               DateTime                  @default(now()) @updatedAt @db.Timestamp(6)
-  user                     user                      @relation(fields: [user_id], references: [id], onDelete: Cascade)
-  report                   report[]
-  approval_history_actions sitter_approval_history[] @relation("ApprovalHistoryAdmin")
+  id                                        Int                       @id @default(autoincrement())
+  user_id                                   Int                       @unique
+  is_active                                 Boolean                   @default(true)
+  created_at                                DateTime                  @default(now()) @db.Timestamp(6)
+  updated_at                                DateTime                  @default(now()) @updatedAt @db.Timestamp(6)
+  user                                      user                      @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  pet                                       pet[]
+  report                                    report[]
+  report_report_canceled_by_admin_idToadmin report[]                  @relation("report_canceled_by_admin_idToadmin")
+  report_report_pending_by_admin_idToadmin  report[]                  @relation("report_pending_by_admin_idToadmin")
+  report_report_resolved_by_admin_idToadmin report[]                  @relation("report_resolved_by_admin_idToadmin")
+  approval_history_actions                  sitter_approval_history[] @relation("ApprovalHistoryAdmin")
 }
 
 model sitter_approval_status {
@@ -199,24 +207,39 @@ model sitter_approval_history {
 }
 
 model report {
-  id                  Int           @id @default(autoincrement())
-  reporter_id         Int
-  handled_by_admin_id Int?
-  status              report_status @default(new)
-  title               String        @db.VarChar(150)
-  description         String?       @db.VarChar(2000)
-  attachments_json    Json?
-  admin_note          String?       @db.VarChar(1000)
-  created_at          DateTime      @default(now()) @db.Timestamp(6)
-  updated_at          DateTime?     @db.Timestamp(6)
-  admin               admin?        @relation(fields: [handled_by_admin_id], references: [id], onUpdate: NoAction, map: "fk_report_admin")
-  user                user          @relation(fields: [reporter_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_report_user")
+  id                                       Int           @id @default(autoincrement())
+  reporter_id                              Int
+  handled_by_admin_id                      Int?
+  status                                   report_status @default(new)
+  title                                    String        @db.VarChar(150)
+  description                              String?       @db.VarChar(2000)
+  attachments_json                         Json?
+  admin_note                               String?       @db.VarChar(1000)
+  created_at                               DateTime      @default(now()) @db.Timestamp(6)
+  updated_at                               DateTime?     @db.Timestamp(6)
+  reported_user_id                         Int?
+  pending_at                               DateTime?     @db.Timestamp(6)
+  pending_by_admin_id                      Int?
+  resolved_at                              DateTime?     @db.Timestamp(6)
+  resolved_by_admin_id                     Int?
+  canceled_at                              DateTime?     @db.Timestamp(6)
+  canceled_by_admin_id                     Int?
+  admin                                    admin?        @relation(fields: [handled_by_admin_id], references: [id], onUpdate: NoAction, map: "fk_report_admin")
+  admin_report_canceled_by_admin_idToadmin admin?        @relation("report_canceled_by_admin_idToadmin", fields: [canceled_by_admin_id], references: [id], onUpdate: NoAction, map: "fk_report_canceled_admin")
+  admin_report_pending_by_admin_idToadmin  admin?        @relation("report_pending_by_admin_idToadmin", fields: [pending_by_admin_id], references: [id], onUpdate: NoAction, map: "fk_report_pending_admin")
+  user_report_reported_user_idTouser       user?         @relation("report_reported_user_idTouser", fields: [reported_user_id], references: [id], onUpdate: NoAction, map: "fk_report_reported_user")
+  admin_report_resolved_by_admin_idToadmin admin?        @relation("report_resolved_by_admin_idToadmin", fields: [resolved_by_admin_id], references: [id], onUpdate: NoAction, map: "fk_report_resolved_admin")
+  user                                     user          @relation(fields: [reporter_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_report_user")
 
   @@index([created_at], map: "idx_report_created_at")
   @@index([reporter_id], map: "idx_report_reporter")
   @@index([status], map: "idx_report_status")
   @@index([handled_by_admin_id], map: "idx_report_handled_admin")
   @@index([status, created_at(sort: Desc)], map: "idx_report_status_created")
+  @@index([canceled_at], map: "idx_report_canceled_at")
+  @@index([pending_at], map: "idx_report_pending_at")
+  @@index([reported_user_id], map: "idx_report_reported_user")
+  @@index([resolved_at], map: "idx_report_resolved_at")
 }
 
 model chat {
@@ -279,13 +302,14 @@ model booking {
   date_end                                 DateTime             @db.Timestamp(6)
   pet_sitter_id                            Int
   user_id                                  Int
-  payment_id                               String?
-  payment_date                             DateTime?            @db.Timestamp(6)
+  transaction_id                           String?
+  transaction_date                         DateTime?            @db.Timestamp(6)
   booking_status_id                        Int
   amount                                   Decimal              @db.Decimal(10, 2)
   created_at                               DateTime             @default(now()) @db.Timestamp(6)
   updated_at                               DateTime             @default(now()) @db.Timestamp(6)
   payment_status_id                        Int?
+  payment_type                             String?
   status_booking_booking_status_idTostatus status               @relation("booking_booking_status_idTostatus", fields: [booking_status_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "booking_status")
   status_booking_payment_status_idTostatus status?              @relation("booking_payment_status_idTostatus", fields: [payment_status_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "payment_status_id")
   sitter                                   sitter               @relation(fields: [pet_sitter_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "pet_sitter_id")
