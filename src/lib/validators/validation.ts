@@ -30,6 +30,7 @@ async function fetchData<T>(url: string, body: unknown): Promise<T | null> {
 // Regex
 export const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 export const phoneRegex = /^0\d{9}$/;
+export const idNumberRegex = /^\d{13}$/; //  เพิ่ม regex สำหรับ ID Number
 export const cardNameRegex = /^[a-zA-Z\s]*$/;
 export const dobRegex = /^\d{4}-\d{2}-\d{2}$/;
 export const numRegex = /\D/g;
@@ -46,6 +47,17 @@ export const pickDobYmd = (body: unknown): string | undefined => {
   const raw = normalizeString(body["dob"]);
   if (!raw) return undefined;
   return dobRegex.test(raw) ? raw : undefined;
+};
+
+//  เพิ่ม pickIdNumber helper
+export const pickIdNumber = (body: unknown): string | undefined => {
+  if (!isRecord(body)) return undefined;
+  const candidate = body["idNumber"] ?? body["id_number"];
+  const raw = normalizeString(candidate);
+  if (!raw) return undefined;
+  // Remove dashes and spaces for validation
+  const cleaned = raw.replace(/[\s-]/g, "");
+  return idNumberRegex.test(cleaned) ? cleaned : undefined;
 };
 
 export const pickProfileImageUrl = (body: unknown): string | undefined => {
@@ -69,13 +81,15 @@ export const pickProfileImagePublicId = (body: unknown): string | undefined => {
   return normalizeString(candidate);
 };
 
+// อัพเดท schema เพิ่ม idNumber
 export const updateProfileSchema = z.object({
   name: z.string().trim().min(1).max(100).optional(),
   email: z.string().trim().email().optional(),
   phone: z.string().trim().regex(/^\d{9,15}$/).optional(),
+  idNumber: z.string().regex(idNumberRegex).optional(), 
   dob: z.string().regex(dobRegex).optional(),
-  profileImage: z.string().url().optional(),                 // legacy
-  profile_image_public_id: z.string().min(1).optional().or(z.literal(null)), // new
+  profileImage: z.string().url().optional(),
+  profile_image_public_id: z.string().min(1).optional().or(z.literal(null)),
 });
 
 export type ValidationDetails = z.inferFlattenedErrors<typeof updateProfileSchema>;
@@ -116,6 +130,21 @@ export const validatePhone = async (
 
   return { message: "" };
 }
+
+//  เพิ่ม validateIdNumber
+export const validateIdNumber = (value: string): FieldValidation => {
+  if (!value.trim()) {
+    return { message: "" }; // Optional field
+  }
+
+  const cleaned = value.replace(/[\s-]/g, "");
+
+  if (!idNumberRegex.test(cleaned)) {
+    return result("ID Number must be 13 digits");
+  }
+
+  return { message: "" };
+};
 
 export const validatePassword = (
   value: string
@@ -240,6 +269,18 @@ export const formatPhone = (value: string) => {
 
   return { message: "" };
 }
+
+// เพิ่ม formatIdNumber
+export const formatIdNumber = (value: string): string => {
+  const cleaned = value.replace(/[\s-]/g, "");
+  
+  if (cleaned.length <= 13) {
+    // Format: 1-2345-67890-12-3
+    return cleaned.replace(/(\d{1})(\d{4})(\d{5})(\d{2})(\d{1})/, "$1-$2-$3-$4-$5");
+  }
+  
+  return cleaned;
+};
 
 const isValidLuhn = (cardNumber: string): boolean => {
   let sum = 0;

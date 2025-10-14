@@ -12,10 +12,10 @@ import {
   pickDobYmd,
   pickProfileImageUrl,
   pickProfileImagePublicId,
+  pickIdNumber, 
 } from "@/lib/validators/validation";
 import { extractPublicIdFromCloudinaryUrl } from "@/lib/cloudinary/id";
 import { userRepository, type UpdateData } from "@/lib/repo/user.repo";
-
 
 /* ===== helpers ===== */
 type UnknownRecord = Record<string, unknown>;
@@ -46,9 +46,10 @@ type UserProfileResponse = {
   name: string;
   email: string;
   phone: string;
+  idNumber?: string; // ✅ เพิ่ม field นี้
   dob: string;
-  profileImage: string;            // legacy
-  profileImagePublicId?: string;   // preferred for FE
+  profileImage: string;
+  profileImagePublicId?: string;
 };
 type UpdateResponse = { message: string };
 type ErrorResponse = { error: string; details?: ValidationDetails; fields?: string[] };
@@ -65,6 +66,7 @@ const handleGetProfile = async (
     name: user.name ?? "",
     email: user.email ?? "",
     phone: user.phone ?? "",
+    idNumber: user.id_number ?? undefined, // ✅ เพิ่มบรรทัดนี้
     dob: formatDateForResponse(user.dob),
     profileImage: user.profile_image ?? "",
     profileImagePublicId: user.profile_image_public_id ?? undefined,
@@ -80,6 +82,7 @@ const handleUpdateProfile = async (
     name: normalizeString((req.body as UnknownRecord | undefined)?.name),
     email: normalizeString((req.body as UnknownRecord | undefined)?.email),
     phone: normalizeString((req.body as UnknownRecord | undefined)?.phone),
+    idNumber: pickIdNumber(req.body), // ✅ เพิ่มบรรทัดนี้
     dob: pickDobYmd(req.body),
     profileImage: pickProfileImageUrl(req.body),
     profile_image_public_id: pickProfileImagePublicId(req.body),
@@ -93,7 +96,7 @@ const handleUpdateProfile = async (
     });
   }
 
-  const { name, email, phone, dob, profileImage, profile_image_public_id } = parsed.data;
+  const { name, email, phone, idNumber, dob, profileImage, profile_image_public_id } = parsed.data;
 
   const resolvedPublicId =
     profile_image_public_id ?? extractPublicIdFromCloudinaryUrl(profileImage);
@@ -102,16 +105,16 @@ const handleUpdateProfile = async (
   if (name !== undefined) updateData.name = name;
   if (email !== undefined) updateData.email = email;
   if (phone !== undefined) updateData.phone = phone;
+  if (idNumber !== undefined) updateData.id_number = idNumber; // ✅ เพิ่มบรรทัดนี้
   if (dob !== undefined) updateData.dob = parseDate(dob);
   if (resolvedPublicId !== undefined) {
-    updateData.profile_image_public_id = resolvedPublicId || null; // null = ลบรูป
+    updateData.profile_image_public_id = resolvedPublicId || null;
   }
-  // ถ้าต้องเก็บ legacy URL ด้วย ให้เอาคอมเมนต์ออก
-  // if (profileImage !== undefined) updateData.profile_image = profileImage;
 
   try {
     const out = await userRepository.updateById(userId, updateData);
     console.log("[profile] updated public_id =", out.profile_image_public_id);
+    console.log("[profile] updated id_number =", out.id_number); // ✅ เพิ่ม log
     return json(res, HTTP_STATUS.OK, { message: "OK" });
   } catch (error: unknown) {
     if (isPrismaUniqueConstraintError(error)) {
@@ -120,10 +123,13 @@ const handleUpdateProfile = async (
         : undefined;
 
       if (target?.includes("email")) {
-        return json(res, HTTP_STATUS.CONFLICT, { error: "email_taken" });
+        return json(res, HTTP_STATUS.CONFLICT, { error: "Email already registered" });
       }
       if (target?.includes("phone")) {
-        return json(res, HTTP_STATUS.CONFLICT, { error: "phone_taken" });
+        return json(res, HTTP_STATUS.CONFLICT, { error: "Phone already registered" });
+      }
+      if (target?.includes("id_number")) { // ✅ เพิ่ม error handling
+        return json(res, HTTP_STATUS.CONFLICT, { error: "ID Number already registered" });
       }
       return json(res, HTTP_STATUS.CONFLICT, { error: "unique_violation", fields: target });
     }
