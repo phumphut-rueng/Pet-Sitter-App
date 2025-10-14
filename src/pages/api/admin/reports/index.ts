@@ -34,22 +34,14 @@ type Ok = {
 
 type Err = { message: string };
 
-/** ให้ TS เห็นฟิลด์relation  include เข้ามาจริง */
-type ReportWithRelations = Prisma.reportGetPayload<{
-  include: {
-    reporter: { select: { id: true; name: true; email: true; profile_image: true } };
-    reported_user: { select: { id: true; name: true; email: true; profile_image: true } };
-  };
-}>;
-
 /** แปลงค่าจาก query ให้เป็น enum report_status (ถ้าไม่แมตช์ คืน undefined) */
 function normalizeStatus(v: unknown): ReportStatus | undefined {
   if (typeof v !== "string") return undefined;
   const raw = v.trim().toLowerCase();
-  // UI เก่าอาจส่ง rejected map เป็น canceled
+  //rejected map เป็น canceled
   const mapped = raw === "rejected" ? "canceled" : raw;
 
-  // runtime enum object ของ Prisma (ตัวพิมพ์เล็ก)
+  // runtime enum object ของ Prisma 
   const allowed = new Set<string>(Object.values(ReportStatusValue));
   return allowed.has(mapped) ? (mapped as ReportStatus) : undefined;
 }
@@ -73,76 +65,70 @@ export default async function handler(
     // keyword
     const keyword = typeof q === "string" ? q.trim() : "";
 
-    // OR เงื่อนไขค้นหาแบบ type-safe
-    const keywordOr: Prisma.reportWhereInput[] | undefined = keyword
-      ? [
-          {
-            title: {
-              contains: keyword,
-              mode: Prisma.QueryMode.insensitive,
-            },
-          },
-          {
-            description: {
-              contains: keyword,
-              mode: Prisma.QueryMode.insensitive,
-            },
-          },
-          {
-            reporter: {
-              is: {
-                OR: [
-                  { name: { contains: keyword, mode: Prisma.QueryMode.insensitive } },
-                  { email: { contains: keyword, mode: Prisma.QueryMode.insensitive } },
-                ],
-              },
-            },
-          },
-          {
-            reported_user: {
-              is: {
-                OR: [
-                  { name: { contains: keyword, mode: Prisma.QueryMode.insensitive } },
-                  { email: { contains: keyword, mode: Prisma.QueryMode.insensitive } },
-                ],
-              },
-            },
-          },
-        ]
-      : undefined;
+    // แปลง status (ถ้าเป็น "all" ไม่กรอง)
+    const statusEnum = status === "all" || !status ? undefined : normalizeStatus(status);
 
-    // แปลง status เป็น enum ของ Prisma (หรือ undefined ถ้าไม่กรอง)
-    const statusEnum = normalizeStatus(status);
+    // สร้าง where condition
+    const where: Prisma.reportWhereInput = {};
 
-    // where เป็น Prisma.reportWhereInput จริง 
-    const where: Prisma.reportWhereInput = {
-      ...(statusEnum ? { status: statusEnum } : {}),
-      ...(keywordOr ? { OR: keywordOr } : {}),
-    };
+    if (statusEnum) {
+      where.status = statusEnum;
+    }
 
-    // ให้ TS infer tuple ด้วย as const (แก้ overload)
-    const [reports, total] = await Promise.all([
-      prisma.report.findMany({
-        where,
-        include: {
+    if (keyword) {
+      where.OR = [
+        { title: { contains: keyword, mode: "insensitive" } },
+        { description: { contains: keyword, mode: "insensitive" } },
+        {
           reporter: {
-            select: { id: true, name: true, email: true, profile_image: true },
-          },
-          reported_user: {
-            select: { id: true, name: true, email: true, profile_image: true },
+            OR: [
+              { name: { contains: keyword, mode: "insensitive" } },
+              { email: { contains: keyword, mode: "insensitive" } },
+            ],
           },
         },
-        orderBy: { created_at: "desc" },
-        skip,
-        take: limitNum,
-      }),
-      prisma.report.count({ where }),
-    ] as const);
+        {
+          reported_user: {
+            OR: [
+              { name: { contains: keyword, mode: "insensitive" } },
+              { email: { contains: keyword, mode: "insensitive" } },
+            ],
+          },
+        },
+      ];
+    }
+
+    const reports = await prisma.report.findMany({
+      where,
+      include: {
+        reporter: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+            profile_image: true,
+          },
+        },
+        reported_user: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+            profile_image: true,
+          },
+        },
+      },
+      orderBy: { created_at: "desc" },
+      skip,
+      take: limitNum,
+    });
+
+    const total = await prisma.report.count({ where });
 
     const totalPages = Math.max(1, Math.ceil(total / limitNum));
 
     return res.status(200).json({
-      reports: (reports as ReportWithRelations[]).map((r) => ({
+      reports: reports.map((r) => ({
         id: r.id,
         title: r.title,
         description: r.description,
@@ -172,7 +158,10 @@ export default async function handler(
       },
     });
   } catch (err: unknown) {
-    console.error("Error fetching reports:", err);
+    console.error(" Error fetching reports:", err);
+    if (err instanceof Error) {
+      console.error("Stack:", err.stack);
+    }
     return res.status(500).json({ message: "Failed to fetch reports" });
   }
 }

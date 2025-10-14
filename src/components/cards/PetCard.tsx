@@ -48,7 +48,7 @@ const CARD_STYLES = {
   disabled: "cursor-not-allowed opacity-40",
   interactive: `
     cursor-pointer 
-    hover:shadow-[0_6px_24px_rgba(50,54,64,0.08)] 
+    hover:shadow-lg
     active:scale-[.99]
   `,
   chip: `

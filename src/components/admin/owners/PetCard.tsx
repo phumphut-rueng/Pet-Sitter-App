@@ -17,24 +17,25 @@ export default function PetCard({
   return (
     <button
       onClick={onClick}
-      className="group w-full rounded-2xl border border-gray-200 bg-white p-6 text-left hover:shadow-sm transition-shadow cursor-pointer"
+      className="group w-full rounded-2xl border border-gray-2 bg-white p-6 text-left hover:shadow-md transition-shadow cursor-pointer focus-visible:outline-none focus-visible:ring-2 ring-brand ring-offset-2 ring-offset-bg"
     >
       <div className="flex flex-col items-center gap-3">
         <CloudAvatar
           legacyUrl={imageUrl}
           alt={name}
           size={88}
+          priority
           className="shrink-0"
         />
 
-        <div className="font-medium text-ink/90">{name}</div>
+        <div className="text-base-medium text-ink">{name}</div>
 
         <div className="mt-1">
           <span
-            className={`inline-flex items-center rounded-full px-3 py-1 text-xs ${
+            className={`inline-flex items-center rounded-full px-3 py-1 text-xs2-medium ${
               isBanned
-                ? "bg-red/10 text-red border border-red/30"
-                : "bg-green/10 text-green border border-green/30"
+                ? "bg-pink-bg text-red border border-red/30"
+                : "bg-green-light text-green border border-green/30"
             }`}
           >
             {isBanned ? "Suspended" : typeLabel || "—"}

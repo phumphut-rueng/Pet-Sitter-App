@@ -8,7 +8,7 @@ function StatusDot({ ok = true }: { ok?: boolean }) {
     <span
       className={cn(
         "inline-block size-2 rounded-full align-middle",
-        ok ? "bg-success" : "bg-error" 
+        ok ? "bg-success" : "bg-red" 
       )}
       aria-hidden="true"
     />
@@ -17,15 +17,15 @@ function StatusDot({ ok = true }: { ok?: boolean }) {
 
 export default function OwnersTable({ rows }: { rows: OwnerRow[] }) {
   return (
-    <div className="overflow-hidden rounded-2xl border border-[var(--color-border)] bg-[var(--color-card)]">
+    <div className="overflow-hidden rounded-2xl border border-border bg-bg">
       <table className="min-w-full">
         <thead>
-          <tr className="bg-[var(--color-ink)]/90 text-[var(--color-white)]">
-            <th className="px-5 py-3 text-xs2-medium text-justify">Pet Owner</th>
-            <th className="px-5 py-3 text-xs2-medium text-justify">Phone</th>
-            <th className="px-5 py-3 text-xs2-medium text-justify">Email</th>
-            <th className="px-5 py-3 text-xs2-medium text-justify">Pet(s)</th>
-            <th className="px-5 py-3 text-xs2-medium text-justify">Status</th>
+          <tr className="bg-ink/90 text-white">
+            <th className="px-5 py-3 text-xs2-medium text-left">Pet Owner</th>
+            <th className="px-5 py-3 text-xs2-medium text-left">Phone</th>
+            <th className="px-5 py-3 text-xs2-medium text-left">Email</th>
+            <th className="px-5 py-3 text-xs2-medium text-left">Pet(s)</th>
+            <th className="px-5 py-3 text-xs2-medium text-left">Status</th>
           </tr>
         </thead>
 
@@ -34,7 +34,7 @@ export default function OwnersTable({ rows }: { rows: OwnerRow[] }) {
             <tr>
               <td
                 colSpan={5}
-                className="px-5 py-8 text-center text-xs2-medium text-[var(--muted-text)]"
+                className="px-5 py-8 text-center text-xs2-medium text-muted-text"
               >
                 No data
               </td>
@@ -45,7 +45,7 @@ export default function OwnersTable({ rows }: { rows: OwnerRow[] }) {
               return (
                 <tr
                   key={r.id}
-                  className="border-t border-[var(--color-border)] last:border-b hover:bg-[var(--color-muted)]/20"
+                  className="border-t border-border last:border-b hover:bg-muted/20"
                 >
                   {/* Owner */}
                   <td className="px-5 py-4">
@@ -60,9 +60,9 @@ export default function OwnersTable({ rows }: { rows: OwnerRow[] }) {
                       <div className="min-w-0">
                         <Link
                           href={`/admin/owner/${r.id}`}
-                          className="block max-w-[220px] truncate hover:underline"
+                          className="block max-w-[220px] truncate hover:underline focus-visible:outline-none focus-visible:ring-2 ring-brand ring-offset-2 ring-offset-bg rounded"
                         >
-                          <div className="text-sm2-medium text-justify text-ink truncate">
+                          <div className="text-sm2-medium text-left text-ink truncate">
                             {r.name || "(no name)"}
                           </div>
                         </Link>
@@ -71,24 +71,24 @@ export default function OwnersTable({ rows }: { rows: OwnerRow[] }) {
                   </td>
 
                   {/* Phone */}
-                  <td className="px-5 py-4 text-sm2-medium text-justify text-ink">
+                  <td className="px-5 py-4 text-sm2-medium text-left text-ink">
                     {r.phone ?? "-"}
                   </td>
 
                   {/* Email */}
-                  <td className="px-5 py-4 text-sm2-medium text-justify text-ink">
+                  <td className="px-5 py-4 text-sm2-medium text-left text-ink">
                     {r.email}
                   </td>
 
                   {/* Pet(s) */}
-                  <td className="px-5 py-4 text-sm2-medium text-justify text-ink">
+                  <td className="px-5 py-4 text-sm2-medium text-left text-ink">
                     {r.pet_count ?? 0}
                   </td>
 
                   {/* Status */}
                   <td className="px-5 py-4">
                     <div
-                      className="text-sm2-medium text-justify flex items-center gap-2 text-ink"
+                      className="text-sm2-medium text-left flex items-center gap-2 text-ink"
                       title={isActive ? "Normal" : "Banned"}
                     >
                       <StatusDot ok={isActive} />

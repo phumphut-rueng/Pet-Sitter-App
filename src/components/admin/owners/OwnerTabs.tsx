@@ -19,7 +19,7 @@ export default function OwnerTabs({ value, onValueChange, className }: Props) {
     >
       <TabsList
         className={cn(
-          "h4-bold h-auto bg-transparent p-0 gap-3",
+          "h-auto bg-transparent p-0 gap-3",
           "flex items-center justify-start",
           "w-full"
         )}
@@ -30,27 +30,28 @@ export default function OwnerTabs({ value, onValueChange, className }: Props) {
           ["reviews", "Reviews"],
         ] as const).map(([val, label], index) => (
           <TabsTrigger
-                      key={val}
-                      value={val}
-                      className={cn(
-                        "px-8 py-4 text-base font-medium",
-                        "transition-all duration-200",
-                        "relative z-10", // ให้ tab ลอยเหนือ content
-                        index === 0 
-                          ? "rounded-tl-xl rounded-tr-xl rounded-br-xl rounded-bl-none" // Tab แรก: โค้ง 3 มุม
-                          : "rounded-t-xl", // Tab อื่นๆ: โค้งแค่ด้านบน
-                        // Active state - พื้นขาว ตัวอักษรส้ม ไม่มีเงา
-                        "data-[state=active]:bg-white data-[state=active]:text-orange-5",
-                        "data-[state=active]:-mb-px", // ดึง tab ขึ้นมาทับ border ของ content
-                        // Inactive state - พื้นเทา ตัวอักษรเทา
-                        "data-[state=inactive]:bg-gray-2 data-[state=inactive]:text-gray-6",
-                        // Hover states
-                        "data-[state=inactive]:hover:bg-gray-1 data-[state=inactive]:hover:text-gray-7",
-                        "data-[state=active]:hover:text-orange-6"
-                      )}
-                    >
-            {label}
-          </TabsTrigger>
+              key={val}
+              value={val}
+              className={cn(
+                "px-8 py-4 text-base-medium",
+                "transition-all duration-200",
+                "relative z-10",
+                "focus-visible:outline-none focus-visible:ring-2 ring-brand ring-offset-2 ring-offset-bg",
+                index === 0 
+                  ? "rounded-tl-xl rounded-tr-xl rounded-br-xl rounded-bl-none"
+                  : "rounded-t-xl",
+                // Active state
+                "data-[state=active]:bg-white data-[state=active]:text-orange-5",
+                "data-[state=active]:-mb-px",
+                // Inactive state
+                "data-[state=inactive]:bg-gray-2 data-[state=inactive]:text-gray-6",
+                // Hover states
+                "data-[state=inactive]:hover:bg-gray-1 data-[state=inactive]:hover:text-gray-7",
+                "data-[state=active]:hover:text-orange-6"
+              )}
+            >
+              {label}
+            </TabsTrigger>
         ))}
       </TabsList>
     </Tabs>

@@ -30,7 +30,6 @@ import {
 const isDataUrl = (s?: string): boolean =>
   !!s && /^data:image\/[a-zA-Z]+;base64,/.test(s);
 
-// แปลง data URL เป็น File axs
 async function dataUrlToFile(dataUrl: string, filename = "profile.png"): Promise<File> {
   const response = await axios.get(dataUrl, {
     responseType: 'blob'
@@ -40,10 +39,6 @@ async function dataUrlToFile(dataUrl: string, filename = "profile.png"): Promise
   return new File([blob], filename, { type: blob.type || "image/png" });
 }
 
-
-//บีบค่าจาก transform ให้เป็นรูปทรงเดียวกับ OwnerProfileInput ตัดคีย์ที่ schema ไม่รู้จักทิ้ง 
-// บีบ null → undefined สำหรับฟิลด์ optional
- 
 function toFormShape(v: unknown): Partial<OwnerProfileInput> {
   const r = (v ?? {}) as Record<string, unknown>;
   return {
@@ -51,7 +46,7 @@ function toFormShape(v: unknown): Partial<OwnerProfileInput> {
     email: (r.email as string) ?? "",
     phone: (r.phone as string) ?? "",
     image: (r.image as unknown) ?? undefined,
-    idNumber: (r.idNumber as string | null | undefined) ?? undefined,
+    idNumber: (r.idNumber as string | null | undefined) ?? undefined, 
     dob: (r.dob as string | null | undefined) ?? undefined,
   };
 }
@@ -59,7 +54,6 @@ function toFormShape(v: unknown): Partial<OwnerProfileInput> {
 // main hook
 
 export function useOwnerProfileForm() {
-  // เก็บค่าเริ่มต้นในรูปทรง "ฟอร์ม" เพื่อตรงกับ checkFieldChanges
   const initialRef = useRef<Partial<OwnerProfileInput> | null>(null);
 
   const form = useForm<OwnerProfileInput>({
@@ -70,19 +64,17 @@ export function useOwnerProfileForm() {
 
   // load profile
   const load = useCallback(async () => {
-    //  เปลี่ยนจาก apiRequest เป็น api.get
     const { data: profile } = await api.get<OwnerProfileDTO>("/user/profile");
 
     const formData = transformData.fromApiToForm(profile);
-    // เก็บค่าเริ่มต้นเป็นรูปทรงฟอร์ม และ reset ด้วยค่าที่ไม่มี null
     const shaped = toFormShape(formData);
     initialRef.current = shaped;
     form.reset(shaped);
   }, [form]);
 
-  // validate before save (check unique เฉพาะฟิลด์ที่แก้)
+  // validate before save
   const validateBeforeSave = useCallback(
-    async (values: OwnerProfileInput): Promise<boolean> => {
+    async (values: OwnerProfileInput) => {
       const changes = checkFieldChanges(
         initialRef.current,
         values,
@@ -108,29 +100,35 @@ export function useOwnerProfileForm() {
 
   // save profile
   const save = useCallback(
-    async (values: OwnerProfileInput): Promise<boolean> => {
+    async (values: OwnerProfileInput) => {
       const ok = await validateBeforeSave(values);
       if (!ok) return false;
 
       try {
         let public_id: string | undefined;
+        let profile_url: string | undefined;
 
         if (typeof values.image === "string" && isDataUrl(values.image.trim())) {
           const file = await dataUrlToFile(values.image.trim(), "profile.png");
           const up = await uploadAndGetPublicId(file, "owner-profile");
           public_id = up.public_id;
+          profile_url = up.url;
         }
 
         const apiData = transformData.fromFormToApi(values);
+        
         const body = {
           name: apiData.name,
           email: apiData.email,
           phone: apiData.phone,
+          idNumber: apiData.idNumber,
           dob: apiData.dob,
           profile_image_public_id: public_id ?? undefined,
+          profile_image: profile_url ?? undefined,
         };
 
-        //  เปลี่ยนจาก apiRequest เป็น api.put
+        console.log("[useOwnerProfileForm] Sending body:", body);
+
         await api.put("/user/profile", body);
 
         await load();
@@ -138,12 +136,16 @@ export function useOwnerProfileForm() {
       } catch (err) {
         const message = toErrorMessage(err, VALIDATION_ERROR_MESSAGES.unknown);
 
-        if (message.includes("email_taken")) {
+        if (message.includes("email_taken") || message.includes("Email already")) {
           form.setError("email", { message: VALIDATION_ERROR_MESSAGES.emailTaken });
           return false;
         }
-        if (message.includes("phone_taken")) {
+        if (message.includes("phone_taken") || message.includes("Phone already")) {
           form.setError("phone", { message: VALIDATION_ERROR_MESSAGES.phoneTaken });
+          return false;
+        }
+        if (message.includes("id_number") || message.includes("ID Number already")) {
+          form.setError("idNumber", { message: "ID Number already registered" });
           return false;
         }
         if (message.startsWith("HTTP 400") || message.toLowerCase().includes("date")) {

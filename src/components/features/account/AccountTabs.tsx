@@ -11,7 +11,6 @@ type TabConfig = {
 };
 type Props = { className?: string };
 
-
 const ICON_SIZE = 24;
 const SVG_STYLES = { display: "block" } as const;
 
@@ -42,13 +41,11 @@ const ListIcon = () => (
   </svg>
 );
 
-
 const TAB_CONFIGS: readonly TabConfig[] = [
   { href: "/account/profile",  label: "Profile",         value: "profile",  icon: () => <ProfileIcon /> },
   { href: "/account/pet",      label: "Your Pet",        value: "pet",      icon: () => <PawIcon /> },
   { href: "/account/bookings", label: "Booking History", value: "bookings", icon: () => <ListIcon /> },
 ] as const;
-
 
 const STYLES = {
   container: "w-full md:hidden",
@@ -60,11 +57,11 @@ const STYLES = {
   tabTrigger: {
     base: `
       flex-shrink-0 h-full flex items-center justify-start gap-2.5
-      text-base font-bold whitespace-nowrap rounded-none
+      text-base-bold whitespace-nowrap rounded-none
       transition-colors duration-200
       hover:bg-transparent
-      focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2 focus-visible:ring-offset-bg
-      text-gray-7  /* inactive label */
+      focus-visible:ring-2 ring-brand ring-offset-2 ring-offset-bg
+      text-gray-7
     `,
     active: `
       data-[state=active]:text-orange-5
