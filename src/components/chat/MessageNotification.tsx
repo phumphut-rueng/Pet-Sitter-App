@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useSocketContext } from './SocketProvider';
 
 const MessageNotification: React.FC = () => {
-  const { messages, unreadUpdates } = useSocketContext();
+  const { messages } = useSocketContext();
   const [showNotification, setShowNotification] = useState(false);
   const [lastMessageCount, setLastMessageCount] = useState(0);
 
@@ -18,7 +18,7 @@ const MessageNotification: React.FC = () => {
         audio.play().catch(() => {
           // Ignore errors if audio can't play
         });
-      } catch (error) {
+      } catch {
         // Ignore audio errors
       }
 

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import axios from 'axios';
 
 export const useUnreadCount = (userId: string | undefined) => {
@@ -6,7 +6,7 @@ export const useUnreadCount = (userId: string | undefined) => {
   const [loading, setLoading] = useState(false);
 
   // ฟังก์ชันสำหรับดึง unread count จาก API
-  const fetchUnreadCount = async () => {
+  const fetchUnreadCount = useCallback(async () => {
     if (!userId) return;
     
     setLoading(true);
@@ -22,23 +22,23 @@ export const useUnreadCount = (userId: string | undefined) => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [userId]);
 
   // ดึงข้อมูล unread count เมื่อ component mount
   useEffect(() => {
     if (userId) {
       fetchUnreadCount();
     }
-  }, [userId]);
+  }, [userId, fetchUnreadCount]);
 
   // ฟัง unread_update event จาก custom events
   useEffect(() => {
-    const handleUnreadUpdate = (event: CustomEvent) => {
+    const handleUnreadUpdate = () => {
       // Fetch ข้อมูลใหม่จาก API เพื่อความแม่นยำ
       fetchUnreadCount();
     };
 
-    const handleReceiveMessage = (event: CustomEvent) => {
+    const handleReceiveMessage = () => {
       // เมื่อได้รับข้อความใหม่ ให้ refresh unread count
       fetchUnreadCount();
     };
@@ -51,7 +51,7 @@ export const useUnreadCount = (userId: string | undefined) => {
       window.removeEventListener('socket:unread_update', handleUnreadUpdate as EventListener);
       window.removeEventListener('socket:receive_message', handleReceiveMessage as EventListener);
     };
-  }, []); // ✅ ลบ userId ออกจาก dependency array
+  }, [fetchUnreadCount]); // ✅ เพิ่ม fetchUnreadCount ใน dependency array
 
   return {
     unreadCount,

@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { useSession } from 'next-auth/react';
-import { connectSocket, disconnectSocket, getSocket, initVisibilityListener } from '@/lib/utils/socket';
+import { connectSocket, disconnectSocket, initVisibilityListener } from '@/lib/utils/socket';
 import { SocketEvents } from '@/types/socket.types';
 import { Socket } from 'socket.io-client';
 import axios from 'axios';

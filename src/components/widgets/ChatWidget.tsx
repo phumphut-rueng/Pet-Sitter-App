@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import axios from 'axios';
 import { useRouter } from 'next/router';
 import ChatList from '@/components/chat/ChatList';
@@ -150,7 +150,7 @@ export default function ChatWidget() {
   });
 
   // Fetch chats list
-  const fetchChats = async (shouldAutoSelect: boolean = true) => {
+  const fetchChats = useCallback(async (shouldAutoSelect: boolean = true) => {
     try {
       const response = await axios.get('/api/chat/list');
       
@@ -171,10 +171,10 @@ export default function ChatWidget() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [selectedChatId, router]);
 
   // Fetch messages for selected chat
-  const fetchMessages = async (chatId: string) => {
+  const fetchMessages = useCallback(async (chatId: string) => {
     try {
       const response = await axios.get(`/api/chat/${chatId}/message`);
       
@@ -196,13 +196,13 @@ export default function ChatWidget() {
     } finally {
       setIsLoadingMessages(false); // หยุด loading หลังจาก fetch เสร็จ (ทั้งสำเร็จและ error)
     }
-  };
+  }, []);
 
   useEffect(() => {
     if (userId) {
       fetchChats(true); // อนุญาตให้ auto-select เมื่อโหลดครั้งแรก
     }
-  }, [userId]);
+  }, [userId, fetchChats]);
 
   // อัปเดตเวลาสัมพัทธ์ทุกนาที
   useEffect(() => {
@@ -230,7 +230,7 @@ export default function ChatWidget() {
         router.replace('/chat', undefined, { shallow: true });
       }
     }
-  }, [router.query, chats, loading]);
+  }, [router.query, chats, loading, router]);
 
   useEffect(() => {
     if (selectedChatId) {
@@ -244,7 +244,7 @@ export default function ChatWidget() {
           setSelectedChatId(''); // ล้าง selectedChatId ด้วย
         }
     }
-  }, [selectedChatId, chats]);
+  }, [selectedChatId, chats, fetchMessages]);
 
   // จัดการกับ socket messages real-time
   useEffect(() => {
@@ -328,11 +328,11 @@ export default function ChatWidget() {
         }
       });
     }
-  }, [socketMessages, selectedChatId]);
+  }, [socketMessages, selectedChatId, fetchChats]);
 
   // จัดการกับ refresh chat list event
   useEffect(() => {
-    const handleRefreshChatList = (event: CustomEvent) => {
+    const handleRefreshChatList = () => {
       fetchChats(false); // refresh chat list แต่ไม่ auto-select
     };
 
@@ -371,7 +371,7 @@ export default function ChatWidget() {
       window.removeEventListener('refresh_chat_list', handleRefreshChatList as EventListener);
       window.removeEventListener('socket:unread_update', handleUnreadUpdate as EventListener);
     };
-  }, []);
+  }, [fetchChats, selectedChatId]);
 
   const handleChatSelect = async (chatId: string) => {
     // เริ่ม loading เฉพาะตอนเปลี่ยน chat (selectedChatId เปลี่ยน)
