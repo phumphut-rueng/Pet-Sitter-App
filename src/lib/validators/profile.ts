@@ -108,6 +108,7 @@ export const updateProfileSchema = z.object({
   name: z.string().trim().min(1).max(100).optional(),
   email: z.string().trim().email().optional(),
   phone: z.string().trim().regex(/^\d{9,15}$/).optional(),
+  idNumber: z.string().regex(/^\d{13}$/).optional(), // 
   dob: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
   profileImage: z.string().url().optional(),
   profile_image_public_id: z.string().min(1).optional().or(z.literal(null)),
@@ -174,6 +175,17 @@ export const pickDobYmd = (body: unknown): string | undefined => {
   const raw = normalizeString(body["dob"]);
   if (!raw) return undefined;
   return VALIDATION_RULES.dob.pattern.test(raw) ? raw : undefined;
+};
+
+// ✅ เพิ่ม helper สำหรับ ID Number
+export const pickIdNumber = (body: unknown): string | undefined => {
+  if (!isRecord(body)) return undefined;
+  const candidate = body["idNumber"] ?? body["id_number"];
+  const raw = normalizeString(candidate);
+  if (!raw) return undefined;
+  // Remove dashes and spaces
+  const cleaned = raw.replace(/[\s-]/g, "");
+  return VALIDATION_RULES.idNumber.pattern.test(cleaned) ? cleaned : undefined;
 };
 
 export const pickProfileImageUrl = (body: unknown): string | undefined => {
