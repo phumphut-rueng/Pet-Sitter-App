@@ -9,6 +9,8 @@ import PetOwnerDetailModal from "@/components/modal/PetOwnerDetail";
 import PetCard from "@/components/cards/PetCard";
 import PetDetailModal from "@/components/modal/PetDetail";
 import { PetPawLoading } from "@/components/loading/PetPawLoading";
+import BookingRejectConfirmation from "@/components/modal/BookingRejectConfirmation";
+import toast, { Toaster } from "react-hot-toast";
 
 type BookingDetail = {
   id: number;
@@ -63,6 +65,7 @@ export default function BookingDetailPage() {
   const [avatarUrl, setAvatarUrl] = useState("/icons/avatar-placeholder.svg");
   const [booking, setBooking] = useState<BookingDetail | null>(null);
   const [loading, setLoading] = useState(true);
+  const [isOpenAlert, setisOpenAlert] = useState(false);
 
   //pet owner modal
   const [showProfileModal, setShowProfileModal] = useState(false);
@@ -104,7 +107,9 @@ export default function BookingDetailPage() {
     (async () => {
       try {
         setLoading(true);
-        const { data } = await axios.get(`/api/sitter/get-booking?id=${params.id}`);
+        const { data } = await axios.get(
+          `/api/sitter/get-booking?id=${params.id}`
+        );
         setBooking(data);
       } catch (error: any) {
         if (error.response?.status === 404) {
@@ -115,7 +120,6 @@ export default function BookingDetailPage() {
       }
     })();
   }, [params?.id]);
-  
 
   if (loading) {
     return (
@@ -140,32 +144,58 @@ export default function BookingDetailPage() {
             <Button
               variant="outline"
               className="h-12 w-42 border-orange-1 text-orange-5 bg-orange-1 rounded-full font-bold hover:bg-orange-2 hover:border-orange-2"
+              onClick={() => setisOpenAlert(true)}
             >
               Reject Booking
             </Button>
-            <Button className="h-12 w-42 bg-orange-5 text-white rounded-full font-bold hover:bg-orange-4">
+            <Button className="h-12 w-42 bg-orange-5 text-white rounded-full font-bold hover:bg-orange-4"
+              onClick={() => updateBookingStatus(4)} // waiting for service
+              >
               Confirm Booking
             </Button>
           </div>
         );
       case "waitingService":
         return (
-          <Button className="h-12 w-32 bg-orange-5 text-white font-bold rounded-full px-5">
-            In Service
+          <Button className="h-12 w-32 bg-orange-5 text-white font-bold rounded-full px-5"
+            onClick={() => updateBookingStatus(6)} // in service
+            >
+              In service
           </Button>
         );
       case "inService":
         return (
-          <Button className="h-12 w-30 bg-orange-5 text-white font-bold rounded-full px-5">
-            Success
+          <Button className="h-12 w-30 bg-orange-5 text-white font-bold rounded-full px-5"
+            onClick={() => updateBookingStatus(7)} // success
+            >
+              Success
           </Button>
         );
       default:
         return null;
     }
   };
+
+  const updateBookingStatus = async (statusId: number) => {
+    try {
+      await axios.put("/api/sitter/update-booking-status", {
+        bookingId: booking?.id,
+        statusId,
+      });
+      // โหลดข้อมูลใหม่หลังอัปเดต
+      const { data } = await axios.get(
+        `/api/sitter/get-booking?id=${params.id}`
+      );
+      toast.success("Booking status updated successfully!");
+      setBooking(data);
+    } catch (error) {
+      toast.error("Failed to update booking status");
+    }
+  };
+
   return (
     <main className="flex container-1200 !px-0 bg-gray-1">
+      <Toaster position="top-right"/>
       <SitterSidebar className="min-w-0" />
       <section className="flex-1 min-w-0">
         <PetSitterNavbar avatarUrl={avatarUrl} name={userName} />
@@ -181,7 +211,7 @@ export default function BookingDetailPage() {
             <h2 className="text-2xl font-semibold text-black">
               {booking.ownerName}
             </h2>
-            <StatusBadge status={booking.status} className="text-base" />
+            <StatusBadge status={booking.status} className="text-base mt-1" />
           </div>
           {renderActionButtons()}
         </div>
@@ -259,8 +289,8 @@ export default function BookingDetailPage() {
             </div>
 
             <div>
-            <h4 className="text-gray-4 font-bold text-xl">Payment Method</h4>
-            <p className="mt-1 font-medium">{booking.paymentMethod}</p>
+              <h4 className="text-gray-4 font-bold text-xl">Payment Method</h4>
+              <p className="mt-1 font-medium">{booking.paymentMethod}</p>
             </div>
 
             <div>
@@ -313,6 +343,15 @@ export default function BookingDetailPage() {
           avatarUrl={selectedPet.img}
         />
       )}
+
+      <BookingRejectConfirmation
+        open={isOpenAlert}
+        onOpenChange={setisOpenAlert}
+        onConfirm={() => {
+          updateBookingStatus(8); // canceled
+          setisOpenAlert(false);
+        }}
+      />
     </main>
   );
 }
