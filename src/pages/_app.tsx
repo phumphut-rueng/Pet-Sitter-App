@@ -5,7 +5,9 @@ import { SessionProvider } from "next-auth/react";
 import { useRouter } from "next/router";
 import Navbar from "@/components/navbar/Navbar";
 import { SocketProvider } from "@/components/chat/SocketProvider";
-import { satoshi, notoThai } from "@/fonts"; 
+import { satoshi, notoThai } from "@/fonts"; import { Toaster } from "sonner";
+
+
 const NAV_HIDE_ROUTES = new Set([
   "/login",
   "/logout",
@@ -46,6 +48,7 @@ export default function App({ Component, pageProps: { session, ...pageProps } }:
           <Component {...pageProps} />
         </div>
       </SocketProvider>
+      <Toaster richColors closeButton />
     </SessionProvider>
   );
 }

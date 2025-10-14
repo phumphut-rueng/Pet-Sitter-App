@@ -1,6 +1,8 @@
+"use client";
 import Image from "next/image";
 import AlertConfirm from "./AlertConfirm";
 import PrimaryButton from "../buttons/PrimaryButton";
+import { toast } from "sonner"; 
 
 interface ReviewSummaryDialogProps {
   open: boolean;
@@ -16,6 +18,17 @@ export default function ReviewSummaryDialog({
   data,
 }: ReviewSummaryDialogProps) {
   if (!data) return null;
+
+  const handleClose = () => {
+    toast.success("Review submitted successfully 🎉", {
+      description: "Thank you for sharing your feedback.",
+      duration: 3000,
+      position: "bottom-right",
+      className:
+        "bg-green-50 border border-green-300 text-green-800 shadow-md rounded-xl px-4 py-3",
+    });
+    onOpenChange(false);
+  };
 
   return (
     <AlertConfirm
@@ -71,7 +84,7 @@ export default function ReviewSummaryDialog({
               text="View Pet Sitter"
               bgColor="secondary"
               textColor="orange"
-              onClick={() => onOpenChange(false)}
+              onClick={handleClose}
             />
           </div>
         </div>
