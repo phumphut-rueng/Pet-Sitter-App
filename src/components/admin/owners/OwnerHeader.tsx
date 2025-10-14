@@ -22,7 +22,7 @@ export default function OwnerHeader({
 
   return (
     <header className={className}>
-      {/* แถวบน: ลูกศร + ชื่อ (บรรทัดเดียว) */}
+      {/* แถวบน: ลูกศร + ชื่อ */}
       <div className="px-6 pt-6">
         <div className="flex items-center gap-2 minw-0">
           {showBack && (
@@ -35,14 +35,12 @@ export default function OwnerHeader({
               <ChevronLeft className="h-5 w-5" aria-hidden="true" />
             </button>
           )}
-
-          {/* ชื่อชิดกับลูกศร ในบรรทัดเดียว และตัด ... ถ้ายาว */}
-          <h1 className="h3-bold  text-ink">{title}</h1>
+          <h1 className="h3-bold text-ink">{title}</h1>
         </div>
       </div>
 
       {/* แท็บ */}
-      <div className="px-10 pt-8">
+      <div className="pt-8">
         <OwnerTabs value={tab} onValueChange={onTabChange} />
       </div>
     </header>

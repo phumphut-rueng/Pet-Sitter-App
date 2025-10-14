@@ -257,7 +257,7 @@ export default function PetSitterProfilePage() {
 
       if (response.ok) {
         const result = await response.json();
-        console.log("✅ Success response:", result);
+        console.log(" Success response:", result);
 
         // แสดง toast แจ้งเตือนสำเร็จ (2 วินาที)
         toast.success("Request for approval submitted successfully!", {
@@ -526,7 +526,7 @@ export default function PetSitterProfilePage() {
                       className="w-full"
                       {...register("email", {
                         validate: async (v) => {
-                          // ✅ ถ้าอีเมลที่กรอกเหมือนกับของตัวเอง → ข้ามไม่เช็กซ้ำ
+                          //  ถ้าอีเมลที่กรอกเหมือนกับของตัวเอง → ข้ามไม่เช็กซ้ำ
                           if (v === currentEmail) return true;
 
                           const base = await validateEmail(v, undefined, false);

@@ -2,24 +2,28 @@ import CloudAvatar from "@/components/admin/owners/CloudAvatar";
 
 const formatDob = (s?: string | null) => {
   if (!s) return "-";
-  const d = new Date(`${s}T00:00:00Z`);
+  
+  // ถ้าเป็น ISO string อยู่แล้ว (มี T) ใช้ตรงๆ
+  // ถ้าเป็น date-only (YYYY-MM-DD) ให้เพิ่ม T00:00:00Z
+  const dateStr = s.includes("T") ? s : `${s}T00:00:00Z`;
+  const d = new Date(dateStr);
+  
   return isNaN(d.getTime())
     ? s
-    : d.toLocaleDateString(undefined, {
+    : d.toLocaleDateString("en-GB", {
         day: "numeric",
         month: "short",
         year: "numeric",
       });
 };
 
-
 function Field({ label, value }: { label: string; value: string }) {
   return (
     <div>
-      <div className="h4-bold text-gray-4 mb-1">
+      <div className="text-sm2-medium text-gray-6 mb-1">
         {label}
       </div>
-      <div className="text-sm2-regular text-ink">
+      <div className="text-base-medium text-ink">
         {value}
       </div>
     </div>
@@ -45,11 +49,11 @@ export default function OwnerProfileCard({
 }) {
   const btnLabel = isSuspended ? "Unban This User" : "Ban This User";
   const btnClass =
-    "px-6 py-3 rounded-xl text-sm2-bold transition-colors text-orange-5 hover:bg-orange-5/10 active:bg-orange-5/15 focus:outline-none focus:ring-2 focus:ring-orange-5/30";
+    "px-6 py-3 rounded-xl text-sm2-medium transition-colors text-orange-5 hover:bg-orange-1 active:bg-orange-2 focus-visible:outline-none focus-visible:ring-2 ring-brand ring-offset-2 ring-offset-bg";
 
   return (
-    <div className="px-10 pb-10 pt-6">
-      <div className="flex items-start gap-10">
+    <div className="px-10 py-10 bg-white rounded-br-2xl rounded-tr-2xl">
+    <div className="flex items-start gap-10">
         {/* Avatar ซ้าย */}
         <CloudAvatar
           publicId={owner.profile_image_public_id ?? undefined}
@@ -60,7 +64,7 @@ export default function OwnerProfileCard({
           priority
         />
 
-        <div className="min-h-[360px] flex-1 rounded-lg bg-white-1 p-6">
+        <div className="min-h-[360px] flex-1 rounded-lg p-6">
           {/* ระยะห่างระหว่างหัวข้อ = 40px → space-y-10 */}
           <div className="space-y-10">
             <Field label="Pet Owner Name" value={owner.name || "-"} />

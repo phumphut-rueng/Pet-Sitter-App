@@ -61,7 +61,7 @@ type ReviewCardProps = {
 
 const ReviewCard: React.FC<ReviewCardProps> = ({ review }) => {
   return (
-    <article className="border-b border-border py-6 last:border-b-0">
+    <article className="border-b border-gray-2 py-6 ">
       <div className="flex">
         <SitterAvatar avatarUrl={review.sitter.avatarUrl} name={review.sitter.name} />
         <div className="mx-4">
@@ -95,7 +95,7 @@ const ReviewCard: React.FC<ReviewCardProps> = ({ review }) => {
 };
 
 const LoadingSkeleton: React.FC = () => (
-  <div className="px-10 pb-10 pt-6" role="status" aria-label="Loading reviews">
+  <div className="px-10 py-10 bg-white rounded-2xl rounded-tl-none" role="status" aria-label="Loading reviews">
     <div className="animate-pulse space-y-6">
       {[1, 2, 3].map((i) => (
         <div key={i} className="flex gap-4">
@@ -112,8 +112,8 @@ const LoadingSkeleton: React.FC = () => (
 );
 
 const EmptyState: React.FC = () => (
-  <div className="px-10 pb-10 pt-6">
-    <div className="rounded-lg border border-dashed border-border bg-gray-1 p-12 text-center">
+  <div className="px-10 py-10 bg-white rounded-2xl rounded-tl-none">
+    <div className="rounded-lg border border-dashed border-border bg-white p-12 text-center">
       <svg
         className="mx-auto h-12 w-12 text-gray-6"
         fill="none"
@@ -141,7 +141,7 @@ type ErrorStateProps = {
 };
 
 const ErrorState: React.FC<ErrorStateProps> = ({ message }) => (
-  <div className="px-10 pb-10 pt-6" role="alert">
+  <div className="px-10 py-10 bg-white rounded-2xl rounded-tl-none" role="alert">
     <div className="rounded-lg border border-red bg-pink-bg p-6 text-center">
       <p className="text-red font-medium">{message}</p>
     </div>
@@ -166,13 +166,11 @@ export default function OwnerReviewsList({
   }
 
   return (
-    <section className="bg-white rounded-lg border border-border mt-6">
-      <div className="px-10 py-6">
-        <div className="space-y-0">
-          {reviews.map((review) => (
-            <ReviewCard key={review.id} review={review} />
-          ))}
-        </div>
+    <section className="px-10 py-10 bg-white rounded-2xl rounded-tl-none">
+      <div className="space-y-0">
+        {reviews.map((review) => (
+          <ReviewCard key={review.id} review={review} />
+        ))}
       </div>
     </section>
   );

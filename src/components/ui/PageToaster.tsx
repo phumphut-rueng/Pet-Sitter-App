@@ -1,16 +1,6 @@
 import { Toaster } from "react-hot-toast";
 
 export default function PageToaster() {
-  const orange      = "var(--brand-orange, #FF7037)";
-  const orange50    = "var(--brand-orange-50, #FFE8DC)";
-  const orange200   = "var(--brand-orange-200, #FFD1BC)";
-  const slate50     = "var(--slate-50, #F8FAFC)";
-  const slate200    = "var(--slate-200, #E2E8F0)";
-  const rose50      = "var(--rose-50, #FFF1F2)";
-  const rose200     = "var(--rose-200, #FECDD3)";
-  const rose700     = "var(--rose-700, #BE123C)";
-  const rose500     = "var(--rose-500, #F43F5E)";
-
   return (
     <Toaster
       position="top-right"
@@ -22,32 +12,35 @@ export default function PageToaster() {
           boxShadow: "0 10px 30px rgba(16,24,40,.12)",
         },
 
-
         success: {
           style: {
-            background: orange50,
-            color: orange,
-            border: `1px solid ${orange200}`,
+            background: "var(--green-bg)",
+            color: "var(--green)",
+            border: "1px solid rgba(28, 205, 131, 0.3)",
           },
-          iconTheme: { primary: orange, secondary: "#fff" },
+          iconTheme: { 
+            primary: "var(--green)", 
+            secondary: "#fff" 
+          },
         },
-
 
         error: {
           style: {
-            background: rose50,
-            color: rose700,
-            border: `1px solid ${rose200}`,
+            background: "var(--pink-bg)",
+            color: "var(--red)",
+            border: "1px solid rgba(234, 16, 16, 0.3)",
           },
-          iconTheme: { primary: rose500, secondary: "#fff" },
+          iconTheme: { 
+            primary: "var(--red)", 
+            secondary: "#fff" 
+          },
         },
-
 
         loading: {
           style: {
-            background: slate50,
-            color: "var(--ink, #111827)",
-            border: `1px solid ${slate200}`,
+            background: "var(--gray-1)",
+            color: "var(--ink)",
+            border: "1px solid var(--gray-2)",
           },
         },
       }}

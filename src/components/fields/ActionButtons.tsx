@@ -5,6 +5,7 @@ type ActionButtonsProps = {
   mode: "create" | "edit";
   loading: boolean;
   onCancel: () => void;
+  disabled?: boolean;  // ✨ เพิ่มบรรทัดนี้
   isMobile?: boolean;
 };
 
@@ -12,6 +13,7 @@ export const ActionButtons: React.FC<ActionButtonsProps> = ({
   mode,
   loading,
   onCancel,
+  disabled = false, 
   isMobile = false,
 }) => {
   const submitLabel = mode === "edit" ? "Update Pet" : "Create Pet";
@@ -34,8 +36,10 @@ export const ActionButtons: React.FC<ActionButtonsProps> = ({
       </button>
       <button
         type="submit"
-        disabled={loading}
-        className={`${PET_FORM_STYLES.button.submit} ${buttonSpacing} ${submitClass}`}
+        disabled={disabled || loading} 
+        className={`${PET_FORM_STYLES.button.submit} ${buttonSpacing} ${submitClass} ${
+          (disabled || loading) ? "opacity-50 cursor-not-allowed" : "" 
+        }`}
       >
         {loadingLabel}
       </button>
