@@ -6,18 +6,18 @@ export type OwnerProfileDTO = {
   name: string | null;
   email: string | null;
   phone: string | null;
-  idNumber?: string | null; 
+  idNumber?: string | null;
   dob?: string | null;
-  profileImage?: string | null;
-  profileImagePublicId?: string | null;
-  profile_image_public_id?: string | null;
+  profileImage?: string | null;            // legacy url
+  profileImagePublicId?: string | null;    // camel
+  profile_image_public_id?: string | null; // snake
 };
 
 export const DEFAULT_VALUES: OwnerProfileInput = {
   name: "",
   email: "",
   phone: "",
-  idNumber: "", 
+  idNumber: "",
   dob: "",
   image: undefined,
 };
@@ -34,7 +34,7 @@ export const transformData = {
       name: cleanName,
       email,
       phone: p.phone ?? "",
-      idNumber: p.idNumber ?? "", 
+      idNumber: p.idNumber ?? "",
       dob: p.dob ?? "",
       image: publicId ? cldUrl(publicId, 256, 256) : (legacyUrl || undefined),
     };
@@ -44,7 +44,6 @@ export const transformData = {
     name: sanitize.trimString(v.name) || undefined,
     email: sanitize.trimString(v.email) || undefined,
     phone: sanitize.onlyDigits(v.phone),
-    idNumber: sanitize.trimString(v.idNumber) || undefined, 
     dob: formatDate.toYmd(v.dob),
   }),
 
@@ -52,7 +51,7 @@ export const transformData = {
     name: sanitize.trimString(v.name),
     email: sanitize.trimString(v.email),
     phone: sanitize.onlyDigits(v.phone) ?? "",
-    idNumber: sanitize.trimString(v.idNumber), 
+    idNumber: sanitize.trimString(v.idNumber),
     dob: formatDate.toYmd(v.dob) ?? "",
     profileImage: typeof v.image === "string" ? sanitize.trimString(v.image) : "",
   }),

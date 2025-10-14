@@ -12,13 +12,14 @@ const formatDob = (s?: string | null) => {
       });
 };
 
+
 function Field({ label, value }: { label: string; value: string }) {
   return (
     <div>
-      <div className="text-sm2-medium text-gray-6 mb-1">
+      <div className="h4-bold text-gray-4 mb-1">
         {label}
       </div>
-      <div className="text-base-medium text-ink">
+      <div className="text-sm2-regular text-ink">
         {value}
       </div>
     </div>
@@ -44,7 +45,7 @@ export default function OwnerProfileCard({
 }) {
   const btnLabel = isSuspended ? "Unban This User" : "Ban This User";
   const btnClass =
-    "px-6 py-3 rounded-xl text-sm2-medium transition-colors text-orange-5 hover:bg-orange-1 active:bg-orange-2 focus-visible:outline-none focus-visible:ring-2 ring-brand ring-offset-2 ring-offset-bg";
+    "px-6 py-3 rounded-xl text-sm2-bold transition-colors text-orange-5 hover:bg-orange-5/10 active:bg-orange-5/15 focus:outline-none focus:ring-2 focus:ring-orange-5/30";
 
   return (
     <div className="px-10 pb-10 pt-6">

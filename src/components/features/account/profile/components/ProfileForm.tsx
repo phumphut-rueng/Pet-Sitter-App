@@ -17,9 +17,7 @@ export interface ProfileFormProps {
 }
 
 const ErrorMessage: React.FC<{ message: string }> = ({ message }) => (
-  <div className="text-base-medium text-red bg-pink-bg border border-red/20 rounded-lg px-4 py-3">
-    {message}
-  </div>
+  <div className={FORM_CONFIG.styles.error}>{message}</div>
 );
 
 export default function ProfileForm({
@@ -38,7 +36,7 @@ export default function ProfileForm({
     bgColor: "primary",
     textColor: "white",
     className: cn(
-      "px-6 rounded-full transition hover:opacity-95 focus-visible:outline-none focus-visible:ring-2 ring-brand ring-offset-2 ring-offset-bg",
+      "px-6 rounded-full transition hover:opacity-95 focus:outline-none",
       saving && "opacity-50 pointer-events-none"
     ),
     onClick: () => {

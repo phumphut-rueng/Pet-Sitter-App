@@ -36,7 +36,7 @@ export function PetPawLoading({
   };
 
   const classes = sizeClasses[size];
-  const baseStyle = "min-h-screen flex items-center justify-center";
+  const baseStyle = "min-h-screen bg-gray-5 flex items-center justify-center";
 
   return (
     <div className={baseStyleCustum || baseStyle}>

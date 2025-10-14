@@ -34,7 +34,7 @@ export default function PetListPage() {
   if (loading) {
     return (
       <AccountPageShell title="Your Pet">
-        <div className="text-base-regular text-gray-6">Loading...</div>
+        <div className="text-slate-600">Loading...</div>
       </AccountPageShell>
     );
   }
@@ -51,10 +51,10 @@ export default function PetListPage() {
       <PageToaster />
 
       <div className="mb-6 flex items-center justify-between">
-        <h2 className="h4-bold text-ink">All Pets</h2>
+        <h2 className="text-xl font-semibold text-gray-900">All Pets</h2>
         <button
           onClick={handleCreatePet}
-          className="rounded-full bg-orange-5 px-4 py-2 text-base-bold text-white hover:bg-orange-6 focus-visible:outline-none focus-visible:ring-2 ring-brand ring-offset-2 ring-offset-bg transition-colors"
+          className="rounded-full bg-orange-500, px-4 py-2 font-semibold text-white hover:opacity-90"
         >
           Create Pet
         </button>
@@ -63,7 +63,7 @@ export default function PetListPage() {
       <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-4">
         {viewPets.length === 0 && <CreateNewPetCard onClick={handleCreatePet} />}
 
-        {viewPets.map((p, index) => (
+        {viewPets.map((p) => (
           <PetCard
             key={p.id}
             id={p.id}
@@ -72,7 +72,6 @@ export default function PetListPage() {
             img={p.img}
             onClickId={handleEditPet}
             size={260}
-            priority={index === 0}
           />
         ))}
 

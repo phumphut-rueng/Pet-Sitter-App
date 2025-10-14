@@ -15,6 +15,7 @@ export type AccountSidebarMiniProps = {
   onNavigate?: (id: Item["id"]) => void;
 };
 
+
 const cn = (...c: (string | false | null | undefined)[]) =>
   c.filter(Boolean).join(" ");
 
@@ -77,6 +78,7 @@ export default function AccountSidebarMini({
     },
   ];
 
+
   let current = activeId;
   if (!current) {
     const path = router.asPath || router.pathname || "";
@@ -87,12 +89,13 @@ export default function AccountSidebarMini({
   return (
     <aside
       className={cn(
-        "w-[292px] shrink-0 rounded-2xl bg-white ring-1 ring-border shadow-sm",
+
+        "w-[292px] shrink-0 rounded-2xl bg-white ring-1 ring-slate-200 shadow-sm",
         className
       )}
     >
       <div className="px-5 pt-6 pb-4">
-        <h2 className="h4-bold text-ink">Account</h2>
+        <h2 className="text-xl font-semibold text-gray-900">Account</h2>
       </div>
 
       <nav className="px-2 pb-4">
@@ -100,16 +103,16 @@ export default function AccountSidebarMini({
           {items.map((item) => {
             const isActive = current === item.id;
             const base =
-              "flex items-center gap-3 rounded-xl px-4 py-4 text-sm2-medium transition-colors focus-visible:outline-none focus-visible:ring-2 ring-brand ring-offset-2 ring-offset-bg";
+              "flex items-center gap-3 rounded-xl px-4 py-4 text-[15px] font-medium transition-colors";
             const state = isActive
-              ? "bg-orange-1 text-orange-5"
-              : "text-gray-7 hover:bg-orange-1 hover:text-orange-5";
+              ? "bg-orange-50 text-orange-600"
+              : "text-gray-700 hover:bg-orange-50 hover:text-orange-600 focus-visible:bg-orange-50 focus-visible:text-orange-600";
 
             return (
               <li key={item.id}>
                 <Link
                   href={item.href}
-                  className={cn(base, state)}
+                  className={cn(base, state, "outline-none")}
                   onClick={() => onNavigate?.(item.id)}
                 >
                   <IconMask src={item.iconSrc} />

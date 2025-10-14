@@ -1,18 +1,15 @@
 import { Toaster } from "react-hot-toast";
 
 export default function PageToaster() {
-  
-  const green = "var(--green, #1CCD83)";
-  const greenBg = "var(--green-bg, #E7FDF4)";
-  const greenBorder = "rgba(28, 205, 131, 0.3)";
-  
-  const red = "var(--red, #EA1010)";
-  const pinkBg = "var(--pink-bg, #FFF0F1)";
-  const redBorder = "rgba(234, 16, 16, 0.3)";
-  
-  const gray1 = "var(--gray-1, #F6F6F9)";
-  const gray2 = "var(--gray-2, #DCDFED)";
-  const ink = "var(--ink, #060D18)";
+  const orange      = "var(--brand-orange, #FF7037)";
+  const orange50    = "var(--brand-orange-50, #FFE8DC)";
+  const orange200   = "var(--brand-orange-200, #FFD1BC)";
+  const slate50     = "var(--slate-50, #F8FAFC)";
+  const slate200    = "var(--slate-200, #E2E8F0)";
+  const rose50      = "var(--rose-50, #FFF1F2)";
+  const rose200     = "var(--rose-200, #FECDD3)";
+  const rose700     = "var(--rose-700, #BE123C)";
+  const rose500     = "var(--rose-500, #F43F5E)";
 
   return (
     <Toaster
@@ -25,29 +22,32 @@ export default function PageToaster() {
           boxShadow: "0 10px 30px rgba(16,24,40,.12)",
         },
 
+
         success: {
           style: {
-            background: greenBg,
-            color: green,
-            border: `1px solid ${greenBorder}`,
+            background: orange50,
+            color: orange,
+            border: `1px solid ${orange200}`,
           },
-          iconTheme: { primary: green, secondary: "#fff" },
+          iconTheme: { primary: orange, secondary: "#fff" },
         },
+
 
         error: {
           style: {
-            background: pinkBg,
-            color: red,
-            border: `1px solid ${redBorder}`,
+            background: rose50,
+            color: rose700,
+            border: `1px solid ${rose200}`,
           },
-          iconTheme: { primary: red, secondary: "#fff" },
+          iconTheme: { primary: rose500, secondary: "#fff" },
         },
+
 
         loading: {
           style: {
-            background: gray1,
-            color: ink,
-            border: `1px solid ${gray2}`,
+            background: slate50,
+            color: "var(--ink, #111827)",
+            border: `1px solid ${slate200}`,
           },
         },
       }}
