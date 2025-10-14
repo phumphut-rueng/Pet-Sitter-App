@@ -111,15 +111,17 @@ export default function BookingDetailPage() {
           `/api/sitter/get-booking?id=${params.id}`
         );
         setBooking(data);
-      } catch (error: any) {
-        if (error.response?.status === 404) {
+      } catch (error: unknown) {
+        if (axios.isAxiosError(error) && error.response?.status === 404) {
           router.replace("/404");
+        } else {
+          console.error("Failed to load booking:", error);
         }
       } finally {
         setLoading(false);
       }
     })();
-  }, [params?.id]);
+  }, [params?.id, router]);
 
   if (loading) {
     return (
@@ -188,7 +190,7 @@ export default function BookingDetailPage() {
       );
       toast.success("Booking status updated successfully!");
       setBooking(data);
-    } catch (error) {
+    } catch {
       toast.error("Failed to update booking status");
     }
   };

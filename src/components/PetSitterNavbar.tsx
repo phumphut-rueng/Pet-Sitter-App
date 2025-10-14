@@ -24,8 +24,13 @@ export default function PetSitterNavbar({
             alt={name}
             width={30}
             height={30}
-            unoptimized
-            className="w-full h-full object-cover"
+            style={{
+              width: "100%",
+              height: "100%",
+              objectFit: "cover",
+              objectPosition: "center",
+            }}
+            className="w-full h-full object-cover object-center rounded-full"
           />
           </div>
           <span className="font-medium text-gray-9">{name}</span>

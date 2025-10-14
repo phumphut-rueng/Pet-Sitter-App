@@ -1,4 +1,5 @@
 import React from "react";
+import Image from "next/image";
 
 type PetDetailModalProps = {
   isOpen: boolean;
@@ -44,12 +45,25 @@ export default function PetDetailModal({
         </div>
 
         <div className="flex items-start justify-around gap-7 px-8 mt-7">
-          <div className="w-42 h-42 flex-shrink-0 rounded-full overflow-hidden bg-gray-1">
-            <img
-              src={avatarUrl}
-              alt={petName}
-              className="w-full h-full object-cover object-top"
-            />
+          <div className="flex flex-col items-center gap-4">
+            <div className="w-42 h-42 flex-shrink-0 rounded-full overflow-hidden bg-gray-1">
+              <Image
+                src={avatarUrl || "/images/default-pet-avatar.png"}
+                alt={petName}
+                width={168}
+                height={168}
+                style={{
+                  width: "100%",
+                  height: "100%",
+                  objectFit: "cover",
+                  objectPosition: "center",
+                }}
+                className="w-full h-full object-cover object-center rounded-full"
+              />
+            </div>
+            <div>
+              <p className="text-black font-semibold">{petName}</p>
+            </div>
           </div>
 
           <div className="flex bg-gray-1 rounded-xl pl-6 pr-18 py-6 gap-6">

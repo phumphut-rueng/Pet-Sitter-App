@@ -313,7 +313,7 @@ model booking {
   status_booking_booking_status_idTostatus status               @relation("booking_booking_status_idTostatus", fields: [booking_status_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "booking_status_id")
   status_booking_payment_status_idTostatus status?              @relation("booking_payment_status_idTostatus", fields: [payment_status_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "payment_status_id")
   sitter                                   sitter               @relation(fields: [pet_sitter_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "pet_sitter_id")
-  user                                     user                 @relation("bookingTobooking", fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "user_id ")
+  booking                                     user                 @relation("bookingTobooking", fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "user_id ")
   booking_pet_detail                       booking_pet_detail[]
 
   @@index([date_start, date_end], map: "idx_booking_dates")

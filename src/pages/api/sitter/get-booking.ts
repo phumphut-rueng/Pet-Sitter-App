@@ -111,7 +111,7 @@ export default async function handler(
               },
             },
           },
-          user: true,
+          booking: true,
         },
       });
 
@@ -160,15 +160,15 @@ export default async function handler(
         petsDetail: pets,
         ownerEmail: b.email,
         ownerPhone: b.phone,
-        ownerIdNumber: b.user?.id_number ?? "-",
-        ownerDOB: b.user?.dob
-          ? new Date(b.user.dob).toLocaleDateString("en-GB", {
+        ownerIdNumber: b.booking?.id_number ?? "-",
+        ownerDOB: b.booking?.dob
+          ? new Date(b.booking.dob).toLocaleDateString("en-GB", {
               day: "numeric",
               month: "short",
               year: "numeric",
             })
           : "-",
-        avatarUrl: b.user?.profile_image || "/icons/avatar-placeholder.svg",
+        avatarUrl: b.booking?.profile_image || "/icons/avatar-placeholder.svg",
       };
 
       return res.status(200).json(detail);
