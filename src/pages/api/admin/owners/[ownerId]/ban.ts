@@ -55,7 +55,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         prisma.user.update({
           where: { id: ownerId },
           data: {
-            status: $Enums.user_status.ban,   // ✅ ตรง enum ใหม่
+            status: $Enums.user_status.ban,   
             // ยังใช้ชุด suspended_* ต่อได้ (แค่ชื่อไม่แมตช์คำว่า ban)
             suspended_at: now,
             suspended_by_admin_id: adminId,
