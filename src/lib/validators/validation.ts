@@ -158,12 +158,12 @@ export const validateExpiryDate = (value: string): FieldValidation => {
     return result("Expiry date is required");
   }
 
-  if (cleaned.length !== 6) {
-    return result("Invalid expiry date format (MM/YYYY)");
+  if (cleaned.length !== 4) {
+    return result("Invalid expiry date format (MM/YY)");
   }
 
   const month = parseInt(cleaned.substring(0, 2));
-  const year = parseInt(cleaned.substring(2, 6));
+  const year = 2000 + parseInt(cleaned.substring(2, 4));
 
   if (month < 1 || month > 12) {
     return result("Invalid month (01-12)");

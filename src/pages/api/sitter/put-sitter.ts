@@ -4,9 +4,13 @@ import { prisma } from "@/lib/prisma/prisma";
 import { authOptions } from "../auth/[...nextauth]";
 import { labelToNumber } from "@/lib/utils/experience";
 import type { Prisma } from "@prisma/client";
+import { emailRegex, phoneRegex } from "@/lib/validators/validation";
 
-const phoneRe = /^0\d{9}$/;
-const emailRe = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+// const phoneRe = /^0\d{9}$/;
+// const emailRe = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+const phoneRe = phoneRegex;
+const emailRe = emailRegex;
 
 type Body = {
   fullName?: string;
@@ -34,7 +38,9 @@ export default async function handler(
   res: NextApiResponse
 ) {
   try {
-    if (req.method !== "PUT") return res.status(405).end("Method Not Allowed");
+    if (req.method !== "PUT") {
+      return res.status(405).json({ message: `Method ${req.method} not allowed` });
+    }
 
     const session = await getServerSession(req, res, authOptions);
     if (!session?.user?.email)
@@ -64,8 +70,8 @@ export default async function handler(
     const hasPetTypes = Array.isArray(b.petTypes);
     const petTypeNames = hasPetTypes
       ? Array.from(
-          new Set((b.petTypes ?? []).map((v) => v.trim()).filter(Boolean))
-        )
+        new Set((b.petTypes ?? []).map((v) => v.trim()).filter(Boolean))
+      )
       : [];
 
     const expNumber = b.experience ? labelToNumber(b.experience) : undefined;
@@ -95,7 +101,7 @@ export default async function handler(
     if (hasLatitude && b.latitude !== null) {
       const v = Number(b.latitude);
       if (Number.isNaN(v) || v < -90 || v > 90) {
-        return res.status(400).json({message: "Invalid latitude" })
+        return res.status(400).json({ message: "Invalid latitude" })
       }
     }
 
@@ -125,7 +131,7 @@ export default async function handler(
 
       const baseDataForCreate: Prisma.sitterUncheckedCreateInput = {
         user_sitter_id: me.id,
-        name: tradeName || fullName || me.email ,
+        name: tradeName || fullName || me.email,
         ...(phone !== undefined ? { phone: phone || null } : {}),
         ...(expNumber !== undefined ? { experience: expNumber } : {}),
         ...(b.introduction !== undefined ? { introduction: b.introduction ?? null } : {}),

@@ -15,7 +15,9 @@ export const config = {
 };
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-  if (req.method !== "POST") return res.status(405).end("Method Not Allowed"); // [UNCHANGED] guard เมธอด
+  if (req.method !== "POST") {
+    return res.status(405).json({ message: `Method ${req.method} not allowed` });
+  } // [UNCHANGED] guard เมธอด
 
   // [ADDED] สร้างฟอร์มพร้อม keepExtensions เพื่อคงนามสกุลไฟล์ชั่วคราว
   const form = new IncomingForm({ keepExtensions: true });
