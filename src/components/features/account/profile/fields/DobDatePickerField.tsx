@@ -46,7 +46,7 @@ const DobPickerInner: React.FC<DobInnerProps> = ({ value, onChange, error }) => 
     if (nextStr !== prevStr) onChange(nextStr);
   };
 
-  // ตั้งช่วงปีให้เลือกได้ (ย้อนหลัง 100 ปีถึงวันนี้) และปิดการ block อดีต
+  // ✅ ตั้งช่วงปีให้เลือกได้ (ย้อนหลัง 100 ปีถึงวันนี้) และปิดการ block อดีต
   const today = React.useMemo(() => {
     const d = new Date();
     d.setHours(0, 0, 0, 0);
@@ -61,24 +61,24 @@ const DobPickerInner: React.FC<DobInnerProps> = ({ value, onChange, error }) => 
 
   return (
     <div className="flex flex-col gap-1">
-      <label htmlFor="date" className="text-sm2-medium text-gray-9">
+      <label htmlFor="date" className="text-sm font-medium text-gray-700">
         Date of Birth
       </label>
-      <div className="[&_#date]:bg-white [&_#date]:text-ink [&_#date]:border-gray-2 [&_button]:cursor-pointer">
+      <div className="[&_#date]:bg-white [&_#date]:text-black [&_#date]:border-gray-300 [&_button]:cursor-pointer">
         <DatePicker
           date={selected}
           month={month}
           onMonthChange={handleMonthChange}
           onSelect={handleSelect}
           rules={{
-            disablePastDates: false, // อนุญาตคลิกวัน/เดือน/ปีในอดีต
+            disablePastDates: false, // 🔑 อนุญาตคลิกวัน/เดือน/ปีในอดีต
             minDate: min,            // ย้อนหลัง 100 ปี
             maxDate: today,          // ไม่ให้เกินวันนี้
           }}
           width={400}
         />
       </div>
-      {error && <span className="text-sm2-regular text-red">{error}</span>}
+      {error && <span className="text-sm text-red-600">{error}</span>}
     </div>
   );
 };

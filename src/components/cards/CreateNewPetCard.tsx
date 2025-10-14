@@ -1,29 +1,32 @@
 import * as React from "react";
 import { cn } from "@/lib/utils/utils";
 
+
 type Props = React.ButtonHTMLAttributes<HTMLButtonElement> & {
   height?: number;
 };
 
+
 const THEME_COLORS = {
-  background: "bg-orange-1/60 hover:bg-orange-1",
-  icon: "border-orange-5",
-  text: "text-orange-5"
+  border: "border-orange-100/70",
+  background: "bg-orange-50/60 hover:bg-orange-50",
+  icon: "border-orange-400",
+  text: "text-orange-500"
 } as const;
 
 const STYLES = {
   button: `
-    group grid w-full place-items-center rounded-2xl
-    cursor-pointer transition p-6 text-center
-    focus-visible:outline-none focus-visible:ring-2 ring-brand ring-offset-2 ring-offset-bg
+    group grid w-full place-items-center rounded-3xl border
+    cursor-pointer transition p-8 text-center
   `,
-  iconContainer: "grid h-14 w-14 place-items-center rounded-full border-[3px]",
-  icon: "text-3xl font-bold leading-none",
-  label: "text-sm2-bold",
+  iconContainer: "grid h-14 w-14 place-items-center rounded-full border-2",
+  icon: "text-2xl leading-none",
+  label: "font-semibold",
   content: "mx-auto grid place-items-center gap-3"
 } as const;
 
-const DEFAULT_HEIGHT = 240;
+const DEFAULT_HEIGHT = 260;
+
 
 export default function CreateNewPetCard({
   onClick,
@@ -34,6 +37,7 @@ export default function CreateNewPetCard({
 }: Props) {
   const buttonStyles = cn(
     STYLES.button,
+    THEME_COLORS.border,
     THEME_COLORS.background,
     className
   );

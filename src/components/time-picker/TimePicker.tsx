@@ -89,7 +89,9 @@ export default function TimePicker({
             const now = new Date()
             if (date.toDateString() === now.toDateString()) {
                 const nowMinutes = now.getHours() * 60 + now.getMinutes()
-                if (currentMinutes <= nowMinutes)
+
+                const minAllowedMinutes = nowMinutes + 180 // นัดล่วงหน้า 3 ชั่วโมง
+                if (currentMinutes <= minAllowedMinutes)
                     status.isPastTime = true
             }
         }

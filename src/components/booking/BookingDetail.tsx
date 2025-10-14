@@ -1,4 +1,4 @@
-import { formatToThaiDate } from "@/lib/utils/date"
+import { formatToddMMyyyy } from "@/lib/utils/date"
 import { formatTo12hTime } from "@/lib/utils/time"
 
 export default function BookingSelectDetail(
@@ -19,19 +19,19 @@ export default function BookingSelectDetail(
     }) {
     return (
 
-        <div className="bg-white rounded-2xl shadow-md space-y-4">
+        <div className="bg-white md:rounded-2xl md:shadow-md space-y-4">
             <h3
-                className="font-[700] text-[24px] border-b p-6 border-gray-2">
+                className="font-[700] text-[24px] p-6 border-b border-gray-2">
                 Booking Detail
             </h3>
-            <div className="text-sm text-gray-600 space-y-6 p-6">
+            <div className="text-sm text-gray-6 space-y-6 p-6">
                 <LabelText
                     textHeader="Pet Sitter"
                     textDetail={sitterName}
                 />
                 <LabelText
                     textHeader="Date & Time"
-                    textDetail={`${formatToThaiDate(startTime)} | ${formatTo12hTime(startTime)} - ${formatTo12hTime(endTime)}`}
+                    textDetail={`${formatToddMMyyyy(startTime)} | ${formatTo12hTime(startTime)} - ${formatTo12hTime(endTime)}`}
                 />
                 <LabelText
                     textHeader="Duration"
@@ -43,7 +43,7 @@ export default function BookingSelectDetail(
                 />
             </div>
             <div
-                className="flex justify-between items-center p-6 bg-black rounded-b-2xl text-[16px] text-white">
+                className="flex justify-between items-center p-6 bg-black md:rounded-b-2xl text-[16px] text-white">
                 <span>Total</span>
                 <span>{price} THB</span>
             </div>

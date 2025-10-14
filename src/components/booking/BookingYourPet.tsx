@@ -15,6 +15,10 @@ export default function BookingSelectYourPet({
 }) {
     const [isOpenCreatePet, setIsOpenCreatePet] = useState(false);
 
+    const handleCreatePetClick = () => {
+        setIsOpenCreatePet(true)
+    }
+
     const onClick = (id: number) => {
         setPets((prevPets) =>
             prevPets.map((pet) =>
@@ -29,7 +33,7 @@ export default function BookingSelectYourPet({
     }
 
     return (
-        <div className="grid grid-cols-2 md:grid-cols-3 gap-4 min-w-0">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 min-w-0">
             {pets.map((p) => (
                 <div
                     key={`p-${p.id}`}
@@ -40,18 +44,21 @@ export default function BookingSelectYourPet({
                         img={p.imageUrl ?? ""}
                         selected={p.status === 'selected'}
                         disabled={p.status === 'disabled'}
-                        width={207}
-                        height={240}
+                        // width={207}
+                        // height={240}
                         avatarSize={104}
                         onClick={() => onClick(p.id)}
+                        className={`w-full`}
                     />
                 </div>
             ))}
+
             <CreateNewPetCard
                 height={240}
-                className="w-[207px]"
-                onClick={() => setIsOpenCreatePet(true)}
+                className="w-full"
+                onClick={handleCreatePetClick}
             />
+
             <BookingCreatePet
                 open={isOpenCreatePet}
                 onOpenChange={setIsOpenCreatePet}

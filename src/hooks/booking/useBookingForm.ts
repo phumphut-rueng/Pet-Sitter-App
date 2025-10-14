@@ -1,12 +1,12 @@
 import { cardNameRegex, formatCardNumber, formatCVC, formatEmail, formatExpiryDate, formatPhone, numRegex, validateCardNumber, validateCVC, validateExpiryDate } from "@/lib/validators/validation"
 import { BookingForm } from "@/types/booking.types"
-import { useCallback, useState } from "react"
+import { useCallback, useEffect, useState } from "react"
 
 // Initial state helper
-const createEmptyForm = (): BookingForm => ({
-    name: "",
-    email: "",
-    phone: "",
+const createEmptyForm = (defaults?: Partial<BookingForm>): BookingForm => ({
+    name: defaults?.name || "",
+    email: defaults?.email || "",
+    phone: defaults?.phone || "",
     addition: "",
     cardNumber: "",
     cardName: "",
@@ -14,13 +14,23 @@ const createEmptyForm = (): BookingForm => ({
     cvc: "",
 })
 
-export function useBookingForm() {
-    const [form, setForm] = useState<BookingForm>(createEmptyForm())
+export function useBookingForm(initialValues?: Partial<BookingForm>) {
+    const [form, setForm] = useState<BookingForm>(createEmptyForm(initialValues))
     const [error, setError] = useState<BookingForm>(createEmptyForm())
 
     const updateField = useCallback((name: keyof BookingForm, value: string) => {
         setForm(prev => ({ ...prev, [name]: value }))
     }, [])
+
+    useEffect(() => {
+        if (initialValues?.name || initialValues?.email) {
+            setForm(prev => ({
+                ...prev,
+                name: initialValues.name || prev.name,
+                email: initialValues.email || prev.email,
+            }))
+        }
+    }, [initialValues?.name, initialValues?.email])
 
     const handleChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
         updateField(e.target.name as keyof BookingForm, e.target.value)
