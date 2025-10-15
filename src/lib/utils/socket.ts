@@ -56,7 +56,7 @@ export const connectSocket = (userId: string): Socket<SocketEvents> => {
   }
 
   // Get Socket.IO server URL from environment variable
-  const socketServerUrl = process.env.NEXT_PUBLIC_SOCKET_SERVER_URL || 'http://localhost:3000';
+  const socketServerUrl = process.env.NEXT_PUBLIC_SOCKET_SERVER_URL || 'http://localhost:4000';
   
   const socketConfig = {
     path: '/socket.io', // Default Socket.IO path

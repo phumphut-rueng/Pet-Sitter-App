@@ -8,7 +8,7 @@ import axios from 'axios';
 // ฟังก์ชันเช็คว่า socket server พร้อมใช้งานหรือยัง
 const checkSocketServerStatus = async (): Promise<boolean> => {
   try {
-    const socketServerUrl = process.env.NEXT_PUBLIC_SOCKET_SERVER_URL || 'http://localhost:3000';
+    const socketServerUrl = process.env.NEXT_PUBLIC_SOCKET_SERVER_URL || 'http://localhost:4000';
     const response = await axios.get(`${socketServerUrl}/socket-status`);
     return response.data.isReady || false;
   } catch (error) {
