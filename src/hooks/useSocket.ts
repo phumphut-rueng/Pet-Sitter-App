@@ -5,10 +5,11 @@ import { SocketEvents } from '@/types/socket.types';
 import { Socket } from 'socket.io-client';
 import axios from 'axios';
 
-// ฟังก์ชันเช็คว่า socket server instance ถูกสร้างแล้วหรือยัง
+// ฟังก์ชันเช็คว่า socket server พร้อมใช้งานหรือยัง
 const checkSocketServerStatus = async (): Promise<boolean> => {
   try {
-    const response = await axios.get('/api/chat/socket-status');
+    const socketServerUrl = process.env.NEXT_PUBLIC_SOCKET_SERVER_URL || 'http://localhost:3000';
+    const response = await axios.get(`${socketServerUrl}/socket-status`);
     return response.data.isReady || false;
   } catch (error) {
     console.error('Error checking socket server status:', error);

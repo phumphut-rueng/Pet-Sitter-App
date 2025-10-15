@@ -49,14 +49,17 @@ export const connectSocket = (userId: string): Socket<SocketEvents> => {
   if (socket && socket.connected) {
     return socket;
   }
-  
+
   // ถ้ามี connection promise อยู่แล้ว ให้ return socket ที่มีอยู่
   if (socketConnectionPromise && socket) {
     return socket;
   }
+
+  // Get Socket.IO server URL from environment variable
+  const socketServerUrl = process.env.NEXT_PUBLIC_SOCKET_SERVER_URL || 'http://localhost:3000';
   
   const socketConfig = {
-    path: '/api/chat/socket',
+    path: '/socket.io', // Default Socket.IO path
     autoConnect: false, // ปิด auto connect เพื่อควบคุมการเชื่อมต่อ
     forceNew: true, // บังคับสร้าง connection ใหม่
     timeout: 20000, // เพิ่ม timeout เป็น 20 วินาที
@@ -70,8 +73,9 @@ export const connectSocket = (userId: string): Socket<SocketEvents> => {
     rememberUpgrade: false, // ไม่จำการ upgrade
     withCredentials: true // ส่ง credentials
   };
-  
-  socket = io(socketConfig);
+
+  console.log(`🔌 Connecting to Socket.IO server: ${socketServerUrl}`);
+  socket = io(socketServerUrl, socketConfig);
 
   // เชื่อมต่อ socket หลังจากสร้างเสร็จ
   socket.connect();
