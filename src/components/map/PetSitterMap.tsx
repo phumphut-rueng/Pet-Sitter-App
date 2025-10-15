@@ -147,7 +147,7 @@ export default function PetSitterMap({
       
       {/* Sitter Cards Carousel on the right side */}
       {pins.length > 0 && (
-        <div className="absolute bottom-4 left-0 right-0 z-999">
+        <div className="absolute flex justify-center w-full bottom-4 left-0 right-0 z-999">
           <div 
             ref={carouselRef}
             className="flex overflow-x-auto space-x-4 pb-4 scrollbar-hide"
