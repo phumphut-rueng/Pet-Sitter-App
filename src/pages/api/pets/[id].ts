@@ -7,14 +7,13 @@ import { petSchema } from "@/lib/validators/pet";
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   const session = await getServerSession(req, res, authOptions);
   const userIdStr = session?.user?.id;
-  if (!userIdStr) return res.status(401).json({ error: "Unauthorized" });
+  if (!userIdStr) return res.status(401).json({ message: "Unauthorized" });
 
   const userId = Number(userIdStr);
-  if (!Number.isFinite(userId)) return res.status(400).json({ error: "Invalid user id" });
+  if (!Number.isFinite(userId)) return res.status(400).json({ message: "Invalid user id" });
 
   const id = Number(req.query.id);
-
-  if (!Number.isFinite(id)) return res.status(400).json({ error: "Invalid id" });
+  if (!Number.isFinite(id)) return res.status(400).json({ message: "Invalid id" });
 
   try {
     if (req.method === "GET") {
@@ -23,7 +22,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         include: { pet_type: true },
       });
 
-      if (!pet) return res.status(404).json({ error: "Pet not found" });
+      if (!pet) return res.status(404).json({ message: "Pet not found" });
 
       return res.status(200).json({
         id: pet.id,
@@ -43,9 +42,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     if (req.method === "PUT") {
       const parsed = petSchema.safeParse(req.body);
       if (!parsed.success) {
-        return res
-          .status(400)
-          .json({ error: "Validation error", details: parsed.error.flatten() });
+        const flat = parsed.error.flatten();
+        return res.status(400).json({
+          message: "Validation failed",
+          fieldErrors: flat.fieldErrors, // { [field]: string[] }
+        });
       }
       const data = parsed.data;
 
@@ -64,8 +65,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           updated_at: new Date(),
         },
       });
-      if (updated.count === 0) return res.status(404).json({ error: "Pet not found" });
 
+      if (updated.count === 0) return res.status(404).json({ message: "Pet not found" });
       return res.status(200).json({ message: "OK" });
     }
 
@@ -73,14 +74,14 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       const result = await prisma.pet.deleteMany({
         where: { id, owner_id: userId },
       });
-      if (result.count === 0) return res.status(404).json({ error: "Pet not found" });
+      if (result.count === 0) return res.status(404).json({ message: "Pet not found" });
       return res.status(200).json({ message: "Deleted" });
     }
 
     res.setHeader("Allow", ["GET", "PUT", "DELETE"]);
-    return res.status(405).json({ error: `Method ${req.method} not allowed` });
+    return res.status(405).json({ message: "Method not allowed" });
   } catch (err) {
     console.error("pet [id] api error:", err);
-    return res.status(500).json({ error: "Internal Server Error" });
+    return res.status(500).json({ message: "Internal Server Error" });
   }
 }

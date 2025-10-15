@@ -39,7 +39,6 @@ const LOGOUT = { id: "logout", label: "Log Out", iconSrc: "/icons/ic-logout.svg"
 
 const cn = (...c: (string | false | null | undefined)[]) => c.filter(Boolean).join(" ");
 
-
 const isActive = (pathname: string, href: string) =>
   pathname === href || (href !== "/" && pathname.startsWith(href));
 
@@ -66,7 +65,7 @@ const IconMask: React.FC<{ src: string; className?: string }> = React.memo(
 IconMask.displayName = "IconMask";
 
 const NotificationBadge: React.FC = React.memo(() => (
-  <span className="ml-auto mt-[1px] inline-block h-2 w-2 rounded-full bg-red-500" />
+  <span className="ml-auto mt-[1px] inline-block h-2 w-2 rounded-full bg-red" />
 ));
 NotificationBadge.displayName = "NotificationBadge";
 
@@ -109,13 +108,13 @@ export default function AdminSidebar({
       className={cn(
         positionCls,
         "flex min-h-[100svh] h-auto shrink-0 flex-col",
-        "bg-black text-gray-200 border-r border-neutral-800",
+        "bg-ink text-white border-r border-gray-9",
         className
       )}
       style={{ width: CONFIG.width }}
     >
-
-      <div className="px-5 pt-8 pb-6 border-b border-neutral-800">
+      {/* Logo Section */}
+      <div className="px-5 pt-8 pb-6 border-b border-gray-9">
         <Link
           href={landingHref}
           aria-label="Go to landing page"
@@ -132,26 +131,26 @@ export default function AdminSidebar({
           <span className="sr-only">Admin Panel</span>
         </Link>
 
-        <div className="mt-2 italic font-medium leading-4 text-[16px] text-[#7B7E8F]">
+        <div className="mt-2 text-xs2-medium italic text-gray-6">
           Admin Panel
         </div>
       </div>
 
-
+      {/* Navigation */}
       <nav className="flex-1 overflow-y-auto px-2 py-4">
         <ul className="space-y-0.5">
           {ADMIN_ITEMS.map((item) => {
             const active = isActive(pathname, item.href);
             const base =
-              "group flex w-full items-center gap-3 rounded-xl px-3 py-3 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/20 focus-visible:ring-offset-2 focus-visible:ring-offset-black cursor-pointer";
-            const activeCls = "bg-neutral-800 text-white";
-            const inactiveCls = "text-gray-300 hover:bg-neutral-800 hover:text-white";
+              "group flex w-full items-center gap-3 rounded-xl px-3 py-3 transition-colors focus-visible:outline-none focus-visible:ring-2 ring-brand ring-offset-2 ring-offset-ink cursor-pointer";
+            const activeCls = "bg-gray-9 text-white";
+            const inactiveCls = "text-gray-4 hover:bg-gray-9 hover:text-white";
             return (
               <li key={item.id}>
                 <Link href={item.href} className="block" onClick={() => handleNavigate(item.id)}>
                   <div className={cn(base, active ? activeCls : inactiveCls)}>
                     <IconMask src={item.iconSrc} />
-                    <span className="text-[15px] font-medium leading-5">{item.label}</span>
+                    <span className="text-sm2-medium">{item.label}</span>
                     {item.notify && <NotificationBadge />}
                   </div>
                 </Link>
@@ -161,19 +160,19 @@ export default function AdminSidebar({
         </ul>
       </nav>
 
-
-      <div className="mt-auto border-t border-neutral-800">
+      {/* Logout Button */}
+      <div className="mt-auto border-t border-gray-9">
         <button
           className={cn(
             "flex w-full items-center gap-3 px-4 py-5 md:py-6",
-            "text-gray-300 hover:bg-neutral-800 hover:text-white",
-            "transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/20 focus-visible:ring-offset-2 focus-visible:ring-offset-black cursor-pointer"
+            "text-gray-4 hover:bg-gray-9 hover:text-white",
+            "transition-colors focus-visible:outline-none focus-visible:ring-2 ring-brand ring-offset-2 ring-offset-ink cursor-pointer"
           )}
           onClick={handleLogout}
           disabled={pending}
         >
           <IconMask src={LOGOUT.iconSrc} />
-          <span className="text-[15px] font-medium leading-5">{LOGOUT.label}</span>
+          <span className="text-sm2-medium">{LOGOUT.label}</span>
         </button>
       </div>
     </aside>

@@ -4,15 +4,14 @@ import type { AppProps } from "next/app";
 import { SessionProvider } from "next-auth/react";
 import { useRouter } from "next/router";
 import Navbar from "@/components/navbar/Navbar";
-
+import { satoshi, notoThai } from "@/fonts"; 
 const NAV_HIDE_ROUTES = new Set([
   "/login",
   "/logout",
-  // ถ้าต้องการเพิ่ม: "/register", "/auth/forgot-password"
 ]);
 
 const NAV_HIDE_PREFIXES = [
-  "/auth", // ครอบพวก /auth/login, /auth/reset ฯลฯ
+  "/auth",
   "/admin",
   "/admin-management",
   "/admin-panel",
@@ -29,11 +28,7 @@ function normalize(pathname: string) {
 
 function shouldHideNavbar(pathname: string): boolean {
   const p = normalize(pathname);
-
-  // 1) ซ่อนถ้าเป็นหน้าเฉพาะแบบตรงตัว (login/logout)
   if (NAV_HIDE_ROUTES.has(p)) return true;
-
-  // 2) ซ่อนถ้าขึ้นต้นด้วย prefix ที่กำหนด
   return NAV_HIDE_PREFIXES.some((prefix) => p === prefix || p.startsWith(prefix + "/"));
 }
 
@@ -43,8 +38,11 @@ export default function App({ Component, pageProps: { session, ...pageProps } }:
 
   return (
     <SessionProvider session={session}>
-      {showNavbar && <Navbar />}
-      <Component {...pageProps} />
+      {/*เพิ่ม font variables ที่ wrapper div */}
+      <div className={`${satoshi.variable} ${notoThai.variable}`}>
+        {showNavbar && <Navbar />}
+        <Component {...pageProps} />
+      </div>
     </SessionProvider>
   );
 }

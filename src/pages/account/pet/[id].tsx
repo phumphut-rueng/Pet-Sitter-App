@@ -10,6 +10,7 @@ import {
   AlertDialogCancel,
   AlertDialogContent,
   AlertDialogTitle,
+  AlertDialogDescription,
 } from "@/components/ui/alert-dialog";
 import {
   PetFormValues,
@@ -128,9 +129,9 @@ export default function EditPetPage() {
                   ✕
                 </AlertDialogCancel>
               </div>
-              <div className="pl-5 pr-4 pt-4 pb-2 text-[16px] font-normal text-ink/80">
+              <AlertDialogDescription className="pl-5 pr-4 pt-4 pb-2 text-[16px] font-normal text-ink/80">
                 Are you sure to delete this pet?
-              </div>
+              </AlertDialogDescription>
               <div className="px-4 pb-4 pt-2 grid grid-cols-2 gap-3">
                 <AlertDialogCancel className="h-11 rounded-full bg-orange-1/40 text-orange-6 font-semibold hover:bg-orange-1/60 transition">
                   Cancel

@@ -13,7 +13,9 @@
   --color-border: var(--border);
 
   /* NEW: ink (Figma black) */
-  --color-ink: var(--ink);  /* => text-ink / bg-ink / border-ink */
+  
+  --color-ink: var(--ink);
+  --color-black:var(--black);
 
   /* Brand */
   --color-brand: var(--brand);
@@ -30,6 +32,7 @@
   --color-gray-2: var(--gray-2);
   --color-gray-1: var(--gray-1);
   --color-white: var(--white);
+  --color-white-1:var(--white-1);
 
   /* Brown Scale */
   --color-brown-700: var(--brown-700);
@@ -41,13 +44,13 @@
   --color-brown-100: var(--brown-100);
 
   /* Orange scale */
-  --color-orange-6: var(--orange-6); /* #E44A0C */
-  --color-orange-5: var(--orange-5); /* #FF7037 */
-  --color-orange-4: var(--orange-4); /* #FF986F */
-  --color-orange-3: var(--orange-3); /* #FFB899 */
-  --color-orange-2: var(--orange-2); /* #FFD5C2 */
-  --color-orange-1: var(--orange-1); /* #FFF1EC */
-  --color-orange-50: var(--orange-bg); /* พื้นส้มอ่อน */
+  --color-orange-6: var(--orange-6);
+  --color-orange-5: var(--orange-5);
+  --color-orange-4: var(--orange-4);
+  --color-orange-3: var(--orange-3);
+  --color-orange-2: var(--orange-2);
+  --color-orange-1: var(--orange-1);
+  --color-orange-50: var(--orange-bg);
 
   /* Shortcuts */
   --color-orange: var(--orange-5);
@@ -129,6 +132,13 @@
 /* ---------- BASE STYLES ---------- */
 *, *::before, *::after { box-sizing: border-box; }
 
+/* Reset heading defaults */
+/* h1, h2, h3, h4, h5, h6 {
+  font-size: 1rem;
+  font-weight: 400;
+  margin: 0;
+} */
+
 html, body, #__next { height: 100%; }
 
 :root {
@@ -139,15 +149,14 @@ html, body, #__next { height: 100%; }
 
 html, body {
   max-width: 100%;
-  overflow-x: hidden; /* กันสกรอลล์นอนเมื่อรวมงานหลายคน */
+  overflow-x: hidden;
 }
 
 body {
   margin: 0;
   font-family: var(--font-sans);
-  background: var(--color-bg);
+  background: var(--gray-1);
   color: var(--color-text);
-  -webkit-font-smoothing: antialiased;
 }
 
 button:not([disabled]),
@@ -159,7 +168,6 @@ summary,
 label[for] {
   cursor: pointer;
 }
-
 
 .cursor-pointer { cursor: pointer; }
 .cursor-default { cursor: default; }
@@ -179,7 +187,6 @@ dialog::backdrop {
   background: rgba(0, 0, 0, 0.5);
 }
 
-/* กันสื่อทุกชนิดล้นกรอบแม้ลืมใส่คลาส */
 img, video, canvas, svg, iframe { max-width: 100%; height: auto; }
 
 ::selection {
@@ -188,7 +195,6 @@ img, video, canvas, svg, iframe { max-width: 100%; height: auto; }
 }
 
 /* ---------- DARK MODE ---------- */
-/* ให้สลับได้ด้วยการใส่ class="dark" บน <html> */
 :root.dark {
   /* ถ้ามีโทเคนโหมดมืดใน token.css ให้ map เพิ่มที่นี่ */
 }
@@ -202,20 +208,16 @@ img, video, canvas, svg, iframe { max-width: 100%; height: auto; }
     padding-inline: var(--page-pad-x);
   }
 
-  /* สำหรับ section ย่อยที่ต้องการคุมกรอบเหมือนกัน */
   .section {
     max-width: var(--page-max);
     margin-inline: auto;
     padding-inline: var(--page-pad-x);
   }
 
-  /* Media ไม่ให้ล้นกรอบ (สำรองจาก base) */
   .media-fluid { max-width: 100%; height: auto; }
-
-  /* ลูกของ flex/grid ที่มีเนื้อหายาว: ป้องกันดันล้น */
   .minw-0 { min-width: 0; }
 
-  /* Focus ring tone (ใช้ง่าย: ring-2 ring-brand ring-offset-2 ring-offset-bg) */
+  /* Focus ring */
   .ring-brand { --tw-ring-color: var(--color-brand); }
   .ring-offset-bg { --tw-ring-offset-color: var(--color-bg); }
 
@@ -237,7 +239,7 @@ img, video, canvas, svg, iframe { max-width: 100%; height: auto; }
   .bg-error   { background: var(--red); }
   .bg-pending { background: var(--pending); }
 
-  /* ===== Typography scale (single source of truth) ===== */
+  /* ===== Typography Scale (Legacy - DO NOT MODIFY) ===== */
   .display { font-size: 88px; line-height: 96px; font-family: var(--font-sans); font-weight: 900; }
   .h1      { font-size: 56px; line-height: 64px; font-family: var(--font-sans); font-weight: 700; }
   .h2      { font-size: 36px; line-height: 44px; font-family: var(--font-sans); font-weight: 700; }
@@ -247,6 +249,53 @@ img, video, canvas, svg, iframe { max-width: 100%; height: auto; }
   .body-sm { font-size: 16px; line-height: 28px; font-family: var(--font-sans); font-weight: 500; }
   .caption { font-size: 14px; line-height: 24px; font-family: var(--font-sans); font-weight: 500; }
 
+  /* ===== Typography Variants (New - Based on Design Tokens) ===== */
+  
+  /* Body 1 (18px/26px) - text-base */
+  .text-base-bold    { font: 700 18px/26px var(--font-sans); }
+  .text-base-medium  { font: 500 18px/26px var(--font-sans); }
+  .text-base-regular { font: 400 18px/26px var(--font-sans); }
+
+  /* Body 2 (16px/28px) - text-sm2 */
+  .text-sm2-bold     { font: 700 16px/28px var(--font-sans); }
+  .text-sm2-medium   { font: 500 16px/28px var(--font-sans); }
+  .text-sm2-regular  { font: 400 16px/28px var(--font-sans); }
+
+  /* Body 3 (14px/24px) - text-xs2 */
+  .text-xs2-bold     { font: 700 14px/24px var(--font-sans); }
+  .text-xs2-medium   { font: 500 14px/24px var(--font-sans); }
+  .text-xs2-regular  { font: 400 14px/24px var(--font-sans); }
+
+  /* Heading Variants */
+  .h1-bold   { font: 700 56px/64px var(--font-sans); }
+  .h2-bold   { font: 700 36px/44px var(--font-sans); }
+  .h3-bold   { font: 700 24px/32px var(--font-sans); }
+  .h4-bold   { font: 700 20px/28px var(--font-sans); }
+
+  .h1-medium { font: 500 56px/64px var(--font-sans); }
+  .h2-medium { font: 500 36px/44px var(--font-sans); }
+  .h3-medium { font: 500 24px/32px var(--font-sans); }
+  .h4-medium { font: 500 20px/28px var(--font-sans); }
+
+   /* เพิ่ม Body Variants (แบบเดียวกับ Heading)  */
+   .body1-bold    { font: 700 18px/150% var(--font-sans); }  /* 18px/27px */
+   .body1-medium  { font: 500 18px/150% var(--font-sans); }
+   .body1-regular { font: 400 18px/150% var(--font-sans); }
+ 
+   .body2-bold    { font: 700 16px/150% var(--font-sans); }  /* 16px/24px */
+   .body2-medium  { font: 500 16px/150% var(--font-sans); }
+   .body2-regular { font: 400 16px/150% var(--font-sans); }
+ 
+   .body3-bold    { font: 700 14px/150% var(--font-sans); }  /* 14px/21px */
+   .body3-medium  { font: 500 14px/150% var(--font-sans); }
+   .body3-regular { font: 400 14px/150% var(--font-sans); }
+ 
+   /* เพิ่ม Gray-5 */
+   .text-gray-5 { color: #AEB1C3; }
+   .bg-gray-5 { background-color: #AEB1C3; }
+   .border-gray-5 { border-color: #AEB1C3; }
+
+  /* Responsive Typography */
   @media (max-width: 768px) {
     .display { font-size: 56px; line-height: 64px; }
     .h1      { font-size: 36px; line-height: 44px; }
@@ -254,53 +303,19 @@ img, video, canvas, svg, iframe { max-width: 100%; height: auto; }
   }
 }
 
-/* ---------- EXAMPLES ----------
-  RootLayout:
-    <main class="container-1200">{children}</main>
+/* ---------- CHEAT SHEET ----------
+Typography Usage:
+  Legacy:  .display, .h1, .h2, .h3, .h4, .body, .body-sm, .caption
+  New:     .text-base-{bold|medium|regular}  (18px - Body 1)
+           .text-sm2-{bold|medium|regular}   (16px - Body 2)
+           .text-xs2-{bold|medium|regular}   (14px - Body 3)
+           .h1-{bold|medium}, .h2-{bold|medium}, etc.
 
-  Section:
-    <section class="section py-10">...</section>
-
-  Media:
-    <img class="media-fluid" ... />
-
-  Flex/Grid:
-    <div class="grid md:grid-cols-[260px,1fr] gap-6 minw-0">
-      <aside class="minw-0">...</aside>
-      <section class="minw-0">...</section>
-    </div>
-------------------------------------------------*/
-/* ---------------------------------------------------------
-  🔎 Cheat-sheet (Tailwind + Theme Mapping)
-  ใช้เป็นคู่มืออ่านคลาส + ตัวแปรที่เจอบ่อยในโปรเจกต์นี้
-------------------------------------------------------------
-
-[FOCUS RING 🧡]
-- --ring            : สี ring เริ่มต้นของโปรเจกต์ (เราตั้ง = สีแบรนด์)
-- ring-2            : กำหนด "ความหนา" ของ ring (2px)
-- ring-brand        : กำหนด "สี" ของ ring ให้เป็นสีแบรนด์ชัดเจน
-- ring-offset-2     : ระยะห่าง ring ออกจากขอบ element 2px (ช่วยให้ ring ดูลอย)
-- ring-offset-bg    : สีของพื้นที่ offset (ให้มันกลืนกับพื้น bg ของเรา)
-
-เขียนแบบนี้อ่านง่ายและไม่เตือนซ้ำซ้อนจาก IntelliSense:
+Focus Ring:
   class="ring-2 ring-brand ring-offset-2 ring-offset-bg"
 
-(เลี่ยงเขียน "ring" เปล่าๆ คู่กับ "ring-2" เพราะปลั๊กอินบางตัวจะเตือนว่าเขียน property เดียวกัน)
-
-[สีพื้นฐาน & การแม็ป @theme]
-- bg-bg / text-text / border-border
-- bg-card / text-card-foreground
-- bg-muted / text-muted
-- bg-primary / text-primary-foreground
-- bg-secondary / text-secondary-foreground
-
-[สเกลสีแบรนด์/ส้ม]
-- bg-orange-6..1 / text-orange-6..1
-- bg-orange-50 (พื้นส้มอ่อน)
-
-[โทเคนฟอนต์แบบสั้น]
-- .display / .h1 / .h2 / .h3 / .h4 / .body / .body-sm / .caption
-
-[Dark mode]
-- ใส่ .dark บน <html> เพื่อสลับชุดสี :root.dark
------------------------------------------------------------*/
+Colors:
+  Gray:    text-gray-{9|7|6|4|2|1}
+  Orange:  text-orange-{6|5|4|3|2|1}
+  Status:  text-{success|waiting|error|pending}
+-------------------------------------------*/
