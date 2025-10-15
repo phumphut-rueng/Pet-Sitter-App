@@ -3,11 +3,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import axios from "axios";
 
-import {
-  ownerProfileSchema,
-  type OwnerProfileInput,
-} from "@/lib/validators/profile";
-
+import { ownerProfileSchema, type OwnerProfileInput } from "@/lib/validators/profile";
 import {
   validateEmailUnique,
   validatePhoneUnique,
@@ -15,43 +11,34 @@ import {
   checkFieldChanges,
   VALIDATION_ERROR_MESSAGES,
 } from "@/lib/validators/helpers";
-
-import { api } from "@/lib/api/axios"; 
+import { api } from "@/lib/api/axios";
 import { uploadAndGetPublicId } from "@/lib/cloudinary/image-upload";
-import { toErrorMessage } from "@/lib/utils/strings";
+import { toErrorMessage } from "@/lib/utils/error"; 
 import {
   transformData,
   DEFAULT_VALUES,
   type OwnerProfileDTO,
 } from "@/components/features/account/profile/transform";
 
-// helpers
-
-const isDataUrl = (s?: string): boolean =>
-  !!s && /^data:image\/[a-zA-Z]+;base64,/.test(s);
+const isDataUrl = (s?: string) => !!s && /^data:image\/[a-zA-Z]+;base64,/.test(s);
 
 async function dataUrlToFile(dataUrl: string, filename = "profile.png"): Promise<File> {
-  const response = await axios.get(dataUrl, {
-    responseType: 'blob'
-  });
-  
-  const blob = response.data;
+  const res = await axios.get(dataUrl, { responseType: "blob" });
+  const blob = res.data as Blob;
   return new File([blob], filename, { type: blob.type || "image/png" });
 }
 
-function toFormShape(v: unknown): Partial<OwnerProfileInput> {
+function toFormValues(v: unknown): Partial<OwnerProfileInput> {
   const r = (v ?? {}) as Record<string, unknown>;
   return {
     name: (r.name as string) ?? "",
     email: (r.email as string) ?? "",
     phone: (r.phone as string) ?? "",
     image: (r.image as unknown) ?? undefined,
-    idNumber: (r.idNumber as string | null | undefined) ?? undefined, 
+    idNumber: (r.idNumber as string | null | undefined) ?? undefined,
     dob: (r.dob as string | null | undefined) ?? undefined,
   };
 }
-
-// main hook
 
 export function useOwnerProfileForm() {
   const initialRef = useRef<Partial<OwnerProfileInput> | null>(null);
@@ -62,35 +49,27 @@ export function useOwnerProfileForm() {
     defaultValues: DEFAULT_VALUES,
   });
 
-  // load profile
   const load = useCallback(async () => {
-    const { data: profile } = await api.get<OwnerProfileDTO>("/user/profile");
-
-    const formData = transformData.fromApiToForm(profile);
-    const shaped = toFormShape(formData);
+    const { data } = await api.get<OwnerProfileDTO>("/user/profile");
+    const shaped = toFormValues(transformData.fromApiToForm(data));
     initialRef.current = shaped;
     form.reset(shaped);
   }, [form]);
 
-  // validate before save
   const validateBeforeSave = useCallback(
     async (values: OwnerProfileInput) => {
-      const changes = checkFieldChanges(
-        initialRef.current,
-        values,
-        ["name", "email", "phone"] as const
-      );
+      const changed = checkFieldChanges(initialRef.current, values, ["name", "email", "phone"] as const);
 
-      const fieldsToCheck: Parameters<typeof validateUniqueFields>[0] = {};
-      if (changes.name) fieldsToCheck.name = values.name;
-      if (changes.email) fieldsToCheck.email = values.email;
-      if (changes.phone) fieldsToCheck.phone = values.phone;
+      const needCheck: Parameters<typeof validateUniqueFields>[0] = {};
+      if (changed.name) needCheck.name = values.name;
+      if (changed.email) needCheck.email = values.email;
+      if (changed.phone) needCheck.phone = values.phone;
 
-      if (Object.keys(fieldsToCheck).length === 0) return true;
+      if (Object.keys(needCheck).length === 0) return true;
 
-      const errors = await validateUniqueFields(fieldsToCheck);
+      const errors = await validateUniqueFields(needCheck);
       if (errors.length > 0) {
-        errors.forEach((err) => form.setError(err.field, { message: err.message }));
+        errors.forEach((e) => form.setError(e.field, { message: e.message }));
         return false;
       }
       return true;
@@ -98,7 +77,6 @@ export function useOwnerProfileForm() {
     [form]
   );
 
-  // save profile
   const save = useCallback(
     async (values: OwnerProfileInput) => {
       const ok = await validateBeforeSave(values);
@@ -110,13 +88,12 @@ export function useOwnerProfileForm() {
 
         if (typeof values.image === "string" && isDataUrl(values.image.trim())) {
           const file = await dataUrlToFile(values.image.trim(), "profile.png");
-          const up = await uploadAndGetPublicId(file, "owner-profile");
-          public_id = up.public_id;
-          profile_url = up.url;
+          const uploaded = await uploadAndGetPublicId(file, "owner-profile");
+          public_id = uploaded.public_id;
+          profile_url = uploaded.url;
         }
 
         const apiData = transformData.fromFormToApi(values);
-        
         const body = {
           name: apiData.name,
           email: apiData.email,
@@ -127,31 +104,29 @@ export function useOwnerProfileForm() {
           profile_image: profile_url ?? undefined,
         };
 
-        console.log("[useOwnerProfileForm] Sending body:", body);
-
         await api.put("/user/profile", body);
-
         await load();
         return true;
       } catch (err) {
-        const message = toErrorMessage(err, VALIDATION_ERROR_MESSAGES.unknown);
+        const msg = toErrorMessage(err, VALIDATION_ERROR_MESSAGES.unknown);
 
-        if (message.includes("email_taken") || message.includes("Email already")) {
+        if (msg.includes("email_taken") || msg.includes("Email already")) {
           form.setError("email", { message: VALIDATION_ERROR_MESSAGES.emailTaken });
           return false;
         }
-        if (message.includes("phone_taken") || message.includes("Phone already")) {
+        if (msg.includes("phone_taken") || msg.includes("Phone already")) {
           form.setError("phone", { message: VALIDATION_ERROR_MESSAGES.phoneTaken });
           return false;
         }
-        if (message.includes("id_number") || message.includes("ID Number already")) {
+        if (msg.includes("id_number") || msg.includes("ID Number already")) {
           form.setError("idNumber", { message: "ID Number already registered" });
           return false;
         }
-        if (message.startsWith("HTTP 400") || message.toLowerCase().includes("date")) {
+        if (msg.startsWith("HTTP 400") || msg.toLowerCase().includes("date")) {
           form.setError("dob", { message: VALIDATION_ERROR_MESSAGES.invalidDate });
           return false;
         }
+
         throw err;
       }
     },

@@ -1,6 +1,8 @@
-import * as React from "react";
+import { useState } from "react";
 import Head from "next/head";
 import { useRouter } from "next/router";
+import toast from "react-hot-toast";
+
 import AdminSidebar from "@/components/layout/AdminSidebar";
 import OwnerHeader from "@/components/admin/owners/OwnerHeader";
 import OwnerProfileCard from "@/components/admin/owners/OwnerProfileCard";
@@ -9,123 +11,130 @@ import OwnerReviewsList from "@/components/admin/owners/OwnerReviewsList";
 import PetDetailModal from "@/components/admin/owners/PetDetailModal";
 import BanConfirm from "@/components/admin/owners/BanConfirm";
 import { PetPawLoading } from "@/components/loading/PetPawLoading";
-import { useOwnerDetail } from "@/hooks/admin/useOwnerDetail";
-import { useOwnerReviews } from "@/hooks/admin/useOwnerReviews";
-import { getErrorMessage } from "@/lib/api/api-utils";
-import toast from "react-hot-toast";
-import { api } from "@/lib/api/axios";
-import type { PetItem } from "@/types/admin/owners";
 
-type AxiosLikeError = {
-  message?: string;
-  response?: { data?: unknown; status?: number };
-};
+import { useOwnerDetail } from "@/hooks/admin/useOwnerDetail";
+import { useOwnerActions } from "@/hooks/admin/useOwnerActions";
+import { useOwnerReviews } from "@/hooks/admin/useOwnerReviews";
+import { usePetActions } from "@/hooks/admin/usePetActions";
+
+import type { PetItem } from "@/types/admin/owners";
 
 export default function OwnerDetailPage() {
   const router = useRouter();
-  const ownerIdParam = router.query.ownerId as string | undefined;
+  const ownerId = router.query.ownerId as string | undefined;
 
-  const effectiveOwnerId = router.isReady ? ownerIdParam : undefined;
+  // Fetch data
+  const { loading, error, owner, tab, setTab, refetch } = useOwnerDetail(ownerId);
+  const { banOwner, unbanOwner, loading: banLoading } = useOwnerActions(ownerId, refetch);
+  const { loading: reviewsLoading, error: reviewsError, reviews, meta: reviewsMeta } = useOwnerReviews(ownerId);
+  const { togglePetBan, loading: petLoading } = usePetActions(refetch);
 
-  const { loading, error, owner, tab, setTab, refetch } = useOwnerDetail(effectiveOwnerId);
-  const isSuspended = owner?.status === "ban";
+  // Local state
+  const [banDialogOpen, setBanDialogOpen] = useState(false);
+  const [petModalOpen, setPetModalOpen] = useState(false);
+  const [selectedPet, setSelectedPet] = useState<PetItem | null>(null);
+  const [hiddenPets, setHiddenPets] = useState<number[]>([]);
 
-  const {
-    loading: reviewsLoading,
-    error: reviewsError,
-    reviews,
-    meta: reviewsMeta,
-  } = useOwnerReviews(effectiveOwnerId);
+  const isBanned = owner?.status === "ban";
 
-  const [dialogOpen, setDialogOpen] = React.useState(false);
-  const [dialogLoading, setDialogLoading] = React.useState(false);
-  const [mode, setMode] = React.useState<"ban" | "unban">("ban");
-
-  const [selectedPet, setSelectedPet] = React.useState<PetItem | null>(null);
-  const [petModalOpen, setPetModalOpen] = React.useState(false);
-  const [petActionLoading, setPetActionLoading] = React.useState(false);
-
-  const [hiddenPetIds, setHiddenPetIds] = React.useState<number[]>([]);
-
+  // แบน/ปลดแบน owner
   async function handleBanUnban() {
-    if (!ownerIdParam) return;
-    setDialogLoading(true);
-    try {
-      await api.post(`admin/owners/${ownerIdParam}/ban`, {
-        action: mode,
-        reason: mode === "ban" ? "Violated policy" : undefined,
-        cascadePets: false,
-      });
-      setDialogOpen(false);
-      toast.success(mode === "ban" ? "User banned" : "User unbanned");
-      await refetch();
+    const action = isBanned ? "unban" : "ban";
+    const loadingToast = toast.loading(`${action === "ban" ? "Banning" : "Unbanning"} user...`);
 
-      if (mode === "unban") setHiddenPetIds([]);
-    } catch (err: unknown) {
-      toast.error(getErrorMessage(err));
-    } finally {
-      setDialogLoading(false);
+    try {
+      if (action === "ban") {
+        await banOwner("Violated policy", false);
+      } else {
+        await unbanOwner();
+        setHiddenPets([]);
+      }
+
+      toast.success(`User ${action === "ban" ? "banned" : "unbanned"} successfully`, { id: loadingToast });
+      setBanDialogOpen(false);
+    } catch {
+      toast.error("Failed to update user status", { id: loadingToast });
     }
   }
 
-  /** Toggle Pet Ban (optimistic hide เมื่อ suspend) */
-  async function handlePetToggleSuspend(petId: number, shouldBan: boolean) {
-    console.log(" Frontend: handlePetToggleSuspend called!", { petId, shouldBan });
-
+  // แบน/ปลดแบน pet
+  async function handlePetBan(petId: number, shouldBan: boolean) {
     if (shouldBan) {
-      setHiddenPetIds((prev) => (prev.includes(petId) ? prev : [...prev, petId]));
-      console.log(" Frontend: Hidden pet:", petId);
+      setHiddenPets((prev) => [...prev, petId]);
     }
 
-    setPetActionLoading(true);
+    const loadingToast = toast.loading(`${shouldBan ? "Suspending" : "Unsuspending"} pet...`);
 
     try {
-      console.log(" Frontend: Calling API...");
-      console.log(" Frontend: URL:", `admin/pets/${petId}/ban`);
-      console.log(" Frontend: Body:", { action: shouldBan ? "ban" : "unban" });
-
-      const response = await api.post(`admin/pets/${petId}/ban`, {
-        action: shouldBan ? "ban" : "unban",
-        reason: shouldBan ? "Violated policy" : undefined,
-      });
-
-      console.log(" Frontend: API Response:", response.data);
-
-      console.log(" Frontend: Starting refetch...");
-      await refetch();
-      console.log(" Frontend: Refetch done");
-
-      toast.success(shouldBan ? "Pet suspended" : "Pet unsuspended");
+      await togglePetBan(petId, shouldBan);
+      toast.success(`Pet ${shouldBan ? "suspended" : "unsuspended"} successfully`, { id: loadingToast });
 
       setPetModalOpen(false);
       setSelectedPet(null);
 
       if (!shouldBan) {
-        setHiddenPetIds((prev) => prev.filter((id) => id !== petId));
+        setHiddenPets((prev) => prev.filter((id) => id !== petId));
       }
-    } catch (err: unknown) {
-      // ปลอด any: แปลงเป็นชนิดที่เราตรวจสอบได้
-      const ax = err as AxiosLikeError;
-      console.error(" Frontend: ERROR:", err);
-      if (ax.message) console.error(" Frontend: ERROR Message:", ax.message);
-      if (ax.response) {
-        console.error(" Frontend: ERROR Response:", ax.response.data);
-        console.error(" Frontend: ERROR Status:", ax.response.status);
-      }
-
+    } catch {
       if (shouldBan) {
-        setHiddenPetIds((prev) => prev.filter((id) => id !== petId));
+        setHiddenPets((prev) => prev.filter((id) => id !== petId));
       }
-      toast.error(getErrorMessage(err, "Failed to update pet status"));
-      throw err;
-    } finally {
-      setPetActionLoading(false);
-      console.log(" Frontend: Loading done");
+      toast.error("Failed to update pet status", { id: loadingToast });
     }
   }
 
-  const visiblePets: PetItem[] =
-    owner?.pets?.filter((p) => !p.is_banned).filter((p) => !hiddenPetIds.includes(p.id)) ?? [];
+  const visiblePets = owner?.pets?.filter((p) => !p.is_banned && !hiddenPets.includes(p.id)) ?? [];
+
+  // กำลังโหลด
+  if (loading) {
+    return (
+      <>
+        <Head><title>Admin • Owner Detail</title></Head>
+        <div className="flex min-h-screen w-full">
+          <aside className="hidden shrink-0 md:block md:w-[240px]">
+            <AdminSidebar sticky />
+          </aside>
+          <main className="flex flex-1 items-center justify-center">
+            <PetPawLoading message="Loading Owner Details" size="md" />
+          </main>
+        </div>
+      </>
+    );
+  }
+
+  // มี error
+  if (error) {
+    return (
+      <>
+        <Head><title>Admin • Owner Detail</title></Head>
+        <div className="flex min-h-screen w-full">
+          <aside className="hidden shrink-0 md:block md:w-[240px]">
+            <AdminSidebar sticky />
+          </aside>
+          <main className="flex flex-1 items-center justify-center">
+            <div className="text-danger">{error}</div>
+          </main>
+        </div>
+      </>
+    );
+  }
+
+  // ไม่เจอ owner
+  if (!owner) {
+    return (
+      <>
+        <Head><title>Admin • Owner Detail</title></Head>
+        <div className="flex min-h-screen w-full">
+          <aside className="hidden shrink-0 md:block md:w-[240px]">
+            <AdminSidebar sticky />
+          </aside>
+          <main className="flex flex-1 items-center justify-center">
+            <div className="text-ink">Owner not found</div>
+          </main>
+        </div>
+      </>
+    );
+  }
 
   return (
     <>
@@ -133,65 +142,66 @@ export default function OwnerDetailPage() {
         <title>Admin • Owner Detail</title>
       </Head>
 
-      <div className="flex min-h-screen w-full ">
-          <aside className="hidden shrink-0 md:block md:w-[240px]">
-            <AdminSidebar sticky />
-          </aside>
+      <div className="flex min-h-screen w-full">
+        <aside className="hidden shrink-0 md:block md:w-[240px]">
+          <AdminSidebar sticky />
+        </aside>
 
-          <main className="min-w-0 flex-1 px-4 py-6 lg:px-6"> 
-    <div className="mx-auto max-w-[1200px]">
-      {loading && <PetPawLoading message="Loading Owner Details" size="md" />}
-
-      {!loading && error && <div className="py-16 text-center text-danger">{error}</div>}
-
-      {!loading && !error && !owner && router.isReady && ownerIdParam && (
-        <div className="py-16 text-center text-ink">Not found</div>
-      )}
-
-      {!loading && owner && (
-        <section>
-          <OwnerHeader title={owner?.name ?? "-"} tab={tab} onTabChange={setTab} showBack />
-
-          {tab === "profile" && (
-            <OwnerProfileCard
-              owner={owner}
-              isSuspended={isSuspended}
-              onClickBan={() => {
-                setMode(isSuspended ? "unban" : "ban");
-                setDialogOpen(true);
-              }}
+        <main className="relative flex-1 px-4 py-6 lg:px-6">
+          <div className="mx-auto max-w-[1200px]">
+            <OwnerHeader 
+              title={owner.name || "Unknown"} 
+              tab={tab} 
+              onTabChange={setTab} 
+              showBack 
             />
-          )}
 
-          {tab === "pets" && (
-            <OwnerPetsList
-              pets={visiblePets}
-              onPetClick={(pet: PetItem) => {
-                setSelectedPet(pet);
-                setPetModalOpen(true);
-              }}
-            />
-          )}
+            {tab === "profile" && (
+              <OwnerProfileCard
+                owner={owner}
+                isSuspended={isBanned}
+                onClickBan={() => setBanDialogOpen(true)}
+              />
+            )}
 
-          {tab === "reviews" && (
-            <OwnerReviewsList
-              reviews={reviews}
-              meta={reviewsMeta}
-              loading={reviewsLoading}
-              error={reviewsError}
-            />
-          )}
-        </section>
-      )}
-    </div>
-  </main>
-</div>
+            {tab === "pets" && (
+              <OwnerPetsList
+                pets={visiblePets}
+                onPetClick={(pet) => {
+                  setSelectedPet(pet);
+                  setPetModalOpen(true);
+                }}
+              />
+            )}
 
+            {tab === "reviews" && (
+              <OwnerReviewsList
+                reviews={reviews}
+                meta={reviewsMeta}
+                loading={reviewsLoading}
+                error={reviewsError}
+              />
+            )}
+          </div>
+
+          {/* Loading overlay เวลาแบน/ปลดแบน */}
+          {banLoading && (
+            <div className="absolute inset-0 z-50 flex items-center justify-center bg-black/40">
+              <PetPawLoading
+                message={isBanned ? "Unbanning User..." : "Banning User..."}
+                size="md"
+              />
+            </div>
+          )}
+        </main>
+      </div>
+
+      {/* Dialogs */}
       <BanConfirm
-        open={dialogOpen}
-        loading={dialogLoading}
-        mode={mode}
-        onOpenChange={setDialogOpen}
+        open={banDialogOpen}
+        loading={banLoading}
+        mode={isBanned ? "unban" : "ban"}
+        onOpenChange={setBanDialogOpen}
         onConfirm={handleBanUnban}
       />
 
@@ -199,8 +209,8 @@ export default function OwnerDetailPage() {
         open={petModalOpen}
         onOpenChange={setPetModalOpen}
         pet={selectedPet}
-        onToggleSuspend={handlePetToggleSuspend}
-        loading={petActionLoading}
+        onToggleSuspend={handlePetBan}
+        loading={petLoading}
       />
     </>
   );

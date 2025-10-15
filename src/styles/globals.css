@@ -190,7 +190,15 @@ html, body, #__next { height: 100%; }
   /* Global Layout Width */
   --page-max: 1200px;
   --page-pad-x: 16px;
+
+    /* Toast Notification Colors */
+    --toast-success: var(--green);
+    --toast-error: var(--red);
+    --toast-loading: var(--blue);
+    --toast-info: var(--blue);
 }
+
+
 
 html, body {
   max-width: 100%;
@@ -364,3 +372,28 @@ Colors:
   Orange:  text-orange-{6|5|4|3|2|1}
   Status:  text-{success|waiting|error|pending}
 -------------------------------------------*/
+
+/* ---------- TOAST NOTIFICATIONS ---------- */
+.toast-success {
+  background: var(--toast-success) !important;
+  color: var(--white) !important;
+  font-weight: 500 !important;
+}
+
+.toast-error {
+  background: var(--toast-error) !important;
+  color: var(--white) !important;
+  font-weight: 500 !important;
+}
+
+.toast-loading {
+  background: var(--toast-loading) !important;
+  color: var(--white) !important;
+  font-weight: 500 !important;
+}
+
+.toast-info {
+  background: var(--toast-info) !important;
+  color: var(--white) !important;
+  font-weight: 500 !important;
+}

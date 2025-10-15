@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { api } from "@/lib/api/axios";
 import { getErrorMessage } from "@/lib/api/api-utils";
 import type { ReviewItem } from "@/types/admin/owners";
@@ -23,7 +23,13 @@ export type UseOwnerReviewsReturn = {
     total: number;
     averageRating: string;
   };
+  /** รีเฟรชหน้าปัจจุบัน หรือไปหน้าที่ระบุ */
   refetch: (page?: number) => Promise<void>;
+  /** สั่งเปลี่ยนหน้า */
+  setPage: (page: number) => void;
+  /** ลัดไปหน้าถัดไป/ก่อนหน้า */
+  nextPage: () => void;
+  prevPage: () => void;
 };
 
 export function useOwnerReviews(
@@ -39,71 +45,83 @@ export function useOwnerReviews(
     total: 0,
     averageRating: "0.00",
   });
+  const [refreshTick, setRefreshTick] = useState(0);
 
+  // รีเซ็ตเมื่อ ownerId หรือ pageSize เปลี่ยน
   useEffect(() => {
-    if (!ownerId) {
-      setReviews([]);
-      setError(null);
-      setLoading(false);
-      return;
-    }
-
-    let cancelled = false;
-    setLoading(true);
+    setReviews([]);
+    setMeta((m) => ({
+      ...m,
+      page: 1,
+      pageSize: defaultPageSize,
+      total: 0,
+      averageRating: "0.00",
+    }));
     setError(null);
-
-    api.get<ReviewResponse>(`/admin/owners/${ownerId}/reviews`, {
-      params: { page: 1, pageSize: defaultPageSize }
-    })
-    .then(({ data }) => {
-      if (cancelled) return;
-      
-      setReviews(data.data ?? []);
-      setMeta({
-        page: data.meta?.page ?? 1,
-        pageSize: data.meta?.pageSize ?? defaultPageSize,
-        total: data.meta?.total ?? 0,
-        averageRating: data.meta?.averageRating ?? "0.00",
-      });
-      setLoading(false);
-    })
-    .catch((err) => {
-      if (cancelled) return;
-      
-      setError(getErrorMessage(err, "Failed to load reviews"));
-      setLoading(false);
-    });
-
-    return () => {
-      cancelled = true;
-    };
   }, [ownerId, defaultPageSize]);
 
-  const refetch = async (page = 1) => {
+  // โหลดข้อมูลเมื่อ ownerId / page / pageSize / refreshTick เปลี่ยน
+  useEffect(() => {
     if (!ownerId) return;
-    
-    setLoading(true);
-    setError(null);
 
-    try {
-      const { data } = await api.get<ReviewResponse>(
-        `/admin/owners/${ownerId}/reviews`,
-        { params: { page, pageSize: defaultPageSize } }
-      );
-      
-      setReviews(data.data ?? []);
-      setMeta({
-        page: data.meta?.page ?? page,
-        pageSize: data.meta?.pageSize ?? defaultPageSize,
-        total: data.meta?.total ?? 0,
-        averageRating: data.meta?.averageRating ?? "0.00",
-      });
-    } catch (err) {
-      setError(getErrorMessage(err, "Failed to load reviews"));
-    } finally {
-      setLoading(false);
+    const controller = new AbortController();
+
+    const run = async () => {
+      setLoading(true);
+      setError(null);
+      try {
+        const { data } = await api.get<ReviewResponse>(
+          `/admin/owners/${ownerId}/reviews`,
+          {
+            params: { page: meta.page, pageSize: meta.pageSize },
+            signal: controller.signal,
+          }
+        );
+
+        if (controller.signal.aborted) return;
+
+        setReviews(data.data ?? []);
+        setMeta({
+          page: data.meta?.page ?? meta.page,
+          pageSize: data.meta?.pageSize ?? meta.pageSize,
+          total: data.meta?.total ?? 0,
+          averageRating: data.meta?.averageRating ?? "0.00",
+        });
+      } catch (err) {
+        if (controller.signal.aborted) return;
+        setError(getErrorMessage(err, "Failed to load reviews"));
+      } finally {
+        if (!controller.signal.aborted) setLoading(false);
+      }
+    };
+
+    run();
+    return () => controller.abort();
+  }, [ownerId, meta.page, meta.pageSize, refreshTick]);
+
+  const setPage = useCallback((page: number) => {
+    if (page < 1) page = 1;
+    const totalPages = Math.max(1, Math.ceil((meta.total || 0) / meta.pageSize));
+    if (page > totalPages) page = totalPages;
+    setMeta((m) => ({ ...m, page }));
+  }, [meta.total, meta.pageSize]);
+
+  const nextPage = useCallback(() => {
+    const totalPages = Math.max(1, Math.ceil((meta.total || 0) / meta.pageSize));
+    if (meta.page < totalPages) setMeta((m) => ({ ...m, page: m.page + 1 }));
+  }, [meta.page, meta.total, meta.pageSize]);
+
+  const prevPage = useCallback(() => {
+    if (meta.page > 1) setMeta((m) => ({ ...m, page: m.page - 1 }));
+  }, [meta.page]);
+
+  const refetch = useCallback(async (page?: number) => {
+    if (page && page !== meta.page) {
+      setPage(page); // จะไปโหลดเองใน useEffect
+    } else {
+      setRefreshTick((t) => t + 1); // โหลดหน้าเดิมใหม่
     }
-  };
+  }, [meta.page, setPage]);
 
   return {
     loading,
@@ -111,5 +129,8 @@ export function useOwnerReviews(
     reviews,
     meta,
     refetch,
+    setPage,
+    nextPage,
+    prevPage,
   };
 }

@@ -1,88 +1,33 @@
 import * as React from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { usePathname, useRouter } from "next/navigation";
+import { useRouter } from "next/router";
 import { signOut } from "next-auth/react";
 
-/** ===== Types ===== */
 type SidebarItem = {
   id: string;
   label: string;
-  href?: string;
-  iconSrc: string;
+  href: string;
+  icon: string;
   notify?: boolean;
 };
 
-export type SitterSidebarProps = {
+type SitterSidebarProps = {
   className?: string;
-  activeId?: string;
-  onNavigate?: (id: string) => void;
-  onLogout?: () => Promise<void> | void;
-  logoSrc?: string;
-  /** ให้ sidebar ติดขอบบนเวลาสกรอลล์ (default: true) */
   sticky?: boolean;
 };
 
-/** ===== Config ===== */
-const SIDEBAR_CONFIG = {
-  width: 240,           
-  logoWidth: 131,
-  logoHeight: 40,
-  defaultLogoSrc: "/icons/sitter-logo-1.svg",
-  defaultActiveId: "profile",
-} as const;
+const SITTER_ITEMS: SidebarItem[] = [
+  { id: "profile", label: "Pet Sitter Profile", href: "/sitter/profile", icon: "/icons/ic-user.svg" },
+  { id: "booking", label: "Booking List", href: "/sitter/booking", icon: "/icons/ic-list.svg", notify: true },
+  { id: "calendar", label: "Calendar", href: "/sitter/calendar", icon: "/icons/ic-calendar.svg" },
+  { id: "payout", label: "Payout Option", href: "/sitter/payout", icon: "/icons/ic-creditcard.svg" },
+];
 
-const NAVIGATION_ITEMS: readonly SidebarItem[] = [
-  { id: "profile", label: "Pet Sitter Profile", href: "/sitter/profile", iconSrc: "/icons/ic-user.svg" },
-  { id: "booking", label: "Booking List", href: "/sitter/booking", iconSrc: "/icons/ic-list.svg", notify: true },
-  { id: "calendar", label: "Calendar", href: "/sitter/calendar", iconSrc: "/icons/ic-calendar.svg" },
-  { id: "payout", label: "Payout Option", href: "/sitter/payout", iconSrc: "/icons/ic-creditcard.svg" },
-] as const;
-
-const LOGOUT_CONFIG = {
-  id: "logout",
-  label: "Log Out",
-  iconSrc: "/icons/ic-logout.svg",
-} as const;
-
-
-const STYLES = {
-  sidebar:
-    "flex min-h-[100svh] h-auto shrink-0 flex-col bg-bg text-text border-r border-border",
-  header: "px-5 pt-8 pb-6 border-b border-border",
-  nav: "flex-1 overflow-y-auto px-2 py-4",
-  navList: "space-y-0.5",
-  menuItem: {
-    base: "group flex w-full items-center gap-3 rounded-xl px-3 py-3 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2 focus-visible:ring-offset-bg cursor-pointer",
-    active: "bg-orange-50 text-orange-6",
-    inactive: "text-gray-7 hover:bg-orange-50 hover:text-orange-6",
-  },
-  logout: {
-    container: "mt-auto border-t border-border",
-    button:
-      "flex w-full items-center gap-3 px-4 py-5 md:py-6 transition-colors text-gray-7 hover:bg-orange-50 hover:text-orange-6 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2 focus-visible:ring-offset-bg cursor-pointer",
-  },
-  text: "text-[15px] font-medium leading-5",
-  notification: "ml-auto mt-[1px] inline-block h-2 w-2 rounded-full bg-red",
-} as const;
-
-/** ===== Utils ===== */
-const cn = (...c: (string | false | null | undefined)[]) => c.filter(Boolean).join(" ");
-
-const findActiveItem = (pathname: string): string => {
-  const matched = NAVIGATION_ITEMS.find((it) => it.href && pathname.startsWith(it.href));
-  return matched ? matched.id : SIDEBAR_CONFIG.defaultActiveId;
-};
-
-const getMenuItemClassName = (isActive: boolean) =>
-  cn(STYLES.menuItem.base, isActive ? STYLES.menuItem.active : STYLES.menuItem.inactive);
-
-/** ===== Small atoms ===== */
-const IconMask: React.FC<{ src: string; className?: string }> = React.memo(
-  ({ src, className = "w-5 h-5" }) => (
+function Icon({ src }: { src: string }) {
+  return (
     <span
-      aria-hidden
-      className={cn("inline-block align-middle", className)}
+      className="inline-block w-5 h-5"
       style={{
         backgroundColor: "currentColor",
         WebkitMaskImage: `url(${src})`,
@@ -91,134 +36,108 @@ const IconMask: React.FC<{ src: string; className?: string }> = React.memo(
         maskRepeat: "no-repeat",
         WebkitMaskSize: "contain",
         maskSize: "contain",
-        WebkitMaskPosition: "center",
-        maskPosition: "center",
-        display: "inline-block",
       }}
     />
-  )
-);
-IconMask.displayName = "IconMask";
-
-const SidebarLogo: React.FC<{
-  logoSrc: string;
-  href?: string;
-  onNavigate?: () => void;
-}> = React.memo(({ logoSrc, href = "/", onNavigate }) => (
-  <div className={STYLES.header}>
-    <Link
-      href={href}
-      aria-label="Go to landing page"
-      onClick={onNavigate}
-      className="inline-flex items-center gap-2"
-    >
-      <Image
-        src={logoSrc}
-        alt="Sitter"
-        width={SIDEBAR_CONFIG.logoWidth}
-        height={SIDEBAR_CONFIG.logoHeight}
-        priority
-        style={{ width: SIDEBAR_CONFIG.logoWidth, height: "auto" }}
-      />
-    </Link>
-  </div>
-));
-SidebarLogo.displayName = "SidebarLogo";
-
-const NotificationBadge: React.FC = React.memo(() => <span className={STYLES.notification} />);
-NotificationBadge.displayName = "NotificationBadge";
-
-const MenuItem: React.FC<{
-  item: SidebarItem;
-  isActive: boolean;
-  onNavigate?: (id: string) => void;
-}> = React.memo(({ item, isActive, onNavigate }) => {
-  const handleClick = React.useCallback(() => onNavigate?.(item.id), [item.id, onNavigate]);
-  return (
-    <li>
-      <Link href={item.href || "#"} className="block">
-        <div className={getMenuItemClassName(isActive)} onClick={handleClick}>
-          <IconMask src={item.iconSrc} />
-          <span className={STYLES.text}>{item.label}</span>
-          {item.notify && <NotificationBadge />}
-        </div>
-      </Link>
-    </li>
   );
-});
-MenuItem.displayName = "MenuItem";
+}
 
-const NavigationList: React.FC<{
-  currentActiveId: string;
-  onNavigate?: (id: string) => void;
-}> = React.memo(({ currentActiveId, onNavigate }) => (
-  <nav className={STYLES.nav}>
-    <ul className={STYLES.navList}>
-      {NAVIGATION_ITEMS.map((item) => (
-        <MenuItem key={item.id} item={item} isActive={currentActiveId === item.id} onNavigate={onNavigate} />
-      ))}
-    </ul>
-  </nav>
-));
-NavigationList.displayName = "NavigationList";
+function NotificationBadge() {
+  return <span className="ml-auto mt-[1px] inline-block h-2 w-2 rounded-full bg-red" />;
+}
 
-const LogoutSection: React.FC<{ onClick: () => void; disabled?: boolean }> = React.memo(
-  ({ onClick, disabled }) => (
-    <div className={STYLES.logout.container}>
-      <button className={STYLES.logout.button} onClick={onClick} disabled={disabled}>
-        <IconMask src={LOGOUT_CONFIG.iconSrc} />
-        <span className={STYLES.text}>{LOGOUT_CONFIG.label}</span>
-      </button>
-    </div>
-  )
-);
-LogoutSection.displayName = "LogoutSection";
+function NavItem({ item, isActive }: { item: SidebarItem; isActive: boolean }) {
+  return (
+    <Link href={item.href} className="block">
+      <div
+        className={`
+          flex items-center gap-3 rounded-xl px-3 py-3
+          text-[16px] font-medium leading-[150%] tracking-[-0.02em]
+          transition-colors cursor-pointer
+          ${isActive 
+            ? "bg-orange-1 text-orange-5" 
+            : "text-gray-7 hover:bg-orange-1 hover:text-orange-5"
+          }
+        `}
+      >
+        <Icon src={item.icon} />
+        <span>{item.label}</span>
+        {item.notify && <NotificationBadge />}
+      </div>
+    </Link>
+  );
+}
 
-/** ===== Main component ===== */
 export default function SitterSidebar({
   className = "",
-  activeId,
-  onNavigate,
-  onLogout,
-  logoSrc = SIDEBAR_CONFIG.defaultLogoSrc,
   sticky = true,
 }: SitterSidebarProps) {
-  const pathname = usePathname();
   const router = useRouter();
-  const [pending, setPending] = React.useState(false);
+  const [loggingOut, setLoggingOut] = React.useState(false);
 
-  const currentActiveId = React.useMemo(
-    () => activeId || findActiveItem(pathname || ""),
-    [activeId, pathname]
-  );
+  const isActive = (href: string) => {
+    const path = router.pathname;
+    return path === href || path.startsWith(href);
+  };
 
-  const doDefaultLogout = React.useCallback(async () => {
-    setPending(true);
+  const handleLogout = async () => {
+    setLoggingOut(true);
     try {
       await signOut({ redirect: true, callbackUrl: "/" });
-    } catch {
-      router.push("/");
     } finally {
-      setPending(false);
+      setLoggingOut(false);
     }
-  }, [router]);
-
-  const handleLogout = React.useCallback(() => {
-    if (onLogout) return void onLogout();
-    return void doDefaultLogout();
-  }, [onLogout, doDefaultLogout]);
-
-  // ควบคุมการ sticky ให้เลือกได้
-  const positionCls = sticky ? "sticky top-0" : "static";
-
-  
-  const sidebarClassName = cn(positionCls, STYLES.sidebar, className);
+  };
 
   return (
-    <aside className={sidebarClassName} style={{ width: SIDEBAR_CONFIG.width }}>
-      <SidebarLogo logoSrc={logoSrc} />
-      <NavigationList currentActiveId={currentActiveId} onNavigate={onNavigate} />
-      <LogoutSection onClick={handleLogout} disabled={pending} />
+    <aside
+      className={`
+        ${sticky ? "sticky top-0" : ""}
+        flex min-h-screen h-auto w-[240px] shrink-0 flex-col
+        bg-bg text-text border-r border-border
+        ${className}
+      `}
+    >
+      {/* Logo */}
+      <div className="px-5 pt-8 pb-6 border-b border-border">
+        <Link href="/">
+          <Image
+            src="/icons/sitter-logo-1.svg"
+            alt="Sitter"
+            width={131}
+            height={40}
+            priority
+          />
+        </Link>
+      </div>
+
+      {/* Navigation */}
+      <nav className="flex-1 overflow-y-auto px-2 py-4">
+        <ul className="space-y-1">
+          {SITTER_ITEMS.map((item) => (
+            <li key={item.id}>
+              <NavItem item={item} isActive={isActive(item.href)} />
+            </li>
+          ))}
+        </ul>
+      </nav>
+
+      {/* Logout */}
+      <div className="mt-auto border-t border-border">
+        <button
+          onClick={handleLogout}
+          disabled={loggingOut}
+          className="
+            flex w-full items-center gap-3 px-4 py-5
+            text-[16px] font-medium leading-[150%] tracking-[-0.02em]
+            text-gray-7 hover:bg-orange-1 hover:text-orange-5
+            transition-colors cursor-pointer
+            disabled:opacity-50
+          "
+        >
+          <Icon src="/icons/ic-logout.svg" />
+          <span>Log Out</span>
+        </button>
+      </div>
     </aside>
   );
 }

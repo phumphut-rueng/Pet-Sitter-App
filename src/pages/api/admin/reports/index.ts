@@ -3,6 +3,25 @@ import { prisma } from "@/lib/prisma/prisma";
 import { Prisma, report_status as ReportStatusValue } from "@prisma/client";
 import type { report_status as ReportStatus } from "@prisma/client";
 
+function sendError(res: NextApiResponse, status: number, message: string) {
+  return res.status(status).json({ message });
+}
+
+function toPositiveInt(v: unknown, fallback: number): number {
+  const n = Number(v);
+  if (Number.isFinite(n) && n > 0) return Math.floor(n);
+  return fallback;
+}
+
+function normalizeStatus(v: unknown): ReportStatus | undefined {
+  if (typeof v !== "string") return undefined;
+  const raw = v.trim().toLowerCase();
+  const mapped = raw === "rejected" ? "canceled" : raw;
+
+  const allowed = new Set<string>(Object.values(ReportStatusValue));
+  return allowed.has(mapped) ? (mapped as ReportStatus) : undefined;
+}
+
 type Ok = {
   reports: Array<{
     id: number;
@@ -24,57 +43,32 @@ type Ok = {
     createdAt: string;
     updatedAt: string;
   }>;
-  pagination: {
-    page: number;
-    limit: number;
-    total: number;
-    totalPages: number;
-  };
+  pagination: { page: number; limit: number; total: number; totalPages: number };
 };
-
 type Err = { message: string };
-
-/** แปลงค่าจาก query ให้เป็น enum report_status (ถ้าไม่แมตช์ คืน undefined) */
-function normalizeStatus(v: unknown): ReportStatus | undefined {
-  if (typeof v !== "string") return undefined;
-  const raw = v.trim().toLowerCase();
-  //rejected map เป็น canceled
-  const mapped = raw === "rejected" ? "canceled" : raw;
-
-  // runtime enum object ของ Prisma 
-  const allowed = new Set<string>(Object.values(ReportStatusValue));
-  return allowed.has(mapped) ? (mapped as ReportStatus) : undefined;
-}
 
 export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse<Ok | Err>
 ) {
   if (req.method !== "GET") {
-    return res.status(405).json({ message: "Method not allowed" });
+    res.setHeader("Allow", ["GET"]);
+    return sendError(res, 405, "Method not allowed");
   }
 
   try {
-    const { status, q, page = "1", limit = "10" } = req.query;
+    const page = Math.max(1, toPositiveInt(req.query.page, 1));
+    const limit = Math.min(100, Math.max(1, toPositiveInt(req.query.limit, 10)));
+    const skip = (page - 1) * limit;
 
-    // pagination
-    const pageNum = Math.max(1, Number(page) || 1);
-    const limitNum = Math.min(100, Math.max(1, Number(limit) || 10));
-    const skip = (pageNum - 1) * limitNum;
+    const keyword = typeof req.query.q === "string" ? req.query.q.trim() : "";
 
-    // keyword
-    const keyword = typeof q === "string" ? q.trim() : "";
+    const statusParam = req.query.status;
+    const statusEnum =
+      statusParam === "all" || statusParam == null ? undefined : normalizeStatus(statusParam);
 
-    // แปลง status (ถ้าเป็น "all" ไม่กรอง)
-    const statusEnum = status === "all" || !status ? undefined : normalizeStatus(status);
-
-    // สร้าง where condition
     const where: Prisma.reportWhereInput = {};
-
-    if (statusEnum) {
-      where.status = statusEnum;
-    }
-
+    if (statusEnum) where.status = statusEnum;
     if (keyword) {
       where.OR = [
         { title: { contains: keyword, mode: "insensitive" } },
@@ -98,37 +92,30 @@ export default async function handler(
       ];
     }
 
-    const reports = await prisma.report.findMany({
-      where,
-      include: {
-        reporter: {
-          select: {
-            id: true,
-            name: true,
-            email: true,
-            profile_image: true,
-          },
+    const [rows, total] = await Promise.all([
+      prisma.report.findMany({
+        where,
+        select: {
+          id: true,
+          title: true,
+          description: true,
+          status: true,
+          created_at: true,
+          updated_at: true,
+          reporter: { select: { id: true, name: true, email: true, profile_image: true } },
+          reported_user: { select: { id: true, name: true, email: true, profile_image: true } },
         },
-        reported_user: {
-          select: {
-            id: true,
-            name: true,
-            email: true,
-            profile_image: true,
-          },
-        },
-      },
-      orderBy: { created_at: "desc" },
-      skip,
-      take: limitNum,
-    });
+        orderBy: { created_at: "desc" },
+        skip,
+        take: limit,
+      }),
+      prisma.report.count({ where }),
+    ]);
 
-    const total = await prisma.report.count({ where });
-
-    const totalPages = Math.max(1, Math.ceil(total / limitNum));
+    const totalPages = Math.max(1, Math.ceil(total / limit));
 
     return res.status(200).json({
-      reports: reports.map((r) => ({
+      reports: rows.map((r) => ({
         id: r.id,
         title: r.title,
         description: r.description,
@@ -148,20 +135,12 @@ export default async function handler(
             }
           : null,
         createdAt: r.created_at.toISOString(),
-        updatedAt: (r.updated_at ?? r.created_at).toISOString(),
+        updatedAt: r.updated_at?.toISOString() ?? r.created_at.toISOString(),
       })),
-      pagination: {
-        page: pageNum,
-        limit: limitNum,
-        total,
-        totalPages,
-      },
+      pagination: { page, limit, total, totalPages },
     });
-  } catch (err: unknown) {
-    console.error(" Error fetching reports:", err);
-    if (err instanceof Error) {
-      console.error("Stack:", err.stack);
-    }
-    return res.status(500).json({ message: "Failed to fetch reports" });
+  } catch (err) {
+    console.error("Reports list error:", err);
+    return sendError(res, 500, "Failed to fetch reports");
   }
 }

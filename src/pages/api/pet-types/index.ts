@@ -7,54 +7,53 @@ type PetTypeResponse = {
 };
 
 type ErrorResponse = {
-  error: string;
+  message: string;
 };
-
 
 const HTTP_STATUS = {
   OK: 200,
+  METHOD_NOT_ALLOWED: 405,
   INTERNAL_SERVER_ERROR: 500,
 } as const;
 
 const ERROR_MESSAGES = {
+  METHOD_NOT_ALLOWED: "Method not allowed",
   INTERNAL_SERVER_ERROR: "Internal Server Error",
 } as const;
 
+/* ------------------------------- repository ------------------------------- */
+
 const petTypeRepository = {
-  findAll: async (): Promise<PetTypeResponse[]> => {
+  async findAll(): Promise<PetTypeResponse[]> {
     const types = await prisma.pet_type.findMany({
       orderBy: { id: "asc" },
-      select: { 
-        id: true, 
-        pet_type_name: true 
-      },
+      select: { id: true, pet_type_name: true },
     });
-
-    return types.map(type => ({
-      id: type.id,
-      name: type.pet_type_name,
-    }));
+    return types.map((t) => ({ id: t.id, name: t.pet_type_name }));
   },
 };
 
-const handleError = (error: unknown, res: NextApiResponse<ErrorResponse>) => {
-  console.error("Pet types API error:", error);
-  
-  return res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json({
-    error: ERROR_MESSAGES.INTERNAL_SERVER_ERROR,
-  });
-};
-
+/* --------------------------------- handler -------------------------------- */
 
 export default async function handler(
-  _req: NextApiRequest,
+  req: NextApiRequest,
   res: NextApiResponse<PetTypeResponse[] | ErrorResponse>
 ) {
+  // allow only GET
+  if (req.method !== "GET") {
+    res.setHeader("Allow", ["GET"]);
+    return res
+      .status(HTTP_STATUS.METHOD_NOT_ALLOWED)
+      .json({ message: ERROR_MESSAGES.METHOD_NOT_ALLOWED });
+  }
+
   try {
     const petTypes = await petTypeRepository.findAll();
-    
     return res.status(HTTP_STATUS.OK).json(petTypes);
   } catch (error) {
-    return handleError(error, res);
+    console.error("Pet types API error:", error);
+    return res
+      .status(HTTP_STATUS.INTERNAL_SERVER_ERROR)
+      .json({ message: ERROR_MESSAGES.INTERNAL_SERVER_ERROR });
   }
 }

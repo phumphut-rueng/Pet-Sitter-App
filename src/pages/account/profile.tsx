@@ -6,98 +6,50 @@ import { getServerSession } from "next-auth/next";
 
 import AccountPageShell from "@/components/layout/AccountPageShell";
 import ProfileForm from "@/components/features/account/profile/components/ProfileForm";
-import PageToaster from "@/components/ui/PageToaster";
 import { useOwnerProfileForm } from "@/hooks/useOwnerProfileForm";
 import { authOptions } from "@/pages/api/auth/[...nextauth]";
 import type { OwnerProfileInput } from "@/lib/validators/profile";
+import { ERROR_MESSAGES, SUCCESS_MESSAGES } from "@/lib/constants/messages";
+import { getErrorMessage } from "@/lib/utils/error";
 
-const ERROR_MESSAGES = {
-  loadFailed: "Failed to load profile.",
-  saveFailed: "Something went wrong. Please try again.",
-  fixFields: "Please fix the highlighted fields.",
-  unknown: "Something went wrong.",
-} as const;
-
-const SUCCESS_MESSAGES = {
-  profileUpdated: "Profile updated!",
-} as const;
-
-const getErrorMessage = (error: unknown): string => {
-  if (typeof error === "string") return error;
-  if (error instanceof Error) return error.message;
-  try {
-    return JSON.stringify(error);
-  } catch {
-    return "Unknown error";
-  }
-};
-
-const useProfileLoader = (loadProfileFn: () => Promise<void>) => {
-  useEffect(() => {
-    let isMounted = true;
-
-    const loadProfile = async () => {
-      try {
-        await loadProfileFn();
-      } catch (error) {
-        if (!isMounted) return;
-        console.error("Profile load error:", error);
-        toast.error(ERROR_MESSAGES.loadFailed);
-      }
-    };
-
-    loadProfile();
-    return () => {
-      isMounted = false;
-    };
-  }, [loadProfileFn]);
-};
-
-const useProfileSubmission = (
-  saveProfileFn: (values: OwnerProfileInput) => Promise<boolean>
-) => {
+const AccountProfilePage: NextPage = () => {
+  const { form, load, save } = useOwnerProfileForm();
   const [saving, setSaving] = useState(false);
   const [serverError, setServerError] = useState<string | null>(null);
 
-  const submitProfile = async (values: OwnerProfileInput) => {
+  // โหลดโปรไฟล์ตอนเริ่มต้น
+  useEffect(() => {
+    load().catch((err) => {
+      console.error("Profile load error:", err);
+      toast.error(ERROR_MESSAGES.loadFailed);
+    });
+  }, [load]);
+
+  // ฟังก์ชันบันทึกโปรไฟล์
+  const handleSubmit = form.handleSubmit(async (values: OwnerProfileInput) => {
     setServerError(null);
     setSaving(true);
 
     try {
-      const success = await saveProfileFn(values);
+      const success = await save(values);
+      
       if (success) {
         toast.success(SUCCESS_MESSAGES.profileUpdated);
       } else {
         toast.error(ERROR_MESSAGES.fixFields);
       }
-    } catch (error) {
-      console.error("Profile save error:", error);
-      const errorMessage = getErrorMessage(error);
-      setServerError(errorMessage || ERROR_MESSAGES.unknown);
+    } catch (err) {
+      console.error("Profile save error:", err);
+      const errorMsg = getErrorMessage(err) || ERROR_MESSAGES.unknown;
+      setServerError(errorMsg);
       toast.error(ERROR_MESSAGES.saveFailed);
     } finally {
       setSaving(false);
     }
-  };
-
-  return {
-    saving,
-    serverError,
-    submitProfile,
-  };
-};
-
-const AccountProfilePage: NextPage = () => {
-  const { form, load, save } = useOwnerProfileForm();
-  const { saving, serverError, submitProfile } = useProfileSubmission(save);
-
-  useProfileLoader(load);
-
-  const handleSubmit = form.handleSubmit(submitProfile);
+  });
 
   return (
     <AccountPageShell title="Profile" showTitle>
-      <PageToaster />
       <ProfileForm
         control={form.control}
         saving={saving}
@@ -118,7 +70,7 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
     return {
       redirect: {
         destination: `/api/auth/signin?callbackUrl=${callbackUrl}`,
-        permanent: false, // 302
+        permanent: false,
       },
     };
   }

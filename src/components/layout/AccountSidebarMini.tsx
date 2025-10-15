@@ -66,7 +66,7 @@ export default function AccountSidebarMini({
     {
       id: "history",
       label: "Booking History",
-      href: "/account/bookings",
+      href: "/account/pet/bookings",
       iconSrc: "/icons/ic-list.svg",
     },
     {
