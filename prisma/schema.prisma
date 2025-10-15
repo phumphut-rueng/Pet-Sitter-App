@@ -300,7 +300,7 @@ model user {
   chat_chat_user1_idTouser             chat[]                    @relation("chat_user1_idTouser")
   chat_chat_user2_idTouser             chat[]                    @relation("chat_user2_idTouser")
   message                              message[]
-  pet                                  pet[]
+  pets                                  pet[]
   report_report_reported_user_idTouser report[]                  @relation("report_reported_user_idTouser")
   report_report_reporter_idTouser      report[]                  @relation("report_reporter_idTouser")
   review                               review[]
