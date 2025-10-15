@@ -1,0 +1,13 @@
+{
+  "functions": {
+    "src/pages/api/chat/socket.ts": {
+      "maxDuration": 30
+    }
+  },
+  "rewrites": [
+    {
+      "source": "/api/chat/socket",
+      "destination": "/api/chat/socket"
+    }
+  ]
+}
