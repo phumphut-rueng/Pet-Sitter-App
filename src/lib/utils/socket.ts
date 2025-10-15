@@ -88,8 +88,9 @@ export const connectSocket = (userId: string): Socket<SocketEvents> => {
     });
     
     // ถ้า connection ล้มเหลว 3 ครั้งติดต่อกัน ให้ใช้ polling fallback
-    const retryCount = (socket as any).retryCount || 0;
-    (socket as any).retryCount = retryCount + 1;
+    const socketWithRetry = socket as Socket & { retryCount?: number };
+    const retryCount = socketWithRetry.retryCount || 0;
+    socketWithRetry.retryCount = retryCount + 1;
     
     if (retryCount >= 3 && socket) {
       console.warn('🔄 Switching to polling-only mode due to repeated connection failures');
