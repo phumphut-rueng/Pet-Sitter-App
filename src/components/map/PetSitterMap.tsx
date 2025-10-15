@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { Sitter } from '@/types/sitter.types';
 import dynamic from 'next/dynamic';
 import { useRouter } from 'next/router';
@@ -11,7 +11,7 @@ const LeafletMap = dynamic(() => import('@/components/form/LeafletMap'), {
   ssr: false,
   loading: () => (
     <div className="h-[600px] w-full rounded-xl border border-gray-200 bg-gray-50 flex items-center justify-center">
-      <div className="text-gray-500">กำลังโหลดแผนที่...</div>
+      <div className="text-gray-500">Loading map...</div>
     </div>
   )
 });
@@ -37,6 +37,7 @@ export default function PetSitterMap({
   const router = useRouter();
   const [selectedPinId, setSelectedPinId] = useState<number | null>(null);
   const [pins, setPins] = useState<Pin[]>([]);
+  const carouselRef = useRef<HTMLDivElement>(null);
 
   // Convert sitters to pins, filtering out those without coordinates
   useEffect(() => {
@@ -68,6 +69,38 @@ export default function PetSitterMap({
   const handleCardClick = (sitter: Sitter) => {
     router.push(`/findpetsitter/${sitter.id}`);
   };
+
+  const handleCardNavigation = (sitter: Sitter) => {
+    // เลือก pin ที่ตรงกับ card ที่คลิก
+    const pin = pins.find(p => p.sitter.id === sitter.id);
+    if (pin) {
+      setSelectedPinId(pin.id);
+      onSitterSelect?.(sitter);
+    }
+  };
+
+  // ฟังก์ชันเลื่อน carousel ไปยัง card ที่เลือก
+  const scrollToSelectedCard = (pinId: number) => {
+    if (carouselRef.current) {
+      const cardIndex = pins.findIndex(pin => pin.id === pinId);
+      if (cardIndex !== -1) {
+        const cardWidth = 320; // ความกว้างของ card + gap
+        const scrollPosition = cardIndex * cardWidth - (carouselRef.current.clientWidth / 2) + (cardWidth / 2);
+        
+        carouselRef.current.scrollTo({
+          left: scrollPosition,
+          behavior: 'smooth'
+        });
+      }
+    }
+  };
+
+  // เลื่อนไปยัง card ที่เลือกเมื่อ selectedPinId เปลี่ยน
+  useEffect(() => {
+    if (selectedPinId) {
+      scrollToSelectedCard(selectedPinId);
+    }
+  }, [selectedPinId, pins]);
 
   const selectedSitter = pins.find(pin => pin.id === selectedPinId)?.sitter;
 
@@ -108,23 +141,42 @@ export default function PetSitterMap({
           }))}
           selectedId={selectedPinId}
           onSelectPin={(pinId) => handlePinClick(Number(pinId))}
+          className="h-full w-full rounded-xl border border-gray-200"
         />
       </div>
       
-      {/* Sitter Card Overlay */}
-      {selectedSitter && (
-        <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 z-10">
-          <div onClick={() => handleCardClick(selectedSitter)}>
-            <PetSitterCardSmall
-              title={selectedSitter.name || 'Happy House!'}
-              hostName={selectedSitter.user_name || 'Jame Maison'}
-              location={`${selectedSitter.address_district}, ${selectedSitter.address_province}`}
-              rating={Math.floor(selectedSitter.averageRating || 4)}
-              tags={selectedSitter.sitter_pet_type.map(petType => petType.pet_type.pet_type_name)}
-              coverUrl={selectedSitter.sitter_image[0]?.image_url || "/images/cards/pet-sitter-cover.svg"}
-              smPreset="wide"
-              className="cursor-pointer shadow-lg hover:shadow-xl transition-shadow border-orange-6"
-            />
+      {/* Sitter Cards Carousel on the right side */}
+      {pins.length > 0 && (
+        <div className="absolute bottom-4 left-0 right-0 z-999">
+          <div 
+            ref={carouselRef}
+            className="flex overflow-x-auto space-x-4 pb-4 scrollbar-hide"
+            style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+          >
+            {pins.map(pin => {
+              const sitter = pin.sitter;
+              const isSelected = selectedPinId === pin.id;
+              return (
+                <div key={sitter.id} className="flex-shrink-0">
+                  <div onClick={() => handleCardNavigation(sitter)}>
+                    <PetSitterCardSmall
+                      title={sitter.name || 'Happy House!'}
+                      hostName={sitter.user_name || 'Jame Maison'}
+                      location={`${sitter.address_district || ''}, ${sitter.address_province || ''}`}
+                      rating={Math.floor(sitter.averageRating || 4)}
+                      tags={sitter.sitter_pet_type.map(petType => petType.pet_type.pet_type_name)}
+                      coverUrl={sitter.sitter_image[0]?.image_url || "/images/cards/pet-sitter-cover.svg"}
+                      smPreset="wide"
+                      className={`cursor-pointer shadow-lg hover:shadow-xl transition-all duration-300 max-w-[400px] ${
+                        isSelected 
+                          ? 'border-orange-6 border-2 rounded-xl' 
+                          : 'border-gray-200 border hover:border-gray-300'
+                      }`}
+                    />
+                  </div>
+                </div>
+              );
+            })}
           </div>
         </div>
       )}

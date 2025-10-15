@@ -13,6 +13,7 @@ type Props = {
   pins?: Pin[];           // ถ้ามีหลายจุด ใช้อันนี้
   selectedId?: Pin['id'] | null;
   onSelectPin?: (id: Pin['id']) => void;
+  className?: string;     // เพิ่ม className prop
 };
 
 //ย้ายตำแหน่งแผนที่ ทุกครั้งที่ latitude หรือ longitude เปลี่ยน
@@ -25,7 +26,7 @@ function Recenter({ latitude, longitude }: { latitude: number; longitude: number
 }
 
 export default function LeafletMap({
-  latitude, longitude, zoom = 15, pins, selectedId, onSelectPin
+  latitude, longitude, zoom = 15, pins, selectedId, onSelectPin, className
 }: Props) {
   const [internalSelected, setInternalSelected] = useState<Pin['id'] | null>(selectedId ?? null);
   useEffect(() => setInternalSelected(selectedId ?? null), [selectedId]);
@@ -35,7 +36,7 @@ export default function LeafletMap({
       center={[latitude, longitude]}
       zoom={zoom}
       scrollWheelZoom={false}
-      className="h-[300px] w-full rounded-xl border border-gray-200"
+      className={className || "h-[300px] w-full rounded-xl border border-gray-200"}
     >
       <TileLayer attribution="© OpenStreetMap" url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
       <Recenter latitude={latitude} longitude={longitude} />

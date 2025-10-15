@@ -2,6 +2,16 @@
 @import "./token.css";
 @import "leaflet/dist/leaflet.css";
 
+/* Custom scrollbar styles */
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+
 @source "./app/**/*.{ts,tsx,mdx}" "./components/**/*.{ts,tsx}" "./pages/**/*.{ts,tsx}" "./src/**/*.{ts,tsx}";
 
 /* Custom Animations for SocketLoading */
