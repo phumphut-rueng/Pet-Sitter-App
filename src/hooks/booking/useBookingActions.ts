@@ -1,6 +1,6 @@
 "use client";
 
-import axios from "axios";
+import axios, { AxiosError } from "axios";
 import { toast } from "sonner";
 import {
   calcDuration,
@@ -8,6 +8,46 @@ import {
 } from "@/lib/utils/booking-helpers";
 import type { BookingCardProps } from "@/components/cards/BookingCard";
 
+// ---------- Types ----------
+type ReportPayload = {
+  userId: number;
+  sitterId: number | null;
+  title: string;
+  description: string;
+};
+
+type ReviewPayload = {
+  sitterId: number;
+  userId: number;
+  rating: number;
+  comment: string;
+};
+
+type ChangeDatePayload = {
+  bookingId: number;
+  date_start: string | Date;
+  date_end: string | Date;
+};
+
+type ApiErrorBody = {
+  error?: string;
+  details?: {
+    fieldErrors?: Record<string, string[]>;
+  };
+};
+
+// Helper: ดึงข้อความ error แบบปลอดภัย
+function extractErrorMessage(err: unknown) {
+  const axErr = err as AxiosError<ApiErrorBody>;
+  const details = axErr?.response?.data?.details;
+  const zodMsg = details
+    ? Object.values(details.fieldErrors ?? {}).flat().join(" | ")
+    : axErr?.response?.data?.error;
+
+  return zodMsg || axErr?.message || "Unknown error";
+}
+
+// ---------- Hook ----------
 type UseBookingActionsArgs = {
   userId: number;
   selectedBooking: BookingCardProps | null;
@@ -45,8 +85,12 @@ export function useBookingActions({
     }
 
     try {
-      const sitterUserId = selectedBooking.sitterUserId ?? null;
-      const payload = { userId, sitterId: sitterUserId, title, description };
+      const payload: ReportPayload = {
+        userId,
+        sitterId: selectedBooking.sitterUserId ?? null,
+        title,
+        description,
+      };
       const res = await axios.post("/api/bookings/report", payload);
       if (res.status === 201) {
         toast.success("Report sent successfully!", {
@@ -56,15 +100,11 @@ export function useBookingActions({
         });
         setOpenReport(false);
       }
-    } catch (error: any) {
-      const details = error?.response?.data?.details;
-      const zodMsg = details
-        ? Object.values(details.fieldErrors || {}).flat().join(" | ")
-        : error?.response?.data?.error;
-
-      console.error("❌ Report error:", error?.response?.data || error);
+    } catch (err: unknown) {
+      const msg = extractErrorMessage(err);
+      console.error("❌ Report error:", msg);
       toast.error("Failed to send report", {
-        description: zodMsg || "Please try again later.",
+        description: msg || "Please try again later.",
         duration: 3000,
         position: "bottom-right",
       });
@@ -91,7 +131,7 @@ export function useBookingActions({
         return;
       }
 
-      const payload = { sitterId, userId, rating, comment };
+      const payload: ReviewPayload = { sitterId, userId, rating, comment };
       const res = await axios.post("/api/bookings/review", payload);
       if (res.status === 201) {
         toast.success("ส่งรีวิวเรียบร้อย!", {
@@ -112,15 +152,11 @@ export function useBookingActions({
         });
         setOpenSummary(true);
       }
-    } catch (error: any) {
-      const details = error?.response?.data?.details;
-      const zodMsg = details
-        ? Object.values(details.fieldErrors || {}).flat().join(" | ")
-        : error?.response?.data?.error;
-
-      console.error("❌ Review error:", error?.response?.data || error);
+    } catch (err: unknown) {
+      const msg = extractErrorMessage(err);
+      console.error("❌ Review error:", msg);
       toast.error("ส่งรีวิวไม่สำเร็จ", {
-        description: zodMsg || "โปรดลองอีกครั้ง",
+        description: msg || "โปรดลองอีกครั้ง",
         position: "bottom-right",
       });
     }
@@ -128,11 +164,12 @@ export function useBookingActions({
 
   const handleChangeDate = async (bookingId: number, newStart: Date, newEnd: Date) => {
     try {
-      const res = await axios.put("/api/bookings/change-date", {
+      const payload: ChangeDatePayload = {
         bookingId,
         date_start: newStart,
         date_end: newEnd,
-      });
+      };
+      const res = await axios.put("/api/bookings/change-date", payload);
 
       if (res.status === 200) {
         toast.success("Changed date success 🎉", {
@@ -177,11 +214,11 @@ export function useBookingActions({
 
         setOpenChangeDialog(false);
       }
-    } catch (err: any) {
-      console.error("❌ Change date error:", err);
-      const msg = err?.response?.data?.error || "Failed to update booking date";
+    } catch (err: unknown) {
+      const msg = extractErrorMessage(err);
+      console.error("❌ Change date error:", msg);
       toast.error("Change date failed", {
-        description: msg,
+        description: msg || "Failed to update booking date",
         position: "bottom-right",
       });
     }

@@ -44,7 +44,7 @@ export default function BookingChange({
       setEndTime(end);
       setMonth(start);
     }
-  }, [open, currentStart, currentEnd]);
+  }, [open, currentStart, currentEnd, handleSelect, setStartTime, setEndTime, setMonth]);
 
   const handleOnSubmit = () => {
     if (!date || !startTime || !endTime) {
