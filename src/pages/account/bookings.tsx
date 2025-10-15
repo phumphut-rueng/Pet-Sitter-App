@@ -1,170 +1,122 @@
-import React, { useEffect } from "react";
+"use client";
+import React, { useState } from "react";
 import AccountPageShell from "@/components/layout/AccountPageShell";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/router";
-import BookingCard, {
-  type BookingCardProps,
-} from "@/components/cards/ATestBookingCard";
+import BookingCard, { type BookingCardProps } from "@/components/cards/BookingCard";
 import ReportDialog from "@/components/modal/BookingReport";
 import RatingReviewDialog from "@/components/modal/RatingReview";
 import ReviewSummaryDialog from "@/components/modal/ReviewSummary";
 import BookingDetailDialog from "@/components/modal/BookingDetail";
 import BookingChange from "@/components/modal/BookingChange";
+import { PetPawLoading } from "@/components/loading/PetPawLoading";
+import { useBookingHistory } from "@/hooks/booking/useBookingHistory";
+import { useBookingActions } from "@/hooks/booking/useBookingActions";
 
 export default function BookingHistoryPage() {
   const { data: session, status } = useSession();
   const router = useRouter();
 
-  const [openReport, setOpenReport] = React.useState(false);
-  const [openReview, setOpenReview] = React.useState(false);
-  const [openSummary, setOpenSummary] = React.useState(false);
-  const [openDetail, setOpenDetail] = React.useState(false);
-  const [openChangeDialog, setOpenChangeDialog] = React.useState(false);
+  const userId = session?.user?.id ? Number(session.user.id) : null;
+  const { bookings, loading, error, setBookings } = useBookingHistory(userId);
 
-  const [reviewData, setReviewData] = React.useState<{
+  const [openReport, setOpenReport] = useState(false);
+  const [openReview, setOpenReview] = useState(false);
+  const [openSummary, setOpenSummary] = useState(false);
+  const [openDetail, setOpenDetail] = useState(false);
+  const [openChangeDialog, setOpenChangeDialog] = useState(false);
+
+  const [reviewData, setReviewData] = useState<{
     rating: number;
     review: string;
     date: string;
   } | null>(null);
-  const [selectedBooking, setSelectedBooking] =
-    React.useState<BookingCardProps | null>(null);
+  const [selectedBooking, setSelectedBooking] = useState<BookingCardProps | null>(null);
 
-  useEffect(() => {
-    if (status === "loading") return; // รอโหลด session ก่อน
-    if (!session?.user) {
-      router.push("/auth/login");
-    }
-  }, [session, status, router]);
+  // redirect if not logged in
+  if (status !== "loading" && !session?.user) {
+    router.push("/auth/login");
+  }
 
-  // mock data จำลองจาก DB
-  const bookings: BookingCardProps[] = [
-    {
-      id: 1,
-      status: "waiting",
-      title: "Happy House!",
-      sitterName: "Jane Maison",
-      avatarUrl: "/images/avatar1.png",
-      transactionDate: "Tue, 10 Aug 2023",
-      dateTime: "25 Aug, 2023 | 7 AM - 10 AM",
-      duration: "3 hours",
-      pet: "Bubba, Daisy",
-    },
-    {
-      id: 2,
-      status: "in_service",
-      title: "Gentle >< for all pet! (Kid friendly)",
-      sitterName: "Jane Maison",
-      avatarUrl: "/images/avatar2.png",
-      transactionDate: "Tue, 14 Aug 2023",
-      dateTime: "25 Aug, 2023 | 7 AM - 10 AM",
-      duration: "3 hours",
-      pet: "Mr.Ham, Bingsu",
-    },
-    {
-      id: 3,
-      status: "success",
-      title: "We love cat and your cat",
-      sitterName: "Jane Maison",
-      avatarUrl: "/images/cat.png",
-      transactionDate: "Tue, 24 Apr 2023",
-      dateTime: "25 Aug, 2023 | 7 AM - 10 AM",
-      duration: "3 hours",
-      pet: "Mr.Ham, Bingsu",
-      successDate: "Tue, 26 Apr 2023 | 11:03 AM",
-    },
-    {
-      id: 4,
-      status: "canceled",
-      title: "Energetic pup needs walk",
-      sitterName: "Jane Maison",
-      avatarUrl: "/images/cat.png",
-      transactionDate: "Tue, 24 Apr 2023",
-      dateTime: "25 Aug, 2023 | 7 AM - 10 AM",
-      duration: "3 hours",
-      pet: "Mr.Ham, Bingsu",
-      canceledReason: "Pet sitter is unavailable on this date",
-    },
-  ];
-
-  const handleReportSubmit = (data: { issue: string; description: string }) => {
-    if (!selectedBooking) return;
-
-    console.log("Report submitted:", {
-      bookingId: selectedBooking.id,
-      title: selectedBooking.title,
-      sitter: selectedBooking.sitterName,
-      ...data,
-    });
-    setOpenReport(false);
-  };
-
-  const handleReviewSubmit = (data: { rating: number; review: string }) => {
-    const now = new Date();
-    const formattedDate = now.toLocaleDateString("en-GB", {
-      weekday: "short",
-      day: "2-digit",
-      month: "short",
-      year: "numeric",
+  const { handleReportSubmit, handleReviewSubmit, handleChangeDate } =
+    useBookingActions({
+      userId: userId || 0,
+      selectedBooking,
+      setBookings,
+      setOpenReport,
+      setOpenReview,
+      setReviewData,
+      setOpenSummary,
+      setOpenChangeDialog,
+      setSelectedBooking,
     });
 
-    setReviewData({
-      rating: data.rating,
-      review: data.review,
-      date: formattedDate,
-    });
+  /* ---------- Render ---------- */
+  if (loading) {
+    return (
+      <AccountPageShell title="Booking History">
+        <PetPawLoading
+        message="Loading booking history"
+        size="lg"
+      />
+      </AccountPageShell>
+    );
+  }
 
-    if (!selectedBooking) return;
-    console.log("Review submitted:", {
-      bookingId: selectedBooking.id,
-      sitter: selectedBooking.sitterName,
-      title: selectedBooking.title,
-      ...data,
-    });
-    setOpenReview(false);
-    setOpenSummary(true);
-  };
-
-  const handleChangeDateTime = (booking: BookingCardProps) => {
-    setSelectedBooking(booking);
-    setOpenChangeDialog(true);
-  };
+  if (error) {
+    return (
+      <AccountPageShell title="Booking History">
+        <div className="flex justify-center items-center min-h-screen text-red-500 text-lg">
+          {error}
+        </div>
+      </AccountPageShell>
+    );
+  }
 
   return (
     <AccountPageShell title="Booking History">
       <div className="flex min-h-screen">
         <main className="flex-1 py-4 px-2 max-w-[343px] bg-white rounded-xl md:p-8 md:max-w-none">
           <h1 className="text-2xl font-bold mb-6">Booking History</h1>
-          <div className="space-y-6">
-            {bookings.map((b) => (
-              <div
-                key={b.id}
-                onClick={(e) => {
-                  const target = e.target as HTMLElement;
-                  if (target.closest("button")) return;
-
-                  setOpenDetail(true);
-                  setSelectedBooking(b);
-                }}
-                className="cursor-pointer"
-              >
-                <BookingCard
+          {bookings.length === 0 ? (
+            <p className="text-gray-500 text-center mt-10">No bookings found.</p>
+          ) : (
+            <div className="space-y-6">
+              {bookings.map((b) => (
+                <div
                   key={b.id}
-                  {...b}  
-                  onReport={() => {
-                    setOpenReport(true);
+                  onClick={(e) => {
+                    const target = e.target as HTMLElement;
+                    if (target.closest("button")) return;
+                    setOpenDetail(true);
                     setSelectedBooking(b);
                   }}
-                  onReview={() => {
-                    setOpenReview(true);
-                    setSelectedBooking(b);
-                  }}
-                  onChange={() => handleChangeDateTime(b)}
-                />
-              </div>
-            ))}
-          </div>
+                  className="cursor-pointer"
+                >
+                  <BookingCard
+                    key={b.id}
+                    {...b}
+                    onReport={() => {
+                      setOpenReport(true);
+                      setSelectedBooking(b);
+                    }}
+                    onReview={() => {
+                      setOpenReview(true);
+                      setSelectedBooking(b);
+                    }}
+                    onChange={() => {
+                      setSelectedBooking(b);
+                      setOpenChangeDialog(true);
+                    }}
+                  />
+                </div>
+              ))}
+            </div>
+          )}
         </main>
       </div>
+
+      {/* Modals */}
       <BookingDetailDialog
         open={openDetail}
         onOpenChange={setOpenDetail}
@@ -176,9 +128,12 @@ export default function BookingHistoryPage() {
       />
 
       <BookingChange
-        sitterId={selectedBooking?.id ?? 0}
+        bookingId={selectedBooking?.id ?? 0}
+        currentStart={selectedBooking?.dateStart}
+        currentEnd={selectedBooking?.dateEnd}
         open={openChangeDialog}
         onOpenChange={setOpenChangeDialog}
+        onSubmitChangeDate={handleChangeDate}
         disabledDates={[]}
       />
 
@@ -198,7 +153,7 @@ export default function BookingHistoryPage() {
         open={openSummary}
         onOpenChange={setOpenSummary}
         user={{
-          name: session?.user?.name || "John Wick",
+          name: session?.user?.name || "",
           avatarUrl: session?.user?.image || "/Icons/bubba.svg",
         }}
         data={reviewData}

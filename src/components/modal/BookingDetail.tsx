@@ -2,10 +2,11 @@ import AlertConfirm from "@/components/modal/AlertConfirm";
 import type {
   BookingCardProps,
   BookingStatus,
-} from "@/components/cards/ATestBookingCard";
+} from "@/components/cards/BookingCard";
 
 const STATUS_CONFIG = {
   waiting: { dot: "bg-pink", text: "text-pink", label: "Waiting for confirm" },
+  waiting_for_service: { dot: "bg-pink", text: "text-pink", label: "Waiting for Service"},
   in_service: { dot: "bg-blue", text: "text-blue", label: "In service" },
   success: { dot: "bg-green", text: "text-green", label: "Success" },
   canceled: { dot: "bg-red", text: "text-red", label: "Canceled" },
@@ -45,6 +46,11 @@ export default function BookingDetailDialog({
   if (!booking) return null;
   const statusCfg = STATUS_CONFIG[booking.status as BookingStatus];
 
+  function truncateText(text: string, maxLength: number): string {
+    if (!text) return "";
+    return text.length > maxLength ? text.slice(0, maxLength) + "..." : text;
+  }
+
   return (
     <AlertConfirm
       open={open}
@@ -73,10 +79,14 @@ export default function BookingDetailDialog({
           {/* Pet Sitter */}
           <Section label="Pet Sitter:">
             <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-2 md:gap-4">
-              <div className="text-gray-9 text-[15px] min-w-0 md:truncate">
-                {booking.title} <span className="text-gray-9">By</span>{" "}
-                {booking.sitterName}
-              </div>
+            <div
+  className="text-gray-9 text-[15px] min-w-0"
+  title={`${booking.title} By ${booking.sitterName}`}
+>
+  {truncateText(booking.title, 25)}{" "}
+  <span className="text-gray-9">By</span>{" "}
+  {truncateText(booking.sitterName, 20)}
+</div>
               <button
                 className="flex items-center gap-1 text-[14px] md:text-[16px] font-medium text-orange-5 hover:text-orange-6"
                 onClick={onViewMap}
@@ -93,7 +103,7 @@ export default function BookingDetailDialog({
               <div className="text-gray-9 text-[15px] md:text-[16px] break-words">
                 {booking.dateTime}
               </div>
-              {booking.status === "waiting" && (
+              {(booking.status === "waiting" || booking.status === "waiting_for_service") && (
                 <button
                   onClick={onChangeDateTime}
                   className="flex items-center gap-1 text-[14px] md:text-[16px] font-medium text-orange-5 hover:text-orange-6"
