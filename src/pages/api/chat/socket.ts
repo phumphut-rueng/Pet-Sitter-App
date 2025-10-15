@@ -30,7 +30,8 @@ interface SocketWithUser extends Socket {
 }
 
 export default async function socketHandler(req: NextApiRequest, res: NextApiResponseWithSocket) {
-  if (!res.socket?.server?.io) {
+  try {
+    if (!res.socket?.server?.io) {
     // ⚠️ สร้าง Socket.io Server Instance ครั้งแรก (Magic Part)
     // SocketLoading จะแสดงเฉพาะตอนนี้เท่านั้น (เมื่อ !res.socket?.server?.io === true)
     // หลังจากนี้ instance จะถูกเก็บไว้และไม่ต้องสร้างใหม่อีก
@@ -40,7 +41,7 @@ export default async function socketHandler(req: NextApiRequest, res: NextApiRes
       path: '/api/chat/socket', 
       cors: { 
         origin: process.env.NODE_ENV === 'production' 
-          ? ['https://your-domain.vercel.app'] 
+          ? ['https://vercel.com/phumphuts-projects/pet-sitter-app'] 
           : ['http://localhost:3000'], 
         methods: ['GET', 'POST'],
         credentials: true
@@ -237,10 +238,17 @@ export default async function socketHandler(req: NextApiRequest, res: NextApiRes
         }
       });
     });
-    res.socket!.server.io = io;
-    console.log('✅ Socket.io Server Instance created successfully!');
-  } else {
-    console.log('♻️ Socket.io Server Instance already exists, reusing...');
+      res.socket!.server.io = io;
+      console.log('✅ Socket.io Server Instance created successfully!');
+    } else {
+      console.log('♻️ Socket.io Server Instance already exists, reusing...');
+    }
+    res.status(200).end();
+  } catch (error) {
+    console.error('❌ Socket handler error:', error);
+    res.status(500).json({ 
+      error: 'Socket server initialization failed',
+      details: error instanceof Error ? error.message : 'Unknown error'
+    });
   }
-  res.status(200).end();
 }

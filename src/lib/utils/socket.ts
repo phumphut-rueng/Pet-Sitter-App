@@ -59,12 +59,16 @@ export const connectSocket = (userId: string): Socket<SocketEvents> => {
     path: '/api/chat/socket',
     autoConnect: false, // ปิด auto connect เพื่อควบคุมการเชื่อมต่อ
     forceNew: true, // บังคับสร้าง connection ใหม่
-    timeout: 10000, // ลด timeout เป็น 10 วินาที
+    timeout: 20000, // เพิ่ม timeout เป็น 20 วินาที
     reconnection: true, // เปิดการ reconnect อัตโนมัติ
-    reconnectionDelay: 1000, // รอ 1 วินาทีก่อน reconnect
-    reconnectionAttempts: 3, // ลดจำนวนการ reconnect เป็น 3 ครั้ง
-    reconnectionDelayMax: 3000, // ลดเวลารอสูงสุดเป็น 3 วินาที
-    randomizationFactor: 0.5 // เพิ่มความสุ่มในการ reconnect
+    reconnectionDelay: 2000, // รอ 2 วินาทีก่อน reconnect
+    reconnectionAttempts: 5, // เพิ่มจำนวนการ reconnect เป็น 5 ครั้ง
+    reconnectionDelayMax: 5000, // เพิ่มเวลารอสูงสุดเป็น 5 วินาที
+    randomizationFactor: 0.5, // เพิ่มความสุ่มในการ reconnect
+    transports: ['polling', 'websocket'], // เริ่มด้วย polling ก่อน
+    upgrade: true, // อนุญาตให้ upgrade ไป WebSocket
+    rememberUpgrade: false, // ไม่จำการ upgrade
+    withCredentials: true // ส่ง credentials
   };
   
   socket = io(socketConfig);
@@ -82,6 +86,18 @@ export const connectSocket = (userId: string): Socket<SocketEvents> => {
       message: error.message,
       stack: error.stack
     });
+    
+    // ถ้า connection ล้มเหลว 3 ครั้งติดต่อกัน ให้ใช้ polling fallback
+    const retryCount = (socket as any).retryCount || 0;
+    (socket as any).retryCount = retryCount + 1;
+    
+    if (retryCount >= 3 && socket) {
+      console.warn('🔄 Switching to polling-only mode due to repeated connection failures');
+      socket.io.opts.transports = ['polling'];
+      socket.disconnect();
+      socket.connect();
+    }
+    
     // ส่ง event เพื่อแจ้ง frontend ว่าเกิด error
     window.dispatchEvent(new CustomEvent('socket:connection_error', { detail: error }));
   });
