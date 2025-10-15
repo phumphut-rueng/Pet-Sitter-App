@@ -90,7 +90,6 @@ export default function BookingCreatePet(
           onSubmit={handleSubmit}
           onCancel={handleCancel}
         />
-
         : <dialog
           ref={dialogRef}
           onClose={() => onOpenChange(false)}
@@ -110,7 +109,7 @@ export default function BookingCreatePet(
             </button>
           </div>
 
-          <div className="w-[800px] h-[850px] p-10">
+          <div className="w-[800px] max-h-[90vh] p-10">
             <PetForm
               key={formKey}
               mode="create"
