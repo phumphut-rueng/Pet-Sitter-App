@@ -39,18 +39,38 @@ export default async function socketHandler(req: NextApiRequest, res: NextApiRes
     io = new Server(httpServer, { 
       path: '/api/chat/socket', 
       cors: { 
-        origin: '*', 
-        methods: ['GET', 'POST'] 
+        origin: process.env.NODE_ENV === 'production' 
+          ? ['https://your-domain.vercel.app'] 
+          : ['http://localhost:3000'], 
+        methods: ['GET', 'POST'],
+        credentials: true
       },
       pingTimeout: 60000, // 60 วินาที
       pingInterval: 25000, // 25 วินาที
       upgradeTimeout: 10000, // 10 วินาที
-      allowEIO3: true
+      allowEIO3: true,
+      transports: ['websocket', 'polling'], // รองรับทั้ง WebSocket และ polling
+      serveClient: false // ไม่ serve client files
+    });
+
+    // เพิ่ม error handling
+    io.on('connect_error', (error) => {
+      console.error('Socket connection error:', error);
+    });
+
+    io.engine.on('connection_error', (err) => {
+      console.error('Socket engine error:', err);
     });
 
     io.on('connection', (socket: SocketWithUser) => {
       console.log('New socket connection established');
       
+      // เพิ่ม error handling สำหรับ socket events
+      socket.on('error', (error) => {
+        console.error('Socket error:', error);
+        socket.emit('error', { message: 'Connection error occurred' });
+      });
+
       // Event: เมื่อผู้ใช้เข้าสู่แอป
       socket.on('join_app', async (userId: string) => {
         try {
@@ -87,7 +107,7 @@ export default async function socketHandler(req: NextApiRequest, res: NextApiRes
           console.log('User successfully joined app:', userId);
         } catch (error) {
           console.error('Error joining app:', error);
-          socket.emit('error', { message: 'Failed to join app' });
+          socket.emit('error', { message: 'Failed to join app', details: error instanceof Error ? error.message : 'Unknown error' });
         }
       });
       
@@ -189,6 +209,7 @@ export default async function socketHandler(req: NextApiRequest, res: NextApiRes
           });
         } catch (error) {
           console.error('Error sending message:', error);
+          socket.emit('error', { message: 'Failed to send message', details: error instanceof Error ? error.message : 'Unknown error' });
         }
       });
 
@@ -212,6 +233,7 @@ export default async function socketHandler(req: NextApiRequest, res: NextApiRes
           }
         } catch (error) {
           console.error('Error handling disconnect:', error);
+          // ไม่ emit error ตรงนี้เพราะ socket อาจจะ disconnect แล้ว
         }
       });
     });
