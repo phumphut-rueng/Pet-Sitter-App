@@ -17,11 +17,7 @@ import ChatWidget from "@/components/widgets/ChatWidget";
 import PetTypeCheckBox from "@/components/petTypeCheckBox";
 import CashButton from "@/components/buttons/CashButton";
 import IconButton from "@/components/buttons/IconButton";
-import {
-  PetSitterCard as _PetSitterCard,
-  PetSitterCardLarge,
-  PetSitterCardSmall,
-} from "@/components/cards/PetSitterCard";
+import { PetSitterCard, PetSitterCardLarge, PetSitterCardSmall } from "@/components/cards/PetSitterCard";
 import BookingCard from "@/components/cards/BookingCard";
 import PetCard from "@/components/cards/PetCard";
 import AccountSidebarMini from "@/components/layout/AccountSidebarMini";

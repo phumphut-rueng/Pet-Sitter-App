@@ -105,7 +105,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           payment_type: 'Credit',
         };
       }
-    } catch (e: unknown) {
+    } catch {
       // ถ้า charge ไม่สำเร็จ
       charge = {
         id: '',
