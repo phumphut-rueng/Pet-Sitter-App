@@ -1,76 +1,90 @@
-import { prisma } from "@/lib/prisma/prisma"
-import type { NextApiRequest, NextApiResponse } from "next"
+import type { NextApiRequest, NextApiResponse, NextApiHandler } from "next";
+import { prisma } from "@/lib/prisma/prisma";
+import { Prisma } from "@prisma/client";
+import { z } from "zod";
 
-export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+/** Validate & coerce body */
+const ChangeDateSchema = z
+  .object({
+    bookingId: z.coerce.number().int().positive(),
+    date_start: z.coerce.date(),
+    date_end: z.coerce.date(),
+  })
+  .refine((v) => v.date_end > v.date_start, {
+    message: "date_end must be after date_start",
+    path: ["date_end"],
+  });
+
+const handler: NextApiHandler = async (req: NextApiRequest, res: NextApiResponse) => {
   if (req.method !== "PUT") {
-    return res.status(405).json({ error: `Method ${req.method} not allowed` })
+    return res.status(405).json({ error: `Method ${req.method} not allowed` });
   }
 
-  const { bookingId, date_start, date_end } = req.body
-
-  if (!bookingId || !date_start || !date_end) {
-    return res.status(400).json({ error: "Missing required fields" })
+  // ✅ Zod parse (แก้เรื่อง any + ตรวจรูปแบบ input)
+  const parsed = ChangeDateSchema.safeParse(req.body);
+  if (!parsed.success) {
+    return res.status(400).json({
+      error: "Invalid input",
+      details: parsed.error.flatten(),
+    });
   }
+
+  const { bookingId, date_start: newStart, date_end: newEnd } = parsed.data;
 
   try {
-    const newStart = new Date(date_start)
-    const newEnd = new Date(date_end)
-
-    if (isNaN(newStart.getTime()) || isNaN(newEnd.getTime())) {
-      return res.status(400).json({ error: "Invalid date format" })
-    }
-
-    // ✅ ดึง booking เดิมมาเพื่อรู้ว่า sitter คนไหน
+    // ✅ หา sitter ของ booking นี้ก่อน
     const currentBooking = await prisma.booking.findUnique({
-      where: { id: Number(bookingId) },
+      where: { id: bookingId },
       select: { pet_sitter_id: true },
-    })
+    });
 
     if (!currentBooking) {
-      return res.status(404).json({ error: "Booking not found" })
+      return res.status(404).json({ error: "Booking not found" });
     }
 
-    // ✅ ตรวจสอบว่าช่วงใหม่ทับกับ booking อื่นของ sitter คนเดียวกันหรือไม่
+    // ✅ ตรวจซ้อนทับ (overlap) กับ booking อื่นของ sitter เดียวกัน
+    // เงื่อนไข overlap มาตรฐาน: start < otherEnd && end > otherStart
     const overlappingBooking = await prisma.booking.findFirst({
       where: {
         pet_sitter_id: currentBooking.pet_sitter_id,
-        id: { not: Number(bookingId) }, // ไม่รวม booking ตัวเอง
-        OR: [
-          {
-            date_start: { lte: newEnd },
-            date_end: { gte: newStart },
-          },
-        ],
+        id: { not: bookingId },
+        date_start: { lt: newEnd },
+        date_end: { gt: newStart },
       },
       select: { id: true, date_start: true, date_end: true },
-    })
+    });
 
     if (overlappingBooking) {
       return res.status(409).json({
         error: "This sitter is already booked in that date range.",
         conflict: overlappingBooking,
-      })
+      });
     }
 
-    // ✅ ถ้าไม่ซ้ำ → update ได้
+    // ✅ อัปเดตได้
     const updated = await prisma.booking.update({
-      where: { id: Number(bookingId) },
+      where: { id: bookingId },
       data: {
         date_start: newStart,
         date_end: newEnd,
         updated_at: new Date(),
       },
-    })
+    });
 
     return res.status(200).json({
       message: "Booking date updated successfully",
       booking: updated,
-    })
-  } catch (err: any) {
-    console.error("❌ Error updating booking:", err)
-    if (err.code === "P2025") {
-      return res.status(404).json({ error: "Booking not found" })
+    });
+  } catch (err: unknown) {
+    // ✅ แก้ no-explicit-any: แคสต์เป็น Prisma error อย่างปลอดภัย
+    if (err instanceof Prisma.PrismaClientKnownRequestError) {
+      if (err.code === "P2025") {
+        return res.status(404).json({ error: "Booking not found" });
+      }
     }
-    return res.status(500).json({ error: "Internal Server Error" })
+    console.error("❌ Error updating booking:", err);
+    return res.status(500).json({ error: "Internal Server Error" });
   }
-}
+};
+
+export default handler;
