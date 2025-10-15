@@ -125,12 +125,13 @@ export default function RegisterPage() {
           />
         </form>
 
-        <SocialLogin />
+        {/* <SocialLogin
+          callbackUrl={`/admin?role=${role}`} /> */}
 
         <p className="mt-6 text-center text-[18px] text-ink font-[500]">
           Already have an account?{" "}
           <Link
-            href="auth/login"
+            href="/auth/login"
             className="text-orange-5 hover:underline    text-[16px] font-[700]"
           >
             Login
