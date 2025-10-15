@@ -13,8 +13,7 @@ import { StatusBadge } from "@/components/badges/StatusBadge";
 import ImageGallery from "@/components/form/ImageGalleryUpload";
 import AvatarUploader from "@/components/form/AvatarUpload";
 import PinSelection from "@/components/PinSelection";
-import ChatList from "@/components/chat/ChatList";
-import ChatContainer from "@/components/chat/ChatContainer";
+import ChatWidget from "@/components/widgets/ChatWidget";
 import PetTypeCheckBox from "@/components/petTypeCheckBox";
 import CashButton from "@/components/buttons/CashButton";
 import IconButton from "@/components/buttons/IconButton";
@@ -782,10 +781,9 @@ export default function ComponentAll() {
 
         {/* Chat */}
         <Section title="Chat">
-          <SubSection title="Chat List and Chat Container">
-            <div className="flex flex-row gap-4">
-              <ChatList />
-              <ChatContainer />
+          <SubSection title="Chat Widget">
+            <div className="w-full h-[calc(100vh-90px)]">
+              <ChatWidget />
             </div>
           </SubSection>
         </Section>

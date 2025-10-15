@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React from "react";
 import type { LucideIcon } from "lucide-react";
 
 interface IconButtonProps {
@@ -22,17 +22,8 @@ const IconButton = ({
   onNavigate,
   disabled = false,
 }: IconButtonProps) => {
-  const [indicatorVisible, setIndicatorVisible] = useState(hasIndicator);
-
-
-  useEffect(() => {
-    setIndicatorVisible(hasIndicator);
-  }, [hasIndicator]);
-
   const handleClick = () => {
     if (disabled) return;
-
-    if (indicatorVisible) setIndicatorVisible(false);
 
     if (onClick) onClick();
     else if (route && onNavigate) onNavigate(route);
@@ -62,7 +53,7 @@ const IconButton = ({
       disabled={disabled}
     >
       <Icon className={iconClasses} />
-      {indicatorVisible && (
+      {hasIndicator && (
         <div className={`absolute ${indicatorPos} w-3 h-3 bg-orange-5 rounded-full`} />
       )}
     </button>
