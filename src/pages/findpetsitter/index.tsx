@@ -80,6 +80,10 @@ function FindPetsitter() {
                 viewMode={viewMode}
                 onClear={handleClear}
                 onSwitchToList={switchToList}
+                onSitterSelect={(sitter) => {
+                  // Optional: Handle sitter selection (e.g., scroll to details, highlight, etc.)
+                  console.log('Selected sitter:', sitter);
+                }}
                 variant="desktop"
               />
             </div>
@@ -93,6 +97,10 @@ function FindPetsitter() {
               viewMode={viewMode}
               onClear={handleClear}
               onSwitchToList={switchToList}
+              onSitterSelect={(sitter) => {
+                // Optional: Handle sitter selection (e.g., scroll to details, highlight, etc.)
+                console.log('Selected sitter:', sitter);
+              }}
               variant="mobile"
             />
           </div>

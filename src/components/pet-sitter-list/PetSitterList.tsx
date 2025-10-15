@@ -2,6 +2,7 @@ import { PetSitterCardLarge } from "@/components/cards/PetSitterCardLargeRespons
 import { PetSitterCardSkeletonLarge } from "@/components/cards/PetSitterCardSkeleton";
 import { NoResultsFound } from "@/components/empty-states/NoResultsFound";
 import { MapViewPlaceholder } from "@/components/empty-states/MapViewPlaceholder";
+import PetSitterMap from "@/components/map/PetSitterMap";
 import { Sitter } from "@/types/sitter.types";
 import Link from "next/link";
 
@@ -11,6 +12,7 @@ interface PetSitterListProps {
   viewMode: "list" | "map";
   onClear: () => void;
   onSwitchToList: () => void;
+  onSitterSelect?: (sitter: Sitter) => void;
   variant?: "desktop" | "mobile";
 }
 
@@ -20,11 +22,31 @@ export function PetSitterList({
   viewMode,
   onClear,
   onSwitchToList,
+  onSitterSelect,
   variant = "desktop",
 }: PetSitterListProps) {
   if (viewMode === "map") {
+    // Check if sitters have location data
+    const sittersWithLocation = sitters.filter(sitter => sitter.latitude && sitter.longitude);
+    
+    if (sittersWithLocation.length === 0 && !loading) {
+      // Show placeholder if no sitters have location data
+      const reason = sitters.length > 0 ? 'no-location' : 'no-data';
+      return (
+        <MapViewPlaceholder 
+          onSwitchToList={onSwitchToList} 
+          variant={variant}
+          reason={reason}
+        />
+      );
+    }
+    
     return (
-      <MapViewPlaceholder onSwitchToList={onSwitchToList} variant={variant} />
+      <PetSitterMap 
+        sitters={sitters} 
+        loading={loading}
+        onSitterSelect={onSitterSelect}
+      />
     );
   }
 

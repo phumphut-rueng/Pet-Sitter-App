@@ -1,5 +1,6 @@
 @import "tailwindcss";
 @import "./token.css";
+@import "leaflet/dist/leaflet.css";
 
 @source "./app/**/*.{ts,tsx,mdx}" "./components/**/*.{ts,tsx}" "./pages/**/*.{ts,tsx}" "./src/**/*.{ts,tsx}";
 

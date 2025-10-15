@@ -51,6 +51,8 @@ export interface Sitter {
   updated_at: string | null;
   experience: number;
   service_description: string | null;
+  latitude?: number | null;
+  longitude?: number | null;
   owner: User;
   sitter_image: SitterImage[];
   sitter_pet_type: SitterPetType[];
