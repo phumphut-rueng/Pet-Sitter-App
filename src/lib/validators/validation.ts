@@ -40,7 +40,7 @@ const pickNullableString = (body: unknown, key: string): string | null | undefin
  * Regex
  * ------------------------------------------------------ */
 export const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-export const phoneRegex = /^0\d{9}$/;          
+export const phoneRegex = /^0\d{9}$/;
 export const idNumberRegex = /^\d{13}$/;       // 13 หลัก
 export const cardNameRegex = /^[a-zA-Z\s]*$/;
 export const dobRegex = /^\d{4}-\d{2}-\d{2}$/; // YYYY-MM-DD
@@ -198,15 +198,18 @@ export const validateCardNumber = (value: string): FieldValidation => {
 };
 
 export const validateExpiryDate = (value: string): FieldValidation => {
-  const cleaned = value.replace(numRegex, "");
+  const cleaned = value.replace(numRegex, '');
   if (!cleaned) return result("Expiry date is required");
 
-  // ใช้รูปแบบ MM/YYYY
-  if (cleaned.length !== 6) return result("Invalid expiry date format (MM/YYYY)");
+  // ใช้รูปแบบ MM/YY
+  if (cleaned.length !== 4) return result("Invalid expiry date format (MM/YY)");
 
   const month = parseInt(cleaned.substring(0, 2));
-  const year = parseInt(cleaned.substring(2, 6));
-  if (month < 1 || month > 12) return result("Invalid month (01-12)");
+  const year = 2000 + parseInt(cleaned.substring(2, 4));
+
+  if (month < 1 || month > 12) {
+    return result("Invalid month (01-12)");
+  }
 
   const now = new Date();
   const currentYear = now.getFullYear();
