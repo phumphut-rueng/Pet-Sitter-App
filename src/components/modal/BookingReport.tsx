@@ -3,7 +3,7 @@ import { AlertDialogDescription } from "@/components/ui/alert-dialog";
 import AlertConfirm from "./AlertConfirm";
 import PrimaryButton from "../buttons/PrimaryButton";
 import { useState } from "react";
-import { toast } from "sonner";
+
 
 interface ReportDialogProps {
   open: boolean;
@@ -22,16 +22,12 @@ export default function ReportDialog({
   const handleSubmit = () => {
     onSubmit({ issue, description });
     onOpenChange(false);
-    toast.success("Report sent successfully ", {
-      description: "Our team will review your report shortly.",
-      duration: 3000,
-      position: "bottom-right",
-      className:
-        "bg-blue-50 border border-blue-300 text-blue-800 shadow-md rounded-xl px-4 py-3",
-    });
     setIssue("");
     setDescription("");
   };
+
+  const isValid =
+  issue.trim().length >= 5 && description.trim().length >= 10;
 
   return (
     <AlertConfirm
@@ -84,7 +80,7 @@ export default function ReportDialog({
                 textColor="white"
                 type="button"
                 onClick={handleSubmit}
-                disabled={issue === ""}
+                disabled={!isValid}
               />
             </div>
           </div>

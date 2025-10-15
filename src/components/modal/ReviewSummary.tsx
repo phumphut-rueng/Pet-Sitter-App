@@ -2,12 +2,12 @@
 import Image from "next/image";
 import AlertConfirm from "./AlertConfirm";
 import PrimaryButton from "../buttons/PrimaryButton";
-import { toast } from "sonner"; 
+ 
 
 interface ReviewSummaryDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  user: { name: string; avatarUrl: string };
+  user: { name?: string; avatarUrl?: string };
   data: { rating: number; review: string; date: string } | null;
 }
 
@@ -20,13 +20,6 @@ export default function ReviewSummaryDialog({
   if (!data) return null;
 
   const handleClose = () => {
-    toast.success("Review submitted successfully 🎉", {
-      description: "Thank you for sharing your feedback.",
-      duration: 3000,
-      position: "bottom-right",
-      className:
-        "bg-green-50 border border-green-300 text-green-800 shadow-md rounded-xl px-4 py-3",
-    });
     onOpenChange(false);
   };
 
@@ -35,7 +28,7 @@ export default function ReviewSummaryDialog({
       open={open}
       onOpenChange={onOpenChange}
       width={700}
-      maxWidth="90vh"
+      maxWidth="90vw"
       title="Your Rating and Review"
       description={
         <div className="pl-5 pr-4 pb-6 text-[16px]">
@@ -43,8 +36,8 @@ export default function ReviewSummaryDialog({
             {/* user info */}
             <div className="flex items-center gap-3">
               <Image
-                src={user.avatarUrl}
-                alt={user.name}
+                src={user.avatarUrl || "/Icons/avatar-placeholder.svg" }
+                alt={user.name || "User" }
                 width={56}
                 height={56}
                 className="rounded-full"

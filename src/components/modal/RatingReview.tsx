@@ -88,15 +88,14 @@ export default function RatingReviewDialog({
                 onClick={() => onOpenChange(false)}
               />
               <PrimaryButton
-                text="Send Review&Rating"
-                bgColor="primary"
-                textColor="white"
-                onClick={() => {
-                  onSubmit({ rating, review });
-                  onOpenChange(false);
-                }}
-                disabled={rating === 0}
-              />
+  text="Send Review&Rating"
+  bgColor="primary"
+  textColor="white"
+  onClick={() => {
+    onSubmit({ rating, review });
+  }}
+  disabled={rating < 1 || review.trim().length < 5}
+/>
             </div>
           </div>
         </AlertDialogDescription>

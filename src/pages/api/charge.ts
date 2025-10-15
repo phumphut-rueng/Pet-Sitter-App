@@ -182,11 +182,12 @@ export default async function handler(
             charge: charge,
             booking: bookingData
         });
-    } catch (error: unknown) {
+    } catch (error: any) {
         console.error('Booking error:', error);
         return res.status(500).json({
             success: false,
             message: 'Payment processing failed',
+            error: error.message 
         });
     }
 }

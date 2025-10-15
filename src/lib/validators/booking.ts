@@ -83,7 +83,30 @@ export const bookingMetadataSchema = z
         path: ["endTime"],
     });
 
+
+    
 /**
  * Type ที่ได้จาก schema (ใช้ใน TypeScript)
 */
 export type BookingMetadata = z.infer<typeof bookingMetadataSchema>;
+
+export const ReviewSchema = z.object({
+    sitterId: z.coerce.number().int().positive(),
+    userId: z.coerce.number().int().positive(),
+    rating: z.coerce.number().min(1).max(5),
+    comment: z.string().min(5).max(500),
+  })
+  
+  export type ReviewInput = z.infer<typeof ReviewSchema>;
+  
+  /* --------------------------------------------------
+   🚨 Report Schema
+  -------------------------------------------------- */
+  export const ReportSchema = z.object({
+    userId: z.coerce.number().int().positive(),
+    sitterId: z.coerce.number().int().positive().optional(),
+    title: z.string().min(5).max(80),
+    description: z.string().min(10).max(800),
+  });
+  
+  export type ReportInput = z.infer<typeof ReportSchema>;
