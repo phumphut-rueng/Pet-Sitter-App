@@ -297,7 +297,7 @@ export default function PetSitterProfilePage() {
   const onSubmit = handleSubmit(async (values) => {
     await toast.promise(
       (async () => {
-        //อัปโหลดรูปหม่ไป cloudinary
+        //อัปโหลดรูปใหม่ไป cloudinary
         const uploadedUrls: string[] = [];
         if (values.newImageFiles && values.newImageFiles.length > 0) {
           for (const file of values.newImageFiles) {
@@ -324,9 +324,9 @@ export default function PetSitterProfilePage() {
         const { data: refreshed } = await axios.get<GetSitterResponse>(
           "/api/sitter/get-profile-sitter"
         );
-          const latestImages = refreshed.sitter?.images || [];
-          setValue("images", latestImages);
-          setInitialGallery(latestImages);
+        const latestImages = refreshed.sitter?.images || [];
+        setValue("images", latestImages);
+        setInitialGallery(latestImages);
       })(),
       {
         loading: "Saving profile...",
@@ -525,6 +525,7 @@ export default function PetSitterProfilePage() {
                       variant={errors.email ? "error" : "default"}
                       className="w-full"
                       {...register("email", {
+                        required: "Please enter your email.",
                         validate: async (v) => {
                           //  ถ้าอีเมลที่กรอกเหมือนกับของตัวเอง → ข้ามไม่เช็กซ้ำ
                           if (v === currentEmail) return true;
@@ -548,7 +549,6 @@ export default function PetSitterProfilePage() {
                           } catch (e) {
                             console.error("Email duplicate check failed:", e);
                           }
-
                           return true;
                         },
                       })}
@@ -565,9 +565,16 @@ export default function PetSitterProfilePage() {
                     <InputTextArea
                       placeholder=""
                       label="Introduction (Describe about yourself as pet sitter)"
-                      className="w-full"
-                      {...register("introduction")}
+                      className={`w-full ${errors.introduction ? "!border-red focus:ring-red" : ""}`}
+                      {...register("introduction", {
+                        required: "Please enter introduction.",
+                      })}
                     />
+                    {errors.introduction && (
+                      <p className="mt-1 text-sm text-red">
+                        {errors.introduction.message}
+                      </p>
+                    )}
                   </div>
                 </div>
               </div>
