@@ -308,13 +308,40 @@ export function useBookingHandler() {
     }, [router])
 
     const handleBookingDetail = useCallback(() => {
-        alert('Showing booking details...');
-    }, [])
+        router.push("/account/pet/bookings.tsx")
+    }, [router])
 
     const handleViewMap = useCallback(() => {
-        alert('Opening map location...');
-    }, [])
+        if (!sitter?.latitude || !sitter?.longitude) {
+            alert('ไม่พบข้อมูลตำแหน่งของผู้ดูแลสัตว์เลี้ยง');
+            return;
+        }
 
+        const { latitude, longitude, name = '' } = sitter;
+        const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+        const isIOS = /iPhone|iPad|iPod/i.test(navigator.userAgent);
+
+        // สร้าง URL ตามแต่ละ platform
+        const urls = {
+            ios: `maps://maps.google.com/maps?q=${latitude},${longitude}`,
+            android: `geo:${latitude},${longitude}?q=${latitude},${longitude}(${encodeURIComponent(name)})`,
+            web: `https://www.google.com/maps?q=${latitude},${longitude}`
+        };
+
+        if (isMobile && isIOS) {
+            // iOS
+            window.location.href = urls.ios;
+            setTimeout(() => {
+                window.location.href = urls.web;
+            }, 1500);
+        } else if (isMobile) {
+            // Android
+            window.location.href = urls.android;
+        } else {
+            // Desktop
+            window.open(urls.web, '_blank');
+        }
+    }, [sitter]);
 
     return {
         // Router data

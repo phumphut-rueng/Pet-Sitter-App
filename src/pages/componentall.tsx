@@ -759,8 +759,16 @@ export default function ComponentAll() {
                 onChange={setendTime2}
                 date={new Date()}
                 disabledTimeSlots={[
-                  new Date(new Date().getFullYear(), new Date().getMonth(), new Date().getDate(), 9, 0),
-                  new Date(new Date().getFullYear(), new Date().getMonth(), new Date().getDate(), 10, 0),
+                  {
+                    // ISO string
+                    date_start: "2025-10-15T08:30:00Z",
+                    date_end: "2025-10-15T09:30:00Z"
+                  },
+                  // {
+                  //   // Date object
+                  //   date_start: new Date(new Date().getFullYear(), new Date().getMonth(), new Date().getDate(), 9, 0),
+                  //   date_end: new Date(new Date().getFullYear(), new Date().getMonth(), new Date().getDate(), 10, 0)
+                  // }
                 ]}
                 rules={{
                   showDisabledSlots: true
