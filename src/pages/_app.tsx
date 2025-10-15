@@ -66,7 +66,6 @@ export default function App({ Component, pageProps: { session, ...pageProps } }:
           />
         </div>
       </SocketProvider>
-      <Toaster richColors closeButton />
     </SessionProvider>
   );
 }

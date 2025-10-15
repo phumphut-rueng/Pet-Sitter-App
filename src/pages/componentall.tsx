@@ -37,7 +37,7 @@ import { PetPawLoading } from "@/components/loading/PetPawLoading";
 // Sidebar Demo
 const SidebarDemo: React.FC = () => {
   return (
-    <div className="flex h-[520px] overflow-hidden rounded-xl border border-border">
+      <div className="flex h-[520px] overflow-hidden rounded-xl border border-border">
       <SitterSidebar sticky={false} />
       <main className="flex-1 bg-white" />
     </div>
