@@ -26,7 +26,7 @@ function formatListDateRange(start: Date, end: Date) {
       hour: "numeric",
       minute: "2-digit",
       hour12: true,
-      timeZone: "UTC",
+      timeZone: "Asia/Bangkok",
     });
 
   // Booking list: "25 Aug, 7 AM - 10 AM"
@@ -34,7 +34,7 @@ function formatListDateRange(start: Date, end: Date) {
     date.toLocaleString("en-GB", {
       day: "numeric",
       month: "short",
-      timeZone: "UTC",
+      timeZone: "Asia/Bangkok",
     });
 
   return `${formatDate(start)}, ${formatTime(start)} - ${formatTime(end)}`;
@@ -46,7 +46,7 @@ function formatDetailDateRange(start: Date, end: Date) {
       hour: "numeric",
       minute: "2-digit",
       hour12: true,
-      timeZone: "UTC",
+      timeZone: "Asia/Bangkok",
     });
 
   // Booking detail: "16 Oct 2022 | 7 AM - 10 AM"
@@ -55,7 +55,7 @@ function formatDetailDateRange(start: Date, end: Date) {
       day: "numeric",
       month: "short",
       year: "numeric",
-      timeZone: "UTC",
+      timeZone: "Asia/Bangkok",
     });
 
   return `${formatDate(start)} | ${formatTime(start)} - ${formatTime(end)}`;
@@ -145,12 +145,16 @@ export default async function handler(
         totalPaid: b.amount.toFixed(2),
         paymentMethod: b.payment_type ?? "-",
         transactionDate: b.transaction_date
-          ? new Date(b.transaction_date).toLocaleDateString("en-GB", {
-              day: "numeric",
-              month: "short",
-              year: "numeric",
-            })
-          : "-",
+        ? new Date(b.transaction_date).toLocaleString("en-US", {
+            day: "numeric",
+            month: "short",
+            year: "numeric",
+            hour: "numeric",
+            minute: "2-digit",
+            hour12: true,
+            timeZone: "Asia/Bangkok",
+          })
+        : "-",
         transactionId: b.transaction_id ?? "-",
         message: b.additional ?? "-",
         status: mapStatusNameToKey(
