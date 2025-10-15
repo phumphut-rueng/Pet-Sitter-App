@@ -116,7 +116,7 @@ export default function ReportsListPage() {
           </div>
 
           {loading && (
-            <div className="absolute inset-0 flex items-center justify-center rounded-2xl bg-white/80">
+            <div className="absolute inset-0 flex items-center justify-center rounded-2xl ">
               <PetPawLoading message="Loading Reports..." size="md" />
             </div>
           )}

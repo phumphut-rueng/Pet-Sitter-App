@@ -105,7 +105,7 @@ export default function AdminOwnerListPage() {
             </div>
 
             {loading && (
-              <div className="absolute inset-0 flex items-center justify-center rounded-2xl bg-white/60">
+              <div className="absolute inset-0 flex items-center justify-center rounded-2xl ">
                 <PetPawLoading message="Loading Pet Owners..." size="md" />
               </div>
             )}

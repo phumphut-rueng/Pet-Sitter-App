@@ -11,6 +11,7 @@ import { authOptions } from "@/pages/api/auth/[...nextauth]";
 import type { OwnerProfileInput } from "@/lib/validators/profile";
 import { ERROR_MESSAGES, SUCCESS_MESSAGES } from "@/lib/constants/messages";
 import { getErrorMessage } from "@/lib/utils/error";
+import { PetPawLoading } from "@/components/loading/PetPawLoading"; 
 
 const AccountProfilePage: NextPage = () => {
   const { form, load, save } = useOwnerProfileForm();
@@ -32,7 +33,7 @@ const AccountProfilePage: NextPage = () => {
 
     try {
       const success = await save(values);
-      
+
       if (success) {
         toast.success(SUCCESS_MESSAGES.profileUpdated);
       } else {
@@ -50,6 +51,14 @@ const AccountProfilePage: NextPage = () => {
 
   return (
     <AccountPageShell title="Profile" showTitle>
+      {saving && (
+        <PetPawLoading
+          message="Updating..."
+          size="lg"
+          baseStyleCustum="fixed inset-0 z-[9999]  flex items-center justify-center"
+        />
+      )}
+
       <ProfileForm
         control={form.control}
         saving={saving}

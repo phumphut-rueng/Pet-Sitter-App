@@ -26,8 +26,6 @@ import {
   petService,
 } from "@/lib/pet/pet-utils";
 
-
-
 function BackButton({ onClick }: { onClick: () => void }) {
   return (
     <button
@@ -94,7 +92,7 @@ function DeleteConfirmDialog({
 
 function LoadingOverlay({ message }: { message: string }) {
   return (
-    <div className="absolute inset-0 bg-white flex items-center justify-center">
+    <div className="fixed inset-0 z-[9999] bg-black/20 flex items-center justify-center">
       <PetPawLoading
         message={message}
         size="md"
@@ -104,11 +102,9 @@ function LoadingOverlay({ message }: { message: string }) {
   );
 }
 
-
 export default function EditPetPage() {
   const router = useRouter();
   const { getPetTypes } = usePetsApi();
-
 
   const petId = React.useMemo<number | null>(
     () => (parsePetId(router.query.id) ?? null),
@@ -118,6 +114,7 @@ export default function EditPetPage() {
   const { isLoading, error, values } = usePetDetail(petId);
 
   const [showDeleteDialog, setShowDeleteDialog] = React.useState(false);
+  const [overlayMessage, setOverlayMessage] = React.useState<string | null>(null);
 
   const goBack = React.useCallback(() => router.back(), [router]);
 
@@ -129,6 +126,7 @@ export default function EditPetPage() {
     async (formValues: PetFormValues) => {
       if (!petId) return;
       try {
+        setOverlayMessage("Updating pet...");
         const payload = await formValuesToPayload(formValues, getPetTypes);
         await petService.updatePet(petId, payload);
         toast.success(SUCCESS_MESSAGES.petUpdated);
@@ -137,6 +135,8 @@ export default function EditPetPage() {
         const msg = getErrorMessage(err);
         toast.error(msg);
         console.error("Update pet failed:", err);
+      } finally {
+        setOverlayMessage(null);
       }
     },
     [petId, getPetTypes, goList]
@@ -145,6 +145,7 @@ export default function EditPetPage() {
   const handleDelete = React.useCallback(async () => {
     if (!petId) return;
     try {
+      setOverlayMessage("Deleting pet...");
       await petService.deletePet(petId);
       toast.success(SUCCESS_MESSAGES.petDeleted);
       goList();
@@ -153,6 +154,7 @@ export default function EditPetPage() {
       toast.error(msg);
       console.error("Delete pet failed:", err);
     } finally {
+      setOverlayMessage(null);
       setShowDeleteDialog(false);
     }
   }, [petId, goList]);
@@ -186,7 +188,11 @@ export default function EditPetPage() {
           </>
         )}
 
+        {/* Overlay: loading details */}
         {isLoading && <LoadingOverlay message="Loading Pet Details..." />}
+
+        {/* Overlay: updating / deleting */}
+        {overlayMessage && <LoadingOverlay message={overlayMessage} />}
       </div>
     </AccountPageShell>
   );

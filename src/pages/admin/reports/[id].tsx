@@ -175,7 +175,7 @@ export default function ReportDetailPage() {
 
         {/* Action Loading overlay */}
         {actionLoading && (
-          <div className="absolute inset-0 z-50 flex items-center justify-center bg-white/80">
+          <div className="absolute inset-0 z-50 flex items-center justify-center ">
             <PetPawLoading
               message={actionType === "resolve" ? "Resolving Report..." : "Canceling Report..."}
               size="md"
