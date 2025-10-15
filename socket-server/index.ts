@@ -4,9 +4,19 @@ import { createServer } from 'http';
 import { Server, Socket } from 'socket.io';
 import cors from 'cors';
 import dotenv from 'dotenv';
+import { PrismaClient } from '@prisma/client';
 
 // Load environment variables
 dotenv.config();
+
+// Initialize Prisma client
+const prisma = new PrismaClient({
+  datasources: {
+    db: {
+      url: process.env.DATABASE_URL
+    }
+  }
+});
 
 const app = express();
 const httpServer = createServer(app);
@@ -100,21 +110,21 @@ io.on('connection', (socket: SocketWithUser) => {
       socket.userId = userId;
       socket.join(userId); // Join a room specific to the user
       
-      // TODO: Update user online status in database
-      // await prisma.user.update({ 
-      //   where: { id: parseInt(userId) }, 
-      //   data: { is_online: true } 
-      // });
+      // Update user online status in database
+      await prisma.user.update({ 
+        where: { id: parseInt(userId) }, 
+        data: { is_online: true } 
+      });
       
-      // TODO: Get online users from database
-      // const onlineUsers = await prisma.user.findMany({
-      //   where: { is_online: true },
-      //   select: { id: true },
-      // });
-      // const onlineUserIds = onlineUsers.map(user => user.id.toString());
+      // Get online users from database
+      const onlineUsers = await prisma.user.findMany({
+        where: { is_online: true },
+        select: { id: true },
+      });
+      const onlineUserIds = onlineUsers.map((user: { id: number }) => user.id.toString());
       
-      // For now, just emit the user online event
-      socket.emit('online_users_list', [userId]); // Send current user as online
+      // Send online users list to the user
+      socket.emit('online_users_list', onlineUserIds);
       io.emit('user_online', userId); // Notify all clients that this user is online
       
       console.log(`User ${userId} successfully joined app`);
@@ -132,30 +142,72 @@ io.on('connection', (socket: SocketWithUser) => {
     try {
       console.log(`Message from ${data.senderId} to ${data.receiverId}: ${data.content}`);
       
-      // TODO: Save message to database
-      // const newMessage = await prisma.message.create({
-      //   data: {
-      //     chat_id: data.chatId,
-      //     sender_id: parseInt(data.senderId),
-      //     content: data.content,
-      //     message_type: data.messageType || 'TEXT',
-      //     image_url: data.imageUrl,
-      //   },
-      // });
+      // Save message to database
+      const newMessage = await prisma.message.create({
+        data: {
+          chat_id: data.chatId,
+          sender_id: parseInt(data.senderId),
+          content: data.content,
+          message_type: data.messageType || 'TEXT',
+          image_url: data.imageUrl,
+        },
+      });
+
+      // Update chat last message
+      await prisma.chat.update({ 
+        where: { id: data.chatId }, 
+        data: { 
+          last_message_id: newMessage.id, 
+          updated_at: new Date() 
+        } 
+      });
+
+      // Check if receiver is viewing this chat
+      const receiverSocket = Array.from(io.sockets.sockets.values()).find(
+        socket => (socket as SocketWithUser).userId === data.receiverId
+      ) as SocketWithUser;
+      const isReceiverViewingThisChat = receiverSocket?.currentChatId === data.chatId;
+
+      // Update unread count
+      const updatedUserChatSettings = await prisma.user_chat_settings.update({
+        where: { 
+          user_id_chat_id: { 
+            user_id: parseInt(data.receiverId), 
+            chat_id: data.chatId 
+          } 
+        },
+        data: { 
+          unread_count: isReceiverViewingThisChat 
+            ? { set: 0 } // If viewing, set to 0
+            : { increment: 1 }, // If not viewing, increment by 1
+          is_hidden: false // Show chat when first message arrives
+        },
+        select: { unread_count: true }
+      });
+
+      // Get sender info
+      const sender = await prisma.user.findUnique({
+        where: { id: parseInt(data.senderId) },
+        select: { 
+          name: true,
+          profile_image: true,
+          profile_image_public_id: true
+        }
+      });
 
       // Create message payload
       const payload: MessagePayload = {
-        id: Date.now().toString(), // Temporary ID
-        chatId: data.chatId,
-        senderId: data.senderId,
-        content: data.content,
-        messageType: data.messageType || 'TEXT',
-        imageUrl: data.imageUrl,
-        timestamp: new Date(),
-        isRead: false,
-        senderName: 'User', // TODO: Get from database
-        senderProfileImage: undefined,
-        senderProfileImagePublicId: undefined
+        id: newMessage.id.toString(),
+        chatId: newMessage.chat_id,
+        senderId: newMessage.sender_id.toString(),
+        content: newMessage.content || '',
+        messageType: newMessage.message_type || 'TEXT',
+        imageUrl: newMessage.image_url || undefined,
+        timestamp: newMessage.timestamp || new Date(),
+        isRead: newMessage.is_read || false,
+        senderName: sender?.name || 'Unknown User',
+        senderProfileImage: sender?.profile_image || undefined,
+        senderProfileImagePublicId: sender?.profile_image_public_id || undefined
       };
 
       // Send message to both sender and receiver
@@ -168,9 +220,10 @@ io.on('connection', (socket: SocketWithUser) => {
         newUnreadCount: 0 
       });
       
+      const unreadCountForReceiver = updatedUserChatSettings.unread_count || 0;
       io.to(data.receiverId).emit('unread_update', { 
         chatId: data.chatId, 
-        newUnreadCount: 1 // TODO: Get actual unread count from database
+        newUnreadCount: unreadCountForReceiver
       });
 
       // Send chat list update
@@ -200,14 +253,14 @@ io.on('connection', (socket: SocketWithUser) => {
       if (socket.userId) {
         console.log(`User ${socket.userId} disconnected from socket ${socket.id}`);
         
-        // TODO: Update user offline status in database
-        // await prisma.user.update({ 
-        //   where: { id: parseInt(socket.userId) }, 
-        //   data: { 
-        //     is_online: false, 
-        //     last_seen: new Date() 
-        //   } 
-        // });
+        // Update user offline status in database
+        await prisma.user.update({ 
+          where: { id: parseInt(socket.userId) }, 
+          data: { 
+            is_online: false, 
+            last_seen: new Date() 
+          } 
+        });
         
         io.emit('user_offline', socket.userId); // Notify all clients that this user is offline
       } else {

@@ -16,9 +16,10 @@ export const checkSocketServerReady = async (): Promise<boolean> => {
   }
   
   try {
-    const response = await axios.get('/api/chat/socket');
+    const socketServerUrl = process.env.NEXT_PUBLIC_SOCKET_SERVER_URL || 'http://localhost:4000';
+    const response = await axios.get(`${socketServerUrl}/socket-status`);
     
-    if (response.status === 200) {
+    if (response.status === 200 && response.data.isReady) {
       isSocketServerReady = true;
       return true;
     }
