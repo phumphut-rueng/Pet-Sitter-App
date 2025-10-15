@@ -38,7 +38,7 @@ export default function PetSitterNavbar({
 
         {/* Right: messages button */}
         <Link
-          href="/sitter/messages"
+          href="/chat"
           aria-label="Messages"
           className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-gray-1
                      hover:bg-gray-2"
