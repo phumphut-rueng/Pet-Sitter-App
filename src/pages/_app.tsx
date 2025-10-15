@@ -41,11 +41,11 @@ export default function App({ Component, pageProps: { session, ...pageProps } }:
     <SessionProvider session={session}>
       <SocketProvider>
         {/*เพิ่ม font variables ที่ wrapper div */}
-      <div className={`${satoshi.variable} ${notoThai.variable}`}>
-        {showNavbar && <Navbar />}
+        <div className={`${satoshi.variable} ${notoThai.variable}`}>
+          {showNavbar && <Navbar />}
           <Component {...pageProps} />
+        </div>
       </SocketProvider>
-      </div>
     </SessionProvider>
   );
 }
