@@ -7,11 +7,13 @@ import RatingSelect from "@/components/ratingStar";
 import { useSitterDetail } from "@/hooks/useSitterDetail";
 import { Pagination } from "@/components/pagination/Pagination";
 import { useState } from "react";
+import { PetPawLoading } from "@/components/loading/PetPawLoading";
+import BookingSelect from "@/components/booking/BookingSelect";
 
 export default function PetsitterSlug() {
   const router = useRouter();
   const { id } = router.query;
-
+  const [openBooking, setOpenBooking] = useState(false);
   const [selectedRating, setSelectedRating] = useState<number | string>(
     "All Reviews"
   );
@@ -39,9 +41,10 @@ export default function PetsitterSlug() {
 
   if (loading)
     return (
-      <div className="flex flex-col items-center justify-center min-h-[calc(100vh-80px)]">
-        <h1 className="text-4xl font-bold">loading... </h1>
-      </div>
+      <PetPawLoading
+              message="Loading Sitter Details"
+              size="lg"
+            />
     );
   if (error)
     return (
@@ -104,6 +107,7 @@ export default function PetsitterSlug() {
               avatarUrl={sitter.owner.profile_image || null}
               ownerId={sitter.owner.id}
               sitterId={sitter.id}
+              onBookNow={() => setOpenBooking(true)}
             />
           </div>
 
@@ -156,6 +160,13 @@ export default function PetsitterSlug() {
           </section>
         </div>
       </div>
+      <BookingSelect
+        sitterId={sitter.id}
+        open={openBooking}
+        onOpenChange={setOpenBooking}
+        disabledDates={[]}
+      />
+
       <Footer />
     </div>
   );

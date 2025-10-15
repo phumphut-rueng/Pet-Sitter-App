@@ -16,6 +16,7 @@ export default function PetSitterProfileCard({
   avatarUrl,
   ownerId,
   sitterId,
+  onBookNow,
 }: {
   title: string;
   hostName: string;
@@ -26,6 +27,7 @@ export default function PetSitterProfileCard({
   avatarUrl: string | null;
   ownerId: number;
   sitterId: number;
+  onBookNow?: () => void;
 }) {
   const { createChatAndNavigate, loading } = useCreateChat();
   const [showSelfMessageModal, setShowSelfMessageModal] = useState(false);
@@ -40,6 +42,11 @@ export default function PetSitterProfileCard({
       setShowSelfMessageModal(true);
     });
   };
+
+  function truncateByChars(input: string, max = 20) {
+    const chars = Array.from(input);
+    return chars.length > max ? chars.slice(0, max).join("") + "…" : input;
+  }
 
   return (
     <>
@@ -59,7 +66,9 @@ export default function PetSitterProfileCard({
               </span>
             )}
           </div>
-          <h2 className="text-4xl font-bold mt-2">{title}</h2>
+          <h2 className="text-4xl font-bold mt-2" title={title}>
+  {truncateByChars(title, 15)}
+</h2>
           <p className="flex items-baseline gap-2">
             <span className="text-[20px] font-bold">{hostName}</span>
             <span className="text-[16px] font-medium text-success">
@@ -88,18 +97,13 @@ export default function PetSitterProfileCard({
             disabled={loading}
           />
 
-          <Link
-            href={`/book-now/${sitterId}`}
-            passHref
-            className="flex-1 min-w-0 whitespace-nowrap"
-          >
-            <PrimaryButton
-              text="Book Now"
-              bgColor="primary"
-              textColor="white"
-              className="w-full"
-            />
-          </Link>
+<PrimaryButton
+            text="Book Now"
+            bgColor="primary"
+            textColor="white"
+            className="flex-1 w-full"
+            onClick={() => onBookNow?.()}
+          />
         </div>
       </div>
 
