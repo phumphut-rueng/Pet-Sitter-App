@@ -56,6 +56,8 @@ export interface Sitter {
   sitter_pet_type: SitterPetType[];
   reviews: Review[];
   averageRating: number | null;
+  latitude: number;
+  longitude: number;
 
   reviewPagination?: {
     page: number;
