@@ -1,0 +1,87 @@
+"use client";
+import Image from "next/image";
+import AlertConfirm from "./AlertConfirm";
+import PrimaryButton from "../buttons/PrimaryButton";
+ 
+
+interface ReviewSummaryDialogProps {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  user: { name?: string; avatarUrl?: string };
+  data: { rating: number; review: string; date: string } | null;
+}
+
+export default function ReviewSummaryDialog({
+  open,
+  onOpenChange,
+  user,
+  data,
+}: ReviewSummaryDialogProps) {
+  if (!data) return null;
+
+  const handleClose = () => {
+    onOpenChange(false);
+  };
+
+  return (
+    <AlertConfirm
+      open={open}
+      onOpenChange={onOpenChange}
+      width={700}
+      maxWidth="90vw"
+      title="Your Rating and Review"
+      description={
+        <div className="pl-5 pr-4 pb-6 text-[16px]">
+          <div className="flex items-center justify-between mb-8 mt-8">
+            {/* user info */}
+            <div className="flex items-center gap-3">
+              <Image
+                src={user.avatarUrl || "/Icons/avatar-placeholder.svg" }
+                alt={user.name || "User" }
+                width={56}
+                height={56}
+                className="rounded-full"
+              />
+              <div>
+                <p className="text-lg font-medium text-ink">{user.name}</p>
+                <p className="text-sm font-medium text-gray-6">{data.date}</p>
+              </div>
+            </div>
+
+            {/* stars */}
+            <div className="flex gap-1">
+              {[1, 2, 3, 4, 5].map((star) => (
+                <Image
+                  key={star}
+                  src={
+                    star <= data.rating
+                      ? "/icons/BigGreenRatingStar.svg"
+                      : "/icons/BigGrayRatingStar.svg"
+                  }
+                  alt="star"
+                  width={20}
+                  height={20}
+                />
+              ))}
+            </div>
+          </div>
+
+          {/* review text */}
+          <p className="text-gray-6 border-t border-gray-200 pt-10 mt-8">
+            {data.review}
+          </p>
+
+          {/* button */}
+          <div className="flex justify-center mt-20">
+            <PrimaryButton
+              text="View Pet Sitter"
+              bgColor="secondary"
+              textColor="orange"
+              onClick={handleClose}
+            />
+          </div>
+        </div>
+      }
+    />
+  );
+}

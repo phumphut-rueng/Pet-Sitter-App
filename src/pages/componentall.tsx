@@ -44,6 +44,8 @@ const SidebarDemo: React.FC = () => {
   );
 };
 
+
+
 //card 123 
 // assets
 const COVER = "/images/cards/pet-sitter-cover.svg";
@@ -122,6 +124,7 @@ const sitterCommon = {
 
 // ข้อมูลร่วมสำหรับ BookingCard
 const bookingBase = {
+  id: 1,
   title: "Happy House!",
   sitterName: "Jane Maison",
   avatarUrl: "/images/cards/jane-maison.svg",
@@ -497,128 +500,77 @@ export default function ComponentAll() {
           </SubSection>
           <SubSection title=""><></></SubSection>
           <SubSection title="Booking Cards Desktop">
-            {/* =========================================================
-                    BOOKING CARDS (Desktop 4 + Mobile 4)
-                ========================================================= */}
-            <div className="mx-auto space-y-3 rounded-2xl p-5">
-              <p className="text-gray-500 text-sm -mt-1">
-              </p>
+  <div className="mx-auto space-y-3 rounded-2xl p-5">
+    {/* ตัวอย่าง Desktop 3 แบบ */}
+    <div className="space-y-4">
+      {/* Waiting */}
+      <BookingCard
+        {...bookingBase}
+        status="waiting"
+        onChange={() => on("change")()}
+        // กดโทร/แชทเดโมอยู่ในตัวการ์ดแล้ว ถ้าต้องการ action จริง ค่อยใส่ที่จุดเรียกใช้เอง
+      />
 
-              {/* ---------- Desktop (WIDE) : 4 แบบ ---------- */}
-              <div className="space-y-4">
-                <BookingCard
-                  {...bookingBase}
-                  status="waiting"
-                  layout="wide"
-                  note="Waiting Pet Sitter for confirm booking"
-                  actions={[
-                    { key: "message", label: "Send Message", onClick: on("message") },
-                    { key: "change", label: "Change", onClick: on("change") },
-                    { key: "call", label: "Call", onClick: on("call") },
-                  ]}
-                />
+      {/* In service */}
+      <BookingCard
+        {...bookingBase}
+        status="in_service"
+      />
 
+      {/* Success */}
+      <BookingCard
+        {...bookingBase}
+        status="success"
+        successDate="Tue, 25 Oct 2022  |  11:03 AM"
+        onReport={() => on("report")()}
+        onReview={() => on("review")()}
+      />
+    </div>
+  </div>
+</SubSection>
 
-                <BookingCard
-                  {...bookingBase}
-                  status="in_service"
-                  layout="wide"
-                  note="Your pet is already in Pet Sitter care!"
-                  actions={[
-                    { key: "message", onClick: on("message") },
-                    { key: "call", onClick: on("call") },
-                  ]}
-                />
+<SubSection title="Booking Cards Mobile">
+  <div className="mx-auto space-y-3 rounded-2xl p-5">
+    {/* TIP: ตั้งกรอบ 375px เพื่อให้การ์ด mobile ตรงตาม Figma */}
+    <div className="mt-6 flex flex-wrap gap-4">
+      <div className="w-[375px]">
+        <BookingCard
+          {...bookingBase}
+          status="waiting"
+          onChange={() => on("change")()}
+        />
+      </div>
 
-                <BookingCard
-                  {...bookingBase}
-                  status="success"
-                  layout="wide"
-                  successDate="Tue, 25 Oct 2022  |  11:03 AM"
-                  actions={[
-                    { key: "report", label: "Report", onClick: on("report") },
-                    { key: "review", label: "Review", onClick: on("review") },
-                    { key: "call", onClick: on("call") },
-                  ]}
-                />
+      <div className="w-[375px]">
+        <BookingCard
+          {...bookingBase}
+          status="in_service"
+        />
+      </div>
 
-                <BookingCard
-                  {...bookingBase}
-                  status="success"
-                  layout="wide"
-                  successDate="Tue, 25 Oct 2022  |  11:03 AM"
-                  actions={[
-                    { key: "report", label: "Report", onClick: on("report") },
-                    { key: "review", label: "Your Review", onClick: on("review") },
-                    { key: "call", onClick: on("call") },
-                  ]}
-                />
-              </div>
-            </div>
-          </SubSection>
-          <SubSection title="Booking Cards Desktop">
-            <div className="mx-auto space-y-3 rounded-2xl p-5">
-              {/* ---------- Mobile (COMPACT) : 4 แบบ ---------- */}
-              {/* TIP: ตั้งกรอบ 375px เพื่อให้การ์ด mobile ตรงตาม Figma */}
-              <div className="mt-6 flex flex-wrap gap-4">
-                <div className="w-[375px]">
-                  <BookingCard
-                    {...bookingBase}
-                    layout="compact"
-                    status="waiting"
-                    note="Waiting Pet Sitter for confirm booking"
-                    actions={[
-                      { key: "message", label: "Send Message", onClick: on("message") },
-                      { key: "change", label: "Change", onClick: on("change") },
-                      { key: "call", label: "Call", onClick: on("call") },
-                    ]}
-                  />
-                </div>
+      <div className="w-[375px]">
+        <BookingCard
+          {...bookingBase}
+          status="success"
+          successDate="Tue, 25 Oct 2022  |  11:03 AM"
+          onReport={() => on("report")()}
+          onReview={() => on("review")()}
+        />
+      </div>
 
-                <div className="w-[375px]">
-                  <BookingCard
-                    {...bookingBase}
-                    layout="compact"
-                    status="in_service"
-                    note="Your pet is already in Pet Sitter care!"
-                    actions={[
-                      { key: "message", onClick: on("message") },
-                      { key: "call", onClick: on("call") },
-                    ]}
-                  />
-                </div>
+      <div className="w-[375px]">
+        <BookingCard
+          {...bookingBase}
+          status="canceled"
+          // ถ้ามีสาเหตุยกเลิก
+          canceledReason="Canceled by system"
+          onReport={() => on("report")()}
+        />
+      </div>
+    </div>
+  </div>
+</SubSection>
 
-                <div className="w-[375px]">
-                  <BookingCard
-                    {...bookingBase}
-                    layout="compact"
-                    status="success"
-                    successDate="Tue, 25 Oct 2022  |  11:03 AM"
-                    actions={[
-                      { key: "report", label: "Report", onClick: on("report") },
-                      { key: "review", label: "Review", onClick: on("review") },
-                      { key: "call", onClick: on("call") },
-                    ]}
-                  />
-                </div>
-
-
-
-                <div className="w-[375px]">
-                  <BookingCard
-                    {...bookingBase}
-                    layout="compact"
-                    status="success"
-                    successDate="Tue, 25 Oct 2022  |  11:03 AM"
-                    actions={[
-                      { key: "report", label: "Report", onClick: on("report") },
-                      { key: "review", label: "Your Review", onClick: on("review") },
-                      { key: "call", onClick: on("call") },
-                    ]}
-                  />
-                </div>
-              </div></div>
-          </SubSection>
         </Section>
 
 
