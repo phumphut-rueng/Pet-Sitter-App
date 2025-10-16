@@ -6,9 +6,6 @@ import { labelToNumber } from "@/lib/utils/experience";
 import type { Prisma } from "@prisma/client";
 import { emailRegex, phoneRegex } from "@/lib/validators/validation";
 
-// const phoneRe = /^0\d{9}$/;
-// const emailRe = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-
 const phoneRe = phoneRegex;
 const emailRe = emailRegex;
 
@@ -39,7 +36,9 @@ export default async function handler(
 ) {
   try {
     if (req.method !== "PUT") {
-      return res.status(405).json({ message: `Method ${req.method} not allowed` });
+      return res
+        .status(405)
+        .json({ message: `Method ${req.method} not allowed` });
     }
 
     const session = await getServerSession(req, res, authOptions);
@@ -70,8 +69,8 @@ export default async function handler(
     const hasPetTypes = Array.isArray(b.petTypes);
     const petTypeNames = hasPetTypes
       ? Array.from(
-        new Set((b.petTypes ?? []).map((v) => v.trim()).filter(Boolean))
-      )
+          new Set((b.petTypes ?? []).map((v) => v.trim()).filter(Boolean))
+        )
       : [];
 
     const expNumber = b.experience ? labelToNumber(b.experience) : undefined;
@@ -101,7 +100,7 @@ export default async function handler(
     if (hasLatitude && b.latitude !== null) {
       const v = Number(b.latitude);
       if (Number.isNaN(v) || v < -90 || v > 90) {
-        return res.status(400).json({ message: "Invalid latitude" })
+        return res.status(400).json({ message: "Invalid latitude" });
       }
     }
 
@@ -134,14 +133,30 @@ export default async function handler(
         name: tradeName || fullName || me.email,
         ...(phone !== undefined ? { phone: phone || null } : {}),
         ...(expNumber !== undefined ? { experience: expNumber } : {}),
-        ...(b.introduction !== undefined ? { introduction: b.introduction ?? null } : {}),
-        ...(b.location_description !== undefined ? { location_description: b.location_description ?? null } : {}),
-        ...(b.service_description !== undefined ? { service_description: b.service_description ?? null } : {}),
-        ...(b.address_detail !== undefined ? { address_detail: b.address_detail ?? null } : {}),
-        ...(b.address_province !== undefined ? { address_province: b.address_province ?? null } : {}),
-        ...(b.address_district !== undefined ? { address_district: b.address_district ?? null } : {}),
-        ...(b.address_sub_district !== undefined ? { address_sub_district: b.address_sub_district ?? null } : {}),
-        ...(b.address_post_code !== undefined ? { address_post_code: b.address_post_code ?? null } : {}),
+        ...(b.introduction !== undefined
+          ? { introduction: b.introduction ?? null }
+          : {}),
+        ...(b.location_description !== undefined
+          ? { location_description: b.location_description ?? null }
+          : {}),
+        ...(b.service_description !== undefined
+          ? { service_description: b.service_description ?? null }
+          : {}),
+        ...(b.address_detail !== undefined
+          ? { address_detail: b.address_detail ?? null }
+          : {}),
+        ...(b.address_province !== undefined
+          ? { address_province: b.address_province ?? null }
+          : {}),
+        ...(b.address_district !== undefined
+          ? { address_district: b.address_district ?? null }
+          : {}),
+        ...(b.address_sub_district !== undefined
+          ? { address_sub_district: b.address_sub_district ?? null }
+          : {}),
+        ...(b.address_post_code !== undefined
+          ? { address_post_code: b.address_post_code ?? null }
+          : {}),
         ...(hasLatitude ? { latitude: b.latitude ?? null } : {}),
         ...(hasLongtitude ? { longitude: b.longitude ?? null } : {}),
         updated_at: new Date(),
@@ -151,14 +166,30 @@ export default async function handler(
         ...(tradeName || fullName ? { name: tradeName || fullName } : {}),
         ...(phone !== undefined ? { phone: phone || null } : {}),
         ...(expNumber !== undefined ? { experience: expNumber } : {}),
-        ...(b.introduction !== undefined ? { introduction: b.introduction || null } : {}),
-        ...(b.location_description !== undefined ? { location_description: b.location_description || null } : {}),
-        ...(b.service_description !== undefined ? { service_description: b.service_description || null } : {}),
-        ...(b.address_detail !== undefined ? { address_detail: b.address_detail || null } : {}),
-        ...(b.address_province !== undefined ? { address_province: b.address_province || null } : {}),
-        ...(b.address_district !== undefined ? { address_district: b.address_district || null } : {}),
-        ...(b.address_sub_district !== undefined ? { address_sub_district: b.address_sub_district || null } : {}),
-        ...(b.address_post_code !== undefined ? { address_post_code: b.address_post_code || null } : {}),
+        ...(b.introduction !== undefined
+          ? { introduction: b.introduction || null }
+          : {}),
+        ...(b.location_description !== undefined
+          ? { location_description: b.location_description || null }
+          : {}),
+        ...(b.service_description !== undefined
+          ? { service_description: b.service_description || null }
+          : {}),
+        ...(b.address_detail !== undefined
+          ? { address_detail: b.address_detail || null }
+          : {}),
+        ...(b.address_province !== undefined
+          ? { address_province: b.address_province || null }
+          : {}),
+        ...(b.address_district !== undefined
+          ? { address_district: b.address_district || null }
+          : {}),
+        ...(b.address_sub_district !== undefined
+          ? { address_sub_district: b.address_sub_district || null }
+          : {}),
+        ...(b.address_post_code !== undefined
+          ? { address_post_code: b.address_post_code || null }
+          : {}),
         ...(hasLatitude ? { latitude: b.latitude ?? null } : {}),
         ...(hasLongtitude ? { longitude: b.longitude ?? null } : {}),
         updated_at: new Date(),
@@ -219,7 +250,7 @@ export default async function handler(
         };
       }
 
-      return tx.sitter.update({
+      const sitter = await tx.sitter.update({
         where: { id: existing.id },
         data: baseDataForUpdate,
         include: {
@@ -227,6 +258,30 @@ export default async function handler(
           sitter_pet_type: { include: { pet_type: true } },
         },
       });
+      
+      if (sitter.approval_status_id === 4) {
+        const sitterRole = await tx.role.findUnique({
+          where: { role_name: "Sitter" },
+          select: { id: true },
+        });
+      
+        if (sitterRole) {
+          const alreadyHasRole = await tx.user_role.findFirst({
+            where: { user_id: me.id, role_id: sitterRole.id },
+          });
+      
+          if (!alreadyHasRole) {
+            await tx.user_role.create({
+              data: {
+                user_id: me.id,
+                role_id: sitterRole.id,
+              },
+            });
+          }
+        }
+      }
+
+      return sitter;
     });
 
     return res.status(200).json(result);

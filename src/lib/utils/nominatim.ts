@@ -10,7 +10,7 @@ export async function getLatLngFromAddress(address: string) {
     if (!res.ok) throw new Error("Geocoding failed");
   
     const data: Array<{ lat: string; lon: string }> = await res.json();
-    if (!data?.length) throw new Error("We couldn't find the location for this address.");
+    if (!data?.length) return null;
   
     return { lat: parseFloat(data[0].lat), lng: parseFloat(data[0].lon) }; //แปลงค่าพิกัดจาก string -> number
   }

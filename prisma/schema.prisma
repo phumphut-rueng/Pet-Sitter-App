@@ -16,7 +16,7 @@ model pet_type {
 
 model role {
   id        Int         @id @default(autoincrement())
-  role_name String      @db.VarChar(50)
+  role_name String      @unique
   user_role user_role[]
 }
 
