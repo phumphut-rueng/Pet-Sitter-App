@@ -72,7 +72,7 @@ export function PetSitterList({
        
         return (
           <div key={sitterData.id} className="mb-4">
-            <Link href={`/findpetsitter/${sitterData.id}`}>
+            <a href={`/findpetsitter/${sitterData.id}`}>
               <PetSitterCardLarge
                 title={sitterData.name}
                 hostName={sitterData.user_name}
@@ -86,7 +86,7 @@ export function PetSitterList({
                 )}
                 priority={index < 2}
               />
-            </Link>
+            </a>
           </div>
         );
       })}

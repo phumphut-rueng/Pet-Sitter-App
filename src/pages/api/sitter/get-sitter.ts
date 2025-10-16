@@ -27,6 +27,17 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const queryParams: (string | number)[] = [];
     let paramIndex = 1;
 
+    // กรองข้อมูลที่ไม่มีข้อมูลสำคัญ
+    whereConditions.push(`
+      s.name IS NOT NULL AND 
+      s.address_province IS NOT NULL AND 
+      s.address_district IS NOT NULL AND
+      EXISTS (
+        SELECT 1 FROM sitter_pet_type spt 
+        WHERE spt.sitter_id = s.id
+      )
+    `);
+
     // 1) Search term (ชื่อ sitter หรือที่อยู่)
     if (searchTerm) {
       whereConditions.push(`(

@@ -3,7 +3,6 @@
 import { useEffect, useState, useRef } from 'react';
 import { Sitter } from '@/types/sitter.types';
 import dynamic from 'next/dynamic';
-import { useRouter } from 'next/router';
 import { PetSitterCardSmall } from '@/components/cards/PetSitterCard';
 import { PetPawLoadingSmall } from '@/components/loading/PetPawLoadingSmall';
 
@@ -35,7 +34,6 @@ export default function PetSitterMap({
   loading = false, 
   onSitterSelect 
 }: PetSitterMapProps) {
-  const router = useRouter();
   const [selectedPinId, setSelectedPinId] = useState<number | null>(null);
   const [pins, setPins] = useState<Pin[]>([]);
   const carouselRef = useRef<HTMLDivElement>(null);
@@ -67,9 +65,6 @@ export default function PetSitterMap({
     }
   };
 
-  const handleCardClick = (sitter: Sitter) => {
-    router.push(`/findpetsitter/${sitter.id}`);
-  };
 
   const handleCardNavigation = (sitter: Sitter) => {
     // เลือก pin ที่ตรงกับ card ที่คลิก
@@ -159,7 +154,10 @@ export default function PetSitterMap({
               const isSelected = selectedPinId === pin.id;
               return (
                 <div key={sitter.id} className="flex-shrink-0">
-                  <div onClick={() => handleCardNavigation(sitter)}>
+                  <a 
+                    href={`/findpetsitter/${sitter.id}`}
+                    onClick={() => handleCardNavigation(sitter)}
+                  >
                     <PetSitterCardSmall
                       title={sitter.name || 'Happy House!'}
                       hostName={sitter.user_name || 'Jame Maison'}
@@ -175,7 +173,7 @@ export default function PetSitterMap({
                           : 'border-gray-200 border hover:border-gray-300'
                       }`}
                     />
-                  </div>
+                  </a>
                 </div>
               );
             })}
