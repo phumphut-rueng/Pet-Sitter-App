@@ -1,7 +1,7 @@
 "use client";
 
 import axios, { AxiosError } from "axios";
-import { toast } from "sonner";
+import { toast } from "react-hot-toast";
 import {
   calcDuration,
   formatBookingDateRange,
@@ -36,7 +36,7 @@ type ApiErrorBody = {
   };
 };
 
-// Helper: ดึงข้อความ error แบบปลอดภัย
+// ---------- Helpers ----------
 function extractErrorMessage(err: unknown) {
   const axErr = err as AxiosError<ApiErrorBody>;
   const details = axErr?.response?.data?.details;
@@ -47,10 +47,23 @@ function extractErrorMessage(err: unknown) {
   return zodMsg || axErr?.message || "Unknown error";
 }
 
+function isSameRangeByDayAndTime(aStart: Date, aEnd: Date, bStart: Date, bEnd: Date) {
+  return (
+    aStart.getTime() === bStart.getTime() &&
+    aEnd.getTime() === bEnd.getTime()
+  );
+}
+
+// overlap (มีช่วงเวลาทับกัน)
+function isOverlapped(aStart: Date, aEnd: Date, bStart: Date, bEnd: Date) {
+  return aStart < bEnd && aEnd > bStart;
+}
+
 // ---------- Hook ----------
 type UseBookingActionsArgs = {
   userId: number;
   selectedBooking: BookingCardProps | null;
+  currentBookings: BookingCardProps[]; // ✅ เพิ่มเข้ามาเพื่อเช็คชน
   setBookings: React.Dispatch<React.SetStateAction<BookingCardProps[]>>;
   setOpenReport: (v: boolean) => void;
   setOpenReview: (v: boolean) => void;
@@ -63,6 +76,7 @@ type UseBookingActionsArgs = {
 export function useBookingActions({
   userId,
   selectedBooking,
+  currentBookings,
   setBookings,
   setOpenReport,
   setOpenReview,
@@ -77,10 +91,7 @@ export function useBookingActions({
     const title = data.issue.trim();
     const description = data.description.trim();
     if (title.length < 5 || description.length < 10) {
-      toast.error("Please provide more detail", {
-        description: "Title ≥ 5 ตัวอักษร และ Description ≥ 10 ตัวอักษร",
-        position: "bottom-right",
-      });
+      toast.error("Please provide more details. Title must be ≥ 5 characters and description ≥ 10 characters.");
       return;
     }
 
@@ -93,21 +104,13 @@ export function useBookingActions({
       };
       const res = await axios.post("/api/bookings/report", payload);
       if (res.status === 201) {
-        toast.success("Report sent successfully!", {
-          description: "Our team will review your report shortly.",
-          duration: 3000,
-          position: "bottom-right",
-        });
+        toast.success("Report sent successfully!");
         setOpenReport(false);
       }
     } catch (err: unknown) {
       const msg = extractErrorMessage(err);
       console.error("❌ Report error:", msg);
-      toast.error("Failed to send report", {
-        description: msg || "Please try again later.",
-        duration: 3000,
-        position: "bottom-right",
-      });
+      toast.error(msg || "Failed to send the report. Please try again later.");
     }
   };
 
@@ -117,27 +120,21 @@ export function useBookingActions({
     const rating = Number(data.rating);
     const comment = data.review.trim();
     if (rating < 1 || comment.length < 5) {
-      toast.error("กรุณากรอกข้อมูลรีวิวให้ครบ", {
-        description: "ให้คะแนนอย่างน้อย 1 ดาว และรีวิวอย่างน้อย 5 ตัวอักษร",
-        position: "bottom-right",
-      });
+      toast.error("Please complete your review. Minimum 1 star and at least 5 characters.");
       return;
     }
 
     try {
       const sitterId = selectedBooking.sitterId ?? null;
       if (sitterId == null) {
-        toast.error("ไม่พบรหัส Sitter จากรายการจองนี้", { position: "bottom-right" });
+        toast.error("Could not find the sitter ID for this booking.");
         return;
       }
 
       const payload: ReviewPayload = { sitterId, userId, rating, comment };
       const res = await axios.post("/api/bookings/review", payload);
       if (res.status === 201) {
-        toast.success("ส่งรีวิวเรียบร้อย!", {
-          description: "ขอบคุณสำหรับคำติชมของคุณ",
-          position: "bottom-right",
-        });
+        toast.success("Your review has been submitted. Thank you!");
 
         setOpenReview(false);
         setReviewData({
@@ -155,15 +152,37 @@ export function useBookingActions({
     } catch (err: unknown) {
       const msg = extractErrorMessage(err);
       console.error("❌ Review error:", msg);
-      toast.error("ส่งรีวิวไม่สำเร็จ", {
-        description: msg || "โปรดลองอีกครั้ง",
-        position: "bottom-right",
-      });
+      toast.error(msg || "Failed to submit the review. Please try again.");
     }
   };
 
   const handleChangeDate = async (bookingId: number, newStart: Date, newEnd: Date) => {
     try {
+      if (!selectedBooking) return;
+
+      // A) same as current booking's original range?
+      const curStart = new Date(selectedBooking.dateStart!);
+      const curEnd = new Date(selectedBooking.dateEnd!);
+
+      if (isSameRangeByDayAndTime(newStart, newEnd, curStart, curEnd)) {
+        toast.error("You selected the same date and time as the current booking.", { icon: "⚠️" });
+        return;
+      }
+
+      // B) overlap with user's other bookings? (exclude this booking id)
+      const hasOverlap = currentBookings.some((b) => {
+        if (b.id === bookingId) return false;
+        const s = new Date(b.dateStart!);
+        const e = new Date(b.dateEnd!);
+        return isOverlapped(newStart, newEnd, s, e);
+      });
+
+      if (hasOverlap) {
+        toast.error("This time range overlaps with another booking.", { icon: "⚠️" });
+        return;
+      }
+
+      // proceed to API
       const payload: ChangeDatePayload = {
         bookingId,
         date_start: newStart,
@@ -172,13 +191,9 @@ export function useBookingActions({
       const res = await axios.put("/api/bookings/change-date", payload);
 
       if (res.status === 200) {
-        toast.success("Changed date success 🎉", {
-          description: "Your booking date and time have been updated.",
-          duration: 3000,
-          position: "bottom-right",
-        });
+        toast.success("Booking date and time were updated successfully.");
 
-        // อัปเดต list ทั้งหมด
+        // update list
         setBookings((prev) =>
           prev.map((b) =>
             b.id === bookingId
@@ -196,7 +211,7 @@ export function useBookingActions({
           )
         );
 
-        // อัปเดตตัวที่ถูกเลือกอยู่
+        // update selected
         setSelectedBooking((prev) =>
           prev
             ? {
@@ -217,10 +232,7 @@ export function useBookingActions({
     } catch (err: unknown) {
       const msg = extractErrorMessage(err);
       console.error("❌ Change date error:", msg);
-      toast.error("Change date failed", {
-        description: msg || "Failed to update booking date",
-        position: "bottom-right",
-      });
+      toast.error(msg || "Failed to update the booking date. Please try again.");
     }
   };
 

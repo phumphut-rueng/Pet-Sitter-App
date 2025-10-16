@@ -45,12 +45,13 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       dateStart: b.date_start,
       dateEnd: b.date_end,
       transactionDate: b.transaction_date,
+      transactionId: b.transaction_id ?? null,
       pets: b.booking_pet_detail.map((bp) => ({
         id: bp.pet.id,
         name: bp.pet.name,
         type: bp.pet.pet_type.pet_type_name,
       })),
-      amount: b.amount,
+      amount: b.amount ? Number(b.amount) : null,
       paymentType: b.payment_type,
       note: b.additional,
     }));

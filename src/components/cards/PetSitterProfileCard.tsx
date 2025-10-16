@@ -85,12 +85,12 @@ export default function PetSitterProfileCard({
           </div>
         </div>
 
-        <div className="flex gap-2 pt-4 border-t mt-4 border-gray-2 -mx-6 px-6">
+        <div className="flex gap-2 pt-4 border-t mt-4 border-gray-2 -mx-6 pr-2.5 pl-2.5">
           <PrimaryButton
             text={loading ? "Creating..." : "Send Message"}
             bgColor="secondary"
             textColor="orange"
-            className="flex-1 w-full"
+            className="flex-1 w-[160px]  whitespace-nowrap"
             onClick={handleSendMessage}
             disabled={loading}
           />
@@ -99,7 +99,7 @@ export default function PetSitterProfileCard({
             text="Book Now"
             bgColor="primary"
             textColor="white"
-            className="flex-1 w-full"
+            className="flex-1 w-[160px]  whitespace-nowrap"
             onClick={() => onBookNow?.()}
           />
         </div>
