@@ -450,54 +450,11 @@ export default function ChatWidget() {
       imageUrl: isImageUrl ? message : undefined,
     };
 
+    // ส่งข้อความผ่าน socket
     sendMessage(messageData);
     
-    // อัปเดต chat list ทันทีเมื่อส่งข้อความใหม่
-    const newMessage = {
-      id: Date.now(), // temporary ID
-      chat_id: parseInt(selectedChatId),
-      sender_id: parseInt(userId || '0'),
-      message_type: 'TEXT',
-      content: message,
-      image_url: null,
-      timestamp: new Date(),
-      is_read: false,
-      sender: {
-        id: parseInt(userId || '0'),
-        name: 'You', // หรือชื่อผู้ใช้จริง
-        email: '',
-        profile_image: null,
-        is_online: null,
-        last_seen: null
-      }
-    };
-
-    // อัปเดต chat list ทันที
-    setChats(prev => {
-      const updatedChats = prev.map(chat => {
-        if (chat.id.toString() === selectedChatId) {
-          return {
-            ...chat,
-            last_message: newMessage,
-            updated_at: new Date()
-          };
-        }
-        return chat;
-      });
-      
-      // เรียงลำดับตาม updated_at (ใหม่สุดขึ้นบน)
-      return updatedChats.sort((a, b) => {
-        const dateA = a.updated_at ? new Date(a.updated_at).getTime() : 0;
-        const dateB = b.updated_at ? new Date(b.updated_at).getTime() : 0;
-        return dateB - dateA;
-      });
-    });
-    
-    // Refresh messages after sending
-    setTimeout(() => {
-      fetchMessages(selectedChatId);
-      // Scroll ไปที่ล่างสุดหลังจากส่งข้อความ (จะทำงานใน fetchMessages)
-    }, 100);
+    // ❌ ลบการ fetch messages ออก เพราะจะรอรับจาก socket real-time แทน
+    // Real-time message จะถูกจัดการโดย useEffect ที่ฟัง socketMessages (บรรทัด 250-331)
   };
 
   // ฟังก์ชันสำหรับย้อนกลับไปที่ chat list บน mobile

@@ -1,45 +1,53 @@
 import React, { useEffect, useState } from 'react';
+import toast from 'react-hot-toast';
+import { useRouter } from 'next/router';
 import { useSocketContext } from './SocketProvider';
 
 const MessageNotification: React.FC = () => {
-  const { messages } = useSocketContext();
-  const [showNotification, setShowNotification] = useState(false);
+  const { messages, userId } = useSocketContext();
   const [lastMessageCount, setLastMessageCount] = useState(0);
+  const router = useRouter();
 
   useEffect(() => {
+    console.log('MessageNotification: messages.length =', messages.length, 'lastMessageCount =', lastMessageCount);
+    
     if (messages.length > lastMessageCount && lastMessageCount > 0) {
-      // Show notification for new message
-      setShowNotification(true);
+      const latestMessage = messages[messages.length - 1];
       
-      // Play notification sound (if supported)
-      try {
-        const audio = new Audio('/sounds/notification.mp3');
-        audio.volume = 0.3;
-        audio.play().catch(() => {
-          // Ignore errors if audio can't play
+      // ตรวจสอบว่าเป็นข้อความที่ส่งมาหาผู้ใช้ปัจจุบันหรือไม่ (ไม่ใช่ข้อความที่ผู้ใช้ส่งเอง)
+      const isMessageForCurrentUser = latestMessage.senderId !== userId;
+      
+      // ตรวจสอบว่าผู้ใช้ไม่ได้อยู่หน้าแชท
+      const isNotOnChatPage = !router.pathname.startsWith('/chat');
+      
+      console.log('MessageNotification: isMessageForCurrentUser =', isMessageForCurrentUser, 'isNotOnChatPage =', isNotOnChatPage);
+      
+      if (isMessageForCurrentUser && isNotOnChatPage) {
+        console.log('MessageNotification: Showing toast for new message');
+        // Show toast notification for new message
+        toast.success(`📨 New Message from ${latestMessage.senderName}!`, {
+          duration: 3000,
+          position: 'top-right',
+          style: {
+            background: 'var(--green-bg)',
+            color: 'var(--green)',
+            border: '1px solid rgba(28, 205, 131, 0.3)',
+            borderRadius: '14px',
+            padding: '10px 14px',
+            boxShadow: '0 10px 30px rgba(16,24,40,.12)',
+          },
+          iconTheme: { 
+            primary: 'var(--green)', 
+            secondary: '#fff' 
+          },
         });
-      } catch {
-        // Ignore audio errors
       }
-
-      // Hide notification after 3 seconds
-      setTimeout(() => {
-        setShowNotification(false);
-      }, 3000);
     }
     setLastMessageCount(messages.length);
-  }, [messages.length, lastMessageCount]);
+  }, [messages.length, lastMessageCount, userId, router.pathname]);
 
-  if (!showNotification) return null;
-
-  return (
-    <div className="fixed top-4 right-4 bg-blue-500 text-white px-4 py-2 rounded-lg shadow-lg z-50 animate-bounce">
-      <div className="flex items-center gap-2">
-        <div className="w-2 h-2 bg-white rounded-full animate-pulse"></div>
-        <span className="text-sm font-medium">ข้อความใหม่!</span>
-      </div>
-    </div>
-  );
+  // Component ไม่ต้อง render อะไร เพราะใช้ toast แทน
+  return null;
 };
 
 export default MessageNotification;

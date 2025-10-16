@@ -16,21 +16,25 @@ export const checkSocketServerReady = async (): Promise<boolean> => {
   }
   
   try {
-    const socketServerUrl = process.env.NEXT_PUBLIC_SOCKET_SERVER_URL || 'http://localhost:4000';
-    const response = await axios.get(`${socketServerUrl}/socket-status`);
+    const socketServerUrl = process.env.NEXT_PUBLIC_SOCKET_SERVER_URL || 'https://pet-sitter-socket-server-production.up.railway.app';
+    const response = await axios.get(`${socketServerUrl}/socket-status`, {
+      timeout: 3000, // ตั้ง timeout สั้นๆ เพื่อไม่ให้รอนาน
+    });
     
     if (response.status === 200 && response.data.isReady) {
       isSocketServerReady = true;
       return true;
     }
     return false;
-  } catch {
+  } catch (error) {
+    // ไม่แสดง error ใน console เพื่อไม่รบกวนการทำงาน
+    // console.log('Socket server not available, continuing without real-time features');
     return false;
   }
 };
 
 // ฟังก์ชันรอ socket server พร้อม
-export const waitForSocketServer = async (maxAttempts: number = 10, delayMs: number = 500): Promise<boolean> => {
+export const waitForSocketServer = async (maxAttempts: number = 3, delayMs: number = 1000): Promise<boolean> => {
   for (let attempt = 1; attempt <= maxAttempts; attempt++) {
     if (await checkSocketServerReady()) {
       return true;
@@ -41,11 +45,12 @@ export const waitForSocketServer = async (maxAttempts: number = 10, delayMs: num
     }
   }
   
-  console.error('Socket server failed to become ready after', maxAttempts, 'attempts');
+  // ไม่แสดง error ใน console เพื่อไม่รบกวนการทำงาน
+  // console.log('Socket server not available, continuing without real-time features');
   return false;
 };
 
-export const connectSocket = (userId: string): Socket<SocketEvents> => {
+export const connectSocket = (userId: string): Socket<SocketEvents> | null => {
   // ถ้ามี socket อยู่แล้วและเชื่อมต่ออยู่ ให้ return socket เดิม
   if (socket && socket.connected) {
     return socket;
@@ -57,25 +62,20 @@ export const connectSocket = (userId: string): Socket<SocketEvents> => {
   }
 
   // Get Socket.IO server URL from environment variable
-  const socketServerUrl = process.env.NEXT_PUBLIC_SOCKET_SERVER_URL || 'http://localhost:4000';
+  const socketServerUrl = process.env.NEXT_PUBLIC_SOCKET_SERVER_URL || 'https://pet-sitter-socket-server-production.up.railway.app';
   
   const socketConfig = {
     path: '/socket.io', // Default Socket.IO path
     autoConnect: false, // ปิด auto connect เพื่อควบคุมการเชื่อมต่อ
     forceNew: true, // บังคับสร้าง connection ใหม่
-    timeout: 20000, // เพิ่ม timeout เป็น 20 วินาที
-    reconnection: true, // เปิดการ reconnect อัตโนมัติ
-    reconnectionDelay: 2000, // รอ 2 วินาทีก่อน reconnect
-    reconnectionAttempts: 5, // เพิ่มจำนวนการ reconnect เป็น 5 ครั้ง
-    reconnectionDelayMax: 5000, // เพิ่มเวลารอสูงสุดเป็น 5 วินาที
-    randomizationFactor: 0.5, // เพิ่มความสุ่มในการ reconnect
-    transports: ['polling', 'websocket'], // เริ่มด้วย polling ก่อน
-    upgrade: true, // อนุญาตให้ upgrade ไป WebSocket
-    rememberUpgrade: false, // ไม่จำการ upgrade
+    timeout: 5000, // ลด timeout เป็น 5 วินาที
+    reconnection: false, // ปิดการ reconnect อัตโนมัติเพื่อไม่ให้พยายามเชื่อมต่อซ้ำๆ
+    transports: ['polling'], // ใช้เฉพาะ polling เพื่อลดความซับซ้อน
     withCredentials: true // ส่ง credentials
   };
 
-  console.log(`🔌 Connecting to Socket.IO server: ${socketServerUrl}`);
+  // ไม่แสดง log เพื่อไม่รบกวนการทำงาน
+  // console.log(`🔌 Connecting to Socket.IO server: ${socketServerUrl}`);
   socket = io(socketServerUrl, socketConfig);
 
   // เชื่อมต่อ socket หลังจากสร้างเสร็จ
@@ -86,50 +86,17 @@ export const connectSocket = (userId: string): Socket<SocketEvents> => {
   });
 
   socket.on('connect_error', (error) => {
-    console.error('❌ Socket connection error:', error);
-    console.error('Error details:', {
-      message: error.message,
-      stack: error.stack
-    });
+    // ไม่แสดง error ใน console เพื่อไม่รบกวนการทำงาน
+    // console.log('Socket connection not available, continuing without real-time features');
     
-    // ถ้า connection ล้มเหลว 3 ครั้งติดต่อกัน ให้ใช้ polling fallback
-    const socketWithRetry = socket as Socket & { retryCount?: number };
-    const retryCount = socketWithRetry.retryCount || 0;
-    socketWithRetry.retryCount = retryCount + 1;
-    
-    if (retryCount >= 3 && socket) {
-      console.warn('🔄 Switching to polling-only mode due to repeated connection failures');
-      socket.io.opts.transports = ['polling'];
-      socket.disconnect();
-      socket.connect();
+    // ส่ง event เพื่อแจ้ง frontend ว่าเกิด error (แต่ไม่แสดงใน console)
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('socket:connection_error', { detail: error }));
     }
-    
-    // ส่ง event เพื่อแจ้ง frontend ว่าเกิด error
-    window.dispatchEvent(new CustomEvent('socket:connection_error', { detail: error }));
   });
 
   socket.on('disconnect', () => {
     // Socket disconnected
-  });
-
-  // เพิ่มการจัดการ reconnect events
-  (socket as Socket & { on: (event: string, callback: (...args: unknown[]) => void) => void }).on('reconnect', () => {
-    // ส่ง join_app อีกครั้งหลังจาก reconnect
-    socket?.emit('join_app', userId);
-  });
-
-  (socket as Socket & { on: (event: string, callback: (...args: unknown[]) => void) => void }).on('reconnect_attempt', () => {
-    // Attempting to reconnect
-  });
-
-  (socket as Socket & { on: (event: string, callback: (...args: unknown[]) => void) => void }).on('reconnect_error', (error: Error) => {
-    console.error('Reconnection error:', error);
-  });
-
-  (socket as Socket & { on: (event: string, callback: (...args: unknown[]) => void) => void }).on('reconnect_failed', () => {
-    console.error('Reconnection failed after all attempts');
-    // แสดงข้อความแจ้งผู้ใช้
-    window.dispatchEvent(new CustomEvent('socket:reconnect_failed'));
   });
 
   // เพิ่ม Listener สำหรับ Real-Time Events
@@ -159,8 +126,10 @@ export const connectSocket = (userId: string): Socket<SocketEvents> => {
 
   // เพิ่ม error handler สำหรับ error ที่ส่งมาจาก server
   (socket as Socket & { on: (event: string, callback: (...args: unknown[]) => void) => void }).on('error', (error: Error) => {
-    console.error('Server error:', error);
-    window.dispatchEvent(new CustomEvent('socket:server_error', { detail: error }));
+    // ไม่แสดง error ใน console เพื่อไม่รบกวนการทำงาน
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('socket:server_error', { detail: error }));
+    }
   });
 
   return socket;
@@ -171,7 +140,8 @@ export const sendMessage = (data: SendMessageData): void => {
   if (socket && socket.connected) {
     socket.emit('send_message', data);
   } else {
-    console.error('❌ Socket not connected. Cannot send message.');
+    // ไม่แสดง error ใน console เพื่อไม่รบกวนการทำงาน
+    // console.log('Socket not connected. Message will be sent when connection is available.');
   }
 };
 
@@ -216,3 +186,9 @@ export const initVisibilityListener = () => {
     document.removeEventListener('visibilitychange', handleVisibilityChange);
   };
 };
+
+// ฟังก์ชันสำหรับตรวจสอบว่า socket พร้อมใช้งานหรือไม่
+export const isSocketAvailable = (): boolean => {
+  return socket !== null && socket.connected;
+};
+
