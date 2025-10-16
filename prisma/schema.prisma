@@ -107,6 +107,7 @@ model user {
   chat_chat_user1_idTouser chat[]                    @relation("chat_user1_idTouser")
   chat_chat_user2_idTouser chat[]                    @relation("chat_user2_idTouser")
   message                  message[]
+  password_reset_tokens    password_reset_tokens[]
   pets                     pet[]
   reported_reports         report[]                  @relation("ReportedUser")
   reports                  report[]                  @relation("Reporter")
@@ -359,6 +360,14 @@ model status {
   type                                      String    @db.VarChar
   booking_booking_status_idTostatus         booking[] @relation("booking_booking_status_idTostatus")
   booking_booking_payment_status_idTostatus booking[] @relation("booking_payment_status_idTostatus")
+}
+
+model password_reset_tokens {
+  id         Int      @id @default(autoincrement())
+  user_id    Int
+  token      String   @unique
+  expires_at DateTime @db.Timestamp(6)
+  user       user     @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
 }
 
 enum report_status {

@@ -45,7 +45,7 @@ export const authOptions: NextAuthOptions = {
           });
           if (!user) return null;
 
-          const isValid = await bcrypt.compare(credentials.password, user.password);
+          const isValid = await bcrypt.compare(credentials.password, user.password || "");
           if (!isValid) return null;
 
           const roles = user.user_role.map(
@@ -73,7 +73,7 @@ export const authOptions: NextAuthOptions = {
   },
 
   callbacks: {
-    async signIn({ user, account, profile }) {
+    async signIn({ user, account }) {
       // ถ้าเป็น OAuth provider (Google, Facebook)
       if (account?.provider === "google" || account?.provider === "facebook") {
         try {

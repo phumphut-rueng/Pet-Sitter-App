@@ -4,7 +4,6 @@ import Image from "next/image"
 import PrimaryButton from "@/components/buttons/PrimaryButton";
 import InputText from "@/components/input/InputText"
 import BookingConfirmation from "@/components/modal/BookingConfirmation";
-import SocialLogin from "@/components/login-register/SocialLogin";
 import { useRegister } from "@/hooks/register/useRegister"
 
 export default function RegisterPage() {
