@@ -14,6 +14,7 @@ import {
 } from "@/components/ui/select";
 import { StatusBadge, StatusKey } from "@/components/badges/StatusBadge";
 import { PetPawLoading } from "@/components/loading/PetPawLoading";
+import { Pagination } from "@/components/pagination/Pagination";
 
 type Booking = {
   id: number;
@@ -37,10 +38,15 @@ export default function PetSitterBookingPage() {
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("All");
   const { status } = useSession();
+  const [loadingBookings, setLoadingBookings] = useState(true);
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
 
   useEffect(() => {
     (async () => {
-      const { data } = await axios.get<GetSitterResponse>("/api/sitter/get-profile-sitter");
+      const { data } = await axios.get<GetSitterResponse>(
+        "/api/sitter/get-profile-sitter"
+      );
       setUserName(data.user.name || data.sitter?.name || "");
       setAvatarUrl(data.user.profile_image || "/icons/avatar-placeholder.svg");
     })();
@@ -50,30 +56,47 @@ export default function PetSitterBookingPage() {
     if (status === "authenticated") {
       (async () => {
         try {
+          setLoadingBookings(true);
           const { data } = await axios.get("/api/sitter/get-booking");
           setBookings(data);
         } catch (error) {
           console.error("Failed to fetch bookings:", error);
+        } finally {
+          setLoadingBookings(false);
         }
       })();
     }
   }, [status]);
 
-  if (status === "loading") return (
-    <div className="flex items-center justify-center h-screen">
-      <PetPawLoading
-        message="Loading Pet"
-        size="lg"
-        baseStyleCustum="flex items-center justify-center w-full h-full"
-      />
-    </div>
-  );
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [search, statusFilter]);
+
+  if (status === "loading")
+    return (
+      <div className="flex items-center justify-center h-screen">
+        <PetPawLoading
+          message="Loading Pet"
+          size="lg"
+          baseStyleCustum="flex items-center justify-center w-full h-full"
+        />
+      </div>
+    );
 
   const filteredBookings = bookings.filter((b) => {
-    const matchesSearch = b.ownerName.toLowerCase().includes(search.toLowerCase());
+    const matchesSearch = b.ownerName
+      .toLowerCase()
+      .includes(search.toLowerCase());
     const matchesStatus = statusFilter === "All" || b.status === statusFilter;
     return matchesSearch && matchesStatus;
   });
+
+  const totalPages = Math.ceil(filteredBookings.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const currentBookings = filteredBookings.slice(
+    startIndex,
+    startIndex + itemsPerPage
+  );
 
   return (
     <main className="flex container-1200 !px-0 bg-gray-1">
@@ -102,8 +125,12 @@ export default function PetSitterBookingPage() {
                 </SelectTrigger>
                 <SelectContent className="bg-white border-gray-2">
                   <SelectItem value="All">All status</SelectItem>
-                  <SelectItem value="waitingConfirm">Waiting for confirm</SelectItem>
-                  <SelectItem value="waitingService">Waiting for service</SelectItem>
+                  <SelectItem value="waitingConfirm">
+                    Waiting for confirm
+                  </SelectItem>
+                  <SelectItem value="waitingService">
+                    Waiting for service
+                  </SelectItem>
                   <SelectItem value="inService">In service</SelectItem>
                   <SelectItem value="success">Success</SelectItem>
                   <SelectItem value="canceled">Canceled</SelectItem>
@@ -114,10 +141,12 @@ export default function PetSitterBookingPage() {
 
           {/* Table */}
           <div className="overflow-hidden rounded-2xl border border-gray-1">
-            <table className="w-full text-left">
+            <table className="w-full text-left overflow-hidden rounded-2xl">
               <thead className="bg-black text-white">
                 <tr>
-                  <th className="py-3 px-5 text-sm font-medium">Pet Owner Name</th>
+                  <th className="py-3 px-5 text-sm font-medium">
+                    Pet Owner Name
+                  </th>
                   <th className="py-3 px-4 text-sm font-medium">Pet(s)</th>
                   <th className="py-3 px-5 text-sm font-medium">Duration</th>
                   <th className="py-3 px-5 text-sm font-medium">Booked Date</th>
@@ -125,30 +154,40 @@ export default function PetSitterBookingPage() {
                 </tr>
               </thead>
               <tbody className="bg-white">
-                {filteredBookings.map((b) => (
-                  <tr
-                    key={b.id}
-                    className="border-t-2 border-gray-1 font-medium text-black cursor-pointer hover:bg-orange-1 transition"
-                    onClick={() => router.push(`/sitter/booking/${b.id}`)}
-                  >
-                    <td className="py-4 px-5">
-                      <span className="inline-flex items-center gap-2">
-                        {b.status === "waitingConfirm" && (
-                          <span className="inline-block w-2 h-2 bg-orange-5 rounded-full" />
-                        )}
-                        {b.ownerName}
-                      </span>
-                    </td>
-                    <td className="py-4 px-5">{b.pets}</td>
-                    <td className="py-4 px-5">{b.duration}</td>
-                    <td className="py-4 px-5">{b.bookedDate}</td>
-                    <td className="py-4 px-5">
-                      <StatusBadge status={b.status} />
+                {loadingBookings ? (
+                  <tr>
+                    <td colSpan={5} className="py-10 text-center">
+                      <PetPawLoading
+                        message="Loading Bookings..."
+                        size="lg"
+                        baseStyleCustum="flex items-center justify-center w-full h-full"
+                      />
                     </td>
                   </tr>
-                ))}
-
-                {filteredBookings.length === 0 && (
+                ) : currentBookings.length > 0 ? (
+                  currentBookings.map((b) => (
+                    <tr
+                      key={b.id}
+                      className="border-t-2 border-gray-1 font-medium text-black cursor-pointer hover:bg-orange-1 transition"
+                      onClick={() => router.push(`/sitter/booking/${b.id}`)}
+                    >
+                      <td className="py-4 px-5">
+                        <span className="inline-flex items-center gap-2">
+                          {b.status === "waitingConfirm" && (
+                            <span className="inline-block w-2 h-2 bg-orange-5 rounded-full" />
+                          )}
+                          {b.ownerName}
+                        </span>
+                      </td>
+                      <td className="py-4 px-5">{b.pets}</td>
+                      <td className="py-4 px-5">{b.duration}</td>
+                      <td className="py-4 px-5">{b.bookedDate}</td>
+                      <td className="py-4 px-5">
+                        <StatusBadge status={b.status} />
+                      </td>
+                    </tr>
+                  ))
+                ) : (
                   <tr>
                     <td colSpan={5} className="py-4 px-5 text-center">
                       No bookings found
@@ -157,6 +196,13 @@ export default function PetSitterBookingPage() {
                 )}
               </tbody>
             </table>
+            <div className="flex items-center justify-center mt-6">
+              <Pagination
+                currentPage={currentPage}
+                totalPages={totalPages}
+                onClick={(page) => setCurrentPage(page)}
+              />
+            </div>
           </div>
         </div>
       </section>
