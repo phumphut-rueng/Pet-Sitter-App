@@ -11,7 +11,7 @@ const checkSocketServerStatus = async (): Promise<boolean> => {
     const socketServerUrl = process.env.NEXT_PUBLIC_SOCKET_SERVER_URL || 'https://pet-sitter-socket-server-production.up.railway.app';
     const response = await axios.get(`${socketServerUrl}/socket-status`);
     return response.data.isReady || false;
-  } catch (error) {
+  } catch {
     // ไม่แสดง error ใน console เพื่อไม่รบกวนการทำงาน
     return false;
   }
@@ -52,7 +52,7 @@ export const useSocket = () => {
           
           setIsSocketReady(true);
           setIsWaitingForSocket(false);
-        } catch (error) {
+        } catch {
           // ไม่แสดง error ใน console เพื่อไม่รบกวนการทำงาน
           // แม้เกิด error ก็ปิด loading
           setIsSocketReady(true);

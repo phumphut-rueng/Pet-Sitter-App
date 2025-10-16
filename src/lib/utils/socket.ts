@@ -26,9 +26,9 @@ export const checkSocketServerReady = async (): Promise<boolean> => {
       return true;
     }
     return false;
-  } catch (error) {
+  } catch {
     // ไม่แสดง error ใน console เพื่อไม่รบกวนการทำงาน
-    // console.log('Socket server not available, continuing without real-time features');
+    console.log('Socket server not available, continuing without real-time features');
     return false;
   }
 };

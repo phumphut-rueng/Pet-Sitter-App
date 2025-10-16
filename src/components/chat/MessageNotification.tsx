@@ -44,7 +44,7 @@ const MessageNotification: React.FC = () => {
       }
     }
     setLastMessageCount(messages.length);
-  }, [messages.length, lastMessageCount, userId, router.pathname]);
+  }, [messages, lastMessageCount, userId, router.pathname]);
 
   // Component ไม่ต้อง render อะไร เพราะใช้ toast แทน
   return null;
