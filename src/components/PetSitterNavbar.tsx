@@ -24,8 +24,13 @@ export default function PetSitterNavbar({
             alt={name}
             width={30}
             height={30}
-            unoptimized
-            className="w-full h-full object-cover"
+            style={{
+              width: "100%",
+              height: "100%",
+              objectFit: "cover",
+              objectPosition: "center",
+            }}
+            className="w-full h-full object-cover object-center rounded-full"
           />
           </div>
           <span className="font-medium text-gray-9">{name}</span>
@@ -33,7 +38,7 @@ export default function PetSitterNavbar({
 
         {/* Right: messages button */}
         <Link
-          href="/sitter/messages"
+          href="/chat"
           aria-label="Messages"
           className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-gray-1
                      hover:bg-gray-2"

@@ -4,14 +4,13 @@ import { authOptions } from "@/pages/api/auth/[...nextauth]";
 import { prisma } from "@/lib/prisma/prisma";
 import { petSchema } from "@/lib/validators/pet";
 
-
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   const session = await getServerSession(req, res, authOptions);
   const userIdStr = session?.user?.id;
-  if (!userIdStr) return res.status(401).json({ error: "Unauthorized" });
+  if (!userIdStr) return res.status(401).json({ message: "Unauthorized" });
 
   const ownerId = Number(userIdStr);
-  if (!Number.isFinite(ownerId)) return res.status(400).json({ error: "Invalid user id" });
+  if (!Number.isFinite(ownerId)) return res.status(400).json({ message: "Invalid user id" });
 
   try {
     if (req.method === "GET") {
@@ -20,6 +19,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         orderBy: { id: "asc" },
         include: { pet_type: true },
       });
+
 
       return res.status(200).json(
         pets.map((p) => ({
@@ -40,13 +40,15 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     if (req.method === "POST") {
       const parsed = petSchema.safeParse(req.body);
+
       if (!parsed.success) {
-        return res
-          .status(400)
-          .json({ error: "Validation", details: parsed.error.flatten() });
+        const flat = parsed.error.flatten();
+        return res.status(400).json({
+          message: "Validation failed",
+          fieldErrors: flat.fieldErrors, // { [field]: string[] }
+        });
       }
       const data = parsed.data;
-
       const created = await prisma.pet.create({
         data: {
           owner_id: ownerId,
@@ -74,9 +76,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     }
 
     res.setHeader("Allow", ["GET", "POST"]);
-    return res.status(405).json({ error: "Method not allowed" });
+    return res.status(405).json({ message: "Method not allowed" });
   } catch (e) {
     console.error("pets api error:", e);
-    return res.status(500).json({ error: "Internal Server Error" });
+    return res.status(500).json({ message: "Internal Server Error" });
   }
 }

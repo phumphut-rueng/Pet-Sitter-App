@@ -16,7 +16,7 @@ model pet_type {
 
 model role {
   id        Int         @id @default(autoincrement())
-  role_name String      @db.VarChar(50)
+  role_name String      @unique
   user_role user_role[]
 }
 
@@ -42,6 +42,7 @@ model sitter {
   admin_note              String?                   @db.VarChar(1000)
   latitude                Float?
   longitude               Float?
+  booking                 booking[]
   reviews                 review[]
   sitter_approval_status  sitter_approval_status    @relation(fields: [approval_status_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   user                    user                      @relation(fields: [user_sitter_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
@@ -57,12 +58,31 @@ model sitter_image {
   sitter    sitter @relation(fields: [sitter_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
 }
 
+model Account {
+  id                String  @id @default(dbgenerated("gen_random_uuid()"))
+  userId            Int     @map("user_id")
+  type              String
+  provider          String
+  providerAccountId String  @map("provider_account_id")
+  refresh_token     String?
+  access_token      String?
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String?
+  session_state     String?
+  user              user    @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@unique([provider, providerAccountId])
+  @@map("accounts")
+}
+
 /// This model contains an expression index which requires additional setup for migrations. Visit https://pris.ly/d/expression-indexes for more info.
 model user {
   id                       Int                       @id @default(autoincrement())
   name                     String?                   @db.VarChar(100)
   email                    String                    @unique @db.VarChar(100)
-  password                 String                    @db.VarChar(255)
+  password                 String?                   @db.VarChar(255)
   phone                    String?                   @db.VarChar(20)
   profile_image            String?                   @db.VarChar(255)
   dob                      DateTime?                 @db.Date
@@ -71,7 +91,7 @@ model user {
   created_at               DateTime                  @default(now()) @db.Timestamp(6)
   updated_at               DateTime?                 @db.Timestamp(6)
   profile_image_public_id  String?                   @db.VarChar(255)
-  status                   user_status               @default(ACTIVE)
+  status                   user_status               @default(normal)
   approval_status_id       Int                       @default(1)
   status_updated_at        DateTime?                 @db.Timestamp(6)
   admin_note               String?                   @db.VarChar(1000)
@@ -80,12 +100,17 @@ model user {
   suspend_reason           String?                   @db.VarChar(1000)
   is_online                Boolean?                  @default(false)
   last_seen                DateTime?                 @default(now()) @db.Timestamp(6)
+  id_number                String?                   @unique(map: "unique_id_number") @db.VarChar(20)
+  accounts                 Account[]
   admin                    admin?
+  other_booking            booking[]                 @relation("bookingTobooking")
   chat_chat_user1_idTouser chat[]                    @relation("chat_user1_idTouser")
   chat_chat_user2_idTouser chat[]                    @relation("chat_user2_idTouser")
   message                  message[]
+  password_reset_tokens    password_reset_tokens[]
   pets                     pet[]
-  report                   report[]
+  reported_reports         report[]                  @relation("ReportedUser")
+  reports                  report[]                  @relation("Reporter")
   reviews                  review[]
   sitter                   sitter[]
   sitter_approval_history  sitter_approval_history[]
@@ -132,32 +157,35 @@ model review {
 }
 
 model pet {
-  id                 Int       @id @default(autoincrement())
+  id                 Int                  @id @default(autoincrement())
   owner_id           Int
   pet_type_id        Int
-  name               String    @db.VarChar(100)
-  breed              String    @db.VarChar(100)
-  sex                String    @db.VarChar(10)
+  name               String               @db.VarChar(100)
+  breed              String               @db.VarChar(100)
+  sex                String               @db.VarChar(10)
   age_month          Int
-  color              String    @db.VarChar(100)
-  weight_kg          Decimal   @db.Decimal(6, 2)
-  about              String?   @db.VarChar(1000)
-  image_url          String?   @db.VarChar(255)
-  created_at         DateTime  @default(now()) @db.Timestamp(6)
-  updated_at         DateTime? @db.Timestamp(6)
-  image_public_id    String?   @db.VarChar(255)
-  is_banned          Boolean?  @default(false)
-  banned_at          DateTime? @db.Timestamp(6)
+  color              String               @db.VarChar(100)
+  weight_kg          Decimal              @db.Decimal(6, 2)
+  about              String?              @db.VarChar(1000)
+  image_url          String?              @db.VarChar(255)
+  created_at         DateTime             @default(now()) @db.Timestamp(6)
+  updated_at         DateTime?            @db.Timestamp(6)
+  image_public_id    String?              @db.VarChar(255)
+  is_banned          Boolean?             @default(false)
+  banned_at          DateTime?            @db.Timestamp(6)
   banned_by_admin_id Int?
-  ban_reason         String?   @db.VarChar(1000)
-  owner              user      @relation(fields: [owner_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
-  pet_type           pet_type  @relation(fields: [pet_type_id], references: [id], onUpdate: NoAction)
+  ban_reason         String?              @db.VarChar(1000)
+  booking_pet_detail booking_pet_detail[]
+  banned_by_admin    admin?               @relation("BannedPets", fields: [banned_by_admin_id], references: [id], onUpdate: NoAction)
+  owner              user                 @relation(fields: [owner_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  pet_type           pet_type             @relation(fields: [pet_type_id], references: [id], onUpdate: NoAction)
 
   @@index([name], map: "idx_pet_name")
   @@index([owner_id], map: "idx_pet_owner_id")
   @@index([pet_type_id], map: "idx_pet_pet_type_id")
   @@index([created_at], map: "idx_pet_created_at")
   @@index([is_banned], map: "idx_pet_is_banned")
+  @@index([banned_by_admin_id], map: "idx_pet_banned_by_admin")
 }
 
 model admin {
@@ -167,7 +195,11 @@ model admin {
   created_at               DateTime                  @default(now()) @db.Timestamp(6)
   updated_at               DateTime                  @default(now()) @updatedAt @db.Timestamp(6)
   user                     user                      @relation(fields: [user_id], references: [id], onDelete: Cascade)
-  report                   report[]
+  banned_pets              pet[]                     @relation("BannedPets")
+  handled_reports          report[]                  @relation("HandledBy")
+  canceled_reports         report[]                  @relation("CanceledBy")
+  pending_reports          report[]                  @relation("PendingBy")
+  resolved_reports         report[]                  @relation("ResolvedBy")
   approval_history_actions sitter_approval_history[] @relation("ApprovalHistoryAdmin")
 }
 
@@ -196,24 +228,39 @@ model sitter_approval_history {
 }
 
 model report {
-  id                  Int           @id @default(autoincrement())
-  reporter_id         Int
-  handled_by_admin_id Int?
-  status              report_status @default(NEW)
-  title               String        @db.VarChar(150)
-  description         String?       @db.VarChar(2000)
-  attachments_json    Json?
-  admin_note          String?       @db.VarChar(1000)
-  created_at          DateTime      @default(now()) @db.Timestamp(6)
-  updated_at          DateTime?     @db.Timestamp(6)
-  admin               admin?        @relation(fields: [handled_by_admin_id], references: [id], onUpdate: NoAction, map: "fk_report_admin")
-  user                user          @relation(fields: [reporter_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_report_user")
+  id                   Int           @id @default(autoincrement())
+  reporter_id          Int
+  handled_by_admin_id  Int?
+  status               report_status @default(new)
+  title                String        @db.VarChar(150)
+  description          String?       @db.VarChar(2000)
+  attachments_json     Json?
+  admin_note           String?       @db.VarChar(1000)
+  created_at           DateTime      @default(now()) @db.Timestamp(6)
+  updated_at           DateTime?     @db.Timestamp(6)
+  reported_user_id     Int?
+  pending_at           DateTime?     @db.Timestamp(6)
+  pending_by_admin_id  Int?
+  resolved_at          DateTime?     @db.Timestamp(6)
+  resolved_by_admin_id Int?
+  canceled_at          DateTime?     @db.Timestamp(6)
+  canceled_by_admin_id Int?
+  handled_by_admin     admin?        @relation("HandledBy", fields: [handled_by_admin_id], references: [id], onUpdate: NoAction, map: "fk_report_admin")
+  canceled_by_admin    admin?        @relation("CanceledBy", fields: [canceled_by_admin_id], references: [id], onUpdate: NoAction, map: "fk_report_canceled_admin")
+  pending_by_admin     admin?        @relation("PendingBy", fields: [pending_by_admin_id], references: [id], onUpdate: NoAction, map: "fk_report_pending_admin")
+  reported_user        user?         @relation("ReportedUser", fields: [reported_user_id], references: [id], onUpdate: NoAction, map: "fk_report_reported_user")
+  resolved_by_admin    admin?        @relation("ResolvedBy", fields: [resolved_by_admin_id], references: [id], onUpdate: NoAction, map: "fk_report_resolved_admin")
+  reporter             user          @relation("Reporter", fields: [reporter_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_report_user")
 
   @@index([created_at], map: "idx_report_created_at")
   @@index([reporter_id], map: "idx_report_reporter")
   @@index([status], map: "idx_report_status")
-  @@index([handled_by_admin_id], map: "idx_report_handled_admin")
   @@index([status, created_at(sort: Desc)], map: "idx_report_status_created")
+  @@index([canceled_at], map: "idx_report_canceled_at")
+  @@index([pending_at], map: "idx_report_pending_at")
+  @@index([reported_user_id], map: "idx_report_reported_user")
+  @@index([resolved_at], map: "idx_report_resolved_at")
+  @@index([handled_by_admin_id], map: "idx_report_handled_admin")
 }
 
 model chat {
@@ -266,14 +313,71 @@ model user_chat_settings {
   @@index([user_id], map: "idx_user_chat_settings_user_id")
 }
 
+model booking {
+  id                                       Int                  @id @default(autoincrement())
+  name                                     String               @db.VarChar
+  email                                    String               @db.VarChar
+  phone                                    String               @db.VarChar
+  additional                               String?              @db.VarChar
+  date_start                               DateTime             @db.Timestamp(6)
+  date_end                                 DateTime             @db.Timestamp(6)
+  pet_sitter_id                            Int
+  user_id                                  Int
+  transaction_id                           String?
+  transaction_date                         DateTime?            @db.Timestamp(6)
+  booking_status_id                        Int
+  amount                                   Decimal              @db.Decimal(10, 2)
+  created_at                               DateTime             @default(now()) @db.Timestamp(6)
+  updated_at                               DateTime             @default(now()) @db.Timestamp(6)
+  payment_status_id                        Int?
+  payment_type                             String?
+  status_booking_booking_status_idTostatus status               @relation("booking_booking_status_idTostatus", fields: [booking_status_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "booking_status_id")
+  status_booking_payment_status_idTostatus status?              @relation("booking_payment_status_idTostatus", fields: [payment_status_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "payment_status_id")
+  sitter                                   sitter               @relation(fields: [pet_sitter_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "pet_sitter_id")
+  booking                                  user                 @relation("bookingTobooking", fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "user_id")
+  booking_pet_detail                       booking_pet_detail[]
+
+  @@index([date_start, date_end], map: "idx_booking_dates")
+  @@index([pet_sitter_id], map: "idx_booking_pet_sitter")
+  @@index([booking_status_id], map: "idx_booking_status")
+  @@index([user_id], map: "idx_booking_user")
+}
+
+model booking_pet_detail {
+  id            Int     @id @default(autoincrement())
+  booking_id    Int
+  pet_detail_id Int
+  booking       booking @relation(fields: [booking_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "booking_id")
+  pet           pet     @relation(fields: [pet_detail_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "pet_detail_id")
+
+  @@index([booking_id], map: "idx_booking_pet_detail_booking")
+  @@index([pet_detail_id], map: "idx_booking_pet_detail_pet")
+}
+
+model status {
+  id                                        Int       @id @default(autoincrement())
+  name                                      String    @db.VarChar
+  type                                      String    @db.VarChar
+  booking_booking_status_idTostatus         booking[] @relation("booking_booking_status_idTostatus")
+  booking_booking_payment_status_idTostatus booking[] @relation("booking_payment_status_idTostatus")
+}
+
+model password_reset_tokens {
+  id         Int      @id @default(autoincrement())
+  user_id    Int
+  token      String   @unique
+  expires_at DateTime @db.Timestamp(6)
+  user       user     @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+}
+
 enum report_status {
-  NEW
-  PENDING
-  RESOLVED
-  CANCELED
+  new
+  pending
+  resolved
+  canceled
 }
 
 enum user_status {
-  ACTIVE
-  SUSPENDED
+  normal
+  ban
 }

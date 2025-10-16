@@ -1,50 +1,125 @@
-// src/pages/api/admin/pets/[petId]/ban.ts
 import type { NextApiRequest, NextApiResponse } from "next";
 import { prisma } from "@/lib/prisma/prisma";
+import { apiHandler, methodNotAllowed } from "@/lib/api/api-utils";
 
-type Body = { action: "ban" | "unban"; reason?: string };
+type BanAction = "ban" | "unban";
 
-export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-  if (req.method !== "POST") return res.status(405).end();
+interface RequestBody {
+  action: BanAction;
+  reason?: string;
+}
 
-  const petId = Number(req.query.petId);
-  if (!Number.isFinite(petId)) return res.status(400).json({ message: "Invalid pet id" });
+interface SuccessResponse {
+  message: string;
+  petId: number;
+  action: BanAction;
+  is_banned: boolean | null; 
+  banned_at: string | null;
+  ban_reason: string | null;
+  banned_by_admin_id: number | null;
+}
 
-  const { action, reason }: Body = req.body ?? {};
-  if (action !== "ban" && action !== "unban") return res.status(400).json({ message: "Invalid action" });
+type ErrorResponse = { message: string };
+
+function toPositiveInt(value: unknown): number | null {
+  const str = typeof value === "string" 
+    ? value 
+    : Array.isArray(value) 
+    ? value[0] 
+    : typeof value === "number" && Number.isFinite(value) 
+    ? String(value) 
+    : undefined;
+
+  if (!str) return null;
+  const num = Number(str);
+  return Number.isInteger(num) && num > 0 ? num : null;
+}
+
+function isValidBody(body: unknown): body is RequestBody {
+  if (typeof body !== "object" || body === null) return false;
+  const b = body as Record<string, unknown>;
+  return b.action === "ban" || b.action === "unban";
+}
+
+async function handler(
+  req: NextApiRequest,
+  res: NextApiResponse<SuccessResponse | ErrorResponse>
+) {
+  if (req.method !== "POST") {
+    return methodNotAllowed(res, ["POST"]);
+  }
+
+  const petId = toPositiveInt(req.query.petId);
+  if (!petId) {
+    return res.status(400).json({ message: "Invalid pet id" });
+  }
+
+  if (!isValidBody(req.body)) {
+    return res.status(400).json({ message: "Invalid request body" });
+  }
+
+  const { action, reason } = req.body;
 
   try {
-    // ⛳️ adminId อาจเป็น null ได้ (ไม่บังคับ header)
-    const adminUserId = Number(req.headers["x-user-id"]);
-    const admin = Number.isFinite(adminUserId)
-      ? await prisma.admin.findUnique({ where: { user_id: adminUserId } })
-      : null;
-    const adminId = admin?.id ?? null;
+    // หา admin ถ้ามี user id
+    const requesterUserId = toPositiveInt(req.headers["x-user-id"]);
+    let adminId: number | null = null;
 
-    if (action === "ban") {
-      await prisma.pet.update({
-        where: { id: petId },
-        data: {
-          is_banned: true,
-          banned_at: new Date(),
-          banned_by_admin_id: adminId ?? undefined,
-          ban_reason: reason ?? null,
-        },
+    if (requesterUserId) {
+      const admin = await prisma.admin.findUnique({ 
+        where: { user_id: requesterUserId } 
       });
-    } else {
-      await prisma.pet.update({
-        where: { id: petId },
-        data: {
-          is_banned: false,
-          banned_at: null,
-          banned_by_admin_id: null,
-          ban_reason: null,
-        },
-      });
+      adminId = admin?.id ?? null;
     }
-    return res.json({ ok: true });
-  } catch (e) {
-    console.error(e);
-    return res.status(500).json({ message: "Operation failed" });
+
+    // เช็คว่า pet มีอยู่จริง
+    const pet = await prisma.pet.findUnique({
+      where: { id: petId },
+      select: { id: true },
+    });
+
+    if (!pet) {
+      return res.status(404).json({ message: "Pet not found" });
+    }
+
+    // อัปเดตสถานะ
+    const updated = await prisma.pet.update({
+      where: { id: petId },
+      data: action === "ban"
+        ? {
+            is_banned: true,
+            banned_at: new Date(),
+            banned_by_admin_id: adminId,
+            ban_reason: reason ?? null,
+          }
+        : {
+            is_banned: false,
+            banned_at: null,
+            banned_by_admin_id: null,
+            ban_reason: null,
+          },
+      select: {
+        id: true,
+        is_banned: true,
+        banned_at: true,
+        ban_reason: true,
+        banned_by_admin_id: true,
+      },
+    });
+
+    return res.status(200).json({
+      message: "Pet status updated successfully",
+      petId: updated.id,
+      action,
+      is_banned: updated.is_banned,
+      banned_at: updated.banned_at?.toISOString() ?? null,
+      ban_reason: updated.ban_reason,
+      banned_by_admin_id: updated.banned_by_admin_id,
+    });
+  } catch (err) {
+    console.error("Error updating pet ban status:", err);
+    return res.status(500).json({ message: "Failed to update pet status" });
   }
 }
+
+export default apiHandler(handler);

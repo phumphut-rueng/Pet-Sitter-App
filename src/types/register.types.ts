@@ -7,6 +7,12 @@ export interface RegisterForm {
     password: string;
 }
 
+export interface ResetPasswordForm {
+    email?: string;
+    password?: string;
+    confirmPassword?: string;
+}
+
 export interface RegisterValidation {
     name: FieldValidation
     email: FieldValidation

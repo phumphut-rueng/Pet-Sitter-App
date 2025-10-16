@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import axios from "axios";
 import { useSession } from "next-auth/react";
 import { useForm, Controller } from "react-hook-form";
 import Sidebar from "@/components/layout/SitterSidebar";
@@ -22,6 +23,8 @@ import toast, { Toaster } from "react-hot-toast";
 import { uploadToCloudinary } from "@/lib/cloudinary/upload-to-cloudinary";
 import AddressSection from "@/components/form/AddressSection";
 import type { SitterFormValues } from "@/components/types/SitterForms";
+import { validatePhone, validateEmail } from "@/lib/validators/validation";
+import { PetPawLoading } from "@/components/loading/PetPawLoading";
 
 type GetSitterResponse = {
   exists: boolean;
@@ -60,65 +63,26 @@ const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 function getStatusKey(status: string): StatusKey {
   switch (status) {
-    case 'Pending submission':
-      return 'pendingSubmission';
-    case 'Waiting for approve':
-      return 'waitingApprove';
-    case 'Approved':
-      return 'approved';
-    case 'Rejected':
-      return 'rejected';
+    case "Pending submission":
+      return "pendingSubmission";
+    case "Waiting for approve":
+      return "waitingApprove";
+    case "Approved":
+      return "approved";
+    case "Rejected":
+      return "rejected";
     default:
-      return 'waitingApprove'; // fallback
-  }
-}
-//ตรวจสอบเบอร์โทรซ้ำ
-async function checkPhoneDuplicate(
-  phone: string,
-  excludeUserId?: number
-): Promise<boolean> {
-  try {
-    const res = await fetch("/api/sitter/check-phone", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ phone, excludeUserId }),
-    });
-    if (res.status === 409) return true;
-    if (!res.ok) return false;
-    const data = await res.json();
-    return Boolean(data.exists);
-  } catch (err) {
-    console.error("checkPhoneDuplicate error:", err);
-    return false;
-  }
-}
-
-//ตรวจสอบอีเมลซ้ำ
-async function checkEmailDuplicate(
-  email: string,
-  excludeUserId?: number
-): Promise<boolean> {
-  try {
-    const res = await fetch("/api/sitter/check-email", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email, excludeUserId }),
-    });
-    if (res.status === 409) return true;
-    if (!res.ok) return false;
-    const data = await res.json();
-    return Boolean(data.exists);
-  } catch (err) {
-    console.error("checkEmailDuplicate error:", err);
-    return false;
+      return "waitingApprove"; // fallback
   }
 }
 
 export default function PetSitterProfilePage() {
-  const [userId, setUserId] = useState<number | null>(null);
   const { status, update } = useSession();
   const [initialGallery, setInitialGallery] = useState<string[]>([]); //รูปที่โหลดมาจาก database
-  const [approvalStatus, setApprovalStatus] = useState<string>('');
+  const [approvalStatus, setApprovalStatus] = useState<string>("");
+  const [currentPhone, setCurrentPhone] = useState<string>("");
+  const [currentEmail, setCurrentEmail] = useState<string>("");
+  const [isLoading, setIsLoading] = useState(true);
   const [sitterData, setSitterData] = useState<{
     id: number;
     name: string | null;
@@ -145,9 +109,10 @@ export default function PetSitterProfilePage() {
     handleSubmit,
     control,
     reset,
-    setValue,
+    setValue, 
     watch,
     getValues,
+    setError,
     formState: { errors, isSubmitting },
   } = useForm<SitterFormValues>({
     defaultValues: {
@@ -179,15 +144,15 @@ export default function PetSitterProfilePage() {
     if (status === "loading") return;
     (async () => {
       try {
-        const res = await fetch("/api/sitter/get-profile-sitter");
-        if (res.status === 401) return;
-        if (!res.ok) {
-          console.warn("get-sitter failed", res.status);
-          return;
-        }
-        const data: GetSitterResponse = await res.json();
-        setUserId(data.user.id);
-        setApprovalStatus(data.user.sitter_approval_status?.status_name || 'Waiting for approve');
+        setIsLoading(true);
+        const { data } = await axios.get<GetSitterResponse>(
+          "/api/sitter/get-profile-sitter"
+        );
+        setCurrentPhone(data.sitter?.phone || data.user.phone || "");
+        setCurrentEmail(data.user.email || "");
+        setApprovalStatus(
+          data.user.sitter_approval_status?.status_name || "Waiting for approve"
+        );
         setSitterData(data.sitter as typeof sitterData);
 
         reset({
@@ -215,9 +180,23 @@ export default function PetSitterProfilePage() {
         setInitialGallery(data.sitter?.images || []);
       } catch (error) {
         console.error("load profile error:", error);
+      } finally {
+        setIsLoading(false);
       }
     })();
   }, [status, reset]);
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-screen">
+        <PetPawLoading
+          message="Loading Pet"
+          size="lg"
+          baseStyleCustum="flex items-center justify-center w-full h-full"
+        />
+      </div>
+    );
+  }
 
   //ฟังก์ชันตรวจสอบข้อมูลพื้นฐานที่จำเป็นสำหรับ Request for Approval
   const validateBasicFields = () => {
@@ -225,28 +204,30 @@ export default function PetSitterProfilePage() {
     const basicErrors: string[] = [];
 
     // ตรวจสอบเฉพาะฟิลด์พื้นฐาน
-    if (!values.fullName || values.fullName.trim() === '') {
-      basicErrors.push('Full name is required');
+    if (!values.fullName || values.fullName.trim() === "") {
+      basicErrors.push("Full name is required");
     }
 
-    if (!values.experience || values.experience === '') {
-      basicErrors.push('Experience is required');
+    if (!values.experience || values.experience === "") {
+      basicErrors.push("Experience is required");
     }
 
-    if (!values.phone || values.phone.trim() === '') {
-      basicErrors.push('Phone number is required');
+    if (!values.phone || values.phone.trim() === "") {
+      basicErrors.push("Phone number is required");
     } else if (!phonePattern.test(values.phone)) {
-      basicErrors.push('Phone number must be in format 0XXXXXXXXX (10 digits starting with 0)');
+      basicErrors.push(
+        "Phone number must be in format 0XXXXXXXXX (10 digits starting with 0)"
+      );
     }
 
-    if (!values.email || values.email.trim() === '') {
-      basicErrors.push('Email is required');
+    if (!values.email || values.email.trim() === "") {
+      basicErrors.push("Email is required");
     } else if (!emailPattern.test(values.email)) {
-      basicErrors.push('Email format is invalid');
+      basicErrors.push("Email format is invalid");
     }
 
-    if (!values.introduction || values.introduction.trim() === '') {
-      basicErrors.push('Introduction is required');
+    if (!values.introduction || values.introduction.trim() === "") {
+      basicErrors.push("Introduction is required");
     }
 
     return basicErrors;
@@ -258,12 +239,12 @@ export default function PetSitterProfilePage() {
     const basicErrors = validateBasicFields();
 
     if (basicErrors.length > 0) {
-      toast.error('Please complete and verify all required information.', {
+      toast.error("Please complete and verify all required information.", {
         duration: 5000,
         style: {
-          maxWidth: '400px',
-          fontSize: '14px'
-        }
+          maxWidth: "400px",
+          fontSize: "14px",
+        },
       });
       return;
     }
@@ -278,10 +259,10 @@ export default function PetSitterProfilePage() {
         introduction: values.introduction,
       });
 
-      const response = await fetch('/api/sitter/request-approval', {
-        method: 'POST',
+      const response = await fetch("/api/sitter/request-approval", {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify({
           fullName: values.fullName,
@@ -294,21 +275,21 @@ export default function PetSitterProfilePage() {
 
       if (response.ok) {
         const result = await response.json();
-        console.log("✅ Success response:", result);
+        console.log(" Success response:", result);
 
         // แสดง toast แจ้งเตือนสำเร็จ (2 วินาที)
-        toast.success('Request for approval submitted successfully!', {
-          duration: 3000
+        toast.success("Request for approval submitted successfully!", {
+          duration: 3000,
         });
 
         // แสดง toast บอกว่าจะ refresh (2 วินาที)
         setTimeout(() => {
-          toast('Refreshing page to update status...', {
+          toast("Refreshing page to update status...", {
             duration: 3000,
             style: {
-              background: '#3b82f6',
-              color: 'white'
-            }
+              background: "#3b82f6",
+              color: "white",
+            },
           });
         }, 1000);
 
@@ -316,22 +297,25 @@ export default function PetSitterProfilePage() {
         setTimeout(() => {
           window.location.reload();
         }, 4000);
-
       } else {
         const errorData = await response.json();
         console.error("❌ Error response:", errorData);
-        toast.error(`Failed to submit request for approval: ${errorData.message || 'Unknown error'}`);
+        toast.error(
+          `Failed to submit request for approval: ${
+            errorData.message || "Unknown error"
+          }`
+        );
       }
     } catch (error) {
-      console.error('Error requesting approval:', error);
-      toast.error('An error occurred while submitting request');
+      console.error("Error requesting approval:", error);
+      toast.error("An error occurred while submitting request");
     }
   };
 
   const onSubmit = handleSubmit(async (values) => {
     await toast.promise(
       (async () => {
-        //อัปโหลดรูปหม่ไป cloudinary
+        //อัปโหลดรูปใหม่ไป cloudinary
         const uploadedUrls: string[] = [];
         if (values.newImageFiles && values.newImageFiles.length > 0) {
           for (const file of values.newImageFiles) {
@@ -351,25 +335,16 @@ export default function PetSitterProfilePage() {
         };
         delete (payload as Record<string, unknown>).newImageFiles;
 
-        const res = await fetch("/api/sitter/put-sitter", {
-          method: "PUT",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(payload),
-        });
-        if (!res.ok) {
-          const data = await res.json().catch(() => ({}));
-          throw new Error(data?.message || "Failed to update sitter");
-        }
+        await axios.put("/api/sitter/put-sitter", payload);
 
         //โหลดภาพล่าสุดมาแสดง
         await update();
-        const res2 = await fetch("/api/sitter/get-profile-sitter");
-        if (res2.ok) {
-          const data = await res2.json();
-          const latestImages = data.sitter?.images || [];
-          setValue("images", latestImages);
-          setInitialGallery(latestImages);
-        }
+        const { data: refreshed } = await axios.get<GetSitterResponse>(
+          "/api/sitter/get-profile-sitter"
+        );
+        const latestImages = refreshed.sitter?.images || [];
+        setValue("images", latestImages);
+        setInitialGallery(latestImages);
       })(),
       {
         loading: "Saving profile...",
@@ -395,9 +370,12 @@ export default function PetSitterProfilePage() {
               <h3 className="text-gray-9 font-semibold text-2xl">
                 Pet Sitter Profile
               </h3>
-              <StatusBadge status={getStatusKey(approvalStatus)} className="font-medium" />
+              <StatusBadge
+                status={getStatusKey(approvalStatus)}
+                className="font-medium"
+              />
             </div>
-            {approvalStatus === 'Approved' ? (
+            {approvalStatus === "Approved" ? (
               <PrimaryButton
                 text={isSubmitting ? "Saving..." : "Update"}
                 type="submit"
@@ -420,13 +398,24 @@ export default function PetSitterProfilePage() {
             <div className="mt-4 p-4 bg-gray-200 border-l-4 border-red rounded-r-md">
               <div className="flex items-start gap-3">
                 <div className="text-red flex-shrink-0 mt-0.5">
-                  <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-                    <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                  <svg
+                    className="w-5 h-5"
+                    fill="currentColor"
+                    viewBox="0 0 20 20"
+                  >
+                    <path
+                      fillRule="evenodd"
+                      d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z"
+                      clipRule="evenodd"
+                    />
                   </svg>
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="text-sm text-red font-medium break-words">
-                    <span className="font-medium">Your request has not been approved:</span> &apos;{sitterData.admin_note}&apos;
+                    <span className="font-medium">
+                      Your request has not been approved:
+                    </span>{" "}
+                    &apos;{sitterData.admin_note}&apos;
                   </p>
                 </div>
               </div>
@@ -496,10 +485,11 @@ export default function PetSitterProfilePage() {
                           onValueChange={field.onChange}
                         >
                           <SelectTrigger
-                            className={` w-full rounded-xl !h-12 px-4 py-2 border !border-gray-2 ${errors.experience
-                              ? "!border-red focus:ring-red"
-                              : "border-gray-3"
-                              }`}
+                            className={` w-full rounded-xl !h-12 px-4 py-2 border !border-gray-2 ${
+                              errors.experience
+                                ? "!border-red focus:ring-red"
+                                : "border-gray-3"
+                            }`}
                           >
                             <SelectValue placeholder="" />
                           </SelectTrigger>
@@ -525,26 +515,21 @@ export default function PetSitterProfilePage() {
                       label="Phone Number*"
                       type="tel"
                       inputMode="numeric"
+                      maxLength={10}
+                      onInput={(e) => {
+                        const input = e.target as HTMLInputElement;
+                        // ลบทุกตัวที่ไม่ใช่ตัวเลขออก
+                        input.value = input.value.replace(/\D/g, "");
+                      }}
                       variant={errors.phone ? "error" : "default"}
                       className="w-full"
                       {...register("phone", {
-                        required: "Please enter your phone number.",
-                        validate: {
-                          format: (v) =>
-                            phonePattern.test(v)
-                              ? true
-                              : "Phone number must start with 0 and be 10 digits.",
-                          unique: async (v) => {
-                            if (!v || !userId) return true;
-                            try {
-                              const dup = await checkPhoneDuplicate(v, userId);
-                              return dup
-                                ? "Phone number already exists."
-                                : true;
-                            } catch {
-                              return true;
-                            }
-                          },
+                        validate: async (v) => {
+                          // ✅ ถ้าเบอร์ที่กรอกเหมือนเดิม → ไม่ต้องเช็กซ้ำ
+                          if (v === currentPhone) return true;
+
+                          const { message } = await validatePhone(v);
+                          return message || true;
                         },
                       })}
                     />
@@ -564,21 +549,31 @@ export default function PetSitterProfilePage() {
                       variant={errors.email ? "error" : "default"}
                       className="w-full"
                       {...register("email", {
-                        required: "Please enter your email address.",
-                        validate: {
-                          format: (v) =>
-                            emailPattern.test(v)
-                              ? true
-                              : "Invalid email format.",
-                          unique: async (v) => {
-                            if (!v || !userId) return true;
-                            try {
-                              const dup = await checkEmailDuplicate(v, userId);
-                              return dup ? "Email already exists." : true;
-                            } catch {
-                              return true;
+                        required: "Please enter your email.",
+                        validate: async (v) => {
+                          //  ถ้าอีเมลที่กรอกเหมือนกับของตัวเอง → ข้ามไม่เช็กซ้ำ
+                          if (v === currentEmail) return true;
+
+                          const base = await validateEmail(v, undefined, false);
+                          if (base.message) return base.message;
+
+                          try {
+                            const res = await fetch("/api/user/get-role", {
+                              method: "POST",
+                              headers: { "Content-Type": "application/json" },
+                              body: JSON.stringify({ email: v }),
+                            });
+
+                            if (res.ok) {
+                              const data = await res.json();
+                              if (data.exists) {
+                                return "This email is already registered";
+                              }
                             }
-                          },
+                          } catch (e) {
+                            console.error("Email duplicate check failed:", e);
+                          }
+                          return true;
                         },
                       })}
                     />
@@ -594,9 +589,16 @@ export default function PetSitterProfilePage() {
                     <InputTextArea
                       placeholder=""
                       label="Introduction (Describe about yourself as pet sitter)"
-                      className="w-full"
-                      {...register("introduction")}
+                      className={`w-full ${errors.introduction ? "!border-red focus:ring-red" : ""}`}
+                      {...register("introduction", {
+                        required: "Please enter introduction.",
+                      })}
                     />
+                    {errors.introduction && (
+                      <p className="mt-1 text-sm text-red">
+                        {errors.introduction.message}
+                      </p>
+                    )}
                   </div>
                 </div>
               </div>
@@ -604,7 +606,7 @@ export default function PetSitterProfilePage() {
           </section>
 
           {/* Pet Sitter - แสดงเฉพาะเมื่อสถานะเป็น Approved */}
-          {approvalStatus === 'Approved' && (
+          {approvalStatus === "Approved" && (
             <section className="bg-white rounded-xl py-4 px-12 mt-4 pb-7">
               <h4 className="text-gray-4 font-bold text-xl py-4">Pet Sitter</h4>
 
@@ -688,16 +690,16 @@ export default function PetSitterProfilePage() {
           )}
 
           {/* Address - แสดงเฉพาะเมื่อสถานะเป็น Approved */}
-          {approvalStatus === 'Approved' && (
+          {approvalStatus === "Approved" && (
             <AddressSection
               control={control}
               register={register}
               errors={errors}
               watch={watch}
               setValue={setValue}
+              setError={setError}
             />
           )}
-
         </form>
       </section>
       <Toaster position="top-right" />

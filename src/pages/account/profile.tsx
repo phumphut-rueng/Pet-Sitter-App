@@ -6,104 +6,76 @@ import { getServerSession } from "next-auth/next";
 
 import AccountPageShell from "@/components/layout/AccountPageShell";
 import ProfileForm from "@/components/features/account/profile/components/ProfileForm";
-import PageToaster from "@/components/ui/PageToaster";
 import { useOwnerProfileForm } from "@/hooks/useOwnerProfileForm";
 import { authOptions } from "@/pages/api/auth/[...nextauth]";
 import type { OwnerProfileInput } from "@/lib/validators/profile";
+import { ERROR_MESSAGES, SUCCESS_MESSAGES } from "@/lib/constants/messages";
+import { getErrorMessage } from "@/lib/utils/error";
+import { PetPawLoading } from "@/components/loading/PetPawLoading";
 
-const ERROR_MESSAGES = {
-  loadFailed: "Failed to load profile.",
-  saveFailed: "Something went wrong. Please try again.",
-  fixFields: "Please fix the highlighted fields.",
-  unknown: "Something went wrong.",
-} as const;
-
-const SUCCESS_MESSAGES = {
-  profileUpdated: "Profile updated!",
-} as const;
-
-const getErrorMessage = (error: unknown): string => {
-  if (typeof error === "string") return error;
-  if (error instanceof Error) return error.message;
-  try {
-    return JSON.stringify(error);
-  } catch {
-    return "Unknown error";
-  }
-};
-
-const useProfileLoader = (loadProfileFn: () => Promise<void>) => {
-  useEffect(() => {
-    let isMounted = true;
-
-    const loadProfile = async () => {
-      try {
-        await loadProfileFn();
-      } catch (error) {
-        if (!isMounted) return;
-        console.error("Profile load error:", error);
-        toast.error(ERROR_MESSAGES.loadFailed);
-      }
-    };
-
-    loadProfile();
-    return () => {
-      isMounted = false;
-    };
-  }, [loadProfileFn]);
-};
-
-const useProfileSubmission = (
-  saveProfileFn: (values: OwnerProfileInput) => Promise<boolean>
-) => {
+const AccountProfilePage: NextPage = () => {
+  const { form, load, save } = useOwnerProfileForm();
   const [saving, setSaving] = useState(false);
+  const [opening, setOpening] = useState(true); // แสดงตอนเปิดหน้าแบบเดียวกับ Pets
   const [serverError, setServerError] = useState<string | null>(null);
 
-  const submitProfile = async (values: OwnerProfileInput) => {
+  // โหลดโปรไฟล์ตอนเริ่มต้น + กันแฟลชเล็กน้อย
+  useEffect(() => {
+    let mounted = true;
+    const minDelay = new Promise((r) => setTimeout(r, 400));
+    (async () => {
+      try {
+        await Promise.all([load(), minDelay]);
+      } catch (err) {
+        console.error("Profile load error:", err);
+        toast.error(ERROR_MESSAGES.loadFailed);
+      } finally {
+        if (mounted) setOpening(false);
+      }
+    })();
+    return () => {
+      mounted = false;
+    };
+  }, [load]);
+
+  const handleSubmit = form.handleSubmit(async (values: OwnerProfileInput) => {
     setServerError(null);
     setSaving(true);
-
     try {
-      const success = await saveProfileFn(values);
-      if (success) {
-        toast.success(SUCCESS_MESSAGES.profileUpdated);
-      } else {
-        toast.error(ERROR_MESSAGES.fixFields);
-      }
-    } catch (error) {
-      console.error("Profile save error:", error);
-      const errorMessage = getErrorMessage(error);
-      setServerError(errorMessage || ERROR_MESSAGES.unknown);
+      const ok = await save(values);
+      if (ok) toast.success(SUCCESS_MESSAGES.profileUpdated);
+      else toast.error(ERROR_MESSAGES.fixFields);
+    } catch (err) {
+      console.error("Profile save error:", err);
+      const msg = getErrorMessage(err) || ERROR_MESSAGES.unknown;
+      setServerError(msg);
       toast.error(ERROR_MESSAGES.saveFailed);
     } finally {
       setSaving(false);
     }
-  };
-
-  return {
-    saving,
-    serverError,
-    submitProfile,
-  };
-};
-
-const AccountProfilePage: NextPage = () => {
-  const { form, load, save } = useOwnerProfileForm();
-  const { saving, serverError, submitProfile } = useProfileSubmission(save);
-
-  useProfileLoader(load);
-
-  const handleSubmit = form.handleSubmit(submitProfile);
+  });
 
   return (
     <AccountPageShell title="Profile" showTitle>
-      <PageToaster />
-      <ProfileForm
-        control={form.control}
-        saving={saving}
-        serverError={serverError}
-        onSubmit={handleSubmit}
-      />
+      {/* ให้ตำแหน่ง loader เหมือนหน้า Pets: ครอบด้วย relative + absolute overlay */}
+      <div className="relative min-h-[400px]">
+        <ProfileForm
+          control={form.control}
+          saving={saving || opening}
+          serverError={serverError}
+          onSubmit={handleSubmit}
+        />
+
+        {(opening || saving) && (
+          <div className="absolute inset-0 flex items-center justify-center">
+            <PetPawLoading
+              message={opening ? "Loading Your Profile..." : "Updating..."}
+              size="md"
+              baseStyleCustum="flex items-center justify-center"
+            />
+          </div>
+        )}
+      </div>
     </AccountPageShell>
   );
 };
@@ -112,16 +84,14 @@ export default AccountProfilePage;
 
 export const getServerSideProps: GetServerSideProps = async (context) => {
   const session = await getServerSession(context.req, context.res, authOptions);
-
   if (!session) {
     const callbackUrl = encodeURIComponent(context.resolvedUrl || "/account/profile");
     return {
       redirect: {
         destination: `/api/auth/signin?callbackUrl=${callbackUrl}`,
-        permanent: false, // 302
+        permanent: false,
       },
     };
   }
-
   return { props: {} };
 };

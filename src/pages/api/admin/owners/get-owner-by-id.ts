@@ -1,78 +1,80 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 import { prisma } from "@/lib/prisma/prisma";
-import type { OwnerDetail } from "@/types/admin/owners";
+import { apiHandler, methodNotAllowed } from "@/lib/api/api-utils";
 
-const OWNER_ROLE_NAMES = ["Owner", "pet_owner", "OWNER", "PET_OWNER"] as const;
-
-type ErrorResponse = {
-  message: string;
+type OwnerDetail = {
+  id: number;
+  name: string | null;
+  email: string;
+  phone: string | null;
+  profile_image: string | null;
+  profile_image_public_id: string | null;
+  id_number: string | null;
+  dob: string | null;
+  status: "normal" | "ban";
+  created_at: string;
+  suspended_at: string | null;
+  banned_at: string | null;
+  suspend_reason: string | null;
+  admin_note: string | null;
+  pets: Array<{
+    id: number;
+    name: string | null;
+    pet_type_name: string | null;
+    breed: string | null;
+    sex: string | null;
+    age_month: number | null;
+    color: string | null;
+    weight_kg: string;
+    about: string | null;  // ← เพิ่มบรรทัดนี้
+    image_url: string | null;
+    is_banned: boolean;
+    banned_at: string | null;
+    ban_reason: string | null;
+  }>;
 };
 
-/**
- * 📡 API Route: GET /api/admin/owners/get-owner-by-id
- * 
- * ดึงข้อมูล Owner พร้อม Pets ของเขาจากฐานข้อมูล
- * ใช้ Prisma ORM query ฐานข้อมูลโดยตรง (ไม่ใช่ fetch API หรือ axios)
- * 
- * @param req.query.id - Owner ID
- * @returns OwnerDetail พร้อมรายการ Pets
- */
-export default async function handler(
+type ErrorResponse = { message: string };
+
+function getOwnerId(query: NextApiRequest["query"]): number | null {
+  const raw = query.ownerId ?? query.id;
+  const value = Array.isArray(raw) ? raw[0] : raw;
+  const id = Number(value);
+  return Number.isFinite(id) ? id : null;
+}
+
+async function handler(
   req: NextApiRequest,
   res: NextApiResponse<OwnerDetail | ErrorResponse>
 ) {
-  // อนุญาตเฉพาะ GET method
   if (req.method !== "GET") {
-    return res.status(405).json({ 
-      message: "Method not allowed" 
-    });
+    return methodNotAllowed(res, ["GET"]);
+  }
+
+  const ownerId = getOwnerId(req.query);
+  if (!ownerId) {
+    return res.status(400).json({ message: "Owner ID is required" });
   }
 
   try {
-    const id = Number(req.query.id);
-    
-    // ตรวจสอบว่า id เป็นตัวเลขที่ถูกต้อง
-    if (!Number.isFinite(id)) {
-      return res.status(400).json({ 
-        message: "Invalid id" 
-      });
-    }
-
-    /**
-     *  Query ข้อมูล Owner จากฐานข้อมูลด้วย Prisma
-     * หมายเหตุ: นี่คือ API Route (Backend) ใช้ Prisma query ฐานข้อมูลโดยตรง
-     * ไม่ใช่การเรียก HTTP API ด้วย fetch หรือ axios
-     */
-    const user = await prisma.user.findFirst({
-      where: {
-        id,
-        user_role: { 
-          some: { 
-            role: { 
-              role_name: { in: [...OWNER_ROLE_NAMES] } 
-            } 
-          } 
-        },
-      },
+    const owner = await prisma.user.findUnique({
+      where: { id: ownerId },
       select: {
         id: true,
         name: true,
         email: true,
         phone: true,
-        created_at: true,
         profile_image: true,
         profile_image_public_id: true,
+        id_number: true,
+        dob: true,
         status: true,
+        created_at: true,
         suspended_at: true,
         suspend_reason: true,
-        // ดึงข้อมูล pets ที่ไม่ถูก ban
+        admin_note: true,
         pets: {
-          where: {
-            OR: [
-              { is_banned: false },
-              { is_banned: null },
-            ],
-          },
+          orderBy: { created_at: "desc" },
           select: {
             id: true,
             name: true,
@@ -80,66 +82,59 @@ export default async function handler(
             sex: true,
             age_month: true,
             color: true,
+            weight_kg: true,
+            about: true,  // ← เพิ่มบรรทัดนี้
             image_url: true,
-            created_at: true,
             is_banned: true,
             banned_at: true,
-            pet_type: {
-              select: {
-                pet_type_name: true,
-              },
-            },
+            ban_reason: true,
+            pet_type: { select: { pet_type_name: true } },
           },
-          orderBy: { created_at: "desc" },
         },
       },
     });
 
-    // ถ้าไม่เจอ Owner ตาม id
-    if (!user) {
-      return res.status(404).json({ 
-        message: "Owner not found" 
-      });
+    if (!owner) {
+      return res.status(404).json({ message: "Pet owner not found" });
     }
 
-    //  แปลงข้อมูลจาก Prisma เป็นรูปแบบที่ส่งให้ Frontend
     const payload: OwnerDetail = {
-      id: user.id,
-      name: user.name,
-      email: user.email,
-      phone: user.phone,
-      created_at: user.created_at.toISOString(),
-      profile_image: user.profile_image,
-      profile_image_public_id: user.profile_image_public_id ?? null,
-      id_number: null,
-      dob: null,
-      status: user.status as OwnerDetail["status"],
-      suspended_at: user.suspended_at ? user.suspended_at.toISOString() : null,
-      suspend_reason: user.suspend_reason ?? null,
-      pets: user.pets.map((p) => ({
+      id: owner.id,
+      name: owner.name,
+      email: owner.email,
+      phone: owner.phone,
+      profile_image: owner.profile_image,
+      profile_image_public_id: owner.profile_image_public_id,
+      id_number: owner.id_number,
+      dob: owner.dob?.toISOString() ?? null,
+      status: owner.status as "normal" | "ban",
+      created_at: owner.created_at.toISOString(),
+      suspended_at: owner.suspended_at?.toISOString() ?? null,
+      banned_at: owner.suspended_at?.toISOString() ?? null,
+      suspend_reason: owner.suspend_reason,
+      admin_note: owner.admin_note,
+      pets: owner.pets.map((p) => ({
         id: p.id,
         name: p.name,
+        pet_type_name: p.pet_type?.pet_type_name ?? null,
         breed: p.breed,
         sex: p.sex,
         age_month: p.age_month,
         color: p.color,
+        weight_kg: p.weight_kg != null ? String(p.weight_kg) : "",
+        about: p.about,  // ← เพิ่มบรรทัดนี้
         image_url: p.image_url,
-        created_at: p.created_at.toISOString(),
-        is_banned: p.is_banned ?? null,
-        pet_type_name: p.pet_type?.pet_type_name ?? null,
+        is_banned: Boolean(p.is_banned),
+        banned_at: p.banned_at?.toISOString() ?? null,
+        ban_reason: p.ban_reason,
       })),
     };
 
-    //  ส่งข้อมูลกลับไป
     return res.status(200).json(payload);
-    
-  } catch (error) {
-    console.error("get-owner-by-id error:", error);
-    
-
-
-    return res.status(500).json({ 
-      message: "Failed to load owner details" 
-    });
+  } catch (err) {
+    console.error("Error fetching owner detail:", err);
+    return res.status(500).json({ message: "Failed to fetch owner detail" });
   }
 }
+
+export default apiHandler(handler);

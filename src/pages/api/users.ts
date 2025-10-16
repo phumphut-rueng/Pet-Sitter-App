@@ -8,12 +8,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       return res.status(200).json(users);
     }
 
-    // ถ้า request method อื่น ๆ
+    // 405: method ไม่อนุญาต
     res.setHeader("Allow", ["GET"]);
-    return res.status(405).end(`Method ${req.method} Not Allowed`);
+    return res.status(405).json({ message: "Method not allowed" });
   } catch (error) {
-    console.error(error);
-    return res.status(500).json({ error: "Internal Server Error" });
+    console.error("users api error:", error);
+    return res.status(500).json({ message: "Internal Server Error" });
   }
 }
-

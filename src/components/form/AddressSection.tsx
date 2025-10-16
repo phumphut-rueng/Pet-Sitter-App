@@ -10,7 +10,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { getLatLngFromAddress } from "@/utils/nominatim";
+import { getLatLngFromAddress } from "@/lib/utils/nominatim";
 import { Controller } from "react-hook-form";
 import type {
   Control,
@@ -45,6 +45,10 @@ type Props = {
   errors: FieldErrors<SitterFormValues>;
   watch: UseFormWatch<SitterFormValues>;
   setValue: UseFormSetValue<SitterFormValues>;
+  setError: (
+    name: keyof SitterFormValues,
+    error: { type: string; message?: string }
+  ) => void;
   title?: string;
 };
 
@@ -54,6 +58,7 @@ export default function AddressSection({
   errors,
   watch,
   setValue,
+  setError,
   title = "Address",
 }: Props) {
   const [addr, setAddr] = useState<AddressData | null>(null);
@@ -145,57 +150,57 @@ export default function AddressSection({
   }, [watchSubdistrict, subdistrictOpts, setValue]);
 
   // full address string (สำหรับ geocoding)
-    const addressDetail = watch("address_detail");
-    const subDistrict = watch("address_sub_district");
-    const district = watch("address_district");
-    const province = watch("address_province");
-    const postCode = watch("address_post_code");
-    const fullAddress = useMemo(() => {
-      return [addressDetail, subDistrict, district, province, postCode]
-        .filter(Boolean)
-        .join(", ");
-    }, [addressDetail, subDistrict, district, province, postCode]);
+  const addressDetail = watch("address_detail");
+  const subDistrict = watch("address_sub_district");
+  const district = watch("address_district");
+  const province = watch("address_province");
+  const postCode = watch("address_post_code");
+  const fullAddress = useMemo(() => {
+    return [addressDetail, subDistrict, district, province, postCode]
+      .filter(Boolean)
+      .join(", ");
+  }, [addressDetail, subDistrict, district, province, postCode]);
 
   // debounce geocoding เมื่อ address เปลี่ยน (ต้องมี province+district อย่างน้อย)
   useEffect(() => {
     if (!watchProvince || !watchDistrict) return;
     if (!fullAddress) return;
+  
     const t = setTimeout(async () => {
       try {
-        const { lat, lng } = await getLatLngFromAddress(fullAddress);
+        const result = await getLatLngFromAddress(fullAddress);
+        if (!result) {
+          setError("address_detail", {
+            type: "manual",
+            message: "We couldn't find the location for this address.",
+          });
+          return;
+        }
+  
+        const { lat, lng } = result;
         setLatLng({ lat, lng });
         setValue("latitude", lat, { shouldDirty: true });
         setValue("longitude", lng, { shouldDirty: true });
+  
+        // ✅ เคลียร์ error ถ้าหา location ได้
+        setValue("address_detail", watch("address_detail"), { shouldValidate: true });
       } catch (err) {
         console.error("Geocoding error:", err);
+        setError("address_detail", {
+          type: "manual",
+          message: "Unknown error occurred while finding location.",
+        });
       }
     }, 700);
+  
     return () => clearTimeout(t);
-  }, [fullAddress, watchProvince, watchDistrict, setValue]);
+  }, [fullAddress, watchProvince, watchDistrict, setValue, setError, watch]);
 
   return (
     <section className="bg-white rounded-xl pt-4 pb-7 px-12 mt-4">
       <h4 className="text-gray-4 font-bold text-xl pt-4">{title}</h4>
 
       <div className="mt-4 grid gap-4 md:grid-cols-2">
-        {/* Address detail */}
-        <div className="md:col-span-2">
-          <InputText
-            placeholder=""
-            label="Address detail*"
-            type="text"
-            variant={errors.address_detail ? "error" : "default"}
-            {...register("address_detail", {
-              required: "Please enter your address detail.",
-            })}
-          />
-          {errors.address_detail && (
-            <p className="mt-1 text-sm text-red">
-              {errors.address_detail.message as string}
-            </p>
-          )}
-        </div>
-
         {/* Province */}
         <div className="flex flex-col gap-1 relative z-0">
           <label className="font-medium text-black">Province*</label>
@@ -245,6 +250,7 @@ export default function AddressSection({
               <Select
                 value={field.value || ""}
                 onValueChange={(val) => field.onChange(val)}
+                disabled={!watchProvince}
               >
                 <SelectTrigger
                   className={`!h-12 w-full rounded-xl border px-4 text-left ${
@@ -283,6 +289,7 @@ export default function AddressSection({
               <Select
                 value={field.value || ""}
                 onValueChange={(val) => field.onChange(val)}
+                disabled={!watchDistrict}
               >
                 <SelectTrigger
                   className={`!h-12 w-full rounded-xl border px-4 text-left ${
@@ -319,6 +326,7 @@ export default function AddressSection({
             inputMode="numeric"
             pattern="[0-9]*"
             readOnly
+            disabled={!watchSubdistrict}
             variant={errors.address_post_code ? "error" : "default"}
             {...register("address_post_code", {
               required: "Please select a sub-district to get the postcode.",
@@ -327,6 +335,24 @@ export default function AddressSection({
           {errors.address_post_code && (
             <p className="mt-1 text-sm text-red">
               {errors.address_post_code.message as string}
+            </p>
+          )}
+        </div>
+
+        {/* Address detail */}
+        <div className="md:col-span-2">
+          <InputText
+            placeholder=""
+            label="Address detail*"
+            type="text"
+            variant={errors.address_detail ? "error" : "default"}
+            {...register("address_detail", {
+              required: "Please enter your address detail.",
+            })}
+          />
+          {errors.address_detail && (
+            <p className="mt-1 text-sm text-red">
+              {errors.address_detail.message as string}
             </p>
           )}
         </div>

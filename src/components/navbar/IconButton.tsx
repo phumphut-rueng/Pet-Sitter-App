@@ -1,4 +1,5 @@
-import React, { useEffect, useState } from "react";
+import * as React from "react";
+import { useRouter } from "next/router";
 import type { LucideIcon } from "lucide-react";
 
 interface IconButtonProps {
@@ -22,35 +23,46 @@ const IconButton = ({
   onNavigate,
   disabled = false,
 }: IconButtonProps) => {
-  const [indicatorVisible, setIndicatorVisible] = useState(hasIndicator);
-
-
-  useEffect(() => {
-    setIndicatorVisible(hasIndicator);
-  }, [hasIndicator]);
+  const router = useRouter();
 
   const handleClick = () => {
     if (disabled) return;
-
-    if (indicatorVisible) setIndicatorVisible(false);
-
     if (onClick) onClick();
     else if (route && onNavigate) onNavigate(route);
   };
 
+  // เช็ค active จากเส้นทางปัจจุบัน
+  const isActive =
+    !!route &&
+    (router.asPath === route ||
+      router.asPath.startsWith(route + "?") ||
+      router.asPath.startsWith(route + "/"));
+
   const isDesktop = variant === "desktop";
 
+  // ปล่อยให้ "สี" คุมที่ปุ่ม เพื่อให้ไอคอนตาม currentColor
   const buttonClasses = [
     "relative",
-    "transition-colors",
-    "flex items-center justify-center",
+    "inline-flex items-center justify-center",
+    "transition",
     disabled ? "opacity-50 cursor-not-allowed" : "cursor-pointer",
 
-    isDesktop ? "w-12 h-12 rounded-full bg-gray-1 hover:bg-gray-2" : "w-6 h-6",
+    // สีพื้นฐาน + hover/active
+    "text-ink",
+    "hover:text-orange-5",
+    isDesktop ? "hover:bg-orange-1" : "",
+
+    // active state
+    isActive ? "text-orange-5" : "",
+    isActive && isDesktop ? "bg-orange-1/40" : "",
+
+    // ขนาด
+    isDesktop ? "h-10 w-10 rounded-full" : "h-6 w-6",
   ].join(" ");
 
-  const iconClasses = isDesktop ? "w-6 h-6 text-gray-6" : "w-6 h-6 text-gray-6";
-  const indicatorPos = isDesktop ? "top-2 right-2" : "top-0 right-0";
+  // ไอคอนไม่กำหนดสี ให้รับ currentColor จากปุ่ม
+  const iconClasses = isDesktop ? "h-5 w-5" : "h-5 w-5";
+  const indicatorPos = isDesktop ? "top-0 right-0" : "-top-0.5 -right-0.5";
 
   return (
     <button
@@ -62,8 +74,10 @@ const IconButton = ({
       disabled={disabled}
     >
       <Icon className={iconClasses} />
-      {indicatorVisible && (
-        <div className={`absolute ${indicatorPos} w-3 h-3 bg-orange-5 rounded-full`} />
+      {hasIndicator && (
+        <span
+          className={`absolute ${indicatorPos} h-2 w-2 rounded-full bg-red ring-2 ring-white`}
+        />
       )}
     </button>
   );

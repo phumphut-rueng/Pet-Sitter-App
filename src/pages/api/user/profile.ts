@@ -1,85 +1,111 @@
-// ./src/pages/api/user/profile.ts
 import type { NextApiRequest, NextApiResponse } from "next";
 import { getServerSession } from "next-auth";
 import { Prisma } from "@prisma/client";
 import { authOptions } from "../auth/[...nextauth]";
 
-import { json, HTTP_STATUS, toErrMsg } from "@/lib/api/api-http";
+import { HTTP_STATUS } from "@/lib/api/api-http";
 import {
   updateProfileSchema,
-  ValidationDetails,
+  type ValidationDetails,
   normalizeString,
   pickDobYmd,
   pickProfileImageUrl,
   pickProfileImagePublicId,
+  pickIdNumber,
 } from "@/lib/validators/validation";
 import { extractPublicIdFromCloudinaryUrl } from "@/lib/cloudinary/id";
 import { userRepository, type UpdateData } from "@/lib/repo/user.repo";
 
-
-/* ===== helpers ===== */
 type UnknownRecord = Record<string, unknown>;
-const isRecord = (v: unknown): v is UnknownRecord => typeof v === "object" && v !== null;
 
-const parseDate = (dateString: string): Date => new Date(`${dateString}T00:00:00.000Z`);
-const formatDateForResponse = (date: Date | null): string =>
-  date ? date.toISOString().slice(0, 10) : "";
+function sendError(
+  res: NextApiResponse,
+  status: number,
+  message: string,
+  extra?: Record<string, unknown>
+) {
+  return res.status(status).json({ message, ...(extra ?? {}) });
+}
 
-const getUserIdFromSession = async (req: NextApiRequest, res: NextApiResponse): Promise<number | null> => {
+function getProp<T = unknown>(obj: unknown, key: string): T | undefined {
+  if (obj && typeof obj === "object") {
+    return (obj as UnknownRecord)[key] as T | undefined;
+  }
+  return undefined;
+}
+
+async function getUserIdFromSession(
+  req: NextApiRequest,
+  res: NextApiResponse
+): Promise<number | null> {
   const session = await getServerSession(req, res, authOptions);
-  const u = (session as unknown as UnknownRecord | null)?.["user"];
-  const idRaw = isRecord(u) ? u["id"] : undefined;
-  const n = typeof idRaw === "string" ? Number(idRaw) : NaN;
+
+  const user = getProp<UnknownRecord | undefined>(session, "user");
+  const rawId = user ? getProp<string | number | undefined>(user, "id") : undefined;
+
+  const n = typeof rawId === "string" ? Number(rawId) : typeof rawId === "number" ? rawId : NaN;
   return Number.isFinite(n) ? n : null;
-};
+}
 
-const isPrismaUniqueConstraintError = (
-  error: unknown
-): error is Prisma.PrismaClientKnownRequestError =>
-  typeof error === "object" &&
-  error !== null &&
-  "code" in (error as UnknownRecord) &&
-  (error as { code: unknown }).code === "P2002";
+function parseDateYmdToUTCDate(ymd?: string): Date | undefined {
+  if (!ymd) return undefined;
+  return new Date(`${ymd}T00:00:00.000Z`);
+}
 
-/* ===== types ===== */
+function isP2002(err: unknown): err is Prisma.PrismaClientKnownRequestError {
+  return err instanceof Prisma.PrismaClientKnownRequestError && err.code === "P2002";
+}
+
 type UserProfileResponse = {
   name: string;
   email: string;
   phone: string;
   dob: string;
-  profileImage: string;            // legacy
-  profileImagePublicId?: string;   // preferred for FE
+  idNumber?: string;
+  image?: string; // ← เพิ่มบรรทัดนี้
+  profileImage: string;
+  profileImagePublicId?: string;
 };
-type UpdateResponse = { message: string };
-type ErrorResponse = { error: string; details?: ValidationDetails; fields?: string[] };
 
-/* ===== handlers ===== */
-const handleGetProfile = async (
+type UpdateResponse = { message: string };
+type ErrorResponse = {
+  message: string;
+  details?: ValidationDetails;
+  fields?: string[];
+};
+
+async function handleGetProfile(
   userId: number,
   res: NextApiResponse<UserProfileResponse | ErrorResponse>
-) => {
+) {
   const user = await userRepository.findById(userId);
-  if (!user) return json(res, HTTP_STATUS.NOT_FOUND, { error: "User not found" });
+  if (!user) return sendError(res, HTTP_STATUS.NOT_FOUND, "User not found");
 
-  return json(res, HTTP_STATUS.OK, {
+  const dobStr = user.dob ? user.dob.toISOString().slice(0, 10) : "";
+
+  return res.status(HTTP_STATUS.OK).json({
     name: user.name ?? "",
     email: user.email ?? "",
     phone: user.phone ?? "",
-    dob: formatDateForResponse(user.dob),
+    dob: dobStr,
+    idNumber: user.id_number ?? undefined,
+    image: user.profile_image_public_id ?? user.profile_image ?? undefined, // ← เพิ่มบรรทัดนี้
     profileImage: user.profile_image ?? "",
     profileImagePublicId: user.profile_image_public_id ?? undefined,
   });
-};
+}
 
-const handleUpdateProfile = async (
+async function handleUpdateProfile(
   userId: number,
   req: NextApiRequest,
   res: NextApiResponse<UpdateResponse | ErrorResponse>
-) => {
+) {
+  const idNumberRaw = pickIdNumber(req.body);
+
   const normalized = {
-    name: normalizeString((req.body as UnknownRecord | undefined)?.name),
-    email: normalizeString((req.body as UnknownRecord | undefined)?.email),
-    phone: normalizeString((req.body as UnknownRecord | undefined)?.phone),
+    name: normalizeString(getProp<string | undefined>(req.body, "name")),
+    email: normalizeString(getProp<string | undefined>(req.body, "email")),
+    phone: normalizeString(getProp<string | undefined>(req.body, "phone")),
     dob: pickDobYmd(req.body),
     profileImage: pickProfileImageUrl(req.body),
     profile_image_public_id: pickProfileImagePublicId(req.body),
@@ -87,8 +113,7 @@ const handleUpdateProfile = async (
 
   const parsed = updateProfileSchema.safeParse(normalized);
   if (!parsed.success) {
-    return json(res, HTTP_STATUS.BAD_REQUEST, {
-      error: "Validation error",
+    return sendError(res, HTTP_STATUS.BAD_REQUEST, "Validation error", {
       details: parsed.error.flatten(),
     });
   }
@@ -102,56 +127,65 @@ const handleUpdateProfile = async (
   if (name !== undefined) updateData.name = name;
   if (email !== undefined) updateData.email = email;
   if (phone !== undefined) updateData.phone = phone;
-  if (dob !== undefined) updateData.dob = parseDate(dob);
+  if (dob !== undefined) updateData.dob = parseDateYmdToUTCDate(dob);
+  if (idNumberRaw !== undefined) updateData.id_number = idNumberRaw || null;
+
   if (resolvedPublicId !== undefined) {
-    updateData.profile_image_public_id = resolvedPublicId || null; // null = ลบรูป
+    updateData.profile_image_public_id = resolvedPublicId || null;
   }
-  // ถ้าต้องเก็บ legacy URL ด้วย ให้เอาคอมเมนต์ออก
-  // if (profileImage !== undefined) updateData.profile_image = profileImage;
+  if (profileImage !== undefined) {
+    updateData.profile_image = profileImage || null;
+  }
 
   try {
-    const out = await userRepository.updateById(userId, updateData);
-    console.log("[profile] updated public_id =", out.profile_image_public_id);
-    return json(res, HTTP_STATUS.OK, { message: "OK" });
+    await userRepository.updateById(userId, updateData);
+    return res.status(HTTP_STATUS.OK).json({ message: "Profile updated successfully" });
   } catch (error: unknown) {
-    if (isPrismaUniqueConstraintError(error)) {
-      const target = Array.isArray((error as Prisma.PrismaClientKnownRequestError).meta?.target)
-        ? ((error as Prisma.PrismaClientKnownRequestError).meta!.target as string[])
-        : undefined;
+    if (isP2002(error)) {
+      const targets = error.meta?.target;
+      const fields = Array.isArray(targets) ? (targets as string[]) : [];
 
-      if (target?.includes("email")) {
-        return json(res, HTTP_STATUS.CONFLICT, { error: "email_taken" });
+      if (fields.includes("email")) {
+        return sendError(res, HTTP_STATUS.CONFLICT, "Email is already taken");
       }
-      if (target?.includes("phone")) {
-        return json(res, HTTP_STATUS.CONFLICT, { error: "phone_taken" });
+      if (fields.includes("phone")) {
+        return sendError(res, HTTP_STATUS.CONFLICT, "Phone number is already taken");
       }
-      return json(res, HTTP_STATUS.CONFLICT, { error: "unique_violation", fields: target });
+      if (fields.includes("unique_id_number") || fields.includes("id_number")) {
+        return sendError(res, HTTP_STATUS.CONFLICT, "ID number is already taken");
+      }
+      return sendError(res, HTTP_STATUS.CONFLICT, "Unique constraint violation", { fields });
     }
-    console.error("Update profile error:", error);
-    return json(res, HTTP_STATUS.INTERNAL_SERVER_ERROR, { error: "Internal Server Error" });
-  }
-};
 
-/* ===== router ===== */
+    console.error("Update profile error:", error);
+    return sendError(res, HTTP_STATUS.INTERNAL_SERVER_ERROR, "Failed to update profile");
+  }
+}
+
 export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse<UserProfileResponse | UpdateResponse | ErrorResponse>
 ) {
   try {
     const userId = await getUserIdFromSession(req, res);
-    if (!userId) return json(res, HTTP_STATUS.UNAUTHORIZED, { error: "Unauthorized" });
+    if (!userId) return sendError(res, HTTP_STATUS.UNAUTHORIZED, "Unauthorized");
 
-    switch (req.method) {
-      case "GET":
-        return handleGetProfile(userId, res);
-      case "PUT":
-        return handleUpdateProfile(userId, req, res);
-      default:
-        res.setHeader("Allow", ["GET", "PUT"]);
-        return json(res, HTTP_STATUS.METHOD_NOT_ALLOWED, { error: "Method not allowed" });
+    if (req.method === "GET") {
+      return handleGetProfile(userId, res);
     }
-  } catch (error: unknown) {
+
+    if (req.method === "PUT") {
+      return handleUpdateProfile(userId, req, res);
+    }
+
+    res.setHeader("Allow", ["GET", "PUT"]);
+    return sendError(res, HTTP_STATUS.METHOD_NOT_ALLOWED, "Method not allowed");
+  } catch (error) {
     console.error("Profile API error:", error);
-    return json(res, HTTP_STATUS.INTERNAL_SERVER_ERROR, { error: toErrMsg(error) });
+    return sendError(
+      res,
+      HTTP_STATUS.INTERNAL_SERVER_ERROR,
+      error instanceof Error ? error.message : "Internal server error"
+    );
   }
 }

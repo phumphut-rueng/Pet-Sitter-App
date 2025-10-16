@@ -1,6 +1,6 @@
 import type { OwnerProfileInput } from "@/lib/validators/profile";
 import { cldUrl } from "@/lib/cloudinary/client";
-import { sanitize, formatDate } from "@/lib/utils/strings";
+import { sanitizeDigits, trimString, toYmd } from "@/lib/utils/strings";
 
 export type OwnerProfileDTO = {
   name: string | null;
@@ -8,9 +8,9 @@ export type OwnerProfileDTO = {
   phone: string | null;
   idNumber?: string | null;
   dob?: string | null;
-  profileImage?: string | null;            // legacy url
-  profileImagePublicId?: string | null;    // camel
-  profile_image_public_id?: string | null; // snake
+  profileImage?: string | null;
+  profileImagePublicId?: string | null;
+  profile_image_public_id?: string | null;
 };
 
 export const DEFAULT_VALUES: OwnerProfileInput = {
@@ -41,18 +41,19 @@ export const transformData = {
   },
 
   fromFormToApi: (v: OwnerProfileInput) => ({
-    name: sanitize.trimString(v.name) || undefined,
-    email: sanitize.trimString(v.email) || undefined,
-    phone: sanitize.onlyDigits(v.phone),
-    dob: formatDate.toYmd(v.dob),
+    name: trimString(v.name) || undefined,
+    email: trimString(v.email) || undefined,
+    phone: sanitizeDigits(v.phone),
+    idNumber: trimString(v.idNumber) || undefined,
+    dob: toYmd(v.dob),
   }),
 
   toStorageFormat: (v: OwnerProfileInput): OwnerProfileDTO => ({
-    name: sanitize.trimString(v.name),
-    email: sanitize.trimString(v.email),
-    phone: sanitize.onlyDigits(v.phone) ?? "",
-    idNumber: sanitize.trimString(v.idNumber),
-    dob: formatDate.toYmd(v.dob) ?? "",
-    profileImage: typeof v.image === "string" ? sanitize.trimString(v.image) : "",
+    name: trimString(v.name),
+    email: trimString(v.email),
+    phone: sanitizeDigits(v.phone) ?? "",
+    idNumber: trimString(v.idNumber),
+    dob: toYmd(v.dob) ?? "",
+    profileImage: typeof v.image === "string" ? trimString(v.image) : "",
   }),
 };

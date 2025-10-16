@@ -1,6 +1,6 @@
 import { useState, useMemo, useCallback } from "react"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
-import { formatDate } from "@/lib/utils/date"
+import { formatDateLocale } from "@/lib/utils/date"
 import { cn } from "@/lib/utils/utils"
 import { getDaysInMonth, getFirstDayOfMonth } from "@/lib/utils/date"
 import { DatePickerProps } from "@/types/date-picker.types"
@@ -176,7 +176,7 @@ function DatePicker({
                     )}
                 >
                     {date
-                        ? formatDate(date)
+                        ? formatDateLocale(date)
                         : <span className="text-gray-4">Select date</span>}
                 </button>
             </PopoverTrigger>

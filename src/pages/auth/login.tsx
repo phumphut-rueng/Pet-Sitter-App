@@ -40,6 +40,7 @@ export default function Login() {
         alt="register"
         className="absolute bottom-0 left-0"
         priority
+        style={{ width: 'auto', height: 'auto' }}
       />
 
       {/* ตำแหน่งบนขวา */}
@@ -50,6 +51,7 @@ export default function Login() {
         alt="register"
         className="absolute top-0 right-0"
         loading="lazy"
+        style={{ width: 'auto', height: 'auto' }}
 
       />
 
@@ -121,7 +123,7 @@ export default function Login() {
             {/* forget password */}
             <div>
               <span className="text-[16px] font-bold text-orange-5 cursor-pointer">
-                <Link href="/auth/reset-password">Forget Password</Link>
+                <Link href="/auth/forgot-password">Forget Password</Link>
               </span>
             </div>
           </div>
