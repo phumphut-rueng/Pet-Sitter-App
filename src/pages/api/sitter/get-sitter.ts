@@ -12,7 +12,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const {
       searchTerm,      // คำค้นหาทั่วไป
       petTypes,        // array ของ pet type names ["Dog", "Cat"]
-      rating,          // ขั้นต่ำ rating เช่น 4
+      rating,          // rating range เช่น 4 (จะกรอง 4.00 <= x < 5.00)
       experience,      // ช่วงประสบการณ์ เช่น "0-2", "3-5", "5+"
       page = 1,        // หน้าปัจจุบัน
       limit = 5,       // จำนวนรายการต่อหน้า
@@ -73,17 +73,20 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       }
     }
 
-    // 4) Rating (ขั้นต่ำ)
+    // 4) Rating (range ตามดาว)
     if (rating) {
-      const minRating = Number(rating);
+      const selectedRating = Number(rating);
+      const minRating = selectedRating;
+      const maxRating = selectedRating + 1;
+      
       whereConditions.push(`s.id IN (
         SELECT sitter_id 
         FROM review 
         GROUP BY sitter_id 
-        HAVING AVG(rating) >= $${paramIndex}
+        HAVING AVG(rating) >= $${paramIndex} AND AVG(rating) < $${paramIndex + 1}
       )`);
-      queryParams.push(minRating);
-      paramIndex++;
+      queryParams.push(minRating, maxRating);
+      paramIndex += 2;
     }
 
     // สร้าง WHERE clause
