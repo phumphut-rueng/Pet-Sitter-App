@@ -17,7 +17,6 @@ import ChatWidget from "@/components/widgets/ChatWidget";
 import PetTypeCheckBox from "@/components/petTypeCheckBox";
 import CashButton from "@/components/buttons/CashButton";
 import IconButton from "@/components/buttons/IconButton";
-import Sidebar from "@/components/layout/SitterSidebar";
 import { PetSitterCard, PetSitterCardLarge, PetSitterCardSmall } from "@/components/cards/PetSitterCard";
 import BookingCard from "@/components/cards/BookingCard";
 import PetCard from "@/components/cards/PetCard";
@@ -35,12 +34,9 @@ import { PetPawLoading } from "@/components/loading/PetPawLoading";
 const SidebarDemo: React.FC = () => {
   return (
     <div className="flex h-[520px] overflow-hidden rounded-xl border border-border">
-      <Sidebar
-        logoSrc="/icons/sitter-logo-1.svg"
-        onNavigate={(id) => console.log("goto:", id)}
-      />
+      <SitterSidebar sticky={false} />
       <main className="flex-1 bg-white" />
-    </div>
+      </div>
   );
 };
 

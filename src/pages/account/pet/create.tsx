@@ -1,9 +1,9 @@
 import * as React from "react";
 import { useRouter } from "next/router";
 import toast from "react-hot-toast";
+
 import AccountPageShell from "@/components/layout/AccountPageShell";
 import PetForm from "@/components/features/pet/PetForm";
-import PageToaster from "@/components/ui/PageToaster";
 import { usePetsApi } from "@/hooks/usePets";
 import {
   PetFormValues,
@@ -14,40 +14,56 @@ import {
   petService,
 } from "@/lib/pet/pet-utils";
 
+/** แปลงค่า query.refresh  string ที่ใช้เป็น key ได้เสมอ */
+function getRefreshKey(refresh: string | string[] | undefined): string {
+  if (Array.isArray(refresh)) return refresh[0] ?? "create-form";
+  return typeof refresh === "string" ? refresh : "create-form";
+}
+
 export default function CreatePetPage() {
   const router = useRouter();
   const { getPetTypes } = usePetsApi();
-  const [loading, setLoading] = React.useState(false);
 
-  //  รองรับรีเซ็ตฟอร์มเมื่อมี query เปลี่ยน (เช่น ?refresh=timestamp)
-  const refreshQuery =
-    Array.isArray(router.query.refresh) ? router.query.refresh[0] : router.query.refresh;
-  const formKey = typeof refreshQuery === "string" ? refreshQuery : "create-form";
+  const [isSubmitting, setIsSubmitting] = React.useState(false);
 
-  const handleSubmit = async (values: PetFormValues) => {
-    try {
-      setLoading(true);
-      const payload = await formValuesToPayload(values, getPetTypes);
-      await petService.createPet(payload);
-      toast.success(SUCCESS_MESSAGES.petCreated);
-      router.push(ROUTES.petList);
-    } catch (error) {
-      toast.error(getErrorMessage(error));
-      console.error("Create pet failed:", error);
-    } finally {
-      setLoading(false);
-    }
-  };
+  // เปลี่ยน key เพื่อ remount ฟอร์มถ้า refresh=... เปลี่ยน
+  const formKey = React.useMemo(
+    () => getRefreshKey(router.query.refresh),
+    [router.query.refresh]
+  );
 
-  const handleCancel = () => router.push(ROUTES.petList);
+  const goList = React.useCallback(() => {
+    router.push(ROUTES.petList);
+  }, [router]);
+
+  const handleCancel = React.useCallback(() => {
+    goList();
+  }, [goList]);
+
+  const handleSubmit = React.useCallback(
+    async (values: PetFormValues) => {
+      try {
+        setIsSubmitting(true);
+        const payload = await formValuesToPayload(values, getPetTypes);
+        await petService.createPet(payload);
+        toast.success(SUCCESS_MESSAGES.petCreated);
+        goList();
+      } catch (err) {
+        toast.error(getErrorMessage(err));
+        console.error("Create pet failed:", err);
+      } finally {
+        setIsSubmitting(false);
+      }
+    },
+    [getPetTypes, goList]
+  );
 
   return (
     <AccountPageShell title="Your Pet">
-      <PageToaster />
       <PetForm
-        key={formKey} //  key เปลี่ยนเมื่อ refresh เปลี่ยน ฟอร์ม remount/ล้างค่า
+        key={formKey}
         mode="create"
-        loading={loading}
+        loading={isSubmitting}
         onSubmit={handleSubmit}
         onCancel={handleCancel}
       />

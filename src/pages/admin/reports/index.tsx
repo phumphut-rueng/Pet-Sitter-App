@@ -1,180 +1,127 @@
-import * as React from "react";
+import { useEffect, useMemo, useState } from "react";
+import toast from "react-hot-toast";
+
 import AdminLayout from "@/components/layout/AdminLayout";
 import PageHeader from "@/components/admin/owners/PageHeader";
 import ReportsTable from "@/components/admin/reports/ReportsTable";
 import StatusFilter from "@/components/admin/reports/StatusFilter";
 import { PetPawLoading } from "@/components/loading/PetPawLoading";
+import { Pagination } from "@/components/pagination/Pagination";
+
 import { api } from "@/lib/api/axios";
 import { getErrorMessage } from "@/lib/api/api-utils";
 import type { ReportsResponse, ReportRow, ReportStatusUI } from "@/types/admin/reports";
 import { toReportRow, toDBStatus } from "@/types/admin/reports";
 
-function SearchBar({
-  value,
-  onChange,
-  placeholder,
-}: {
-  value: string;
-  onChange: (v: string) => void;
-  placeholder: string;
-}) {
+const LIMIT = 10;
+
+function SearchBar({ value, onChange }: { value: string; onChange: (v: string) => void }) {
   return (
-    <div className="mb-2">
-      <input
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        placeholder={placeholder}
-        className="w-full md:w-96 rounded-lg border border-gray-2 px-3 py-2 text-sm2-medium
-                   focus:outline-none focus:ring-2 focus:ring-brand"
-        aria-label="Search reports"
-      />
-    </div>
-  );
-}
-
-function ErrorAlert({ message }: { message: string }) {
-  return (
-    <div className="bg-red-1 border border-red-3 text-red-5 px-4 py-3 rounded-lg mb-4 text-sm2-medium">
-      {message}
-    </div>
-  );
-}
-
-function PaginationBar({
-  page,
-  total,
-  totalPages,
-  limit,
-  loading,
-  onPageChange,
-}: {
-  page: number;
-  total: number;
-  totalPages: number;
-  limit: number;
-  loading: boolean;
-  onPageChange: (next: number) => void;
-}) {
-  if (totalPages <= 1) return null;
-
-  const start = (page - 1) * limit + 1;
-  const end = Math.min(page * limit, total);
-
-  return (
-    <div className="mt-6 flex items-center justify-between bg-white px-6 py-4 rounded-xl border border-gray-2">
-      <p className="text-sm2-regular text-gray-6">
-        Showing {start} to {end} of {total} results
-      </p>
-      <div className="flex gap-2">
-        <button
-          onClick={() => onPageChange(Math.max(1, page - 1))}
-          disabled={page === 1 || loading}
-          className="px-4 py-2 rounded-lg text-sm2-medium transition-all disabled:opacity-50 disabled:cursor-not-allowed bg-gray-1 text-gray-6 hover:bg-gray-2"
-        >
-          Previous
-        </button>
-        <button
-          onClick={() => onPageChange(Math.min(totalPages, page + 1))}
-          disabled={page === totalPages || loading}
-          className="px-4 py-2 rounded-lg text-sm2-medium transition-all 
-                    disabled:opacity-50 disabled:cursor-not-allowed bg-gray-1 text-gray-6 hover:bg-gray-2"
-        >
-          Next
-        </button>
-      </div>
-    </div>
+    <input
+      value={value}
+      onChange={(e) => onChange(e.target.value)}
+      placeholder="Search by title, description, reporter name/email"
+      className="mb-4 w-full rounded-lg border border-gray-2 bg-white px-3 py-2 text-sm2-medium focus:outline-none focus:ring-2 focus:ring-brand md:w-96"
+      aria-label="Search reports"
+    />
   );
 }
 
 export default function ReportsListPage() {
-  // filters & query
-  const [statusFilter, setStatusFilter] = React.useState<ReportStatusUI | "all">("all");
-  const [q, setQ] = React.useState("");
+  const [statusFilter, setStatusFilter] = useState<ReportStatusUI | "all">("all");
+  const [q, setQ] = useState("");
+  const [page, setPage] = useState(1);
 
-  // pagination
-  const [page, setPage] = React.useState(1);
-  const limit = 10;
+  const [rows, setRows] = useState<ReportRow[]>([]);
+  const [total, setTotal] = useState(0);
+  const [loading, setLoading] = useState(false);
 
-  // data state
-  const [rows, setRows] = React.useState<ReportRow[]>([]);
-  const [total, setTotal] = React.useState(0);
-  const [totalPages, setTotalPages] = React.useState(1);
+  const totalPages = useMemo(() => Math.max(1, Math.ceil(total / LIMIT)), [total]);
 
-  // ui state
-  const [loading, setLoading] = React.useState(false);
-  const [errorMsg, setErrorMsg] = React.useState<string | null>(null);
+  useEffect(() => {
+    let alive = true;
 
-  const params = React.useMemo(
-    () => ({
-      status: toDBStatus(statusFilter),
-      q,
-      page,
-      limit,
-      sortBy: "created_at" as const,
-      sortOrder: "desc" as const,
-    }),
-    [statusFilter, q, page]
-  );
+    async function fetchReports() {
+      setLoading(true);
 
-  const load = React.useCallback(async () => {
-    setLoading(true);
-    setErrorMsg(null);
-    try {
-      const { data } = await api.get<ReportsResponse>("/admin/reports", { params });
-      setRows((data.reports ?? []).map(toReportRow));
-      setTotal(data.pagination.total);
-      setTotalPages(data.pagination.totalPages);
-    } catch (err: unknown) {
-      setErrorMsg(getErrorMessage(err, "Failed to load reports"));
-    } finally {
-      setLoading(false);
+      const params = {
+        status: toDBStatus(statusFilter),
+        q: q.trim(),
+        page,
+        limit: LIMIT,
+        sortBy: "created_at" as const,
+        sortOrder: "desc" as const,
+      };
+
+      try {
+        const { data } = await api.get<ReportsResponse>("/admin/reports", { params });
+        if (!alive) return;
+
+        setRows((data.reports ?? []).map(toReportRow));
+        setTotal(data.pagination.total);
+      } catch (err) {
+        if (!alive) return;
+
+        const msg = getErrorMessage(err, "Failed to load reports");
+        toast.error(msg);
+        setRows([]);
+        setTotal(0);
+      } finally {
+        if (alive) setLoading(false);
+      }
     }
-  }, [params]);
 
-  // load on first mount + whenever params change
-  React.useEffect(() => {
-    void load();
-  }, [load]);
+    fetchReports();
+    return () => { alive = false; };
+  }, [statusFilter, q, page]);
 
-  // reset page when filter or query changes
-  React.useEffect(() => {
-    setPage(1);
-  }, [statusFilter, q]);
+  const from = rows.length === 0 ? 0 : (page - 1) * LIMIT + 1;
+  const to = (page - 1) * LIMIT + rows.length;
 
   return (
     <AdminLayout>
-      {/* Header */}
-      <div className="flex items-center justify-between mb-6">
-        <PageHeader title="Report" className="mb-0" />
-        <StatusFilter value={statusFilter} onChange={setStatusFilter} />
-      </div>
+      <div className="relative min-h-[600px]">
+        <div className="mb-6 flex items-center justify-between">
+          <PageHeader title="Report" className="mb-0" />
+          <StatusFilter 
+            value={statusFilter} 
+            onChange={(v) => {
+              setStatusFilter(v);
+              setPage(1);
+            }} 
+          />
+        </div>
 
-      {/* Search */}
-      <SearchBar
-        value={q}
-        onChange={setQ}
-        placeholder="Search by title, description, reporter name/email"
-      />
-
-      {/*  Loading State with PetPawLoading */}
-      {loading && <PetPawLoading message="Loading Reports" size="md" />}
-      
-      {errorMsg && <ErrorAlert message={errorMsg} />}
-
-      {/* Table - แสดงเฉพาะตอนไม่ loading */}
-      {!loading && <ReportsTable reports={rows} />}
-
-      {/* Pagination */}
-      {!loading && (
-        <PaginationBar
-          page={page}
-          total={total}
-          totalPages={totalPages}
-          limit={limit}
-          loading={loading}
-          onPageChange={setPage}
+        <SearchBar 
+          value={q} 
+          onChange={(v) => {
+            setQ(v);
+            setPage(1);
+          }} 
         />
-      )}
+
+        <div className="relative rounded-2xl border border-gray-2 bg-white p-4 shadow-sm md:p-5">
+          <ReportsTable reports={rows} />
+
+          <div className="mt-6 grid grid-cols-3 items-center">
+            <div className="text-xs2-regular text-muted">
+              Showing {from}–{to} of {total}
+            </div>
+
+            <div className="flex justify-center">
+              <Pagination currentPage={page} totalPages={totalPages} onClick={setPage} />
+            </div>
+
+            <div />
+          </div>
+
+          {loading && (
+            <div className="absolute inset-0 flex items-center justify-center rounded-2xl ">
+              <PetPawLoading message="Loading Reports..." size="md" />
+            </div>
+          )}
+        </div>
+      </div>
     </AdminLayout>
   );
 }

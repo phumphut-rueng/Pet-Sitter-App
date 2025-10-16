@@ -25,7 +25,7 @@ export default function AccountPageShell({
   titleClassName?: string;
 }) {
   return (
-    <div className={`min-h-screen bg-gray-50 ${className}`}>
+    <div className={`min-h-screen bg-gray-1 ${className}`}>
       <div className="container mx-auto max-w-[1200px] px-4 lg:px-6 py-6">
         <div className="flex flex-col md:flex-row gap-6 md:gap-10 lg:gap-8">
           {/* Desktop Sidebar */}

@@ -1,34 +1,33 @@
 import { useState, useCallback } from "react";
 import { toast } from "sonner";
+import { api } from "@/lib/api/axios";
+import { getErrorMessage } from "@/lib/utils/error";
 
-/** Domain types */
 export type ReportStatus = "new" | "pending" | "resolved" | "rejected";
 
 export interface Reporter {
   id: number;
-  name: string;
+  name: string | null;
   email: string;
-  phone?: string;
+  phone?: string | null;
   profileImage?: string | null;
 }
 
 export interface Admin {
   id: number;
-  username: string;
-  email: string;
+  username?: string;
+  email?: string;
 }
-
 
 export interface Attachment {
   id: string | number;
   url: string;
   name?: string;
   mimeType?: string;
-  size?: number; // bytes
+  size?: number;
   width?: number;
   height?: number;
 }
-
 
 export interface Report {
   id: number;
@@ -37,10 +36,10 @@ export interface Report {
   status: ReportStatus;
   reporter: Reporter;
   handledBy?: Admin | null;
-  attachments?: Attachment[];   
+  attachments?: Attachment[];
   adminNote?: string | null;
-  createdAt: string;          
-  updatedAt?: string | null;    
+  createdAt: string;
+  updatedAt?: string | null;
 }
 
 export interface ReportsResponse {
@@ -57,48 +56,47 @@ export interface UseReportsParams {
   status?: ReportStatus | "all";
   page?: number;
   limit?: number;
-  /** ถ้าต้องการรองรับค้นหา */
   q?: string;
 }
 
-/** ช่วย parse JSON แบบ type-safe */
-async function parseJson<T>(resp: Response): Promise<T> {
-  return (await resp.json()) as T;
+type ReportDetailResponse = { report: Report } | Report;
+
+function toApiStatus(s: ReportStatus): "new" | "pending" | "resolved" | "canceled" {
+  return s === "rejected" ? "canceled" : s;
+}
+
+function isWrappedReport(payload: unknown): payload is { report: Report } {
+  return !!payload && typeof payload === "object" && "report" in (payload as Record<string, unknown>);
+}
+
+function extractReport(payload: ReportDetailResponse): Report {
+  return isWrappedReport(payload) ? payload.report : payload;
 }
 
 export function useReports() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Fetch Reports List
   const fetchReports = useCallback(
-    async (params: UseReportsParams = {}) => {
+    async (params: UseReportsParams = {}): Promise<ReportsResponse> => {
       setLoading(true);
       setError(null);
-
       try {
-        const queryParams = new URLSearchParams({
-          status: params.status ?? "all",
-          page: String(params.page ?? 1),
-          limit: String(params.limit ?? 10),
-        });
+        const { status = "all", page = 1, limit = 10, q = "" } = params;
+        const query = {
+          status: status === "all" ? "all" : toApiStatus(status as ReportStatus),
+          page,
+          limit,
+          ...(q.trim() ? { q: q.trim() } : {}),
+        };
 
-        if (params.q && params.q.trim()) {
-          queryParams.set("q", params.q.trim());
-        }
-
-        const response = await fetch(`/api/admin/reports?${queryParams.toString()}`);
-        if (!response.ok) {
-          throw new Error("Failed to fetch reports");
-        }
-
-        const data = await parseJson<ReportsResponse>(response);
+        const { data } = await api.get<ReportsResponse>("/admin/reports", { params: query });
         return data;
-      } catch (err: unknown) {
-        const message = err instanceof Error ? err.message : "Unknown error";
-        setError(message);
-        toast.error("Failed to load reports");
-        throw err;
+      } catch (e) {
+        const msg = getErrorMessage(e, "Failed to load reports");
+        setError(msg);
+        toast.error(msg);
+        throw e;
       } finally {
         setLoading(false);
       }
@@ -106,70 +104,45 @@ export function useReports() {
     []
   );
 
-  //  Fetch Single Report Detail
-  const fetchReportDetail = useCallback(async (reportId: number) => {
-    setLoading(true);
-    setError(null);
-
-    try {
-      const response = await fetch(`/api/admin/reports/${reportId}`);
-      if (!response.ok) {
-        if (response.status === 404) {
-          throw new Error("Report not found");
-        }
-        throw new Error("Failed to fetch report detail");
+  const fetchReportDetail = useCallback(
+    async (reportId: number): Promise<Report> => {
+      setLoading(true);
+      setError(null);
+      try {
+        const { data } = await api.get<ReportDetailResponse>(`/admin/reports/${reportId}`);
+        return extractReport(data);
+      } catch (e) {
+        const msg = getErrorMessage(e, "Failed to load report detail");
+        setError(msg);
+        toast.error(msg);
+        throw e;
+      } finally {
+        setLoading(false);
       }
-
-      const data = await parseJson<Report>(response);
-      return data;
-    } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : "Unknown error";
-      setError(message);
-      toast.error(message);
-      throw err;
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  // ✏️ Update Report Status
-  interface UpdateReportStatusResponse {
-    success: true;
-    report: Report;
-  }
+    },
+    []
+  );
 
   const updateReportStatus = useCallback(
     async (reportId: number, status: ReportStatus, adminNote?: string) => {
       setLoading(true);
       setError(null);
-
       try {
-        const response = await fetch(`/api/admin/reports/${reportId}/status`, {
-          method: "PATCH",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ status, adminNote }),
-        });
+        const next = toApiStatus(status);
+        await api.patch(`/admin/reports/${reportId}`, { status: next, adminNote });
 
-        if (!response.ok) {
-          throw new Error("Failed to update report status");
-        }
-
-        const data = await parseJson<UpdateReportStatusResponse>(response);
-
-        const statusLabels: Record<ReportStatus, string> = {
+        const labels: Record<ReportStatus, string> = {
           new: "New",
           pending: "Pending",
           resolved: "Resolved",
           rejected: "Rejected",
         };
-        toast.success(`Report marked as ${statusLabels[status]}`);
-
-        return data;
-      } catch (err: unknown) {
-        const message = err instanceof Error ? err.message : "Unknown error";
-        setError(message);
-        toast.error(message);
-        throw err;
+        toast.success(`Report marked as ${labels[status]}`);
+      } catch (e) {
+        const msg = getErrorMessage(e, "Failed to update report status");
+        setError(msg);
+        toast.error(msg);
+        throw e;
       } finally {
         setLoading(false);
       }

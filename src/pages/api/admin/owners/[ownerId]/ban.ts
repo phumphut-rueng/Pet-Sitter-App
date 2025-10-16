@@ -1,8 +1,8 @@
 import type { NextApiRequest, NextApiResponse } from "next";
-import { prisma } from "@/lib/prisma/prisma";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/pages/api/auth/[...nextauth]";
-import { $Enums } from "@prisma/client"; 
+import { prisma } from "@/lib/prisma/prisma";
+import { $Enums } from "@prisma/client";
 
 type Body = {
   action: "ban" | "unban";
@@ -10,58 +10,86 @@ type Body = {
   cascadePets?: boolean;
 };
 
+
+// ตอบ error แบบมาตรฐานเดียวกัน
+function sendError(res: NextApiResponse, status: number, message: string) {
+  return res.status(status).json({ message });
+}
+
+// parse ownerId จาก query [ownerId] หรือ [id]
+function parseOwnerId(req: NextApiRequest): number | null {
+  const idParam = (req.query.ownerId ?? req.query.id) as string | string[] | undefined;
+  const raw = Array.isArray(idParam) ? idParam[0] : idParam;
+  const n = Number(raw);
+  return Number.isFinite(n) ? n : null;
+}
+
+// หา adminId จาก session หรือ header x-user-id (fallback สำหรับ internal tools)
 async function resolveAdminId(req: NextApiRequest, res: NextApiResponse) {
   try {
     const session = await getServerSession(req, res, authOptions);
-    const uid = session?.user?.id ? Number(session.user.id) : NaN;
+    const uid = Number(session?.user?.id);
     if (Number.isFinite(uid)) {
       const admin = await prisma.admin.findUnique({ where: { user_id: uid } });
       if (admin) return admin.id;
     }
-  } catch {}
+  } catch {
+    // ignore – จะลองจาก header ต่อ
+  }
+
   const hdr = Number(req.headers["x-user-id"]);
   if (!Number.isFinite(hdr)) return null;
+
   const admin = await prisma.admin.findUnique({ where: { user_id: hdr } });
   return admin?.id ?? null;
 }
 
+
+
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+  // method guard
   if (req.method !== "POST") {
     res.setHeader("Allow", ["POST"]);
-    return res.status(405).json({ message: "Method not allowed" });
+    return sendError(res, 405, "Method not allowed");
   }
 
-  // รองรับ dynamic [ownerId]
-  const idParam = (req.query.ownerId ?? req.query.id) as string | string[] | undefined;
-  const ownerId = Number(Array.isArray(idParam) ? idParam[0] : idParam);
-  if (!Number.isFinite(ownerId)) return res.status(400).json({ message: "Invalid owner id" });
+  // id guard
+  const ownerId = parseOwnerId(req);
+  if (ownerId == null) return sendError(res, 400, "Invalid owner id");
 
+  // body guard
   const { action, reason, cascadePets = true } = (req.body ?? {}) as Body;
   if (action !== "ban" && action !== "unban") {
-    return res.status(400).json({ message: "Invalid action" });
+    return sendError(res, 400, "Invalid action");
   }
 
   try {
+    // auth guard
     const adminId = await resolveAdminId(req, res);
-    if (adminId == null) return res.status(403).json({ message: "Forbidden" });
+    if (adminId == null) return sendError(res, 403, "Forbidden");
 
-    const current = await prisma.user.findUnique({ where: { id: ownerId }, select: { id: true } });
-    if (!current) return res.status(404).json({ message: "Owner not found" });
+    // entity guard
+    const current = await prisma.user.findUnique({
+      where: { id: ownerId },
+      select: { id: true },
+    });
+    if (!current) return sendError(res, 404, "Owner not found");
 
     const now = new Date();
 
     if (action === "ban") {
+      // BAN อัปเดต user + cascade แบน pets
       const [u] = await prisma.$transaction([
         prisma.user.update({
           where: { id: ownerId },
           data: {
-            status: $Enums.user_status.ban,   
-            // ยังใช้ชุด suspended_* ต่อได้ (แค่ชื่อไม่แมตช์คำว่า ban)
+            status: $Enums.user_status.ban,
+            // field เดิมชื่อ suspended_* กลัวของเก่าพัง
             suspended_at: now,
             suspended_by_admin_id: adminId,
             suspend_reason: reason ?? null,
           },
-          select: { id: true, status: true, suspended_at: true, suspend_reason: true },
+          select: { status: true, suspended_at: true, suspend_reason: true },
         }),
         cascadePets
           ? prisma.pet.updateMany({
@@ -73,7 +101,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
                 ban_reason: reason ? `Owner banned: ${reason}` : "Owner banned",
               },
             })
-          : prisma.$executeRaw`SELECT 1`,
+          // ทำ no-op ให้ transaction array ยาวเท่ากัน 
+          : prisma.$queryRaw`SELECT 1`,
       ]);
 
       return res.status(200).json({
@@ -91,12 +120,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       prisma.user.update({
         where: { id: ownerId },
         data: {
-          status: $Enums.user_status.normal, 
+          status: $Enums.user_status.normal,
           suspended_at: null,
           suspended_by_admin_id: null,
           suspend_reason: null,
         },
-        select: { id: true, status: true, suspended_at: true, suspend_reason: true },
+        select: { status: true },
       }),
       cascadePets
         ? prisma.pet.updateMany({
@@ -108,7 +137,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
               ban_reason: null,
             },
           })
-        : prisma.$executeRaw`SELECT 1`,
+        : prisma.$queryRaw`SELECT 1`,
     ]);
 
     return res.status(200).json({
@@ -121,6 +150,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     });
   } catch (e) {
     console.error("ban owner error:", e);
-    return res.status(500).json({ message: "Operation failed" });
+    return sendError(res, 500, "Operation failed");
   }
 }

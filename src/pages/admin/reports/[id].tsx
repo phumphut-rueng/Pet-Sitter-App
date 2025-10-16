@@ -1,112 +1,111 @@
-import * as React from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/router";
+import toast from "react-hot-toast";
+
 import AdminLayout from "@/components/layout/AdminLayout";
 import ConfirmDialog from "@/components/admin/shared/ConfirmDialog";
 import { StatusBadge } from "@/components/badges/StatusBadge";
 import { PetPawLoading } from "@/components/loading/PetPawLoading";
 import { api } from "@/lib/api/axios";
+import { getErrorMessage } from "@/lib/api/api-utils";
+import { formatToddMMyyyy } from "@/lib/utils/date";
+
 import type { Report, ReportStatus } from "@/types/admin/reports";
 import { toUIStatus } from "@/types/admin/reports";
-import { getErrorMessage } from "@/lib/api/api-utils"; 
 
-// Component สำหรับแสดงข้อมูล
-function Field({
-  label,
-  value,
-  showDivider = false,
-}: {
-  label: string;
-  value: string;
+function Field({ label, value, showDivider = false }: { 
+  label: string; 
+  value: string; 
   showDivider?: boolean;
 }) {
   return (
     <div className="pb-6">
-      {/* Label */}
-      <div className="h4-bold text-gray-5 mb-2">{label}</div>
-      {/* Value */}
+      <div className="h4-bold mb-2 text-gray-5">{label}</div>
       <div className="body1-regular text-ink">{value}</div>
-      {/* เส้นใต้ (อยู่ใต้ Value) */}
-      {showDivider && <div className="w-full h-[1px] bg-gray-2 mt-4" />}
+      {showDivider && <div className="mt-4 h-px w-full bg-gray-2" />}
     </div>
   );
 }
 
-function formatDate(iso: string) {
-  try {
-    return new Date(iso).toLocaleDateString("en-US", {
-      day: "numeric",
-      month: "short",
-      year: "numeric",
-    });
-  } catch {
-    return iso;
-  }
-}
-
 export default function ReportDetailPage() {
   const router = useRouter();
-  const { id } = router.query;
+  const reportId = typeof router.query.id === "string" ? router.query.id : undefined;
 
-  const [report, setReport] = React.useState<Report | null>(null);
-  const [loading, setLoading] = React.useState(true);
-  const [errorMsg, setErrorMsg] = React.useState<string | null>(null);
-  const [actionLoading, setActionLoading] = React.useState(false);
-  const [openResolve, setOpenResolve] = React.useState(false);
-  const [openCancel, setOpenCancel] = React.useState(false);
+  const [report, setReport] = useState<Report | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [actionLoading, setActionLoading] = useState(false);
+  const [actionType, setActionType] = useState<"resolve" | "cancel" | null>(null);
+  const [openResolve, setOpenResolve] = useState(false);
+  const [openCancel, setOpenCancel] = useState(false);
 
-  React.useEffect(() => {
-    if (!id) return;
-    const run = async () => {
+  // โหลดข้อมูล
+  useEffect(() => {
+    if (!reportId) return;
+
+    let alive = true;
+
+    async function fetchReport() {
       setLoading(true);
-      setErrorMsg(null);
       try {
-        const { data } = await api.get<{ report: Report }>(`/admin/reports/${id}`);
+        const { data } = await api.get<{ report: Report }>(`/admin/reports/${reportId}`);
+        if (!alive) return;
         setReport(data.report);
-      } catch (err: unknown) {
+      } catch (err) {
+        if (!alive) return;
         const msg = getErrorMessage(err, "Failed to fetch report");
-        setErrorMsg(msg);
+        toast.error(msg);
       } finally {
-        setLoading(false);
+        if (alive) setLoading(false);
       }
-    };
-    void run();
-  }, [id]);
+    }
 
-  const updateStatus = async (next: ReportStatus) => {
+    fetchReport();
+    return () => { alive = false; };
+  }, [reportId]);
+
+  // อัปเดตสถานะ
+  async function updateStatus(status: ReportStatus, type: "resolve" | "cancel") {
     if (!report) return;
+
     setActionLoading(true);
+    setActionType(type);
+
+    const loadingToast = toast.loading(
+      type === "resolve" ? "Resolving report..." : "Canceling report..."
+    );
+
     try {
-      await api.patch(`/admin/reports/${report.id}`, { status: next });
-      setReport({ ...report, status: next });
-    } catch (err: unknown) {
-      const msg = getErrorMessage(err, "Failed to update report");
-      setErrorMsg(msg);
+      await api.patch(`/admin/reports/${report.id}`, { status });
+      setReport({ ...report, status });
+
+      toast.success(
+        type === "resolve" ? "Report resolved successfully" : "Report canceled successfully",
+        { id: loadingToast }
+      );
+    } catch (err) {
+      toast.error(getErrorMessage(err, "Failed to update report"), { id: loadingToast });
     } finally {
       setActionLoading(false);
+      setActionType(null);
       setOpenResolve(false);
       setOpenCancel(false);
     }
-  };
+  }
 
-  //  Loading State with PetPawLoading
+  const canTakeAction = report && (report.status === "new" || report.status === "pending");
+
+  // กำลังโหลด
   if (loading) {
     return (
       <AdminLayout>
-        <PetPawLoading message="Loading Report Details" size="md" />
-      </AdminLayout>
-    );
-  }
-
-  if (errorMsg) {
-    return (
-      <AdminLayout>
-        <div className="bg-red-1 border border-red-3 text-red-5 px-4 py-3 rounded-lg body1-medium">
-          {errorMsg}
+        <div className="flex min-h-[600px] items-center justify-center">
+          <PetPawLoading message="Loading Report Details..." size="md" />
         </div>
       </AdminLayout>
     );
   }
 
+  // ไม่เจอ report
   if (!report) {
     return (
       <AdminLayout>
@@ -115,70 +114,77 @@ export default function ReportDetailPage() {
     );
   }
 
-  const showActions = report.status === "new" || report.status === "pending";
-
   return (
     <AdminLayout>
-      <div className="flex items-center justify-between mb-6">
-        <div className="flex items-center gap-4">
-          <button
-            onClick={() => router.back()}
-            className="text-gray-6 hover:text-ink body1-medium"
-            aria-label="Go back"
-          >
-            ←
-          </button>
-          <h1 className="h3-bold text-ink">{report.title}</h1>
-          <StatusBadge status={toUIStatus(report.status)} />
+      <div className="relative min-h-[600px]">
+        {/* Header */}
+        <div className="mb-6 flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            <button
+              onClick={() => router.back()}
+              className="body1-medium text-gray-6 hover:text-ink"
+              aria-label="Go back"
+            >
+              ←
+            </button>
+            <h1 className="h3-bold text-ink">{report.title}</h1>
+            <StatusBadge status={toUIStatus(report.status)} />
+          </div>
+
+          {canTakeAction && (
+            <div className="flex items-center gap-3">
+              <button
+                onClick={() => setOpenCancel(true)}
+                className="body1-medium rounded-xl px-6 py-3 text-orange-5 transition-colors hover:bg-orange-1"
+              >
+                Cancel Report
+              </button>
+              <button
+                onClick={() => setOpenResolve(true)}
+                className="body1-medium rounded-xl bg-orange-5 px-6 py-3 text-white transition-colors hover:bg-orange-6"
+              >
+                Resolve
+              </button>
+            </div>
+          )}
         </div>
 
-        {showActions && (
-          <div className="flex items-center gap-3">
-            <button
-              onClick={() => setOpenCancel(true)}
-              className="px-6 py-3 rounded-xl body1-medium text-orange-5 hover:bg-orange-1 transition-colors"
-            >
-              Cancel Report
-            </button>
-            <button
-              onClick={() => setOpenResolve(true)}
-              className="px-6 py-3 rounded-xl body1-medium bg-orange-5 text-white hover:bg-orange-6 transition-colors"
-            >
-              Resolve
-            </button>
+        {/* Content */}
+        <div className="space-y-0 rounded-2xl border border-gray-2 bg-white p-10">
+          <Field
+            label="Reported by"
+            value={`${report.reporter.name} (${report.reporter.email})`}
+            showDivider
+          />
+
+          {report.reportedUser && (
+            <Field
+              label="Reported Person"
+              value={`${report.reportedUser.name} (${report.reportedUser.email})`}
+            />
+          )}
+
+          <Field label="Issue" value={report.title} />
+          <Field label="Description" value={report.description || "-"} />
+          <Field label="Date Submitted" value={formatToddMMyyyy(report.createdAt)} />
+          <Field
+            label="Date Updated"
+            value={formatToddMMyyyy(report.updatedAt || report.createdAt)}
+          />
+        </div>
+
+        {/* Action Loading overlay */}
+        {actionLoading && (
+          <div className="absolute inset-0 z-50 flex items-center justify-center ">
+            <PetPawLoading
+              message={actionType === "resolve" ? "Resolving Report..." : "Canceling Report..."}
+              size="md"
+            />
           </div>
         )}
       </div>
 
-      {/* Content Card */}
-      <div className="bg-white rounded-2xl border border-gray-2 p-10 space-y-0">
-        {/* Reported by - มีเส้นใต้ */}
-        <Field
-          label="Reported by"
-          value={`${report.reporter.name} (${report.reporter.email})`}
-          showDivider={true}
-        />
-
-        {/* ฟิลด์อื่นๆ - ไม่มีเส้นใต้ */}
-        {report.reportedUser && (
-          <Field
-            label="Reported Person"
-            value={`${report.reportedUser.name} (${report.reportedUser.email})`}
-          />
-        )}
-
-        <Field label="Issue" value={report.title} />
-
-        <Field label="Description" value={report.description || "-"} />
-
-        <Field label="Date Submitted" value={formatDate(report.createdAt)} />
-
-        <Field
-          label="Date Updated"
-          value={formatDate(report.updatedAt || report.createdAt)}
-        />
-      </div>
-
+      {/* Dialogs */}
       <ConfirmDialog
         open={openResolve}
         onOpenChange={setOpenResolve}
@@ -187,7 +193,7 @@ export default function ReportDetailPage() {
         description="This will mark the report as resolved."
         confirmLabel="Resolve"
         cancelLabel="Back"
-        onConfirm={() => updateStatus("resolved")}
+        onConfirm={() => updateStatus("resolved", "resolve")}
       />
 
       <ConfirmDialog
@@ -199,7 +205,7 @@ export default function ReportDetailPage() {
         confirmLabel="Cancel Report"
         cancelLabel="Back"
         variant="danger"
-        onConfirm={() => updateStatus("canceled" as ReportStatus)} 
+        onConfirm={() => updateStatus("canceled", "cancel")}
       />
     </AdminLayout>
   );

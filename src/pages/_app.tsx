@@ -3,10 +3,10 @@ import "@/styles/globals.css";
 import type { AppProps } from "next/app";
 import { SessionProvider } from "next-auth/react";
 import { useRouter } from "next/router";
+import { Toaster } from "react-hot-toast";
 import Navbar from "@/components/navbar/Navbar";
 import { SocketProvider } from "@/components/chat/SocketProvider";
-import { satoshi, notoThai } from "@/fonts"; import { Toaster } from "sonner";
-
+import { satoshi, notoThai } from "@/fonts"; 
 
 const NAV_HIDE_ROUTES = new Set([
   "/login",
@@ -42,13 +42,30 @@ export default function App({ Component, pageProps: { session, ...pageProps } }:
   return (
     <SessionProvider session={session}>
       <SocketProvider>
-        {/*เพิ่ม font variables ที่ wrapper div */}
+        {/* เพิ่ม font variables ที่ wrapper div */}
         <div className={`${satoshi.variable} ${notoThai.variable}`}>
           {showNavbar && <Navbar />}
           <Component {...pageProps} />
+          
+          {/* Global Toaster  ใช้ className จาก globals.css */}
+          <Toaster 
+            position="top-right"
+            toastOptions={{
+              duration: 3000,
+              className: '',
+              success: {
+                className: 'toast-success',
+              },
+              error: {
+                className: 'toast-error',
+              },
+              loading: {
+                className: 'toast-loading',
+              },
+            }}
+          />
         </div>
       </SocketProvider>
-      <Toaster richColors closeButton />
     </SessionProvider>
   );
 }

@@ -7,24 +7,24 @@ type Props = {
 };
 
 function formatDate(isoDate: string): string {
-  return new Date(isoDate).toLocaleDateString("en-US", {
-    day: "numeric",
-    month: "short",
-    year: "numeric",
-  });
+  const date = new Date(isoDate);
+  const day = date.getDate();
+  const month = date.toLocaleDateString("en-US", { month: "short" });
+  const year = date.getFullYear();
+  return `${day} ${month} ${year}`;
 }
 
 export default function ReportsTable({ reports }: Props) {
   return (
-    <div className="overflow-hidden rounded-2xl border border-border bg-bg">
+    <div className="overflow-hidden rounded-2xl border border-gray-2 bg-white">
       <table className="min-w-full">
         <thead>
           <tr className="bg-black text-white">
-            <th className="px-5 py-3 text-xs2-medium text-left">User</th>
-            <th className="px-5 py-3 text-xs2-medium text-left">Reported Person</th>
-            <th className="px-5 py-3 text-xs2-medium text-left">Issue</th>
-            <th className="px-5 py-3 text-xs2-medium text-left">Date Submitted</th>
-            <th className="px-5 py-3 text-xs2-medium text-left">Status</th>
+            <th className="px-5 py-3 text-left text-xs2-medium">User</th>
+            <th className="px-5 py-3 text-left text-xs2-medium">Reported Person</th>
+            <th className="px-5 py-3 text-left text-xs2-medium">Issue</th>
+            <th className="px-5 py-3 text-left text-xs2-medium">Date Submitted</th>
+            <th className="px-5 py-3 text-left text-xs2-medium">Status</th>
           </tr>
         </thead>
 
@@ -42,7 +42,7 @@ export default function ReportsTable({ reports }: Props) {
             reports.map((report) => (
               <tr
                 key={report.id}
-                className="border-t border-border last:border-b hover:bg-muted/20"
+                className="border-t border-gray-2 last:border-b hover:bg-gray-1/50"
               >
                 <td className="px-5 py-4">
                   <Link
@@ -65,7 +65,7 @@ export default function ReportsTable({ reports }: Props) {
                 <td className="px-5 py-4">
                   <Link
                     href={`/admin/reports/${report.id}`}
-                    className="block text-sm2-medium text-ink truncate max-w-[300px] hover:underline"
+                    className="block max-w-[300px] truncate text-sm2-medium text-ink hover:underline"
                     title={report.issue}
                   >
                     {report.issue}

@@ -1,4 +1,3 @@
-
 export type UserStatus = "normal" | "ban";
 
 /* ---------- LIST TYPES ---------- */
@@ -11,7 +10,7 @@ export type OwnerRow = {
   pet_count: number;
   profile_image?: string | null;
   profile_image_public_id?: string | null;
-  status: UserStatus; // "normal" | "ban"
+  status: UserStatus;
 };
 
 export type OwnerListResponse = {
@@ -29,19 +28,13 @@ export type OwnerDetail = {
   phone: string | null;
   profile_image: string | null;
   profile_image_public_id?: string | null;
-
   id_number?: string | null;
   dob?: string | null;
-
   created_at: string;
-
   status?: UserStatus;
-
-  // คีย์โทน "ban" (รองรับถ้า API แมปชื่อคีย์)
   banned_at?: string | null;
   ban_reason?: string | null;
-
-  //  Legacy (ยังคงไว้ให้คอมไพล์ผ่านถ้ามีโค้ดเก่าใช้อยู่)
+  
   /** @deprecated use `banned_at` instead */
   suspended_at?: string | null;
   /** @deprecated use `ban_reason` instead */
@@ -54,18 +47,19 @@ export type OwnerDetail = {
     sex: string | null;
     age_month: number | null;
     color: string | null;
+    weight_kg?: string;
+    about: string | null;  // ← เพิ่มบรรทัดนี้
     image_url: string | null;
-    created_at: string;             // list ใช้ sort/render
+    created_at: string;
     is_banned?: boolean | null;
+    banned_at?: string | null;
+    ban_reason?: string | null;
     pet_type_name?: string;
   }>;
 };
 
 export type PetItem = OwnerDetail["pets"][number];
 
-/**
- * Sitter ที่ทำการรีวิว
- */
 export type ReviewSitter = {
   id: number;
   name: string;
@@ -73,9 +67,6 @@ export type ReviewSitter = {
   userId: number | null;
 };
 
-/**
- * รีวิวแต่ละรายการ
- */
 export type ReviewItem = {
   id: number;
   rating: number;
@@ -84,38 +75,26 @@ export type ReviewItem = {
   sitter: ReviewSitter;
 };
 
-/**
- * Props สำหรับ OwnerReviewsList Component
- */
 export type OwnerReviewsListProps = {
   reviews: ReviewItem[];
   meta: {
-    page: number;          
-    pageSize: number;      
+    page: number;
+    pageSize: number;
     total: number;
     averageRating: string;
   };
-  loading: boolean;        
-  error: string | null;     
+  loading: boolean;
+  error: string | null;
 };
 
-/**
- * Props สำหรับ ReviewCard Component
- */
 export type ReviewCardProps = {
   review: ReviewItem;
 };
 
-/**
- * Props สำหรับ StarRating Component
- */
 export type StarRatingProps = {
   rating: number;
 };
 
-/**
- * Props สำหรับ SitterAvatar Component
- */
 export type SitterAvatarProps = {
   avatarUrl: string | null;
   name: string;
