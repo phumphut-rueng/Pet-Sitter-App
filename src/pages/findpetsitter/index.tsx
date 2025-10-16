@@ -110,8 +110,8 @@ function FindPetsitter() {
             />
           </div>
 
-          {/* Pagination */}
-          {!loading && sitters.length > 0 && viewMode === 'list' && (
+          {/* Pagination - แสดงทั้งใน list และ map view */}
+          {!loading && sitters.length > 0 && (
             <div className="flex flex-col items-center mt-8 space-y-4">
               <PaginationInfo
                 currentCount={sitters.length}

@@ -5,13 +5,14 @@ import { Sitter } from '@/types/sitter.types';
 import dynamic from 'next/dynamic';
 import { useRouter } from 'next/router';
 import { PetSitterCardSmall } from '@/components/cards/PetSitterCard';
+import { PetPawLoadingSmall } from '@/components/loading/PetPawLoadingSmall';
 
 // ใช้ LeafletMap component ที่มีอยู่แล้ว
 const LeafletMap = dynamic(() => import('@/components/form/LeafletMap'), { 
   ssr: false,
   loading: () => (
     <div className="h-[600px] w-full rounded-xl border border-gray-200 bg-gray-50 flex items-center justify-center">
-      <div className="text-gray-500">Loading map...</div>
+      <PetPawLoadingSmall message="Loading map..." />
     </div>
   )
 });
@@ -107,7 +108,7 @@ export default function PetSitterMap({
   if (loading) {
     return (
       <div className="h-[600px] w-full rounded-xl border border-gray-200 bg-gray-50 flex items-center justify-center">
-        <div className="text-gray-500">กำลังโหลดแผนที่...</div>
+        <PetPawLoadingSmall message="Loading map..." />
       </div>
     );
   }
@@ -150,7 +151,7 @@ export default function PetSitterMap({
         <div className="absolute flex justify-center w-full bottom-4 left-0 right-0 z-999">
           <div 
             ref={carouselRef}
-            className="flex overflow-x-auto space-x-4 pb-4 scrollbar-hide"
+            className="flex overflow-x-auto space-x-4 scrollbar-hide"
             style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
           >
             {pins.map(pin => {
@@ -166,7 +167,7 @@ export default function PetSitterMap({
                       rating={Math.floor(sitter.averageRating || 4)}
                       tags={sitter.sitter_pet_type.map(petType => petType.pet_type.pet_type_name)}
                       coverUrl={sitter.sitter_image[0]?.image_url || "/images/cards/pet-sitter-cover.svg"}
-                      smPreset="wide"
+                      smPreset="compact"
                       className={`cursor-pointer shadow-lg hover:shadow-xl transition-all duration-300 max-w-[400px] ${
                         isSelected 
                           ? 'border-orange-6 border-2 rounded-xl' 
