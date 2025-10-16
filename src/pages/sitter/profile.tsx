@@ -24,6 +24,7 @@ import { uploadToCloudinary } from "@/lib/cloudinary/upload-to-cloudinary";
 import AddressSection from "@/components/form/AddressSection";
 import type { SitterFormValues } from "@/components/types/SitterForms";
 import { validatePhone, validateEmail } from "@/lib/validators/validation";
+import { PetPawLoading } from "@/components/loading/PetPawLoading";
 
 type GetSitterResponse = {
   exists: boolean;
@@ -81,6 +82,7 @@ export default function PetSitterProfilePage() {
   const [approvalStatus, setApprovalStatus] = useState<string>("");
   const [currentPhone, setCurrentPhone] = useState<string>("");
   const [currentEmail, setCurrentEmail] = useState<string>("");
+  const [isLoading, setIsLoading] = useState(true);
   const [sitterData, setSitterData] = useState<{
     id: number;
     name: string | null;
@@ -141,6 +143,7 @@ export default function PetSitterProfilePage() {
     if (status === "loading") return;
     (async () => {
       try {
+        setIsLoading(true);
         const { data } = await axios.get<GetSitterResponse>(
           "/api/sitter/get-profile-sitter"
         );
@@ -176,9 +179,23 @@ export default function PetSitterProfilePage() {
         setInitialGallery(data.sitter?.images || []);
       } catch (error) {
         console.error("load profile error:", error);
+      } finally {
+        setIsLoading(false);
       }
     })();
   }, [status, reset]);
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-screen">
+        <PetPawLoading
+          message="Loading Pet"
+          size="lg"
+          baseStyleCustum="flex items-center justify-center w-full h-full"
+        />
+      </div>
+    );
+  }
 
   //ฟังก์ชันตรวจสอบข้อมูลพื้นฐานที่จำเป็นสำหรับ Request for Approval
   const validateBasicFields = () => {
