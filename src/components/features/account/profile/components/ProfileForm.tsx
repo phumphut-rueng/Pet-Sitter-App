@@ -1,4 +1,3 @@
-import * as React from "react";
 import { Control } from "react-hook-form";
 import type { OwnerProfileInput } from "@/lib/validators/profile";
 import PrimaryButton from "@/components/buttons/PrimaryButton";
@@ -16,11 +15,17 @@ export interface ProfileFormProps {
   serverError?: string | null;
 }
 
-const ErrorMessage: React.FC<{ message: string }> = ({ message }) => (
-  <div className="text-base-medium text-red bg-pink-bg border border-red/20 rounded-lg px-4 py-3">
-    {message}
-  </div>
-);
+function ErrorMessage({ message }: { message: string }) {
+  return (
+    <div
+      role="alert"
+      aria-live="assertive"
+      className="text-base-medium text-red bg-pink-bg border border-red/20 rounded-lg px-4 py-3"
+    >
+      {message}
+    </div>
+  );
+}
 
 export default function ProfileForm({
   control,
@@ -34,17 +39,15 @@ export default function ProfileForm({
   };
 
   const submitButtonProps = {
+    type: "submit" as const,
     text: saving ? "Saving..." : "Update Profile",
-    bgColor: "primary",
-    textColor: "white",
+    bgColor: "primary" as const,
+    textColor: "white" as const,
     className: cn(
       "px-6 rounded-full transition hover:opacity-95 focus-visible:outline-none focus-visible:ring-2 ring-brand ring-offset-2 ring-offset-bg",
       saving && "opacity-50 pointer-events-none"
     ),
-    onClick: () => {
-      if (!saving) onSubmit();
-    },
-  } satisfies React.ComponentProps<typeof PrimaryButton>;
+  };
 
   return (
     <form
@@ -54,39 +57,37 @@ export default function ProfileForm({
     >
       {serverError && <ErrorMessage message={serverError} />}
 
-      <AvatarField control={control} />
+      {/* ปิด interaction ทั้งหมดตอน saving */}
+      <fieldset disabled={saving} className={saving ? "opacity-60" : ""}>
+        <AvatarField control={control} />
 
-      <TextInputField
-        control={control}
-        name="name"
-        config={FORM_CONFIG.fields.name}
-      />
-
-      <div className={FORM_CONFIG.styles.grid}>
         <TextInputField
           control={control}
-          name="email"
-          config={FORM_CONFIG.fields.email}
+          name="name"
+          config={FORM_CONFIG.fields.name}
         />
-        <TextInputField
-          control={control}
-          name="phone"
-          config={FORM_CONFIG.fields.phone}
-        />
-      </div>
 
-      <div className={FORM_CONFIG.styles.grid}>
-        <IdNumberField control={control} />
-        <DobDatePickerField control={control} />
-      </div>
+        <div className={FORM_CONFIG.styles.grid}>
+          <TextInputField
+            control={control}
+            name="email"
+            config={FORM_CONFIG.fields.email}
+          />
+          <TextInputField
+            control={control}
+            name="phone"
+            config={FORM_CONFIG.fields.phone}
+          />
+        </div>
+
+        <div className={FORM_CONFIG.styles.grid}>
+          <IdNumberField control={control} />
+          <DobDatePickerField control={control} />
+        </div>
+      </fieldset>
 
       <div className={FORM_CONFIG.styles.buttonContainer}>
         <PrimaryButton {...submitButtonProps} />
-        <button
-          type="submit"
-          className={FORM_CONFIG.styles.hiddenSubmit}
-          aria-hidden
-        />
       </div>
     </form>
   );

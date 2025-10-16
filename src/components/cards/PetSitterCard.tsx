@@ -36,7 +36,7 @@ const RATING_SIZES = {
   md: "h-5 w-5",
 } as const;
 
-// ✅ map ขนาดตัวเลขไว้ใช้กับ <Image width/height>
+//  map ขนาดตัวเลขไว้ใช้กับ <Image width/height>
 const AVATAR_DIM = { sm: 36, md: 40, lg: 64 } as const;
 
 const CARD_STYLES = {
@@ -83,9 +83,13 @@ export const LocationIcon: React.FC<{ className?: string }> = ({ className = "h-
 );
 
 const StarIcon: React.FC<{ className?: string }> = ({ className = "h-4 w-4" }) => (
-  <svg viewBox="0 0 24 24" aria-hidden className={cn("fill-current", className)}>
-    <path d="M12 3.75l2.72 5.51 6.08.88-4.4 4.29 1.04 6.07L12 17.77l-5.44 2.85 1.04-6.07-4.4-4.29 6.08-.88L12 3.75z" />
-  </svg>
+  <Image 
+    src="/icons/Rating-Star.svg" 
+    alt="star" 
+    width={16} 
+    height={16} 
+    className={cn("fill-current", className)} 
+  />
 );
 
 export const StarRating: React.FC<{ value: number; size: keyof typeof RATING_SIZES }> = React.memo(

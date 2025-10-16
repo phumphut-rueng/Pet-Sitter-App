@@ -1,6 +1,7 @@
 import React from "react";
 import Link from "next/link";
 import { Bell, MessageSquare } from "lucide-react";
+
 import IconButton from "./IconButton";
 import AvatarDropdown from "./AvatarDropdown";
 import PrimaryButton from "@/components/buttons/PrimaryButton";
@@ -12,9 +13,9 @@ const DesktopNav: React.FC<NavigationProps> = ({
   user,
   menuItems,
   onNavigate,
-  onLogout
+  onLogout,
 }) => {
-  // ใช้ hook เพื่อดึง unread count
+  // ใช้ hook เพื่อดึงสถานะ unread ของแชท
   const { hasUnread } = useUnreadCount(user?.id?.toString());
 
   return (
@@ -24,17 +25,20 @@ const DesktopNav: React.FC<NavigationProps> = ({
           <IconButton
             icon={Bell}
             route="/notifications"
-            hasIndicator={false} // ปิด notification indicator ชั่วคราว
+            hasIndicator={false}
             aria-label="Notifications"
             onNavigate={onNavigate}
           />
+
           <IconButton
             icon={MessageSquare}
-            route="/chat" // เปลี่ยนจาก /messages เป็น /chat
-            hasIndicator={hasUnread} // ใช้ unread count จริง
+            route="/chat"
+            hasIndicator={hasUnread}
             aria-label="Messages"
             onNavigate={onNavigate}
           />
+
+          {/* ปล่อยให้ AvatarDropdown จัดการ fallback image/profile_image เอง */}
           <AvatarDropdown
             user={user}
             menuItems={menuItems}
@@ -44,11 +48,11 @@ const DesktopNav: React.FC<NavigationProps> = ({
         </>
       ) : (
         <>
-          {menuItems.map((item, index) => (
+          {menuItems.map((item, idx) => (
             <Link
-              key={index}
+              key={idx}
               href={item.href}
-              className="text-black hover:text-gray-7 px-6 py-2 text-sm font-medium transition-colors"
+              className="text-black hover:text-gray- px-6 py-2 text-sm font-medium transition-colors"
             >
               {item.text}
             </Link>

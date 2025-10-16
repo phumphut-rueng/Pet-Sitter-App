@@ -2,7 +2,6 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   reactStrictMode: true,
-
   typedRoutes: true,
 
   images: {
@@ -10,36 +9,29 @@ const nextConfig: NextConfig = {
     dangerouslyAllowSVG: true,
     contentDispositionType: "attachment",
     contentSecurityPolicy: "default-src 'self'; script-src 'none'; sandbox;",
-    unoptimized: true,
+    unoptimized: true,                
     loader: "default",
     remotePatterns: [
-      {
-        protocol: "https",
-        hostname: "via.placeholder.com",
-        port: "",
-        pathname: "/**",
-      },
-      {
-        protocol: "https",
-        hostname: "example.com",
-        port: "",
-        pathname: "/**",
-      },
-      {
-        protocol: "https",
-        hostname: "placehold.co",
-        port: "",
-        pathname: "/**",
-      },
+      // ของเดิม
+      { protocol: "https", hostname: "via.placeholder.com", port: "", pathname: "/**" },
+      { protocol: "https", hostname: "example.com",          port: "", pathname: "/**" },
+      { protocol: "https", hostname: "placehold.co",         port: "", pathname: "/**" },
+
+      // ====== เพิ่มสำหรับรูปโปรไฟล์จริง ======
+      // Google OAuth avatar
+      { protocol: "https", hostname: "lh3.googleusercontent.com", port: "", pathname: "/**" },
+      // Cloudinary (ถ้ารูปผู้ใช้เก็บที่นี่)
+      { protocol: "https", hostname: "res.cloudinary.com",        port: "", pathname: "/**" },
+      // (เพิ่มโดเมนอื่นที่มีได้ เช่น Unsplash ฯลฯ)
     ],
   },
 
   async rewrites() {
     return [
-      { source: "/profile", destination: "/account/profile" },
-      { source: "/your-pet", destination: "/account/pet" },
-      { source: "/booking-history", destination: "/account/bookings" },
-      { source: "/sitter-profile", destination: "/account/sitter" },
+      { source: "/profile",          destination: "/account/profile" },
+      { source: "/your-pet",         destination: "/account/pet" },
+      { source: "/booking-history",  destination: "/account/bookings" },
+      { source: "/sitter-profile",   destination: "/account/sitter" },
     ];
   },
 };

@@ -31,7 +31,8 @@ export const TextInputField: React.FC<TextInputFieldProps> = ({
       inputMode={config.inputMode}
       autoComplete={autoComplete}
       pattern={pattern}
-      className={PET_FORM_STYLES.input.base}
+      className={`${PET_FORM_STYLES.input.base} font-normal placeholder:font-normal`}
+ 
     />
   </div>
 );

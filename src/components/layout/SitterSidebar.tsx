@@ -9,7 +9,6 @@ type SidebarItem = {
   label: string;
   href: string;
   icon: string;
-  notify?: boolean;
 };
 
 type SitterSidebarProps = {
@@ -18,16 +17,16 @@ type SitterSidebarProps = {
 };
 
 const SITTER_ITEMS: SidebarItem[] = [
-  { id: "profile", label: "Pet Sitter Profile", href: "/sitter/profile", icon: "/icons/ic-user.svg" },
-  { id: "booking", label: "Booking List", href: "/sitter/booking", icon: "/icons/ic-list.svg", notify: true },
-  { id: "calendar", label: "Calendar", href: "/sitter/calendar", icon: "/icons/ic-calendar.svg" },
-  { id: "payout", label: "Payout Option", href: "/sitter/payout", icon: "/icons/ic-creditcard.svg" },
+  { id: "profile",  label: "Pet Sitter Profile", href: "/sitter/profile",  icon: "/icons/ic-user.svg" },
+  { id: "booking",  label: "Booking List",       href: "/sitter/booking",  icon: "/icons/ic-list.svg" },
+  { id: "calendar", label: "Calendar",           href: "/sitter/calendar", icon: "/icons/ic-calendar.svg" },
+  { id: "payout",   label: "Payout Option",      href: "/sitter/payout",   icon: "/icons/ic-creditcard.svg" },
 ];
 
 function Icon({ src }: { src: string }) {
   return (
     <span
-      className="inline-block w-5 h-5"
+      className="inline-block h-5 w-5"
       style={{
         backgroundColor: "currentColor",
         WebkitMaskImage: `url(${src})`,
@@ -41,10 +40,6 @@ function Icon({ src }: { src: string }) {
   );
 }
 
-function NotificationBadge() {
-  return <span className="ml-auto mt-[1px] inline-block h-2 w-2 rounded-full bg-red" />;
-}
-
 function NavItem({ item, isActive }: { item: SidebarItem; isActive: boolean }) {
   return (
     <Link href={item.href} className="block">
@@ -53,15 +48,14 @@ function NavItem({ item, isActive }: { item: SidebarItem; isActive: boolean }) {
           flex items-center gap-3 rounded-xl px-3 py-3
           text-[16px] font-medium leading-[150%] tracking-[-0.02em]
           transition-colors cursor-pointer
-          ${isActive 
-            ? "bg-orange-1 text-orange-5" 
-            : "text-gray-7 hover:bg-orange-1 hover:text-orange-5"
-          }
+          ${isActive
+            ? "bg-orange-1 text-orange-5"
+            : "text-gray-7 hover:bg-orange-1 hover:text-orange-5"}
         `}
       >
         <Icon src={item.icon} />
         <span>{item.label}</span>
-        {item.notify && <NotificationBadge />}
+        {/* จุดแดงถูกลบออกแล้ว */}
       </div>
     </Link>
   );
@@ -92,13 +86,13 @@ export default function SitterSidebar({
     <aside
       className={`
         ${sticky ? "sticky top-0" : ""}
-        flex min-h-screen h-auto w-[240px] shrink-0 flex-col
+        flex h-auto min-h-screen w-[240px] shrink-0 flex-col
         bg-bg text-text border-r border-border
         ${className}
       `}
     >
       {/* Logo */}
-      <div className="px-5 pt-8 pb-6 border-b border-border">
+      <div className="border-b border-border px-5 pt-8 pb-6">
         <Link href="/">
           <Image
             src="/icons/sitter-logo-1.svg"

@@ -27,7 +27,7 @@ export const SelectField: React.FC<SelectFieldProps> = ({
       name={name}
       value={value}
       onChange={onChange}
-      className={`${PET_FORM_STYLES.input.base} cursor-pointer`}
+      className={`${PET_FORM_STYLES.input.base} cursor-pointer font-normal placeholder:font-normal`}
     >
       {options.map((option) => (
         <option key={option.value} value={option.value}>

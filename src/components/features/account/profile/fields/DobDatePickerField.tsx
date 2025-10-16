@@ -1,78 +1,100 @@
-import * as React from "react";
-import { type Control } from "react-hook-form"; // ← ลบ useController ออก
+import { useState, useEffect, useMemo } from "react";
+import { type Control } from "react-hook-form";
 import type { OwnerProfileInput } from "@/lib/validators/profile";
 import DatePicker from "@/components/date-picker/DatePicker";
 import { FormField } from "./FormField";
 import { toYmd, parseYmd, sameMonth, clampDay } from "../utils/date";
 
-/** YYYY-MM-DD -> "dd mon yyyy" (เช่น 02 sep 2025) */
-function ymdToDMonYYYY(ymd?: string | null): string {
+/** YYYY-MM-DD -> "DD/MMM/YYYY" (เช่น 18/May/2010) */
+function formatDateDisplay(ymd?: string | null): string {
   if (!ymd) return "";
+  
   const [y, m, d] = ymd.split("-");
   const year = Number(y);
   const month = Number(m) - 1;
   const day = Number(d);
-  if (!Number.isFinite(year) || !Number.isFinite(month) || !Number.isFinite(day)) return "";
-  const dt = new Date(Date.UTC(year, month, day));
-  const mon = dt.toLocaleString("en-GB", { month: "short" }).toLowerCase(); // ← ให้เป็นตัวเล็ก
-  return `${String(day).padStart(2, "0")} ${mon} ${String(year)}`;
+  
+  if (!Number.isFinite(year) || !Number.isFinite(month) || !Number.isFinite(day)) {
+    return "";
+  }
+  
+  const date = new Date(Date.UTC(year, month, day));
+  const monthName = date.toLocaleString("en-GB", { month: "short" });
+  const monthCapitalized = monthName.charAt(0).toUpperCase() + monthName.slice(1);
+  
+  return `${String(day).padStart(2, "0")} ${monthCapitalized} ${year}`;
 }
 
-type DobInnerProps = {
-  value?: string;                 // เก็บในฟอร์มเป็น YYYY-MM-DD | ""
-  onChange: (next: string) => void;
+type DobPickerProps = {
+  value?: string;
+  onChange: (value: string) => void;
   error?: string;
 };
 
-const DobPickerInner: React.FC<DobInnerProps> = ({ value, onChange, error }) => {
-  const [month, setMonth] = React.useState<Date | undefined>(undefined);
-  const selected = React.useMemo(() => parseYmd(value), [value]);
+function DobPicker({ value, onChange, error }: DobPickerProps) {
+  const [month, setMonth] = useState<Date | undefined>(undefined);
+  const selected = useMemo(() => parseYmd(value), [value]);
 
-  // sync เดือนในปฏิทินให้ตรงกับวันที่ที่เลือก
-  React.useEffect(() => {
+  // วันที่สูงสุดที่เลือกได้: 15 ปีที่แล้วจากวันนี้ (ต้องอายุครบ 15 ปี)
+  const maxDate = useMemo(() => {
+    const date = new Date();
+    date.setFullYear(date.getFullYear() - 15);
+    date.setHours(0, 0, 0, 0);
+    return date;
+  }, []);
+
+  // วันที่ต่ำสุด: 120 ปีที่แล้ว (อายุไม่เกิน 120 ปี)
+  const minDate = useMemo(() => {
+    const date = new Date();
+    date.setFullYear(date.getFullYear() - 120);
+    date.setHours(0, 0, 0, 0);
+    return date;
+  }, []);
+
+  // Sync เดือนในปฏิทินกับวันที่เลือก
+  useEffect(() => {
     if (!selected) {
       setMonth(undefined);
       return;
     }
-    const m = new Date(selected.getFullYear(), selected.getMonth(), 1);
-    setMonth((prev) => (sameMonth(prev, m) ? prev : m));
+    
+    const newMonth = new Date(selected.getFullYear(), selected.getMonth(), 1);
+    setMonth((prev) => (sameMonth(prev, newMonth) ? prev : newMonth));
   }, [selected]);
 
-  const handleSelect = (d?: Date) => {
-    const next = toYmd(d); // เก็บในฟอร์มเป็น YYYY-MM-DD
-    if ((value ?? "") !== next) onChange(next);
+  const handleSelect = (date?: Date) => {
+    const ymd = toYmd(date);
+    if ((value ?? "") !== ymd) {
+      onChange(ymd);
+    }
   };
 
-  const handleMonthChange = (m?: Date) => {
-    setMonth((prev) => (sameMonth(prev, m) ? prev : m));
-    if (!m || !selected) return;
+  const handleMonthChange = (newMonth?: Date) => {
+    setMonth((prev) => (sameMonth(prev, newMonth) ? prev : newMonth));
+    
+    if (!newMonth || !selected) return;
 
-    const day = clampDay(m.getFullYear(), m.getMonth(), selected.getDate());
-    let nextDate = new Date(m.getFullYear(), m.getMonth(), day);
+    // Clamp วันให้อยู่ในเดือนใหม่
+    const day = clampDay(newMonth.getFullYear(), newMonth.getMonth(), selected.getDate());
+    let nextDate = new Date(newMonth.getFullYear(), newMonth.getMonth(), day);
 
-    // ไม่ให้เกินวันนี้
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    if (nextDate > today) nextDate = today;
+    // ไม่ให้เกิน maxDate (15 ปีที่แล้ว)
+    if (nextDate > maxDate) {
+      nextDate = maxDate;
+    }
+    
+    // ไม่ให้ต่ำกว่า minDate (120 ปีที่แล้ว)
+    if (nextDate < minDate) {
+      nextDate = minDate;
+    }
 
-    const nextStr = toYmd(nextDate);
-    if ((value ?? "") !== nextStr) onChange(nextStr);
+    const nextYmd = toYmd(nextDate);
+    if ((value ?? "") !== nextYmd) {
+      onChange(nextYmd);
+    }
   };
 
-  // ช่วงวันที่เลือกได้: ย้อนหลัง 100 ปีถึงวันนี้
-  const today = React.useMemo(() => {
-    const d = new Date();
-    d.setHours(0, 0, 0, 0);
-    return d;
-  }, []);
-  const min = React.useMemo(() => {
-    const d = new Date(today);
-    d.setFullYear(d.getFullYear() - 100);
-    return d;
-  }, [today]);
-
-  // ข้อความที่จะแสดงในช่อง (overlay)
-  const display = React.useMemo(() => ymdToDMonYYYY(value), [value]);
+  const displayValue = useMemo(() => formatDateDisplay(value), [value]);
 
   return (
     <div className="flex flex-col gap-1">
@@ -80,20 +102,15 @@ const DobPickerInner: React.FC<DobInnerProps> = ({ value, onChange, error }) => 
         Date of Birth
       </label>
 
-      {/* ซ่อนข้อความใน input ของ DatePicker แล้ว overlay ข้อความของเรา */}
       <div
-        className={`
-          relative
-          [&_#date]:bg-white [&_#date]:text-transparent [&_#date]:caret-transparent
-          [&_#date]:border-gray-2 [&_button]:cursor-pointer
-        `}
+        className="relative [&_#date]:bg-white [&_#date]:text-transparent [&_#date]:caret-transparent [&_#date]:border-gray-2 [&_button]:cursor-pointer"
       >
-        {/* overlay: แสดง dd mon yyyy (เช่น 02 sep 2025) */}
+        {/* Overlay text แสดง DD/MMM/YYYY */}
         <div
           className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-sm2-regular text-ink"
           aria-hidden="true"
         >
-          {display || ""}
+          {displayValue || ""}
         </div>
 
         <DatePicker
@@ -103,8 +120,8 @@ const DobPickerInner: React.FC<DobInnerProps> = ({ value, onChange, error }) => 
           onSelect={handleSelect}
           rules={{
             disablePastDates: false,
-            minDate: min,
-            maxDate: today,
+            minDate,
+            maxDate,
           }}
           width={400}
         />
@@ -113,18 +130,22 @@ const DobPickerInner: React.FC<DobInnerProps> = ({ value, onChange, error }) => 
       {error && <span className="text-sm2-regular text-red">{error}</span>}
     </div>
   );
+}
+
+type DobDatePickerFieldProps = {
+  control: Control<OwnerProfileInput>;
 };
 
-export const DobDatePickerField: React.FC<{ control: Control<OwnerProfileInput> }> = ({
-  control,
-}) => (
-  <FormField control={control} name="dob">
-    {(field, fieldState) => (
-      <DobPickerInner
-        value={field.value as string | undefined}
-        onChange={field.onChange}
-        error={fieldState.error?.message}
-      />
-    )}
-  </FormField>
-);
+export function DobDatePickerField({ control }: DobDatePickerFieldProps) {
+  return (
+    <FormField control={control} name="dob">
+      {(field, fieldState) => (
+        <DobPicker
+          value={field.value as string | undefined}
+          onChange={field.onChange}
+          error={fieldState.error?.message}
+        />
+      )}
+    </FormField>
+  );
+}
