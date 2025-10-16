@@ -31,6 +31,7 @@ export default function RegisterPage() {
         alt="register"
         className="absolute bottom-0 left-0"
         loading="lazy"
+        style={{ width: 'auto', height: 'auto' }}
       />
 
       {/* ตำแหน่งบนขวา */}
@@ -41,6 +42,7 @@ export default function RegisterPage() {
         alt="register"
         className="absolute top-0 right-0"
         priority
+        style={{ width: 'auto', height: 'auto' }}
       />
 
       <div className="w-full p-4 max-w-[440px] flex flex-col relative">

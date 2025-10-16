@@ -1,12 +1,12 @@
 import { useCallback, useState } from "react"
 import { ResetPasswordForm } from "@/types/register.types"
-import axios from "axios";
+import axios, { AxiosError } from "axios";
 import { validateEmail } from "@/lib/validators/validation";
+import { Response } from "@/types/response.type";
 
 // Initial state helper
 const createEmptyForm = (): ResetPasswordForm => ({
-    password: "",
-    confirmPassword: "",
+    email: "",
 })
 
 // รวม logic เรียกใช้ hook ย่อยทั้งหมด
@@ -33,11 +33,15 @@ export function useForgotPassword() {
         const err = await validateForm()
 
         if (Object.values(err).every((val) => val === "")) {
+            let res;
             try {
-                const res = await axios.post("/api/auth/forgot-password", { email: form.email })
+                res = await axios.post("/api/auth/forgot-password", { email: form.email })
                 setErrorToken(res.data.message)
-            } catch {
-                setErrorToken("Something went wrong.")
+            } catch (error) {
+                const axiosError = error as AxiosError<Response>
+                console.log("axiosError", axiosError);
+
+                setErrorToken(axiosError.response?.data.message || "Something went wrong.")
             } finally {
                 setIsLoading(false)
             }

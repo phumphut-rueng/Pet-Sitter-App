@@ -4,7 +4,7 @@ import PetCard from "../cards/PetCard";
 import { Dispatch, SetStateAction, useState } from "react";
 import BookingCreatePet from "./bookingCreatePet";
 
-export default function BookingSelectYourPet({
+export default function BookingYourPet({
     pets,
     setPets,
     onRefresh
@@ -33,7 +33,7 @@ export default function BookingSelectYourPet({
     }
 
     return (
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 min-w-0">
+        <section className="grid grid-cols-1 md:grid-cols-3 gap-4 min-w-0">
             {pets.map((p) => (
                 <div
                     key={`p-${p.id}`}
@@ -64,6 +64,6 @@ export default function BookingSelectYourPet({
                 onOpenChange={setIsOpenCreatePet}
                 onSuccess={onRefresh}
             />
-        </div>
+        </section>
     )
 }

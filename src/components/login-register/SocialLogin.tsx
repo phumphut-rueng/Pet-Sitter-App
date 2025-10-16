@@ -43,7 +43,7 @@ export default function SocialLogin({
             </div>
 
             <div className="flex max-[400px]:flex-col flex-row items-center gap-4 w-auto">
-                <PrimaryButton
+                {/* <PrimaryButton
                     text={isLoading === "facebook" ? "Loading..." : "Facebook"}
                     srcImage="/icons/fbIcon.svg"
                     bgColor="gray"
@@ -51,13 +51,13 @@ export default function SocialLogin({
                     className="w-full sm:max-w-[210px]"
                     onClick={() => handleSocialLogin("facebook")}
                     disabled={isLoading !== null}
-                />
+                /> */}
                 <PrimaryButton
                     text={isLoading === "google" ? "Loading..." : "Gmail"}
                     srcImage="/icons/gmaiIicon.svg"
                     bgColor="gray"
                     textColor="black"
-                    className="w-full sm:max-w-[210px]"
+                    className="w-full"
                     onClick={() => handleSocialLogin("google")}
                     disabled={isLoading !== null}
                 />
