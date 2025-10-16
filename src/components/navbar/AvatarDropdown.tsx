@@ -18,7 +18,7 @@ interface AvatarDropdownProps {
   onNavigate: (path: string) => void;
 }
 
-// 👇 type ช่วยสำหรับ user ที่อาจมี image / profile_image (ไม่ใช้ any)
+//  type ช่วยสำหรับ user ที่อาจมี image / profile_image (ไม่ใช้ any)
 type WithOptionalImages = {
   image?: string | null | undefined;
   profile_image?: string | null | undefined;
@@ -61,7 +61,7 @@ const AvatarDropdown = ({ user, menuItems, onLogout, onNavigate }: AvatarDropdow
       </DropdownMenuTrigger>
 
       <DropdownMenuContent
-        className="w-[186px] bg-white border-0 shadow-md pb-2 rounded-2xl ring-1 ring-transparent focus-visible:ring-2 focus-visible:ring-brand"
+        className="w-[186px] bg-white border-0 shadow-md pb-2 rounded-2xl ring-1 ring-transparent "
         align="end"
         sideOffset={8}
       >
