@@ -1,8 +1,8 @@
 import ProgressStep from "@/components/progress-step/ProgressStep"
 import BookingInformation from "@/components/booking/BookingInformation"
-import BookingSelectDetail from "@/components/booking/BookingDetail"
+import BookingDetail from "@/components/booking/BookingDetail"
 import PrimaryButton from "@/components/buttons/PrimaryButton";
-import BookingSelectYourPet from "@/components/booking/BookingYourPet";
+import BookingYourPet from "@/components/booking/BookingYourPet";
 import { PetPawLoading } from "@/components/loading/PetPawLoading";
 import { useBookingHandler } from "@/hooks/booking/useBookingHandler";
 import BookingConfirmation from "@/components/modal/BookingConfirmation";
@@ -18,6 +18,7 @@ export default function BookingHandler() {
         activeStep,
         pets,
         setPets,
+        petType,
         sitter,
         loading,
         bookingData,
@@ -121,7 +122,7 @@ export default function BookingHandler() {
                                                         <div className="bg-white rounded-2xl font-[500] text-[16px] py-2">
                                                             Choose your pet
                                                         </div>
-                                                        <BookingSelectYourPet
+                                                        <BookingYourPet
                                                             pets={pets}
                                                             setPets={setPets}
                                                             onRefresh={handleRefreshPets}
@@ -182,13 +183,14 @@ export default function BookingHandler() {
 
                             {/* Right Side - Booking Detail */}
                             <div className="w-full lg:w-[350px]">
-                                <BookingSelectDetail
+                                <BookingDetail
                                     sitterName={sitter?.name ?? ""}
                                     startTime={startTime}
                                     endTime={endTime}
                                     duration={duration}
                                     petName={petNames}
                                     price={totalPrice}
+                                    petType={petType}
                                 />
                             </div>
 

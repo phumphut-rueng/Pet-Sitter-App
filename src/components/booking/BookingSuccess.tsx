@@ -24,7 +24,7 @@ export default function BookingSuccess(
     } = useBookingHandler()
 
     return (
-        <div className="md:w-[640px] mx-auto overflow-hidden relative pt-5">
+        <section className="md:w-[640px] mx-auto overflow-hidden relative pt-5">
             {/* Middle Section */}
             <div className="flex flex-col flex-1">
                 <div className="rounded-3xl shadow-md md:border md:border-gray-1">
@@ -120,7 +120,7 @@ export default function BookingSuccess(
                     />
                 </div>
             </div>
-        </div>
+        </section>
     )
 }
 

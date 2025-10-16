@@ -40,6 +40,7 @@ export default function Login() {
         alt="register"
         className="absolute bottom-0 left-0"
         priority
+        style={{ width: 'auto', height: 'auto' }}
       />
 
       {/* ตำแหน่งบนขวา */}
@@ -50,6 +51,7 @@ export default function Login() {
         alt="register"
         className="absolute top-0 right-0"
         loading="lazy"
+        style={{ width: 'auto', height: 'auto' }}
 
       />
 
