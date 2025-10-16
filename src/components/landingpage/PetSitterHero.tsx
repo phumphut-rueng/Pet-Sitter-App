@@ -63,14 +63,14 @@ const PetSitterHero = () => {
             )}
 
             {/* Find A Pet Sitter Button */}
-            <Link href="/findpetsitter" aria-label="Go to find a pet sitter page">
+            <a href="/findpetsitter" aria-label="Go to find a pet sitter page">
               <PrimaryButton
                 text="Find a Pet Sitter"
                 textColor="white"
                 bgColor="primary"
                 className="w-full justify-center my-4"
               />
-            </Link>
+            </a>
           </div>
         </div>
       </div>
