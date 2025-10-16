@@ -39,10 +39,11 @@ function FindPetsitter() {
         setSearchFilters(parsedFilters);
         // Clear the stored filters after using them
         sessionStorage.removeItem('searchFilters');
-        // Scroll to top เมื่อมาจาก landingpage
-        requestAnimationFrame(() => {
-          window.scrollTo({ top: 0, behavior: 'smooth' });
-        });
+        // Scroll to top เมื่อมาจาก landingpage (บนสุดของเว็บไซต์)
+        setTimeout(() => {
+          document.documentElement.scrollTop = 0;
+          document.body.scrollTop = 0;
+        }, 100);
       } catch (error) {
         console.error('Error parsing stored filters:', error);
       }

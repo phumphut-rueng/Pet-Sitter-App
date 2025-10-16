@@ -165,6 +165,9 @@ export function usePetSitterData(initialFilters?: SearchFilters) {
     if (Object.keys(router.query).length > 0) {
       router.replace('/findpetsitter', undefined, { shallow: true });
     }
+    
+    // Scroll to top เมื่อเข้าหน้าแรก (บนสุดของเว็บไซต์)
+    
   }, [router.isReady, getInitialFilters, fetchSitters, isInitialLoad, router]);
 
   // Fetch data เมื่อ filters หรือ pagination เปลี่ยน (เฉพาะเมื่อไม่ใช่ initial load)
@@ -172,11 +175,20 @@ export function usePetSitterData(initialFilters?: SearchFilters) {
     if (!router.isReady || isInitialLoad) return;
     
     fetchSitters(filters);
+    
+    // Scroll to top เมื่อ filters หรือ pagination เปลี่ยน (บนสุดของเว็บไซต์)
+    
   }, [filters, currentPage, router.isReady, fetchSitters, isInitialLoad]);
 
   const handleSearch = useCallback((newFilters: SearchFilters) => {
     setFilters(newFilters);
     setCurrentPage(1);
+    
+    // Scroll to top เมื่อ search (ใช้วิธีที่แน่นอนกว่า)
+    setTimeout(() => {
+      document.documentElement.scrollTop = 0;
+      document.body.scrollTop = 0;
+    }, 100);
   }, []);
 
   const handleClear = useCallback(() => {
@@ -187,10 +199,22 @@ export function usePetSitterData(initialFilters?: SearchFilters) {
       experience: "all"
     });
     setCurrentPage(1);
+    
+    // Scroll to top เมื่อ clear (ใช้วิธีที่แน่นอนกว่า)
+    setTimeout(() => {
+      document.documentElement.scrollTop = 0;
+      document.body.scrollTop = 0;
+    }, 100);
   }, []);
 
   const handlePageChange = useCallback((page: number) => {
     setCurrentPage(page);
+    
+    // Scroll to top เมื่อเปลี่ยนหน้า (ใช้วิธีที่แน่นอนกว่า)
+    setTimeout(() => {
+      document.documentElement.scrollTop = 0;
+      document.body.scrollTop = 0;
+    }, 100);
   }, []);
 
   return {
