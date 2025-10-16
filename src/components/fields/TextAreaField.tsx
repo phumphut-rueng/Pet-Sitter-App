@@ -19,7 +19,7 @@ export const TextAreaField: React.FC<TextAreaFieldProps> = ({ value, onChange })
       onChange={onChange}
       placeholder="Describe more about your pet..."
       rows={4}
-      className={PET_FORM_STYLES.input.textarea}
+      className={`${PET_FORM_STYLES.input.textarea} font-normal placeholder:font-normal`}
     />
   </div>
 );

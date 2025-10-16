@@ -1,4 +1,3 @@
-import * as React from "react";
 import Image from "next/image";
 import type { OwnerReviewsListProps, ReviewItem } from "@/types/admin/owners";
 
@@ -6,7 +5,7 @@ type StarRatingProps = {
   rating: number;
 };
 
-const StarRating: React.FC<StarRatingProps> = ({ rating }) => {
+function StarRating({ rating }: StarRatingProps) {
   const totalStars = Math.max(0, Math.min(5, rating));
 
   return (
@@ -24,9 +23,9 @@ const StarRating: React.FC<StarRatingProps> = ({ rating }) => {
       ))}
     </div>
   );
-};
+}
 
-function formatReviewDate(isoDate: string): string {
+function formatReviewDate(isoDate: string) {
   return new Date(isoDate).toLocaleDateString("en-US", {
     month: "short",
     day: "numeric",
@@ -39,7 +38,7 @@ type SitterAvatarProps = {
   name: string;
 };
 
-const SitterAvatar: React.FC<SitterAvatarProps> = ({ avatarUrl, name }) => {
+function SitterAvatar({ avatarUrl, name }: SitterAvatarProps) {
   const initial = name.charAt(0).toUpperCase();
 
   return (
@@ -53,13 +52,13 @@ const SitterAvatar: React.FC<SitterAvatarProps> = ({ avatarUrl, name }) => {
       )}
     </div>
   );
-};
+}
 
 type ReviewCardProps = {
   review: ReviewItem;
 };
 
-const ReviewCard: React.FC<ReviewCardProps> = ({ review }) => {
+function ReviewCard({ review }: ReviewCardProps) {
   return (
     <article className="border-b border-gray-2 py-6 ">
       <div className="flex">
@@ -92,61 +91,67 @@ const ReviewCard: React.FC<ReviewCardProps> = ({ review }) => {
       </div>
     </article>
   );
-};
+}
 
-const LoadingSkeleton: React.FC = () => (
-  <div className="px-10 py-10 bg-white rounded-2xl rounded-tl-none" role="status" aria-label="Loading reviews">
-    <div className="animate-pulse space-y-6">
-      {[1, 2, 3].map((i) => (
-        <div key={i} className="flex gap-4">
-          <div className="h-14 w-14 rounded-full bg-gray-2" />
-          <div className="flex-1 space-y-2">
-            <div className="h-4 w-32 rounded bg-gray-2" />
-            <div className="h-4 w-24 rounded bg-gray-2" />
-            <div className="h-16 w-full rounded bg-gray-2" />
+function LoadingSkeleton() {
+  return (
+    <div className="px-10 py-10 bg-white rounded-2xl rounded-tl-none" role="status" aria-label="Loading reviews">
+      <div className="animate-pulse space-y-6">
+        {[1, 2, 3].map((i) => (
+          <div key={i} className="flex gap-4">
+            <div className="h-14 w-14 rounded-full bg-gray-2" />
+            <div className="flex-1 space-y-2">
+              <div className="h-4 w-32 rounded bg-gray-2" />
+              <div className="h-4 w-24 rounded bg-gray-2" />
+              <div className="h-16 w-full rounded bg-gray-2" />
+            </div>
           </div>
-        </div>
-      ))}
+        ))}
+      </div>
     </div>
-  </div>
-);
+  );
+}
 
-const EmptyState: React.FC = () => (
-  <div className="px-10 py-10 bg-white rounded-2xl rounded-tl-none">
-    <div className="rounded-lg border border-dashed border-border bg-white p-12 text-center">
-      <svg
-        className="mx-auto h-12 w-12 text-gray-6"
-        fill="none"
-        viewBox="0 0 24 24"
-        stroke="currentColor"
-        aria-hidden="true"
-      >
-        <path
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          strokeWidth={2}
-          d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"
-        />
-      </svg>
-      <p className="mt-4 text-ink font-medium">No reviews yet</p>
-      <p className="mt-1 text-sm text-gray-6">
-        This owner hasn&apos;t received any reviews from sitters
-      </p>
+function EmptyState() {
+  return (
+    <div className="px-10 py-10 bg-white rounded-2xl rounded-tl-none">
+      <div className="rounded-lg border border-dashed border-border bg-white p-12 text-center">
+        <svg
+          className="mx-auto h-12 w-12 text-gray-6"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+          aria-hidden="true"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"
+          />
+        </svg>
+        <p className="mt-4 text-ink font-medium">No reviews yet</p>
+        <p className="mt-1 text-sm text-gray-6">
+          This owner hasn&apos;t received any reviews from sitters
+        </p>
+      </div>
     </div>
-  </div>
-);
+  );
+}
 
 type ErrorStateProps = {
   message: string;
 };
 
-const ErrorState: React.FC<ErrorStateProps> = ({ message }) => (
-  <div className="px-10 py-10 bg-white rounded-2xl rounded-tl-none" role="alert">
-    <div className="rounded-lg border border-red bg-pink-bg p-6 text-center">
-      <p className="text-red font-medium">{message}</p>
+function ErrorState({ message }: ErrorStateProps) {
+  return (
+    <div className="px-10 py-10 bg-white rounded-2xl rounded-tl-none" role="alert">
+      <div className="rounded-lg border border-red bg-pink-bg p-6 text-center">
+        <p className="text-red font-medium">{message}</p>
+      </div>
     </div>
-  </div>
-);
+  );
+}
 
 export default function OwnerReviewsList({
   reviews,

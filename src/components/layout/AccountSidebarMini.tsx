@@ -66,13 +66,13 @@ export default function AccountSidebarMini({
     {
       id: "history",
       label: "Booking History",
-      href: "/account/pet/bookings",
+      href: "/account/bookings",
       iconSrc: "/icons/ic-list.svg",
     },
     {
       id: "password",
       label: "Change Password",
-      href: "/account/password",
+      href: "/account/reset-password",
       iconSrc: "/icons/ic-list.svg",
     },
   ];

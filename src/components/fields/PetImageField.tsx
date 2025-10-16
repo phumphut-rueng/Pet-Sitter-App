@@ -10,7 +10,7 @@ type PetImageFieldProps = {
 export const PetImageField: React.FC<PetImageFieldProps> = ({ imageUrl, onChange }) => {
   return (
     <div className={`${PET_FORM_STYLES.imageContainer} cursor-pointer`}>
-      <label className={`${PET_FORM_STYLES.imageLabel} cursor-pointer`}>Pet Image</label>
+      <label className={`${PET_FORM_STYLES.imageLabel} cursor-pointer`}></label>
       <div className="inline-block cursor-pointer [&_button]:cursor-pointer [&_button]:outline-none">
         <AvatarUploader
           imageUrl={imageUrl}

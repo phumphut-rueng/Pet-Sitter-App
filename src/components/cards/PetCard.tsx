@@ -113,6 +113,7 @@ const PetAvatar: React.FC<{
           sizes={`${size}px`}
           className="object-cover"
           priority={priority}
+          loading={priority ? "eager" : "lazy"} 
           onError={onError}
         />
       ) : (

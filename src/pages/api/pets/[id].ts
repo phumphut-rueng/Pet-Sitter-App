@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma/prisma";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/pages/api/auth/[...nextauth]";
 import { petSchema } from "@/lib/validators/pet";
+import { Prisma } from "@prisma/client";
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   const session = await getServerSession(req, res, authOptions);
@@ -45,7 +46,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         const flat = parsed.error.flatten();
         return res.status(400).json({
           message: "Validation failed",
-          fieldErrors: flat.fieldErrors, // { [field]: string[] }
+          fieldErrors: flat.fieldErrors,
         });
       }
       const data = parsed.data;
@@ -56,7 +57,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           pet_type_id: data.petTypeId,
           name: data.name,
           breed: data.breed,
-          sex: data.sex,
+          sex: data.sex, // "Male" | "Female"
           age_month: data.ageMonth,
           color: data.color,
           weight_kg: data.weightKg,
@@ -71,16 +72,32 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     }
 
     if (req.method === "DELETE") {
-      const result = await prisma.pet.deleteMany({
-        where: { id, owner_id: userId },
+      const result = await prisma.$transaction(async (tx) => {
+        await tx.booking_pet_detail.deleteMany({
+          where: { pet_detail_id: id },
+        });
+
+        return tx.pet.deleteMany({
+          where: { id, owner_id: userId },
+        });
       });
+
       if (result.count === 0) return res.status(404).json({ message: "Pet not found" });
       return res.status(200).json({ message: "Deleted" });
     }
 
     res.setHeader("Allow", ["GET", "PUT", "DELETE"]);
     return res.status(405).json({ message: "Method not allowed" });
-  } catch (err) {
+  } catch (err: unknown) {
+    if (err instanceof Prisma.PrismaClientKnownRequestError) {
+      if (err.code === "P2003") {
+        return res.status(409).json({
+          message:
+            "Cannot delete this pet because it is referenced by other records (e.g., bookings).",
+        });
+      }
+    }
+
     console.error("pet [id] api error:", err);
     return res.status(500).json({ message: "Internal Server Error" });
   }
