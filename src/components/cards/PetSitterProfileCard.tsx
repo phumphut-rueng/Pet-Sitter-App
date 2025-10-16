@@ -1,7 +1,6 @@
 import Image from "next/image";
 import { StarRating, TagList, LocationIcon } from "./PetSitterCard";
 import PrimaryButton from "../buttons/PrimaryButton";
-import Link from "next/link";
 import { useCreateChat } from "@/hooks/useCreateChat";
 import { useState } from "react";
 import SelfMessageModal from "../modal/SelfMessageModal";
@@ -15,7 +14,6 @@ export default function PetSitterProfileCard({
   tags,
   avatarUrl,
   ownerId,
-  sitterId,
   onBookNow,
 }: {
   title: string;
@@ -67,8 +65,8 @@ export default function PetSitterProfileCard({
             )}
           </div>
           <h2 className="text-4xl font-bold mt-2" title={title}>
-  {truncateByChars(title, 15)}
-</h2>
+            {truncateByChars(title, 15)}
+          </h2>
           <p className="flex items-baseline gap-2">
             <span className="text-[20px] font-bold">{hostName}</span>
             <span className="text-[16px] font-medium text-success">
@@ -97,7 +95,7 @@ export default function PetSitterProfileCard({
             disabled={loading}
           />
 
-<PrimaryButton
+          <PrimaryButton
             text="Book Now"
             bgColor="primary"
             textColor="white"
