@@ -69,7 +69,9 @@ export default function PetSitterDetailPage() {
   const fetchSitterDetail = useCallback(async () => {
     try {
       setLoading(true);
-      const response = await axios.get(`/api/admin/petsitter/get-sitter-by-id?id=${id}`);
+      const response = await axios.get(
+        `/api/admin/petsitter/get-sitter-by-id?id=${id}`
+      );
       setSitter(response.data);
     } catch (error) {
       console.error("Error fetching sitter detail:", error);
@@ -78,21 +80,26 @@ export default function PetSitterDetailPage() {
     }
   }, [id]);
 
-  const fetchHistory = useCallback(async (page = 1) => {
-    try {
-      setLoadingHistory(true);
-      const response = await axios.get(`/api/admin/petsitter/history?sitterId=${id}&page=${page}&limit=${itemsPerPage}`);
-      if (response.status === 200) {
-        setHistoryData(response.data.data);
-        setTotalHistoryCount(response.data.pagination.totalRecords);
-        setTotalPages(response.data.pagination.totalPages);
+  const fetchHistory = useCallback(
+    async (page = 1) => {
+      try {
+        setLoadingHistory(true);
+        const response = await axios.get(
+          `/api/admin/petsitter/history?sitterId=${id}&page=${page}&limit=${itemsPerPage}`
+        );
+        if (response.status === 200) {
+          setHistoryData(response.data.data);
+          setTotalHistoryCount(response.data.pagination.totalRecords);
+          setTotalPages(response.data.pagination.totalPages);
+        }
+      } catch (error) {
+        console.error("Error fetching history:", error);
+      } finally {
+        setLoadingHistory(false);
       }
-    } catch (error) {
-      console.error("Error fetching history:", error);
-    } finally {
-      setLoadingHistory(false);
-    }
-  }, [id, itemsPerPage]);
+    },
+    [id, itemsPerPage]
+  );
 
   useEffect(() => {
     if (id) {
@@ -135,28 +142,51 @@ export default function PetSitterDetailPage() {
   };
 
   if (loading) {
-    return <PetPawLoading message="Loading Pet Sitter Details" size="lg" />;
+    return (
+      <>
+        <Head>
+          <title>Admin • Pet Sitter Detail</title>
+        </Head>
+        <div className="flex min-h-screen w-full">
+          <aside className="hidden shrink-0 md:block md:w-[240px]">
+            <AdminSidebar sticky />
+          </aside>
+          <main className="flex flex-1 items-center justify-center">
+            <PetPawLoading message="Loading Pet Sitter Details" size="md" />
+          </main>
+        </div>
+      </>
+    );
   }
 
   if (!sitter) {
     return (
-      <div className="min-h-screen bg-muted flex items-center justify-center">
-        <div className="text-center">
-          <h1 className="text-2xl font-bold text-ink mb-4">
-            Pet Sitter Not Found
-          </h1>
-          <Link
-            href="/admin/petsitter"
-            className="inline-flex items-center gap-2 px-4 py-2 bg-brand text-brand-text rounded-lg hover:bg-brand-dark transition-colors"
-          >
-            <ChevronLeft className="w-4 h-4" />
-            Back to Pet Sitters
-          </Link>
+      <>
+        <Head>
+          <title>Admin • Pet Sitter Detail</title>
+        </Head>
+        <div className="flex min-h-screen w-full">
+          <aside className="hidden shrink-0 md:block md:w-[240px]">
+            <AdminSidebar sticky />
+          </aside>
+          <main className="flex flex-1 items-center justify-center">
+            <div className="text-center">
+              <h1 className="text-2xl font-bold text-ink mb-4">
+                Pet Sitter Not Found
+              </h1>
+              <Link
+                href="/admin/petsitter"
+                className="inline-flex items-center gap-2 px-4 py-2 bg-brand text-brand-text rounded-lg hover:bg-brand-dark transition-colors"
+              >
+                <ChevronLeft className="w-4 h-4" />
+                Back to Pet Sitters
+              </Link>
+            </div>
+          </main>
         </div>
-      </div>
+      </>
     );
   }
-
 
   const statusKey = getStatusKey(sitter.approval_status);
 
@@ -191,13 +221,13 @@ export default function PetSitterDetailPage() {
         }}
       />
 
-      <div className="mx-auto w-full max-w-[1200px]">
-        <div className="flex gap-6">
-          <aside className="hidden md:block md:w-[240px] shrink-0">
-            <AdminSidebar sticky />
-          </aside>
+      <div className="flex min-h-screen w-full">
+        <aside className="hidden shrink-0 md:block md:w-[240px]">
+          <AdminSidebar sticky />
+        </aside>
 
-          <main className="flex-1 min-w-0 px-4 py-6 lg:px-6">
+        <main className="relative flex-1 px-4 py-6 lg:px-6">
+          <div className="mx-auto max-w-[1200px]">
             {/* Header Section */}
             <div className="p-6">
               <div className="flex items-center justify-between">
@@ -690,51 +720,56 @@ export default function PetSitterDetailPage() {
                             </tr>
                           </thead>
                           <tbody className="bg-white divide-y divide-border">
-                            {historyData.map((record: {
-                              id: number;
-                              statusName: string;
-                              adminName?: string;
-                              adminNote?: string;
-                              changedAt: string;
-                            }, index: number) => (
-                              <tr
-                                key={record.id}
-                                className={
-                                  index % 2 === 0 ? "bg-white" : "bg-muted"
-                                }
-                              >
-                                <td className="px-8 py-6 whitespace-nowrap">
-                                  <StatusBadge
-                                    status={getStatusKey(record.statusName)}
-                                  />
-                                </td>
-                                <td className="px-8 py-6 whitespace-nowrap text-sm text-ink">
-                                  {record.adminName || "System"}
-                                </td>
-                                <td className="px-8 py-6 text-sm text-ink">
-                                  <div className="max-w-lg">
-                                    <p className="text-sm text-muted-text break-words leading-relaxed">
-                                      {record.adminNote || "No note provided"}
-                                    </p>
-                                  </div>
-                                </td>
-                                <td className="px-8 py-6 whitespace-nowrap text-sm text-muted-text">
-                                  {new Date(
-                                    record.changedAt
-                                  ).toLocaleDateString("en-US", {
-                                    year: "numeric",
-                                    month: "short",
-                                    day: "numeric",
-                                    hour: "2-digit",
-                                    minute: "2-digit",
-                                  })}
-                                </td>
-                              </tr>
-                            ))}
+                            {historyData.map(
+                              (
+                                record: {
+                                  id: number;
+                                  statusName: string;
+                                  adminName?: string;
+                                  adminNote?: string;
+                                  changedAt: string;
+                                },
+                                index: number
+                              ) => (
+                                <tr
+                                  key={record.id}
+                                  className={
+                                    index % 2 === 0 ? "bg-white" : "bg-muted"
+                                  }
+                                >
+                                  <td className="px-8 py-6 whitespace-nowrap">
+                                    <StatusBadge
+                                      status={getStatusKey(record.statusName)}
+                                    />
+                                  </td>
+                                  <td className="px-8 py-6 whitespace-nowrap text-sm text-ink">
+                                    {record.adminName || "System"}
+                                  </td>
+                                  <td className="px-8 py-6 text-sm text-ink">
+                                    <div className="max-w-lg">
+                                      <p className="text-sm text-muted-text break-words leading-relaxed">
+                                        {record.adminNote || "No note provided"}
+                                      </p>
+                                    </div>
+                                  </td>
+                                  <td className="px-8 py-6 whitespace-nowrap text-sm text-muted-text">
+                                    {new Date(
+                                      record.changedAt
+                                    ).toLocaleDateString("en-US", {
+                                      year: "numeric",
+                                      month: "short",
+                                      day: "numeric",
+                                      hour: "2-digit",
+                                      minute: "2-digit",
+                                    })}
+                                  </td>
+                                </tr>
+                              )
+                            )}
                           </tbody>
                         </table>
                       </div>
-                      
+
                       {/* Pagination */}
                       {totalPages > 1 && (
                         <div className="flex items-center justify-between px-6 py-4 bg-white border-t border-border">
@@ -920,8 +955,8 @@ export default function PetSitterDetailPage() {
                 </div>
               </div>
             )}
-          </main>
-        </div>
+          </div>
+        </main>
       </div>
     </>
   );
