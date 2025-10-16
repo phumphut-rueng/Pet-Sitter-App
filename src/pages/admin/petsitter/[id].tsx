@@ -13,6 +13,16 @@ import { Pagination } from "@/components/pagination/Pagination";
 import { PaginationInfo } from "@/components/pagination/PaginationInfo";
 import axios from "axios";
 import toast, { Toaster } from "react-hot-toast";
+import dynamic from "next/dynamic";
+
+const LeafletMap = dynamic(() => import("@/components/form/LeafletMap"), {
+  ssr: false,
+  loading: () => (
+    <div className="h-[300px] w-full rounded-xl border border-gray-200 grid place-items-center">
+      <span className="text-sm text-gray-500">Loading map…</span>
+    </div>
+  ),
+});
 
 interface SitterDetail {
   id: number;
@@ -38,6 +48,8 @@ interface SitterDetail {
   service_description: string;
   admin_note: string;
   averageRating: number;
+  latitude?: number;
+  longitude?: number;
   sitter_image: Array<{
     id: number;
     image_url: string;
@@ -648,13 +660,22 @@ export default function PetSitterDetailPage() {
                           sitter.address_district ||
                           sitter.address_sub_district ||
                           sitter.address_post_code ? (
-                            <div className="w-full h-64 bg-muted rounded-lg flex items-center justify-center">
-                              <div className="text-center text-muted-text text-xl">
-                                <div className="text-4xl mb-2">📍</div>
-                                <div>Location Map</div>
-                                <div className="text-sm mt-1">(Mock Image)</div>
+                            sitter.latitude && sitter.longitude ? (
+                              <LeafletMap
+                                latitude={sitter.latitude}
+                                longitude={sitter.longitude}
+                                zoom={15}
+                                className="h-[300px] w-full rounded-xl border border-gray-200"
+                              />
+                            ) : (
+                              <div className="w-full h-64 bg-muted rounded-lg flex items-center justify-center">
+                                <div className="text-center text-muted-text text-xl">
+                                  <div className="text-4xl mb-2">📍</div>
+                                  <div>Location coordinates not available</div>
+                                  <div className="text-sm mt-1">Address: {sitter.address_detail || "No address detail"}</div>
+                                </div>
                               </div>
-                            </div>
+                            )
                           ) : (
                             <div className="text-center py-8 text-muted-text text-xl">
                               No location available
