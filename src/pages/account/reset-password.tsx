@@ -1,5 +1,5 @@
 "use client";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useMemo } from "react";
 import AccountPageShell from "@/components/layout/AccountPageShell";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
@@ -17,13 +17,9 @@ export default function AccountChangePasswordPage() {
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [showError, setShowError] = useState<string | null>(null);
-
-  //  overlay ตอน "เข้าเพจ"
-  const [opening, setOpening] = useState(true);
-  //  overlay ตอน "submit"
   const [busy, setBusy] = useState(false);
 
-  // ถ้าไม่ล็อกอิน → ไปหน้า Login
+  // ถ้าไม่ล็อกอิน → ไปหน้า Login พร้อม overlay paw ระหว่างรอ
   useEffect(() => {
     if (status === "unauthenticated") router.push("/auth/login");
   }, [status, router]);
@@ -53,19 +49,6 @@ export default function AccountChangePasswordPage() {
     })();
   }, [status, session?.user?.email, router]);
 
-  // คุม overlay ตอนเข้าเพจให้เหมือนหน้า Pets (min 400ms กันแฟลช)
-  useEffect(() => {
-    if (status === "loading" || authFlow === "checking" || authFlow === "google") return;
-    let mounted = true;
-    const t = setTimeout(() => {
-      if (mounted) setOpening(false);
-    }, 400);
-    return () => {
-      mounted = false;
-      clearTimeout(t);
-    };
-  }, [status, authFlow]);
-
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setShowError(null);
@@ -84,7 +67,7 @@ export default function AccountChangePasswordPage() {
     }
 
     try {
-      setBusy(true);
+      setBusy(true); // ⬅️ แสดง Paw ตอน submit
       const res = await fetch("/api/auth/change-password", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -112,22 +95,37 @@ export default function AccountChangePasswordPage() {
     }
   };
 
-  // กำลังเช็ค session/flow
-  if (status === "loading" || authFlow === "checking") {
-    return (
-      <AccountPageShell title="Change password">
-        <div className="p-8">Loading...</div>
-      </AccountPageShell>
-    );
-  }
+  // เงื่อนไขแสดง Paw ตอน "เข้าหน้า"
+  const enteringLoading = useMemo(
+    () => status === "loading" || authFlow === "checking" || status === "unauthenticated",
+    [status, authFlow]
+  );
 
-  // เป็น Google → ถูก redirect ไปแล้ว
+  // เป็น Google → ถูก redirect ไปแล้ว (กัน flicker)
   if (authFlow === "google") return null;
 
   return (
     <AccountPageShell title="Change password">
-      {/* ทำเหมือนหน้า Pets: ครอบคอนเทนต์ด้วย relative แล้ว overlay absolute */}
-      <div className="relative min-h-[60vh]">
+      {/* Overlay Paw: เข้าหน้า/โหลด session/ตรวจ flow */}
+      {enteringLoading && (
+        <PetPawLoading
+          message="Loading..."
+          size="lg"
+          baseStyleCustum="fixed inset-0 z-[9999] flex items-center justify-center"
+        />
+      )}
+
+      {/* Overlay Paw: ระหว่าง Submit */}
+      {busy && (
+        <PetPawLoading
+          message="Updating..."
+          size="lg"
+          baseStyleCustum="fixed inset-0 z-[9999] flex items-center justify-center"
+        />
+      )}
+
+      {/* เนื้อหาหลัก */}
+      <div className="flex min-h-[60vh]">
         <main className="flex-1">
           <div className="w-full max-w-[956px] rounded-2xl border border-gray-2 bg-white p-10">
             <div className="flex flex-col gap-[60px]">
@@ -146,7 +144,7 @@ export default function AccountChangePasswordPage() {
                     }
                     value={newPassword}
                     onChange={(e) => setNewPassword(e.target.value)}
-                    disabled={busy || opening}
+                    disabled={busy}
                   />
                 </div>
 
@@ -164,7 +162,7 @@ export default function AccountChangePasswordPage() {
                     }
                     value={confirmPassword}
                     onChange={(e) => setConfirmPassword(e.target.value)}
-                    disabled={busy || opening}
+                    disabled={busy}
                   />
                 </div>
 
@@ -180,23 +178,13 @@ export default function AccountChangePasswordPage() {
                     text="Change Password"
                     bgColor="primary"
                     textColor="white"
-                    disabled={busy || opening}
+                    disabled={busy}
                   />
                 </div>
               </form>
             </div>
           </div>
         </main>
-
-        {(opening || busy) && (
-          <div className="absolute inset-0 flex items-center justify-center">
-            <PetPawLoading
-              message={opening ? "Loading..." : "Updating..."}
-              size="md"
-              baseStyleCustum="flex items-center justify-center"
-            />
-          </div>
-        )}
       </div>
     </AccountPageShell>
   );
