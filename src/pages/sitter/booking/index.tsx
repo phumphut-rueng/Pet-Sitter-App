@@ -123,17 +123,17 @@ export default function PetSitterBookingPage() {
                 <SelectTrigger className="w-[200px] !h-10 rounded-sm border-gray-2 bg-white">
                   <SelectValue />
                 </SelectTrigger>
-                <SelectContent className="bg-white border-gray-2">
-                  <SelectItem value="All">All status</SelectItem>
-                  <SelectItem value="waitingConfirm">
+                <SelectContent className="bg-white border-gray-1 cursor-pointer">
+                  <SelectItem value="All" className="cursor-pointer hover:bg-gray-1">All status</SelectItem>
+                  <SelectItem value="waitingConfirm" className="cursor-pointer hover:bg-gray-1">
                     Waiting for confirm
                   </SelectItem>
-                  <SelectItem value="waitingService">
+                  <SelectItem value="waitingService" className="cursor-pointer hover:bg-gray-1">
                     Waiting for service
                   </SelectItem>
-                  <SelectItem value="inService">In service</SelectItem>
-                  <SelectItem value="success">Success</SelectItem>
-                  <SelectItem value="canceled">Canceled</SelectItem>
+                  <SelectItem value="inService" className="cursor-pointer hover:bg-gray-1">In service</SelectItem>
+                  <SelectItem value="success" className="cursor-pointer hover:bg-gray-1">Success</SelectItem>
+                  <SelectItem value="canceled" className="cursor-pointer hover:bg-gray-1">Canceled</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -168,7 +168,7 @@ export default function PetSitterBookingPage() {
                   currentBookings.map((b) => (
                     <tr
                       key={b.id}
-                      className="border-t-2 border-gray-1 font-medium text-black cursor-pointer hover:bg-orange-1 transition"
+                      className="border-t-2 border-gray-1 font-medium text-black cursor-pointer hover:bg-gray-1 transition"
                       onClick={() => router.push(`/sitter/booking/${b.id}`)}
                     >
                       <td className="py-4 px-5">
