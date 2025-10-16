@@ -21,7 +21,7 @@ function FindPetsitter() {
     handleSearch,
     handleClear,
     handlePageChange
-  } = usePetSitterData();
+  } = usePetSitterData(searchFilters);
 
   const {
     viewMode,
@@ -39,6 +39,10 @@ function FindPetsitter() {
         setSearchFilters(parsedFilters);
         // Clear the stored filters after using them
         sessionStorage.removeItem('searchFilters');
+        // Scroll to top เมื่อมาจาก landingpage
+        requestAnimationFrame(() => {
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+        });
       } catch (error) {
         console.error('Error parsing stored filters:', error);
       }
