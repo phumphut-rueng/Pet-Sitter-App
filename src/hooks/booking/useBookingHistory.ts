@@ -26,10 +26,11 @@ type BookingApiItem = {
   status: string;
   paymentStatus: string | null;
   dateStart: string;        // ISO string from API
-  dateEnd: string;          // ISO string from API
+  dateEnd: string;   
+  transactionId?: string | null;       // ISO string from API
   transactionDate: string | null;
   pets: ApiPet[];
-  amount?: number | null;
+  amount?: number | null; 
   paymentType?: string | null;
   note?: string | null;
 };
@@ -45,6 +46,9 @@ type UseBookingHistory = {
   setBookings: React.Dispatch<React.SetStateAction<BookingCardProps[]>>;
   refresh: () => Promise<void>;
 };
+
+const asNumber = (v: number | null | undefined) =>
+  typeof v === "number" && !Number.isNaN(v) ? v : undefined;
 
 export function useBookingHistory(userId: number | null): UseBookingHistory {
   const [bookings, setBookings] = useState<BookingCardProps[]>([]);
@@ -84,6 +88,9 @@ export function useBookingHistory(userId: number | null): UseBookingHistory {
         sitterUserId: b.sitterUserId ?? undefined,
         dateStart: b.dateStart,
         dateEnd: b.dateEnd,
+
+        totalTHB: asNumber(b.amount),
+        transactionNo: b.transactionId ?? undefined,
       }));
 
       setBookings(formatted);

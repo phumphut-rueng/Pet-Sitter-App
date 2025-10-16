@@ -5,7 +5,7 @@ import type {
 } from "@/components/cards/BookingCard";
 
 const STATUS_CONFIG = {
-  waiting: { dot: "bg-pink", text: "text-pink", label: "Waiting for confirm" },
+  waiting: { dot: "bg-gray-4", text: "text-gray-9", label: "Waiting for confirm" },
   waiting_for_service: { dot: "bg-pink", text: "text-pink", label: "Waiting for Service"},
   in_service: { dot: "bg-blue", text: "text-blue", label: "In service" },
   success: { dot: "bg-green", text: "text-green", label: "Success" },
@@ -50,6 +50,10 @@ export default function BookingDetailDialog({
     if (!text) return "";
     return text.length > maxLength ? text.slice(0, maxLength) + "..." : text;
   }
+
+  const formatTHB = (n: number) =>
+    new Intl.NumberFormat("th-TH", { style: "currency", currency: "THB", minimumFractionDigits: 2 }).format(n);
+  
 
   return (
     <AlertConfirm
@@ -130,20 +134,25 @@ export default function BookingDetailDialog({
           </Section>
 
           {/* Divider + Total */}
-          <div className="mt-5 md:mt-6 border-t border-gray-2 pt-4">
-            <div className="flex items-center justify-between">
-              <span className="text-[15px] md:text-[16px] font-medium text-black">
-                Total
-              </span>
-              {typeof booking.totalTHB === "number" ? (
-                <span className="text-[15px] md:text-[16px] font-bold text-gray-9">
-                  {booking.totalTHB.toLocaleString()} THB
-                </span>
-              ) : (
-                <span className="text-[16px] font-bold text-ink">— THB</span>
-              )}
-            </div>
-          </div>
+          {/* Divider + Total */}
+<div className="mt-5 md:mt-6 border-t border-gray-2 pt-4">
+  <div className="flex items-center justify-between">
+    <span className="text-[15px] md:text-[16px] font-medium text-black">
+      Total
+    </span>
+
+    {typeof booking.totalTHB === "number" ? (
+      <span className="text-[15px] md:text-[16px] font-bold text-gray-9">
+        {formatTHB(booking.totalTHB)}
+        {/* ถ้าอยากได้สไตล์ `1,234 THB` แบบเดิมก็ใช้:
+            {booking.totalTHB.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} THB
+        */}
+      </span>
+    ) : (
+      <span className="text-[16px] font-bold text-ink">— THB</span>
+    )}
+  </div>
+</div>
         </div>
       }
     />

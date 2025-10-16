@@ -8,7 +8,7 @@ import { useTimePicker } from "@/hooks/useTimePicker";
 import DatePicker from "../date-picker/DatePicker";
 import { Calendar, Clock } from "lucide-react";
 import TimePicker from "../time-picker/TimePicker";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 interface BookingChangeProps {
   bookingId: number;
@@ -16,8 +16,8 @@ interface BookingChangeProps {
   disabledDates: Date[];
   onOpenChange: (open: boolean) => void;
   onSubmitChangeDate: (bookingId: number, newStart: Date, newEnd: Date) => void;
-  currentStart?: string; // 👈 เวลาเริ่มเดิมจาก booking
-  currentEnd?: string;   // 👈 เวลาจบเดิมจาก booking
+  currentStart?: string; // เวลาเริ่มเดิมจาก booking (ISO string)
+  currentEnd?: string;   // เวลาจบเดิมจาก booking (ISO string)
 }
 
 export default function BookingChange({
@@ -26,25 +26,46 @@ export default function BookingChange({
   onOpenChange,
   disabledDates = [],
   onSubmitChangeDate,
-  currentStart,  
-  currentEnd, 
+  currentStart,
+  currentEnd,
 }: BookingChangeProps) {
   const { date, month, setMonth, handleSelect } = useDatePicker();
   const { startTime, endTime, setStartTime, setEndTime } = useTimePicker();
   const [errorText, setErrorText] = useState<string>("");
 
+  // ป้องกัน init ซ้ำ
+  const initedRef = useRef(false);
+
+  // เมื่อ modal เปิด: init ค่าเริ่มต้นจาก currentStart / currentEnd "ครั้งเดียว"
   useEffect(() => {
-    if (open && currentStart && currentEnd) {
+    if (!open) {
+      initedRef.current = false;
+      return;
+    }
+    if (!initedRef.current && currentStart && currentEnd) {
       const start = new Date(currentStart);
       const end = new Date(currentEnd);
-
-      // ตั้งค่าใน date picker และ time picker
+  
       handleSelect(start);
       setStartTime(start);
       setEndTime(end);
       setMonth(start);
+  
+      initedRef.current = true;
     }
   }, [open, currentStart, currentEnd, handleSelect, setStartTime, setEndTime, setMonth]);
+
+  // ถ้า bookingId เปลี่ยน (เช่น เปลี่ยนรายการจอง) → อนุญาตให้ init ใหม่ครั้งต่อไปที่เปิด
+  useEffect(() => {
+    initedRef.current = false;
+  }, [bookingId]);
+
+  // เคลียร์ error เมื่อผู้ใช้แก้ค่า
+  useEffect(() => {
+    if (errorText && (date || startTime || endTime)) {
+      setErrorText("");
+    }
+  }, [date, startTime, endTime, errorText]);
 
   const handleOnSubmit = () => {
     if (!date || !startTime || !endTime) {
@@ -52,8 +73,26 @@ export default function BookingChange({
       return;
     }
 
-    const newStart = new Date(`${date.toDateString()} ${startTime.toTimeString()}`);
-    const newEnd = new Date(`${date.toDateString()} ${endTime.toTimeString()}`);
+    // รวม "วันที่จาก date" + "เวลา จาก startTime/endTime"
+    const newStart = new Date(
+      date.getFullYear(),
+      date.getMonth(),
+      date.getDate(),
+      startTime.getHours(),
+      startTime.getMinutes(),
+      0,
+      0
+    );
+
+    const newEnd = new Date(
+      date.getFullYear(),
+      date.getMonth(),
+      date.getDate(),
+      endTime.getHours(),
+      endTime.getMinutes(),
+      0,
+      0
+    );
 
     onSubmitChangeDate(bookingId, newStart, newEnd);
   };
@@ -72,6 +111,7 @@ export default function BookingChange({
           </AlertDialogDescription>
 
           <div className="space-y-3 px-5 pb-8">
+            {/* Date */}
             <div className="flex justify-start gap-3 pb-4">
               <Calendar className="text-gray-6" width={24} height={24} />
               <DatePicker
@@ -80,6 +120,7 @@ export default function BookingChange({
                 onMonthChange={setMonth}
                 onSelect={(d?: Date) => {
                   handleSelect(d);
+                  // เปลี่ยนวันใหม่ → รีเซ็ตเวลา
                   setStartTime(undefined);
                   setEndTime(undefined);
                 }}
@@ -88,8 +129,11 @@ export default function BookingChange({
               />
             </div>
 
+            {/* Time range */}
             <div className="flex justify-start gap-3">
               <Clock className="text-gray-6" width={24} height={24} />
+
+              {/* Start Time */}
               <TimePicker
                 date={date}
                 value={startTime}
@@ -101,14 +145,19 @@ export default function BookingChange({
                 }}
                 placeholder="Start time"
               />
+
               <span className="text-gray-4 flex items-center">-</span>
+
+              {/* End Time */}
               <TimePicker
                 date={date}
                 value={endTime}
                 onChange={setEndTime}
-                startDate={startTime || new Date()}
-                disabled={!startTime}
+                // ❗ อย่าใช้ new Date() ตรง ๆ ใน prop — จะเปลี่ยนทุก render
+                // ใช้ startTime เป็นตัวอ้างอิงเวลาเริ่ม หรือ undefined ถ้ายังไม่เลือก
+                startDate={startTime ?? undefined}
                 startTimeValue={startTime}
+                disabled={!startTime}
                 placeholder="End time"
               />
             </div>
@@ -123,7 +172,7 @@ export default function BookingChange({
               text="Confirm"
               bgColor="primary"
               textColor="white"
-              type="submit"
+              type="button"
               className="w-full"
               onClick={handleOnSubmit}
             />

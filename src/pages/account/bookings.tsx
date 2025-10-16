@@ -42,6 +42,7 @@ export default function BookingHistoryPage() {
     useBookingActions({
       userId: userId || 0,
       selectedBooking,
+      currentBookings: bookings,
       setBookings,
       setOpenReport,
       setOpenReview,
@@ -153,8 +154,8 @@ export default function BookingHistoryPage() {
         open={openSummary}
         onOpenChange={setOpenSummary}
         user={{
-          name: session?.user?.name || "",
-          avatarUrl: session?.user?.image || "/Icons/bubba.svg",
+          name: session?.user?.name,
+          avatarUrl: session?.user?.image 
         }}
         data={reviewData}
       />

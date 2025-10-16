@@ -2,7 +2,6 @@
 import Image from "next/image";
 import AlertConfirm from "./AlertConfirm";
 import PrimaryButton from "../buttons/PrimaryButton";
- 
 
 interface ReviewSummaryDialogProps {
   open: boolean;
@@ -19,9 +18,10 @@ export default function ReviewSummaryDialog({
 }: ReviewSummaryDialogProps) {
   if (!data) return null;
 
-  const handleClose = () => {
-    onOpenChange(false);
-  };
+  const handleClose = () => onOpenChange(false);
+
+  // ดึงตัวอักษรแรกของชื่อ (หรือ ? ถ้าไม่มีชื่อ)
+  const firstLetter = user.name?.trim()?.[0]?.toUpperCase() || "?";
 
   return (
     <AlertConfirm
@@ -35,15 +35,24 @@ export default function ReviewSummaryDialog({
           <div className="flex items-center justify-between mb-8 mt-8">
             {/* user info */}
             <div className="flex items-center gap-3">
-              <Image
-                src={user.avatarUrl || "/Icons/avatar-placeholder.svg" }
-                alt={user.name || "User" }
-                width={56}
-                height={56}
-                className="rounded-full"
-              />
+              {user.avatarUrl ? (
+                <Image
+                  src={user.avatarUrl}
+                  alt={user.name || "User"}
+                  width={56}
+                  height={56}
+                  className="rounded-full object-cover"
+                />
+              ) : (
+                <div className="w-14 h-14 rounded-full bg-gray-300 flex items-center justify-center text-white text-xl font-semibold">
+                  {firstLetter}
+                </div>
+              )}
+
               <div>
-                <p className="text-lg font-medium text-ink">{user.name}</p>
+                <p className="text-lg font-medium text-ink">
+                  {user.name || "Anonymous"}
+                </p>
                 <p className="text-sm font-medium text-gray-6">{data.date}</p>
               </div>
             </div>
