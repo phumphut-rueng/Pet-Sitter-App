@@ -30,7 +30,7 @@ export default function BookingPayment(
     }) {
 
     return (
-        <div>
+        <section>
             <div className="flex justify-center gap-5">
                 <CashButton
                     text="Credit Card"
@@ -47,9 +47,6 @@ export default function BookingPayment(
             </div>
             {isCreditCard
                 ? <div >
-                    {/* <span className="font-[700] text-[24px] text-gray-9">
-                    Credit Card
-                </span> */}
                     <form
                         className="mt-6 space-y-6"
                         onSubmit={handleSubmit}
@@ -142,6 +139,6 @@ export default function BookingPayment(
                     </p>
                 </div>
             }
-        </div>
+        </section>
     )
 }

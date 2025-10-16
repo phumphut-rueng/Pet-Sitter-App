@@ -5,16 +5,17 @@ import { satoshi } from "@/fonts";
 
 const HeroSection = () => {
   return (
-    <div className="container mx-auto py-8 sm:py-12 lg:py-16 overflow-hidden bg-white">
-      <section className="flex flex-col md:grid md:items-center" style={{gridTemplateColumns: '1fr 1.5fr 1fr'}}>
+    <section className="container mx-auto py-8 sm:py-12 lg:py-16 overflow-hidden bg-white">
+      <section className="flex flex-col md:grid md:items-center" style={{ gridTemplateColumns: '1fr 1.5fr 1fr' }}>
         {/* LEFT VISUALS */}
         <div className=" h-[300px] sm:h-[300px] lg:h-[300px] xl:h-[350px] order-1 md:order-none flex items-center justify-center">
-          <Image 
-            src="/images/landing_page/3Cats.svg" 
-            alt="Three cats" 
-            width={300} 
-            height={300} 
+          <Image
+            src="/images/landing_page/3Cats.svg"
+            alt="Three cats"
+            width={300}
+            height={300}
             className="pointer-events-none select-none"
+            style={{ width: 'auto', height: 'auto' }}
             priority
             unoptimized
           />
@@ -34,18 +35,19 @@ const HeroSection = () => {
 
         {/* RIGHT VISUALS */}
         <div className=" h-[290px] sm:h-[300px] lg:h-[300px] xl:h-[350px] order-3 md:order-none flex items-center justify-center">
-          <Image 
-            src="/images/landing_page/GlassesDog.svg" 
-            alt="Dog" 
-            width={300} 
-            height={300} 
+          <Image
+            src="/images/landing_page/GlassesDog.svg"
+            alt="Dog"
+            width={300}
+            height={300}
             className="pointer-events-none select-none"
+            style={{ width: 'auto', height: 'auto' }}
             priority
             unoptimized
           />
         </div>
       </section>
-    </div>
+    </section>
   );
 };
 

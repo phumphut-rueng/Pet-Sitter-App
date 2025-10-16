@@ -26,6 +26,7 @@ export function useBookingHandler() {
     const [isMobile, setIsMobile] = useState(false);
     const [activeStep, setActiveStep] = useState(1)
     const [pets, setPets] = useState<Pet[]>([])
+    const [petType, setPetType] = useState<PetType[]>([])
     const [sitter, setSitter] = useState<Sitter>()
     const [loading, setLoading] = useState(true)
     const [refreshKey, setRefreshKey] = useState(0)
@@ -96,6 +97,7 @@ export function useBookingHandler() {
                 setPets(updatedPets)
                 setSitter(sitterResult)
                 setLoading(false)
+                setPetType(supportedPetTypes)
             } catch (error) {
                 console.error("❌ Fetch error:", error)
             } finally {
@@ -353,6 +355,7 @@ export function useBookingHandler() {
         activeStep,
         pets,
         setPets,
+        petType,
         sitter,
         loading,
         isConfirmation,
