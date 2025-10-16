@@ -179,6 +179,7 @@ export default function BookingDetailPage() {
   };
 
   const updateBookingStatus = async (statusId: number) => {
+    const toastId = toast.loading("Updating booking status...");
     try {
       await axios.put("/api/sitter/update-booking-status", {
         bookingId: booking?.id,
@@ -188,9 +189,11 @@ export default function BookingDetailPage() {
       const { data } = await axios.get(
         `/api/sitter/get-booking?id=${params.id}`
       );
+      toast.dismiss(toastId);
       toast.success("Booking status updated successfully!");
       setBooking(data);
     } catch {
+      toast.dismiss(toastId);
       toast.error("Failed to update booking status");
     }
   };
