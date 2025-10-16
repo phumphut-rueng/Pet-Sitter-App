@@ -109,9 +109,10 @@ export default function PetSitterProfilePage() {
     handleSubmit,
     control,
     reset,
-    setValue,
+    setValue, 
     watch,
     getValues,
+    setError,
     formState: { errors, isSubmitting },
   } = useForm<SitterFormValues>({
     defaultValues: {
@@ -514,6 +515,12 @@ export default function PetSitterProfilePage() {
                       label="Phone Number*"
                       type="tel"
                       inputMode="numeric"
+                      maxLength={10}
+                      onInput={(e) => {
+                        const input = e.target as HTMLInputElement;
+                        // ลบทุกตัวที่ไม่ใช่ตัวเลขออก
+                        input.value = input.value.replace(/\D/g, "");
+                      }}
                       variant={errors.phone ? "error" : "default"}
                       className="w-full"
                       {...register("phone", {
@@ -690,6 +697,7 @@ export default function PetSitterProfilePage() {
               errors={errors}
               watch={watch}
               setValue={setValue}
+              setError={setError}
             />
           )}
         </form>
