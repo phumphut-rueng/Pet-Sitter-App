@@ -30,7 +30,6 @@ export const AvatarField: React.FC<{
             />
           </div>
           <p className="mt-2 text-xs text-muted-foreground cursor-pointer">
-            Profile Image (optional)
           </p>
         </div>
       );

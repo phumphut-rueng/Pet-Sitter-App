@@ -310,7 +310,7 @@ export function useBookingHandler() {
     }, [router])
 
     const handleBookingDetail = useCallback(() => {
-        router.push("/account/pet/bookings.tsx")
+        router.push("/account/bookings")
     }, [router])
 
     const handleViewMap = useCallback(() => {
