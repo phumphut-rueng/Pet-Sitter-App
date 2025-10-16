@@ -111,6 +111,19 @@ export default async function handler(
       }
     }
 
+    const petTypeIds: number[] = [];
+    if (hasPetTypes) {
+      for (const name of petTypeNames) {
+        const row = await prisma.pet_type.upsert({
+          where: { pet_type_name: name },
+          update: {},
+          create: { pet_type_name: name },
+          select: { id: true },
+        });
+        petTypeIds.push(row.id);
+      }
+    }
+
     const result = await prisma.$transaction(async (tx) => {
       await tx.user.update({
         where: { id: me.id },
@@ -194,19 +207,6 @@ export default async function handler(
         ...(hasLongtitude ? { longitude: b.longitude ?? null } : {}),
         updated_at: new Date(),
       };
-
-      const petTypeIds: number[] = [];
-      if (hasPetTypes) {
-        for (const name of petTypeNames) {
-          const row = await tx.pet_type.upsert({
-            where: { pet_type_name: name },
-            update: {},
-            create: { pet_type_name: name },
-            select: { id: true },
-          });
-          petTypeIds.push(row.id);
-        }
-      }
 
       if (!existing) {
         if (hasImages) {
