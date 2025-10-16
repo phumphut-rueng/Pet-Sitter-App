@@ -105,6 +105,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       SELECT 
         s.*,
         u.name as user_name,
+        u.profile_image as user_profile_image,
         COALESCE((
           SELECT AVG(r.rating)::numeric(3,2)
           FROM review r 

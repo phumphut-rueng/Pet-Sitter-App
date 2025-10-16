@@ -167,6 +167,7 @@ export default function PetSitterMap({
                       rating={Math.floor(sitter.averageRating || 4)}
                       tags={sitter.sitter_pet_type.map(petType => petType.pet_type.pet_type_name)}
                       coverUrl={sitter.sitter_image[0]?.image_url || "/images/cards/pet-sitter-cover.svg"}
+                      avatarUrl={sitter.user_profile_image || sitter.sitter_image[0]?.image_url || "/images/cards/pet-sitter-cover.svg"}
                       smPreset="compact"
                       className={`cursor-pointer shadow-lg hover:shadow-xl transition-all duration-300 max-w-[400px] ${
                         isSelected 

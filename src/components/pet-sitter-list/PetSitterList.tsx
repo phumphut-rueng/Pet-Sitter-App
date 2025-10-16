@@ -68,6 +68,7 @@ export function PetSitterList({
     <>
       {sitters.map((sitterData, index) => {
         const coverUrl = sitterData.sitter_image[0]?.image_url || "https://placehold.co/400x192";
+        const avatarUrl = sitterData.user_profile_image || coverUrl;
        
         return (
           <div key={sitterData.id} className="mb-4">
@@ -77,6 +78,7 @@ export function PetSitterList({
                 hostName={sitterData.user_name}
                 location={`${sitterData.address_district}, ${sitterData.address_province}`}
                 coverUrl={coverUrl}
+                avatarUrl={avatarUrl}
                 rating={sitterData.averageRating || 0}
                 className="min-h-[216px] cursor-pointer"
                 tags={sitterData.sitter_pet_type.map(

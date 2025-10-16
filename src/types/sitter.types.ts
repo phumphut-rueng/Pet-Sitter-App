@@ -37,6 +37,7 @@ export interface Sitter {
   id: number;
   user_sitter_id: number;
   user_name: string;
+  user_profile_image?: string | null;
   name: string;
   location_description: string;
   phone: string;
@@ -58,8 +59,6 @@ export interface Sitter {
   sitter_pet_type: SitterPetType[];
   reviews: Review[];
   averageRating: number | null;
-  latitude: number;
-  longitude: number;
 
   reviewPagination?: {
     page: number;

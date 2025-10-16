@@ -9,6 +9,7 @@ export type PetSitterCardProps = {
   rating?: number;
   tags: string[];
   coverUrl: string;
+  avatarUrl?: string;
   className?: string;
   priority?: boolean;
 };
@@ -109,6 +110,7 @@ const PetSitterCardLargeBase: React.FC<PetSitterCardProps> = ({
   rating = 5,
   tags,
   coverUrl,
+  avatarUrl,
   className,
   priority = false,
 }) => {
@@ -135,7 +137,7 @@ const PetSitterCardLargeBase: React.FC<PetSitterCardProps> = ({
         <div className="flex items-start gap-3">
           <div className="relative h-12 w-12 flex-shrink-0 overflow-hidden rounded-full bg-muted">
             <Image 
-              src={coverUrl} 
+              src={avatarUrl || coverUrl} 
               alt="" 
               fill
               className="object-cover"
@@ -178,7 +180,7 @@ const PetSitterCardLargeBase: React.FC<PetSitterCardProps> = ({
             <div className="flex min-w-0 items-center gap-3">
               <div className="relative h-10 w-10 flex-shrink-0 overflow-hidden rounded-full">
                 <Image 
-                  src={coverUrl} 
+                  src={avatarUrl || coverUrl} 
                   alt="" 
                   fill
                   className="object-cover"
