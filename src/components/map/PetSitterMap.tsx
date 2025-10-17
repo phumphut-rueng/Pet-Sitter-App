@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState, useRef, useMemo } from 'react';
 import { Sitter } from '@/types/sitter.types';
 import dynamic from 'next/dynamic';
 import { PetSitterCardSmall } from '@/components/cards/PetSitterCard';
@@ -98,6 +98,24 @@ export default function PetSitterMap({
     }
   }, [selectedPinId, pins]);
 
+  // คำนวณจุดกึ่งกลางของ pins ทั้งหมด (คำนวณใหม่ทุกครั้งที่ pins เปลี่ยน)
+  const { centerLat, centerLng } = useMemo(() => {
+    if (pins.length === 0) {
+      return {
+        centerLat: 13.7563, // Default Bangkok coordinates
+        centerLng: 100.5018
+      };
+    }
+    
+    const avgLat = pins.reduce((sum, pin) => sum + pin.latitude, 0) / pins.length;
+    const avgLng = pins.reduce((sum, pin) => sum + pin.longitude, 0) / pins.length;
+    
+    return {
+      centerLat: avgLat,
+      centerLng: avgLng
+    };
+  }, [pins]);
+
   const selectedSitter = pins.find(pin => pin.id === selectedPinId)?.sitter;
 
   if (loading) {
@@ -118,10 +136,6 @@ export default function PetSitterMap({
       </div>
     );
   }
-
-  // คำนวณจุดกึ่งกลางของ pins ทั้งหมด
-  const centerLat = pins.reduce((sum, pin) => sum + pin.latitude, 0) / pins.length;
-  const centerLng = pins.reduce((sum, pin) => sum + pin.longitude, 0) / pins.length;
 
   return (
     <div className="relative">

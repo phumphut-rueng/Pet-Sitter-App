@@ -118,6 +118,7 @@ function FindPetsitter() {
                 totalCount={pagination.totalCount}
                 currentPage={pagination.page}
                 totalPages={pagination.totalPages}
+                limit={pagination.limit}
               />
               <Pagination 
                 currentPage={currentPage} 
