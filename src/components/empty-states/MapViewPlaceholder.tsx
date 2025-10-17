@@ -3,10 +3,18 @@ import { Map } from 'lucide-react';
 interface MapViewPlaceholderProps {
   onSwitchToList: () => void;
   variant?: 'desktop' | 'mobile';
+  reason?: 'no-data' | 'no-location';
 }
 
-export function MapViewPlaceholder({ onSwitchToList, variant = 'desktop' }: MapViewPlaceholderProps) {
+export function MapViewPlaceholder({ onSwitchToList, variant = 'desktop', reason = 'no-data' }: MapViewPlaceholderProps) {
   const isMobile = variant === 'mobile';
+  
+  const getMessage = () => {
+    if (reason === 'no-location') {
+      return 'Pet sitters found but no location data available. Switch to List view to see all pet sitters.';
+    }
+    return 'Map view is coming soon. Switch to List view to see pet sitters.';
+  };
   
   return (
     <div className={`flex flex-col items-center justify-center text-center ${
@@ -27,7 +35,7 @@ export function MapViewPlaceholder({ onSwitchToList, variant = 'desktop' }: MapV
       <p className={`text-gray-6 mb-${isMobile ? '4' : '6'} ${
         isMobile ? '' : 'max-w-md'
       }`}>
-        Map view is coming soon. Switch to List view to see pet sitters.
+        {getMessage()}
       </p>
       <button
         onClick={onSwitchToList}

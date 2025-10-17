@@ -121,14 +121,6 @@ export function SearchInput({
           </div>
         )}
         
-        {/* Loading indicator */}
-        {loading && isFocused && (
-          <div className={`absolute top-full left-0 right-0 mt-1 bg-white border border-gray-2 rounded-lg shadow-lg z-50 text-center text-gray-5 ${
-            size === 'sm' ? 'p-3 text-sm' : 'p-4 text-sm'
-          }`}>
-            Loading suggestions...
-          </div>
-        )}
       </div>
     </div>
   );

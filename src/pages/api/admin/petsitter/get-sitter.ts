@@ -13,7 +13,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       status,          // สถานะ approval เช่น "waiting", "approved", "rejected"
       sortOrder = 'newest', // เรียงลำดับ newest หรือ oldest
       page = 1,        // หน้าปัจจุบัน
-      limit = 8,      // จำนวนรายการต่อหน้า
+      limit = 10,     // จำนวนรายการต่อหน้า
     } = req.query;
 
     const pageNumber = Number(page);

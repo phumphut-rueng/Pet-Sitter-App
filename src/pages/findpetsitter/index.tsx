@@ -21,7 +21,7 @@ function FindPetsitter() {
     handleSearch,
     handleClear,
     handlePageChange
-  } = usePetSitterData();
+  } = usePetSitterData(searchFilters);
 
   const {
     viewMode,
@@ -35,10 +35,14 @@ function FindPetsitter() {
     if (storedFilters) {
       try {
         const parsedFilters = JSON.parse(storedFilters);
-        console.log('Found stored filters:', parsedFilters);
         setSearchFilters(parsedFilters);
         // Clear the stored filters after using them
         sessionStorage.removeItem('searchFilters');
+        // Scroll to top เมื่อมาจาก landingpage (บนสุดของเว็บไซต์)
+        setTimeout(() => {
+          document.documentElement.scrollTop = 0;
+          document.body.scrollTop = 0;
+        }, 100);
       } catch (error) {
         console.error('Error parsing stored filters:', error);
       }
@@ -80,6 +84,9 @@ function FindPetsitter() {
                 viewMode={viewMode}
                 onClear={handleClear}
                 onSwitchToList={switchToList}
+                onSitterSelect={(sitter) => {
+                  // Optional: Handle sitter selection (e.g., scroll to details, highlight, etc.)
+                }}
                 variant="desktop"
               />
             </div>
@@ -93,18 +100,22 @@ function FindPetsitter() {
               viewMode={viewMode}
               onClear={handleClear}
               onSwitchToList={switchToList}
+              onSitterSelect={(sitter) => {
+                // Optional: Handle sitter selection (e.g., scroll to details, highlight, etc.)
+              }}
               variant="mobile"
             />
           </div>
 
-          {/* Pagination */}
-          {!loading && sitters.length > 0 && viewMode === 'list' && (
+          {/* Pagination - แสดงทั้งใน list และ map view */}
+          {!loading && sitters.length > 0 && (
             <div className="flex flex-col items-center mt-8 space-y-4">
               <PaginationInfo
                 currentCount={sitters.length}
                 totalCount={pagination.totalCount}
                 currentPage={pagination.page}
                 totalPages={pagination.totalPages}
+                limit={pagination.limit}
               />
               <Pagination 
                 currentPage={currentPage} 

@@ -3,8 +3,14 @@ import Image from "next/image";
 import PrimaryButton from "@/components/buttons/PrimaryButton";
 import Link from "next/link";
 import { satoshi } from "@/fonts";
+import { useSession } from "next-auth/react";
 
 const PetSitterHero = () => {
+  const { data: session } = useSession();
+  
+  // ตรวจสอบว่าผู้ใช้มี role sitter หรือไม่
+  const isSitter = session?.user?.roles?.includes("Sitter");
+
   return (
     <div className={`${satoshi.className} py-20`}>
       <div className="relative bg-yellow-bg rounded-xl p-8 sm:p-12 lg:p-16 overflow-hidden">
@@ -44,24 +50,34 @@ const PetSitterHero = () => {
 
           {/* Buttons */}
           <div className="flex flex-col sm:flex-row mt-10 sm:mt-2 gap-4 sm:gap-6 justify-center items-center">
-            {/* Become A Pet Sitter Button */}
-            <Link
-              href="/auth/register"
-              aria-label="Go to register page"
-            >
-              <button className="cursor-pointer text-orange-5 font-semibold hover:text-orange-6 hover:bg-orange-1 transition-all duration-200 min-w-[200px] sm:min-w-[220px] px-6 py-3 rounded-full border-2 border-orange-5 hover:border-orange-6">
-                Register
-              </button>
-            </Link>
+            {/* Become A Pet Sitter Button - แสดงเฉพาะผู้ใช้ที่ยังไม่ได้เป็น sitter */}
+            {!isSitter && (
+              <Link
+                href="/auth/register"
+                aria-label="Go to register page"
+              >
+                <button className="cursor-pointer text-orange-5 font-semibold hover:text-orange-6 hover:bg-orange-1 transition-all duration-200 min-w-[200px] sm:min-w-[220px] px-6 py-3 rounded-full border-2 border-orange-5 hover:border-orange-6">
+                  Register
+                </button>
+              </Link>
+            )}
 
             {/* Find A Pet Sitter Button */}
             <Link href="/findpetsitter" aria-label="Go to find a pet sitter page">
-              <PrimaryButton
-                text="Find a Pet Sitter"
-                textColor="white"
-                bgColor="primary"
-                className="w-full justify-center my-4"
-              />
+              <div onClick={() => {
+                // Scroll to top after navigation
+                setTimeout(() => {
+                  document.documentElement.scrollTop = 0;
+                  document.body.scrollTop = 0;
+                }, 400);
+              }}>
+                <PrimaryButton
+                  text="Find a Pet Sitter"
+                  textColor="white"
+                  bgColor="primary"
+                  className="w-full justify-center my-4"
+                />
+              </div>
             </Link>
           </div>
         </div>

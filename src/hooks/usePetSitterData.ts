@@ -17,11 +17,12 @@ interface PaginationData {
   totalPages: number;
 }
 
-export function usePetSitterData() {
+export function usePetSitterData(initialFilters?: SearchFilters) {
   const router = useRouter();
   const [sitters, setSitters] = useState<Sitter[]>([]);
   const [loading, setLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
+  const [isInitialLoad, setIsInitialLoad] = useState(true);
   const [filters, setFilters] = useState<SearchFilters>({
     searchTerm: "",
     petTypes: [],
@@ -37,8 +38,14 @@ export function usePetSitterData() {
 
   const cardsPerPage = 5;
 
-  // Parse initial filters from URL parameters
+  // Parse initial filters from URL parameters หรือ initialFilters
   const getInitialFilters = useCallback((): SearchFilters => {
+    // ถ้ามี initialFilters (จาก stored filters) ให้ใช้แทน
+    if (initialFilters) {
+      return initialFilters;
+    }
+
+    // ถ้าไม่มี initialFilters ให้ใช้ URL parameters
     if (!router.isReady) {
       return {
         searchTerm: "",
@@ -55,17 +62,10 @@ export function usePetSitterData() {
       rating: query.rating ? parseInt(query.rating as string, 10) : 0,
       experience: (query.experience as string) || "all"
     };
-  }, [router]);
+  }, [router, initialFilters]);
 
-  // Update filters when router is ready and URL parameters change
-  useEffect(() => {
-    if (router.isReady) {
-      const newFilters = getInitialFilters();
-      setFilters(newFilters);
-    }
-  }, [router.isReady, router.query, getInitialFilters]);
-
-  const fetchSitters = useCallback(async () => {
+  // สร้าง fetch function เดียวสำหรับทุกการใช้งาน
+  const fetchSitters = useCallback(async (filtersToUse: SearchFilters) => {
     try {
       setLoading(true);
       
@@ -74,17 +74,17 @@ export function usePetSitterData() {
         limit: cardsPerPage.toString()
       });
 
-      if (filters.searchTerm) {
-        params.append('searchTerm', filters.searchTerm);
+      if (filtersToUse.searchTerm) {
+        params.append('searchTerm', filtersToUse.searchTerm);
       }
-      if (filters.petTypes.length > 0) {
-        filters.petTypes.forEach(type => params.append('petTypes', type));
+      if (filtersToUse.petTypes.length > 0) {
+        filtersToUse.petTypes.forEach(type => params.append('petTypes', type));
       }
-      if (filters.rating > 0) {
-        params.append('rating', filters.rating.toString());
+      if (filtersToUse.rating > 0) {
+        params.append('rating', filtersToUse.rating.toString());
       }
-      if (filters.experience !== "all") {
-        params.append('experience', filters.experience);
+      if (filtersToUse.experience !== "all") {
+        params.append('experience', filtersToUse.experience);
       }
 
       const response = await axios.get(`/api/sitter/get-sitter?${params.toString()}`);
@@ -150,15 +150,45 @@ export function usePetSitterData() {
     } finally {
       setLoading(false);
     }
-  }, [currentPage, filters, cardsPerPage]);
+  }, [currentPage, cardsPerPage]);
 
+  // Initialize filters เมื่อเข้าหน้าแรก
   useEffect(() => {
-    fetchSitters();
-  }, [fetchSitters]);
+    if (!router.isReady || !isInitialLoad) return;
+    
+    const newFilters = getInitialFilters();
+    setFilters(newFilters);
+    fetchSitters(newFilters);
+    setIsInitialLoad(false); // ป้องกันการ fetch ซ้ำ
+    
+    // ล้าง URL parameters หลังจากใช้แล้ว
+    if (Object.keys(router.query).length > 0) {
+      router.replace('/findpetsitter', undefined, { shallow: true });
+    }
+    
+    // Scroll to top เมื่อเข้าหน้าแรก (บนสุดของเว็บไซต์)
+    
+  }, [router.isReady, getInitialFilters, fetchSitters, isInitialLoad, router]);
+
+  // Fetch data เมื่อ filters หรือ pagination เปลี่ยน (เฉพาะเมื่อไม่ใช่ initial load)
+  useEffect(() => {
+    if (!router.isReady || isInitialLoad) return;
+    
+    fetchSitters(filters);
+    
+    // Scroll to top เมื่อ filters หรือ pagination เปลี่ยน (บนสุดของเว็บไซต์)
+    
+  }, [filters, currentPage, router.isReady, fetchSitters, isInitialLoad]);
 
   const handleSearch = useCallback((newFilters: SearchFilters) => {
     setFilters(newFilters);
     setCurrentPage(1);
+    
+    // Scroll to top เมื่อ search (ใช้วิธีที่แน่นอนกว่า)
+    setTimeout(() => {
+      document.documentElement.scrollTop = 0;
+      document.body.scrollTop = 0;
+    }, 100);
   }, []);
 
   const handleClear = useCallback(() => {
@@ -169,10 +199,22 @@ export function usePetSitterData() {
       experience: "all"
     });
     setCurrentPage(1);
+    
+    // Scroll to top เมื่อ clear (ใช้วิธีที่แน่นอนกว่า)
+    setTimeout(() => {
+      document.documentElement.scrollTop = 0;
+      document.body.scrollTop = 0;
+    }, 100);
   }, []);
 
   const handlePageChange = useCallback((page: number) => {
     setCurrentPage(page);
+    
+    // Scroll to top เมื่อเปลี่ยนหน้า (ใช้วิธีที่แน่นอนกว่า)
+    setTimeout(() => {
+      document.documentElement.scrollTop = 0;
+      document.body.scrollTop = 0;
+    }, 100);
   }, []);
 
   return {

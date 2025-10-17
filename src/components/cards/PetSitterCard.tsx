@@ -62,8 +62,8 @@ const CARD_STYLES = {
     md: "h-10 w-10 rounded-full object-cover",  
     lg: "h-16 w-16 rounded-full object-cover",  
   },
-  image: "h-full w-full object-cover",
-  imageContainer: "overflow-hidden rounded-xl bg-muted",
+  image: "h-full w-full object-cover object-center",
+  imageContainer: "overflow-hidden rounded-xl bg-muted relative",
 } as const;
 
 const cn = (...classes: (string | undefined | false | null)[]) =>
@@ -191,7 +191,13 @@ TagList.displayName = "TagList";
 const CoverImage: React.FC<{ src: string; alt: string; width: number; height: number; className?: string }> =
   React.memo(({ src, alt, width, height, className }) => (
     <div className={cn(CARD_STYLES.imageContainer, className)}>
-      <Image src={src} alt={alt} className={CARD_STYLES.image} width={width} height={height} />
+      <Image 
+        src={src} 
+        alt={alt} 
+        className={CARD_STYLES.image} 
+        fill
+        sizes={`${width}px`}
+      />
     </div>
   ));
 CoverImage.displayName = "CoverImage";
