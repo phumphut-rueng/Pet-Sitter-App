@@ -35,7 +35,6 @@ function FindPetsitter() {
     if (storedFilters) {
       try {
         const parsedFilters = JSON.parse(storedFilters);
-        console.log('Found stored filters:', parsedFilters);
         setSearchFilters(parsedFilters);
         // Clear the stored filters after using them
         sessionStorage.removeItem('searchFilters');
@@ -87,7 +86,6 @@ function FindPetsitter() {
                 onSwitchToList={switchToList}
                 onSitterSelect={(sitter) => {
                   // Optional: Handle sitter selection (e.g., scroll to details, highlight, etc.)
-                  console.log('Selected sitter:', sitter);
                 }}
                 variant="desktop"
               />
@@ -104,7 +102,6 @@ function FindPetsitter() {
               onSwitchToList={switchToList}
               onSitterSelect={(sitter) => {
                 // Optional: Handle sitter selection (e.g., scroll to details, highlight, etc.)
-                console.log('Selected sitter:', sitter);
               }}
               variant="mobile"
             />
