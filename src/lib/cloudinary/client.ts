@@ -1,4 +1,8 @@
-const CLOUD_NAME = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME || "df1j8dvg0";
+const CLOUD_NAME = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME;
+
+if (!CLOUD_NAME) {
+  throw new Error('NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME is required');
+}
 
 export const cldUrl = (publicId: string, w = 256, h = 256) =>
   `https://res.cloudinary.com/${CLOUD_NAME}/image/upload/f_auto,q_auto,c_fill,w_${w},h_${h}/${publicId}`;

@@ -34,9 +34,13 @@ export default function ReportsListPage() {
 
   const [rows, setRows] = useState<ReportRow[]>([]);
   const [total, setTotal] = useState(0);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
 
   const totalPages = useMemo(() => Math.max(1, Math.ceil(total / LIMIT)), [total]);
+  
+  // ย้ายการคำนวณ from และ to มาไว้ก่อน return
+  const from = rows.length === 0 ? 0 : (page - 1) * LIMIT + 1;
+  const to = (page - 1) * LIMIT + rows.length;
 
   useEffect(() => {
     let alive = true;
@@ -58,7 +62,7 @@ export default function ReportsListPage() {
         if (!alive) return;
 
         setRows((data.reports ?? []).map(toReportRow));
-        setTotal(data.pagination.total);
+        setTotal(data.pagination?.total ?? 0);
       } catch (err) {
         if (!alive) return;
 
@@ -74,9 +78,6 @@ export default function ReportsListPage() {
     fetchReports();
     return () => { alive = false; };
   }, [statusFilter, q, page]);
-
-  const from = rows.length === 0 ? 0 : (page - 1) * LIMIT + 1;
-  const to = (page - 1) * LIMIT + rows.length;
 
   return (
     <AdminLayout>
@@ -101,24 +102,26 @@ export default function ReportsListPage() {
         />
 
         <div className="relative rounded-2xl border border-gray-2 bg-white p-4 shadow-sm md:p-5">
-          <ReportsTable reports={rows} />
-
-          <div className="mt-6 grid grid-cols-3 items-center">
-            <div className="text-xs2-regular text-muted">
-              Showing {from}–{to} of {total}
-            </div>
-
-            <div className="flex justify-center">
-              <Pagination currentPage={page} totalPages={totalPages} onClick={setPage} />
-            </div>
-
-            <div />
-          </div>
-
-          {loading && (
-            <div className="absolute inset-0 flex items-center justify-center rounded-2xl ">
+          {loading ? (
+            <div className="flex items-center justify-center h-[400px]">
               <PetPawLoading message="Loading Reports..." size="md" />
             </div>
+          ) : (
+            <>
+              <ReportsTable reports={rows} />
+
+              <div className="mt-6 grid grid-cols-3 items-center">
+                <div className="text-xs2-regular text-muted">
+                  Showing {from}–{to} of {total}
+                </div>
+
+                <div className="flex justify-center">
+                  <Pagination currentPage={page} totalPages={totalPages} onClick={setPage} />
+                </div>
+
+                <div />
+              </div>
+            </>
           )}
         </div>
       </div>
