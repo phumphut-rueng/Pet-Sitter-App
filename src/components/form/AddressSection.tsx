@@ -66,6 +66,7 @@ export default function AddressSection({
   const [districtOpts, setDistrictOpts] = useState<District[]>([]);
   const [subdistrictOpts, setSubdistrictOpts] = useState<Subdistrict[]>([]);
   const [latLng, setLatLng] = useState({ lat: 13.736717, lng: 100.523186 }); // BKK default
+  const [addressWarning, setAddressWarning] = useState<string | null>(null);
 
   const [initialProvince] = useState(watch("address_province"));
   const [initialDistrict] = useState(watch("address_district"));
@@ -165,25 +166,28 @@ export default function AddressSection({
   useEffect(() => {
     if (!watchProvince || !watchDistrict) return;
     if (!fullAddress) return;
-  
+
     const t = setTimeout(async () => {
       try {
         const result = await getLatLngFromAddress(fullAddress);
         if (!result) {
-          setError("address_detail", {
-            type: "manual",
-            message: "We couldn't find the location for this address.",
-          });
+          setAddressWarning(
+            "Map pin couldn't be moved to this address, but you can still save the address."
+          );
           return;
+        } else {
+          setAddressWarning(null);
         }
-  
+
         const { lat, lng } = result;
         setLatLng({ lat, lng });
         setValue("latitude", lat, { shouldDirty: true });
         setValue("longitude", lng, { shouldDirty: true });
-  
+
         // ✅ เคลียร์ error ถ้าหา location ได้
-        setValue("address_detail", watch("address_detail"), { shouldValidate: true });
+        setValue("address_detail", watch("address_detail"), {
+          shouldValidate: true,
+        });
       } catch (err) {
         console.error("Geocoding error:", err);
         setError("address_detail", {
@@ -192,7 +196,7 @@ export default function AddressSection({
         });
       }
     }, 700);
-  
+
     return () => clearTimeout(t);
   }, [fullAddress, watchProvince, watchDistrict, setValue, setError, watch]);
 
@@ -355,8 +359,28 @@ export default function AddressSection({
               {errors.address_detail.message as string}
             </p>
           )}
+          {addressWarning && !errors.address_detail && (
+            <p className="mt-1 text-sm text-orange-4">
+              <div className="flex gap-2">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="w-4 h-4"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M12 8v4m0 4h.01M12 2a10 10 0 100 20 10 10 0 000-20z"
+                  />
+                </svg>
+                {addressWarning}
+              </div>
+            </p>
+          )}
         </div>
-
         {/* Map */}
         <div className="md:col-span-2 z-0">
           <LeafletMap latitude={latLng.lat} longitude={latLng.lng} />
