@@ -236,9 +236,10 @@ const ChatContainer: React.FC<ChatContainerProps> = ({
   const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
-      // ตรวจสอบประเภทไฟล์
-      if (!file.type.startsWith('image/')) {
-        alert('Please select an image file.');
+      // ตรวจสอบประเภทไฟล์ (เฉพาะ jpg, png, gif)
+      const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif'];
+      if (!allowedTypes.includes(file.type)) {
+        alert('Please select only JPG, PNG, or GIF image files.');
         return;
       }
       
@@ -388,7 +389,7 @@ const ChatContainer: React.FC<ChatContainerProps> = ({
             <input
               ref={fileInputRef}
               type="file"
-              accept="image/*"
+              accept="image/jpeg,image/jpg,image/png,image/gif"
               className="hidden"
               onChange={handleFileSelect}
             />

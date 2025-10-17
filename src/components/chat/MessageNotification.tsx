@@ -8,10 +8,15 @@ const MessageNotification: React.FC = () => {
   const [lastMessageCount, setLastMessageCount] = useState(0);
   const router = useRouter();
 
+  // Reset lastMessageCount เมื่อเปลี่ยนหน้า
+  useEffect(() => {
+    setLastMessageCount(messages.length);
+  }, [router.pathname, messages.length]);
+
   useEffect(() => {
     console.log('MessageNotification: messages.length =', messages.length, 'lastMessageCount =', lastMessageCount);
     
-    if (messages.length > lastMessageCount && lastMessageCount > 0) {
+    if (messages.length > lastMessageCount && lastMessageCount >= 0) {
       const latestMessage = messages[messages.length - 1];
       
       // ตรวจสอบว่าเป็นข้อความที่ส่งมาหาผู้ใช้ปัจจุบันหรือไม่ (ไม่ใช่ข้อความที่ผู้ใช้ส่งเอง)
