@@ -11,10 +11,10 @@ type Props = {
   priority?: boolean;
 };
 
-const CLOUD_NAME = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME;
+const CLOUD_NAME = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME || 'df1j8dvg0';
 
-if (!CLOUD_NAME) {
-  console.error('NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME is not configured');
+if (!process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME) {
+  console.warn('NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME is not configured, using fallback');
 }
 
 // Base64 image placeholder (1x1 pixel transparent PNG)

@@ -1,7 +1,7 @@
-const CLOUD_NAME = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME;
+const CLOUD_NAME = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME || 'df1j8dvg0';
 
-if (!CLOUD_NAME) {
-  throw new Error('NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME is required');
+if (!process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME) {
+  console.warn('NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME is not configured, using fallback');
 }
 
 export const cldUrl = (publicId: string, w = 256, h = 256) =>
