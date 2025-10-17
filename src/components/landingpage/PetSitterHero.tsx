@@ -65,7 +65,7 @@ const PetSitterHero = () => {
             {/* Find A Pet Sitter Button */}
             <Link href="/findpetsitter" aria-label="Go to find a pet sitter page">
               <div onClick={() => {
-                // Scroll to top เมื่อไปหน้า findpetsitter
+                // Scroll to top after navigation
                 setTimeout(() => {
                   document.documentElement.scrollTop = 0;
                   document.body.scrollTop = 0;

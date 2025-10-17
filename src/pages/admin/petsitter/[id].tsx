@@ -799,6 +799,7 @@ export default function PetSitterDetailPage() {
                             totalCount={totalHistoryCount}
                             currentPage={currentPage}
                             totalPages={totalPages}
+                            limit={itemsPerPage}
                           />
                           <Pagination
                             currentPage={currentPage}
