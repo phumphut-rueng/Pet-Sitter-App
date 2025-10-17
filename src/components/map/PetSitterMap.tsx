@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, useRef, useMemo } from 'react';
+import { useEffect, useState, useRef, useMemo, useCallback } from 'react';
 import { Sitter } from '@/types/sitter.types';
 import dynamic from 'next/dynamic';
 import { PetSitterCardSmall } from '@/components/cards/PetSitterCard';
@@ -76,7 +76,7 @@ export default function PetSitterMap({
   };
 
   // ฟังก์ชันเลื่อน carousel ไปยัง card ที่เลือก
-  const scrollToSelectedCard = (pinId: number) => {
+  const scrollToSelectedCard = useCallback((pinId: number) => {
     if (carouselRef.current) {
       const cardIndex = pins.findIndex(pin => pin.id === pinId);
       if (cardIndex !== -1) {
@@ -89,7 +89,7 @@ export default function PetSitterMap({
         });
       }
     }
-  };
+  }, [pins]);
 
   // เลื่อนไปยัง card ที่เลือกเมื่อ selectedPinId เปลี่ยน
   useEffect(() => {

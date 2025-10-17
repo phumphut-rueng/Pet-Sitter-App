@@ -63,14 +63,22 @@ const PetSitterHero = () => {
             )}
 
             {/* Find A Pet Sitter Button */}
-            <a href="/findpetsitter" aria-label="Go to find a pet sitter page">
-              <PrimaryButton
-                text="Find a Pet Sitter"
-                textColor="white"
-                bgColor="primary"
-                className="w-full justify-center my-4"
-              />
-            </a>
+            <Link href="/findpetsitter" aria-label="Go to find a pet sitter page">
+              <div onClick={() => {
+                // Scroll to top เมื่อไปหน้า findpetsitter
+                setTimeout(() => {
+                  document.documentElement.scrollTop = 0;
+                  document.body.scrollTop = 0;
+                }, 400);
+              }}>
+                <PrimaryButton
+                  text="Find a Pet Sitter"
+                  textColor="white"
+                  bgColor="primary"
+                  className="w-full justify-center my-4"
+                />
+              </div>
+            </Link>
           </div>
         </div>
       </div>
