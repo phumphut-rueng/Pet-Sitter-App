@@ -205,13 +205,13 @@ export default function BookingDetailPage() {
       <section className="flex-1 min-w-0">
         <PetSitterNavbar avatarUrl={avatarUrl} name={userName} />
 
-        <div className="flex items-center justify-between px-8 py-6">
-          <div className="flex items-center gap-3">
+        <div className="flex items-center justify-between px-6 py-8">
+          <div className="flex items-center gap-4">
             <button
               onClick={() => router.back()}
-              className="text-gray-6 text-2xl hover:text-gray-9"
+              className="text-gray-6 text-2xl"
             >
-              ←
+              <img src="/icons/arrow-left.svg" alt="bank" className="w-3 h-3"/>
             </button>
             <h2 className="text-2xl font-semibold text-black">
               {booking.ownerName}
@@ -221,7 +221,7 @@ export default function BookingDetailPage() {
           {renderActionButtons()}
         </div>
 
-        <div className="px-8 pb-10">
+        <div className="px-6 pb-10">
           <div className="bg-white rounded-2xl px-18 py-8 space-y-6">
             <h4 className="text-gray-4 font-bold text-xl mb-1">
               Pet Owner Name
