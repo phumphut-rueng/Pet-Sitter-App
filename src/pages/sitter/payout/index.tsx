@@ -3,7 +3,6 @@ import axios from "axios";
 import { useRouter } from "next/navigation";
 import SitterSidebar from "@/components/layout/SitterSidebar";
 import PetSitterNavbar from "@/components/PetSitterNavbar";
-import { Pagination } from "@/components/pagination/Pagination";
 
 const mockPayouts = [
   {
@@ -72,7 +71,6 @@ export default function PetSitterPayoutPage() {
         <PetSitterNavbar avatarUrl={avatarUrl} name={userName} />
         <div className="px-6 py-8">
           <h1 className="text-2xl font-semibold mb-6">Payout Option</h1>
-
           <div className="flex gap-5 mb-6">
             <div className="flex-1 bg-white px-6 py-5 rounded-2xl flex items-center justify-between">
               <div className="flex items-center gap-2">

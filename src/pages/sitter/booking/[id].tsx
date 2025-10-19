@@ -211,7 +211,7 @@ export default function BookingDetailPage() {
               onClick={() => router.back()}
               className="text-gray-6 text-2xl"
             >
-              <img src="/icons/arrow-left.svg" alt="bank" className="w-3 h-3"/>
+              <img src="/icons/arrow-left.svg" alt="arrow-left" className="w-3 h-3"/>
             </button>
             <h2 className="text-2xl font-semibold text-black">
               {booking.ownerName}
