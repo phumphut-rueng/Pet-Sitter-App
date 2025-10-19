@@ -93,6 +93,41 @@ export default async function handler(
   if (!sitter) return res.status(404).json({ message: "Sitter not found" });
 
   if (req.method === "GET") {
+
+    if (req.query.payout) {
+      const bookings = await prisma.booking.findMany({
+        where: { pet_sitter_id: sitter.id },
+        include: {
+          status_booking_booking_status_idTostatus: true,
+        },
+        orderBy: {
+          date_start: "desc", // เรียงวันที่ล่าสุดก่อน
+        },
+      });
+
+      const filtered = bookings.filter((b) => {
+        const paymentType = b.payment_type?.toLowerCase() ?? "";
+        const statusId = b.status_booking_booking_status_idTostatus?.id ?? null;
+
+        if (paymentType === "credit" && statusId !== 8) return true; // แสดงได้ทุกสถานะ ยกเว้น canceled
+        if (paymentType === "cash" && statusId === 7) return true; // ต้อง success เท่านั้น
+        return false;
+      });
+
+      const payoutList = filtered.map((b) => ({
+        date: new Date(b.date_start).toLocaleDateString("en-GB", {
+          day: "numeric",
+          month: "short",
+          year: "numeric",
+        }),
+        from: b.name,
+        transactionNo: b.transaction_id ?? "-",
+        amount: parseFloat(b.amount.toString()),
+      }));
+
+      return res.status(200).json(payoutList);
+    }
+
     const bookingId = req.query.id ? Number(req.query.id) : null;
 
     if (bookingId) {
@@ -144,16 +179,16 @@ export default async function handler(
         totalPaid: b.amount.toFixed(2),
         paymentMethod: b.payment_type ?? "-",
         transactionDate: b.transaction_date
-        ? new Date(b.transaction_date).toLocaleString("en-US", {
-            day: "numeric",
-            month: "short",
-            year: "numeric",
-            hour: "numeric",
-            minute: "2-digit",
-            hour12: true,
-            timeZone: "Asia/Bangkok",
-          })
-        : "-",
+          ? new Date(b.transaction_date).toLocaleString("en-US", {
+              day: "numeric",
+              month: "short",
+              year: "numeric",
+              hour: "numeric",
+              minute: "2-digit",
+              hour12: true,
+              timeZone: "Asia/Bangkok",
+            })
+          : "-",
         transactionId: b.transaction_id ?? "-",
         message: b.additional ?? "-",
         status: mapStatusNameToKey(
@@ -202,6 +237,9 @@ export default async function handler(
           b.status_booking_booking_status_idTostatus?.name ??
             "waiting for confirm"
         ),
+        date_start: b.date_start,
+        transaction_id: b.transaction_id || "-",
+        amount: parseFloat(b.amount.toString()),
       }));
 
       return res.status(200).json(list);
