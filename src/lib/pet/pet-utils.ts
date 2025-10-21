@@ -4,7 +4,9 @@ import { Pet, PetFormValues, PetType } from "@/types/pet.types";
 import { uploadToCloudinary } from "@/lib/cloudinary/upload-to-cloudinary";
 import { api } from "@/lib/api/axios";
 import { isAxiosError } from "axios";
+import { getErrorMessage as getErrorMsg } from "@/lib/utils/error";
 import { PET_ERROR_MESSAGES, PET_SUCCESS_MESSAGES } from "@/lib/constants/messages";
+import { isDataUrl, dataUrlToFile } from "@/lib/cloudinary/image-helpers";
 
 export type { Pet, PetFormValues, PetType };
 
@@ -17,39 +19,12 @@ export const ROUTES = {
 
 export const NAVIGATION_DELAY = 900;
 
-// Re-export messages for convenience
-export { PET_ERROR_MESSAGES as ERROR_MESSAGES, PET_SUCCESS_MESSAGES as SUCCESS_MESSAGES };
-
-
+// Re-export messages for convenience (PET_SUCCESS_MESSAGES now points to SUCCESS_MESSAGES)
+export { PET_ERROR_MESSAGES as ERROR_MESSAGES } from "@/lib/constants/messages";
+export { SUCCESS_MESSAGES } from "@/lib/constants/messages";
 
 export function getErrorMessage(error: unknown): string {
-  if (isAxiosError(error)) {
-    const data = error.response?.data as { message?: string; error?: string } | undefined;
-    return (
-      data?.message ||
-      data?.error ||
-      error.response?.statusText ||
-      error.message ||
-      PET_ERROR_MESSAGES.unknown
-    );
-  }
-
-  if (typeof error === "string") return error;
-  if (error instanceof Error) return error.message;
-
-  try {
-    return JSON.stringify(error);
-  } catch {
-    return PET_ERROR_MESSAGES.unknown;
-  }
-}
-
-
-
-export function parsePetId(routerQuery: unknown): number | undefined {
-  const raw = Array.isArray(routerQuery) ? routerQuery[0] : routerQuery;
-  const parsed = raw ? Number(raw) : NaN;
-  return Number.isFinite(parsed) && parsed > 0 ? parsed : undefined;
+  return getErrorMsg(error, PET_ERROR_MESSAGES.unknown);
 }
 
 export function delayedNavigation(
@@ -69,26 +44,6 @@ export function validateImageUrl(url?: string | null): string {
     trimmed &&
     (trimmed.startsWith("http") || trimmed.startsWith("data:") || trimmed.startsWith("/"));
   return isValid ? trimmed : "";
-}
-
-function isDataUrl(url?: string): boolean {
-  return !!url && /^data:image\/[a-zA-Z]+;base64,/.test(url);
-}
-
-function dataUrlToFile(dataUrl: string, filename = "pet.png"): File {
-  const match = dataUrl.match(/^data:([^;]+);base64,(.+)$/);
-  if (!match) throw new Error("Invalid data URL");
-
-  const [, mime = "image/png", base64] = match;
-  const binary = atob(base64);
-  const bytes = new Uint8Array(binary.length);
-
-  for (let i = 0; i < binary.length; i++) {
-    bytes[i] = binary.charCodeAt(i);
-  }
-
-  const blob = new Blob([bytes], { type: mime });
-  return new File([blob], filename, { type: mime });
 }
 
 export function fileToDataURL(file: File): Promise<string> {

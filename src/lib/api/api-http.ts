@@ -13,9 +13,3 @@ export const HTTP_STATUS = {
 export function json<T>(res: NextApiResponse<T>, status: number, body: T) {
   return res.status(status).json(body);
 }
-
-export function toErrMsg(e: unknown, fallback = "Internal Server Error") {
-  if (e instanceof Error) return e.message;
-  if (typeof e === "string") return e;
-  try { return JSON.stringify(e); } catch { return fallback; }
-}

@@ -42,3 +42,35 @@ export const routeRules: RouteRules = {
   "/account":          { anyOf: [ROLES.OWNER, ROLES.ADMIN] },
   //"/profile":          { anyOf: [ROLES.OWNER, ROLES.ADMIN] },
 };
+
+// ---- Admin Resolver for API Routes ----
+import type { NextApiRequest, NextApiResponse } from "next";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/pages/api/auth/[...nextauth]";
+import { prisma } from "@/lib/prisma/prisma";
+import { toPositiveInt } from "@/lib/api/api-utils";
+
+/**
+ * หา adminId จาก session หรือ header x-user-id (fallback สำหรับ internal tools)
+ */
+export async function getAdminIdFromRequest(
+  req: NextApiRequest, 
+  res: NextApiResponse
+): Promise<number | null> {
+  try {
+    const session = await getServerSession(req, res, authOptions);
+    const uid = Number(session?.user?.id);
+    if (Number.isFinite(uid)) {
+      const admin = await prisma.admin.findUnique({ where: { user_id: uid } });
+      if (admin) return admin.id;
+    }
+  } catch {
+    // ignore – จะลองจาก header ต่อ
+  }
+
+  const hdr = toPositiveInt(req.headers["x-user-id"]);
+  if (!hdr) return null;
+
+  const admin = await prisma.admin.findUnique({ where: { user_id: hdr } });
+  return admin?.id ?? null;
+}

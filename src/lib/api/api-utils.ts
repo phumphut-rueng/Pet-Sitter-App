@@ -1,5 +1,5 @@
 import type { NextApiRequest, NextApiResponse } from "next";
-import { isAxiosError } from "axios";
+import { getErrorMessage } from "@/lib/utils/error";
 
 type QueryObject = Record<string, unknown>;
 
@@ -50,22 +50,24 @@ export function toInt(value: unknown, defaultValue: number): number {
 }
 
 /**
- * แปลง error เป็นข้อความ
+ * แปลงค่าเป็น positive integer หรือ null (ใช้สำหรับ ID validation)
  */
-export function getErrorMessage(error: unknown, fallback = "Unknown error"): string {
-  if (isAxiosError(error)) {
-    const data = error.response?.data as { message?: string; error?: string } | undefined;
-    return (
-      data?.message ||
-      data?.error ||
-      error.response?.statusText ||
-      error.message ||
-      fallback
-    );
-  }
-  if (error instanceof Error) return error.message;
-  if (typeof error === "string") return error;
-  return fallback;
+export function toPositiveInt(value: unknown): number | null {
+  const str = getFirstParam(value);
+  const num = str !== undefined ? Number(str) : NaN;
+  return Number.isInteger(num) && num > 0 ? num : null;
+}
+
+/**
+ * ส่ง error response แบบง่าย
+ */
+export function sendError(
+  res: NextApiResponse,
+  status: number,
+  message: string,
+  extra?: Record<string, unknown>
+) {
+  return res.status(status).json({ message, ...(extra ?? {}) });
 }
 
 /**

@@ -1,48 +1,14 @@
 import type { NextApiRequest, NextApiResponse } from "next";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/pages/api/auth/[...nextauth]";
 import { prisma } from "@/lib/prisma/prisma";
 import { $Enums } from "@prisma/client";
+import { sendError, toPositiveInt } from "@/lib/api/api-utils";
+import { getAdminIdFromRequest } from "@/lib/auth/roles";
 
 type Body = {
   action: "ban" | "unban";
   reason?: string;
   cascadePets?: boolean;
 };
-
-
-// ตอบ error แบบมาตรฐานเดียวกัน
-function sendError(res: NextApiResponse, status: number, message: string) {
-  return res.status(status).json({ message });
-}
-
-// parse ownerId จาก query [ownerId] หรือ [id]
-function parseOwnerId(req: NextApiRequest): number | null {
-  const idParam = (req.query.ownerId ?? req.query.id) as string | string[] | undefined;
-  const raw = Array.isArray(idParam) ? idParam[0] : idParam;
-  const n = Number(raw);
-  return Number.isFinite(n) ? n : null;
-}
-
-// หา adminId จาก session หรือ header x-user-id (fallback สำหรับ internal tools)
-async function resolveAdminId(req: NextApiRequest, res: NextApiResponse) {
-  try {
-    const session = await getServerSession(req, res, authOptions);
-    const uid = Number(session?.user?.id);
-    if (Number.isFinite(uid)) {
-      const admin = await prisma.admin.findUnique({ where: { user_id: uid } });
-      if (admin) return admin.id;
-    }
-  } catch {
-    // ignore – จะลองจาก header ต่อ
-  }
-
-  const hdr = Number(req.headers["x-user-id"]);
-  if (!Number.isFinite(hdr)) return null;
-
-  const admin = await prisma.admin.findUnique({ where: { user_id: hdr } });
-  return admin?.id ?? null;
-}
 
 
 
@@ -54,8 +20,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   }
 
   // id guard
-  const ownerId = parseOwnerId(req);
-  if (ownerId == null) return sendError(res, 400, "Invalid owner id");
+  const ownerId = toPositiveInt(req.query.ownerId ?? req.query.id);
+  if (!ownerId) return sendError(res, 400, "Invalid owner id");
 
   // body guard
   const { action, reason, cascadePets = true } = (req.body ?? {}) as Body;
@@ -65,8 +31,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
   try {
     // auth guard
-    const adminId = await resolveAdminId(req, res);
-    if (adminId == null) return sendError(res, 403, "Forbidden");
+    const adminId = await getAdminIdFromRequest(req, res);
+    if (!adminId) return sendError(res, 403, "Forbidden");
 
     // entity guard
     const current = await prisma.user.findUnique({

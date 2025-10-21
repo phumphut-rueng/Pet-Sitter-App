@@ -1,36 +1,12 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma/prisma";
-
-
-
-function sendError(res: NextApiResponse, status: number, message: string) {
-  return res.status(status).json({ message });
-}
-
-function toPositiveInt(value: unknown): number | null {
-  const s =
-    typeof value === "string"
-      ? value
-      : Array.isArray(value)
-      ? String(value[0])
-      : typeof value === "number" && Number.isFinite(value)
-      ? String(value)
-      : undefined;
-  if (!s) return null;
-  const n = Number(s);
-  return Number.isInteger(n) && n > 0 ? n : null;
-}
+import { getErrorMessage } from "@/lib/utils/error";
+import { sendError, toPositiveInt } from "@/lib/api/api-utils";
 
 type UpdatableStatus = "pending" | "resolved" | "canceled";
 function isUpdatableStatus(v: unknown): v is UpdatableStatus {
   return v === "pending" || v === "resolved" || v === "canceled";
-}
-
-function getErrorMessage(err: unknown, fallback = "Internal server error"): string {
-  if (err instanceof Error) return err.message;
-  if (typeof err === "string") return err;
-  return fallback;
 }
 
 

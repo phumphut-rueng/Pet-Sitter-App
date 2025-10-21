@@ -1,6 +1,7 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 import { prisma } from "@/lib/prisma/prisma";
-import { apiHandler, methodNotAllowed } from "@/lib/api/api-utils";
+import { apiHandler, methodNotAllowed, toPositiveInt } from "@/lib/api/api-utils";
+import type { ErrorResponse } from "@/lib/types/api";
 
 type BanAction = "ban" | "unban";
 
@@ -17,22 +18,6 @@ interface SuccessResponse {
   banned_at: string | null;
   ban_reason: string | null;
   banned_by_admin_id: number | null;
-}
-
-type ErrorResponse = { message: string };
-
-function toPositiveInt(value: unknown): number | null {
-  const str = typeof value === "string" 
-    ? value 
-    : Array.isArray(value) 
-    ? value[0] 
-    : typeof value === "number" && Number.isFinite(value) 
-    ? String(value) 
-    : undefined;
-
-  if (!str) return null;
-  const num = Number(str);
-  return Number.isInteger(num) && num > 0 ? num : null;
 }
 
 function isValidBody(body: unknown): body is RequestBody {
@@ -62,15 +47,8 @@ async function handler(
 
   try {
     // หา admin ถ้ามี user id
-    const requesterUserId = toPositiveInt(req.headers["x-user-id"]);
-    let adminId: number | null = null;
-
-    if (requesterUserId) {
-      const admin = await prisma.admin.findUnique({ 
-        where: { user_id: requesterUserId } 
-      });
-      adminId = admin?.id ?? null;
-    }
+    const { getAdminIdFromRequest } = await import("@/lib/auth/roles");
+    const adminId = await getAdminIdFromRequest(req, res);
 
     // เช็คว่า pet มีอยู่จริง
     const pet = await prisma.pet.findUnique({

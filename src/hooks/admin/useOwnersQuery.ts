@@ -32,7 +32,7 @@ export function useOwnersQuery({
       setLoading(true);
       setError(null);
       try {
-        const { data } = await api.get<OwnerListResponse>("admin/owners/get-owners", {
+        const { data } = await api.get<OwnerListResponse>("admin/owners", {
           params,
           signal: controller.signal,
         });
