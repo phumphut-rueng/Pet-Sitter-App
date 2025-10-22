@@ -4,7 +4,34 @@ import { apiHandler, methodNotAllowed, toPositiveInt } from "@/lib/api/api-utils
 import type { ErrorResponse } from "@/lib/types/api";
 import type { OwnerDetail } from "@/types/admin/owners";
 
-
+/**
+ * @openapi
+ * /admin/owners/{ownerId}:
+ *   get:
+ *     tags: [Admin]
+ *     summary: Get owner detail (with pets)
+ *     description: Fetch owner profile and pet list by ownerId. Intended for admin dashboard.
+ *     parameters:
+ *       - in: path
+ *         name: ownerId
+ *         required: true
+ *         schema: { type: integer }
+ *         description: Owner ID
+ *     responses:
+ *       200:
+ *         description: Owner detail
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/AdminOwnerDetail'
+ *       400: { description: Invalid owner id }
+ *       404: { description: Owner not found }
+ *       405: { description: Method not allowed }
+ *       500: { description: Failed to load owner detail }
+ *     security:
+ *       - cookieAuth: []
+ *       - AdminApiKey: []
+ */
 
 async function handler(
   req: NextApiRequest,

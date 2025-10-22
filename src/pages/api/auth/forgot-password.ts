@@ -4,6 +4,55 @@ import crypto from "crypto"
 import sgMail from "@sendgrid/mail"
 import { NextApiRequest, NextApiResponse } from "next"
 
+/**
+ * @openapi
+ * /auth/forgot-password:
+ *   post:
+ *     tags:
+ *       - Auth
+ *     summary: Send password reset link (email)
+ *     description: >
+ *       สร้าง password-reset token (อายุ ~15 นาที) และส่งอีเมลผ่าน SendGrid ไปยังผู้ใช้ที่ล็อกอินแบบรหัสผ่าน (credentials).
+ *       ถ้าเป็นบัญชีที่ผูก OAuth (เช่น Google/Facebook) จะไม่อนุญาตให้รีเซ็ตแบบนี้และตอบ 403.
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [email]
+ *             properties:
+ *               email:
+ *                 type: string
+ *                 format: email
+ *           examples:
+ *             sample:
+ *               value:
+ *                 email: "john@example.com"
+ *     responses:
+ *       200:
+ *         description: Reset link sent
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "Reset link sent! Please check your email."
+ *       400:
+ *         description: Email is required
+ *       403:
+ *         description: Account uses social login (OAuth), cannot reset via password
+ *       404:
+ *         description: No account found with that email
+ *       405:
+ *         description: Method not allowed
+ *       500:
+ *         description: Error sending reset link
+ */
+
+
 const prisma = new PrismaClient()
 sgMail.setApiKey(process.env.SENDGRID_API_KEY!)
 

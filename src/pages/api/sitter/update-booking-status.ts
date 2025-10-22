@@ -3,6 +3,32 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "../auth/[...nextauth]";
 import { prisma } from "@/lib/prisma/prisma";
 
+/**
+ * @openapi
+ * /sitter/update-booking-status:
+ *   put:
+ *     tags: [Sitter]
+ *     summary: Update booking status (owned by current sitter)
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [bookingId, statusId]
+ *             properties:
+ *               bookingId: { type: integer }
+ *               statusId: { type: integer, description: "status.booking_status.id" }
+ *     responses:
+ *       200: { description: Updated }
+ *       400: { description: Bad request }
+ *       401: { description: Unauthorized }
+ *       403: { description: Forbidden (not your booking) }
+ *       404: { description: Booking not found }
+ *       409: { description: Invalid status transition }
+ *       500: { description: Server error }
+ */
+
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== "PUT") {
     res.setHeader("Allow", ["PUT"]);

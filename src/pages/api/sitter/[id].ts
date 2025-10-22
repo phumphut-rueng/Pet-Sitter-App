@@ -1,6 +1,40 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 import { prisma } from "@/lib/prisma/prisma";
 
+/**
+ * @openapi
+ * /sitter/{id}:
+ *   get:
+ *     tags: [Public]
+ *     summary: Get sitter by id
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema: { type: integer }
+ *         description: Sitter ID
+ *     responses:
+ *       200:
+ *         description: OK
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 data:
+ *                   type: object
+ *                   additionalProperties: true
+ *       400:
+ *         description: Sitter id is required / invalid
+ *       404:
+ *         description: Pet Sitter not found
+ *       405:
+ *         description: Method not allowed
+ *       500:
+ *         description: Server error
+ */
+
+
 export default async function handler(
     req: NextApiRequest,
     res: NextApiResponse

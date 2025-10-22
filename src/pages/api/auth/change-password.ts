@@ -4,6 +4,52 @@ import bcrypt from "bcryptjs";
 import { prisma } from "@/lib/prisma/prisma";
 import { PASSWORD_ERROR_MESSAGES, PASSWORD_SUCCESS_MESSAGES } from "@/lib/constants/messages";
 
+/**
+ * @openapi
+ * /auth/change-password:
+ *   post:
+ *     tags:
+ *       - Auth
+ *     summary: Change password (by email)
+ *     description: >
+ *       Change user password by email. **Note:** this endpoint, as implemented,
+ *       does not verify current password or session. Consider requiring a session
+ *       cookie or currentPassword to prevent account takeover.
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [email, newPassword]
+ *             properties:
+ *               email:
+ *                 type: string
+ *                 format: email
+ *               newPassword:
+ *                 type: string
+ *                 description: Must contain letters and digits, length >= 8
+ *           examples:
+ *             sample:
+ *               value:
+ *                 email: "john@example.com"
+ *                 newPassword: "Newpass123"
+ *     responses:
+ *       200:
+ *         description: Password changed
+ *         content:
+ *           application/json:
+ *             schema: { type: object }
+ *       400:
+ *         description: Missing data / invalid email / user not found / weak password
+ *       403:
+ *         description: Google account not allowed to set password here
+ *       405:
+ *         description: Method not allowed
+ *       500:
+ *         description: Unknown error
+ */
+
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== "POST") {
     res.setHeader("Allow", ["POST"]);

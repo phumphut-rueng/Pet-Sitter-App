@@ -4,6 +4,42 @@ import { $Enums } from "@prisma/client";
 import { sendError, toPositiveInt } from "@/lib/api/api-utils";
 import { getAdminIdFromRequest } from "@/lib/auth/roles";
 
+/**
+ * @openapi
+ * /admin/owners/{ownerId}/ban:
+ *   post:
+ *     tags: [Admin]
+ *     summary: Ban or unban an owner
+ *     description: Ban/unban owner by ID. Requires admin session (NextAuth) or x-user-id.
+ *     parameters:
+ *       - in: path
+ *         name: ownerId
+ *         required: true
+ *         schema: { type: integer }
+ *         description: Owner ID
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/AdminBanRequest'
+ *     responses:
+ *       200:
+ *         description: Operation success
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/AdminBanResponse'
+ *       400: { description: Invalid owner id or invalid action }
+ *       403: { description: Forbidden }
+ *       404: { description: Owner not found }
+ *       405: { description: Method not allowed }
+ *       500: { description: Operation failed }
+ *     security:
+ *       - cookieAuth: []
+ *       - AdminApiKey: []
+ */
+
 type Body = {
   action: "ban" | "unban";
   reason?: string;

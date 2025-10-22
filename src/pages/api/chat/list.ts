@@ -3,6 +3,69 @@ import { prisma } from '@/lib/prisma/prisma';
 import { getServerSession } from 'next-auth/next';
 import { authOptions } from '../auth/[...nextauth]';
 
+/**
+ * @openapi
+ * /chat/list:
+ *   get:
+ *     tags: [Chat]
+ *     summary: Get chats for current user
+ *     description: >
+ *       Return visible chats for the logged-in user (or chats with unread messages).
+ *       Requires a valid NextAuth session cookie.
+ *     security:
+ *       - cookieAuth: []
+ *     responses:
+ *       200:
+ *         description: Chats retrieved successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success: { type: boolean, example: true }
+ *                 message: { type: string, example: "Chats retrieved successfully" }
+ *                 chats:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       id: { type: integer, example: 42 }
+ *                       user1_id: { type: integer, example: 10 }
+ *                       user2_id: { type: integer, example: 20 }
+ *                       updated_at: { type: string, example: "2025-10-21T12:34:56.000Z" }
+ *                       unread_count: { type: integer, example: 3 }
+ *                       user1:
+ *                         type: object
+ *                         properties:
+ *                           id: { type: integer, example: 10 }
+ *                           name: { type: string, example: "Alice" }
+ *                           profile_image: { type: string, nullable: true, example: null }
+ *                       user2:
+ *                         type: object
+ *                         properties:
+ *                           id: { type: integer, example: 20 }
+ *                           name: { type: string, example: "Bob" }
+ *                           profile_image: { type: string, nullable: true, example: "https://..." }
+ *                       last_message:
+ *                         type: object
+ *                         nullable: true
+ *                         properties:
+ *                           id: { type: integer, example: 777 }
+ *                           chat_id: { type: integer, example: 42 }
+ *                           sender_id: { type: integer, example: 10 }
+ *                           message_type: { type: string, example: "text" }
+ *                           content: { type: string, example: "Hi!" }
+ *                           image_url: { type: string, nullable: true, example: null }
+ *                           timestamp: { type: string, example: "2025-10-21T12:30:00.000Z" }
+ *                           is_read: { type: boolean, example: false }
+ *       401:
+ *         description: Unauthorized - Please login first
+ *       405:
+ *         description: Method Not Allowed
+ *       500:
+ *         description: Internal server error
+ */
+
 export default async function handle(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'GET') {
     return res.status(405).json({ 

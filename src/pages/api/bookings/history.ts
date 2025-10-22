@@ -1,6 +1,76 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 import { prisma } from "@/lib/prisma/prisma";
 
+/**
+ * @openapi
+ * /bookings/history:
+ *   get:
+ *     tags: [Bookings]
+ *     summary: Get booking history of a user
+ *     description: Return booking history for a given user id, newest first.
+ *     parameters:
+ *       - in: query
+ *         name: userId
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: User ID to fetch bookings for
+ *     responses:
+ *       200:
+ *         description: Booking history
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 bookings:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       id: { type: integer, example: 101 }
+ *                       sitterId: { type: integer, example: 55, description: "pet_sitter_id (for review)" }
+ *                       sitterUserId: { type: integer, nullable: true, example: 777, description: "underlying user.id of sitter (for report)" }
+ *                       sitterName: { type: string, example: "Happy Paws" }
+ *                       sitterAvatar: { type: string, nullable: true, example: "https://cdn.example.com/s/55.jpg" }
+ *                       status: { type: string, example: "Completed" }
+ *                       paymentStatus: { type: string, example: "Paid" }
+ *                       dateStart:
+ *                         type: string
+ *                         format: date-time
+ *                         example: "2025-10-20T09:00:00.000Z"
+ *                       dateEnd:
+ *                         type: string
+ *                         format: date-time
+ *                         example: "2025-10-22T09:00:00.000Z"
+ *                       transactionDate:
+ *                         type: string
+ *                         format: date-time
+ *                         nullable: true
+ *                         example: "2025-10-20T08:30:00.000Z"
+ *                       transactionId: { type: string, nullable: true, example: "TRX_abc123" }
+ *                       pets:
+ *                         type: array
+ *                         items:
+ *                           type: object
+ *                           properties:
+ *                             id: { type: integer, example: 501 }
+ *                             name: { type: string, example: "Milo" }
+ *                             type: { type: string, example: "Dog" }
+ *                       amount: { type: number, nullable: true, example: 1299.5 }
+ *                       paymentType: { type: string, nullable: true, example: "credit_card" }
+ *                       note: { type: string, nullable: true, example: "Leave at front gate" }
+ *       400:
+ *         description: Missing or invalid userId
+ *       405:
+ *         description: Method not allowed
+ *       500:
+ *         description: Internal Server Error
+ *     security:
+ *       - cookieAuth: []
+ */
+
+
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== "GET") {
     return res.status(405).json({ error: `Method ${req.method} not allowed` });

@@ -6,6 +6,154 @@ import { getServerSession } from 'next-auth';
 import Omise from 'omise';
 import { authOptions } from './auth/[...nextauth]';
 
+
+/**
+ * @openapi
+ * /charge:
+ *   post:
+ *     tags: [Payment]
+ *     summary: Create charge & booking
+ *     description: "สร้างรายการชำระเงินผ่าน Omise (หรือเงินสด) และบันทึกเป็น booking ใหม่"
+ *     security:
+ *       - cookieAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [amount, currency, metadata]
+ *             properties:
+ *               token:
+ *                 type: string
+ *                 nullable: true
+ *                 description: "Omise card token (จำเป็นเมื่อ isCreditCard = true)"
+ *                 example: "tokn_test_5xyz..."
+ *               amount:
+ *                 type: integer
+ *                 description: "ยอดชำระเป็นสตางค์ (Omise ต้องการสตางค์) เช่น 150000 = 1,500.00 บาท"
+ *                 example: 150000
+ *               currency:
+ *                 type: string
+ *                 description: "รหัสสกุลเงิน (รองรับ THB)"
+ *                 example: "THB"
+ *               description:
+ *                 type: string
+ *                 nullable: true
+ *                 example: "Booking Payment"
+ *               metadata:
+ *                 type: object
+ *                 description: "ข้อมูลการจองตาม bookingMetadataSchema"
+ *                 required:
+ *                   [isCreditCard, customerName, customerEmail, customerPhone, startTime, endTime, sitterId, petIds]
+ *                 properties:
+ *                   isCreditCard:
+ *                     type: boolean
+ *                     description: "true = ชำระด้วยบัตรผ่าน Omise, false = เงินสด"
+ *                     example: true
+ *                   customerName:
+ *                     type: string
+ *                     example: "Jane Doe"
+ *                   customerEmail:
+ *                     type: string
+ *                     example: "jane@example.com"
+ *                   customerPhone:
+ *                     type: string
+ *                     example: "0812345678"
+ *                   additionalMessage:
+ *                     type: string
+ *                     nullable: true
+ *                     example: "Please take care of my dog."
+ *                   startTime:
+ *                     type: string
+ *                     format: date-time
+ *                     example: "2025-10-21T09:00:00.000Z"
+ *                   endTime:
+ *                     type: string
+ *                     format: date-time
+ *                     example: "2025-10-21T12:00:00.000Z"
+ *                   sitterId:
+ *                     type: integer
+ *                     example: 321
+ *                   petIds:
+ *                     type: array
+ *                     items: { type: integer }
+ *                     example: [701, 702]
+ *           examples:
+ *             credit:
+ *               summary: "ชำระผ่านบัตรเครดิต"
+ *               value:
+ *                 token: "tokn_test_5xyz..."
+ *                 amount: 150000
+ *                 currency: "THB"
+ *                 description: "Booking Payment"
+ *                 metadata:
+ *                   isCreditCard: true
+ *                   customerName: "Jane Doe"
+ *                   customerEmail: "jane@example.com"
+ *                   customerPhone: "0812345678"
+ *                   additionalMessage: "Please take care of my dog."
+ *                   startTime: "2025-10-21T09:00:00.000Z"
+ *                   endTime: "2025-10-21T12:00:00.000Z"
+ *                   sitterId: 321
+ *                   petIds: [701, 702]
+ *             cash:
+ *               summary: "ชำระเงินสด"
+ *               value:
+ *                 amount: 150000
+ *                 currency: "THB"
+ *                 metadata:
+ *                   isCreditCard: false
+ *                   customerName: "Jane Doe"
+ *                   customerEmail: "jane@example.com"
+ *                   customerPhone: "0812345678"
+ *                   startTime: "2025-10-21T09:00:00.000Z"
+ *                   endTime: "2025-10-21T12:00:00.000Z"
+ *                   sitterId: 321
+ *                   petIds: [701, 702]
+ *     responses:
+ *       '200':
+ *         description: "ชำระเงิน (หรือทำเครื่องหมายเป็นเงินสด) และสร้าง booking สำเร็จ"
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success: { type: boolean, example: true }
+ *                 charge:
+ *                   type: object
+ *                   properties:
+ *                     id: { type: string, example: "chrg_test_5abc..." }
+ *                     status:
+ *                       type: string
+ *                       description: "\"successful\", \"failed\", หรือ \"cash\""
+ *                       example: "successful"
+ *                     amount:
+ *                       type: integer
+ *                       description: "สตางค์"
+ *                       example: 150000
+ *                     transaction_date:
+ *                       type: string
+ *                       nullable: true
+ *                       example: "2025-10-21T09:10:00.000Z"
+ *                     payment_type:
+ *                       type: string
+ *                       nullable: true
+ *                       example: "Credit"
+ *                 booking:
+ *                   type: object
+ *                   description: "ข้อมูล booking ที่ถูกสร้าง พร้อมความสัมพันธ์ที่ include ไว้ในโค้ด"
+ *       '400':
+ *         description: "ข้อมูลไม่ครบ/ไม่ถูกต้อง เช่น metadata ไม่ผ่าน schema หรือขาด token เมื่อ isCreditCard = true"
+ *       '401':
+ *         description: "Unauthorized"
+ *       '405':
+ *         description: "Method not allowed"
+ *       '500':
+ *         description: "Payment processing failed"
+ */
+
+
 const omise = Omise({
   secretKey: process.env.OMISE_SECRET_KEY!,
 });

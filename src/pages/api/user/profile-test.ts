@@ -3,6 +3,80 @@ import { getServerSession } from "next-auth/next";
 import { authOptions } from "../auth/[...nextauth]";
 import { prisma } from "@/lib/prisma/prisma";
 
+
+/**
+ * @openapi
+ * /user/profile-test:
+ *   get:
+ *     tags: [User]
+ *     summary: Get my profile (session)
+ *     description: คืนข้อมูลโปรไฟล์ของผู้ใช้ตาม session (ต้องล็อกอินด้วยคุกกี้ NextAuth)
+ *     responses:
+ *       200:
+ *         description: OK
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 id: { type: integer, example: 101 }
+ *                 name: { type: string, example: "Jane Doe" }
+ *                 email: { type: string, example: "jane@example.com" }
+ *                 phone: { type: string, nullable: true, example: "0812345678" }
+ *                 profile_image: { type: string, nullable: true, example: "https://..." }
+ *                 roles:
+ *                   type: array
+ *                   items: { type: string }
+ *       401:
+ *         description: Unauthorized
+ *     security:
+ *       - cookieAuth: []
+ *
+ *   put:
+ *     tags: [User]
+ *     summary: Update my profile (name only)
+ *     description: อัปเดตชื่อผู้ใช้ของบัญชีที่ล็อกอินอยู่
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [name]
+ *             properties:
+ *               name:
+ *                 type: string
+ *                 example: "Jane Doe"
+ *     responses:
+ *       200:
+ *         description: Updated
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 id: { type: integer, example: 101 }
+ *                 name: { type: string, example: "Jane Doe" }
+ *                 email: { type: string, example: "jane@example.com" }
+ *                 phone: { type: string, nullable: true, example: "0812345678" }
+ *                 profile_image: { type: string, nullable: true, example: "https://..." }
+ *                 roles:
+ *                   type: array
+ *                   items: { type: string }
+ *       400:
+ *         description: Invalid user ID
+ *       401:
+ *         description: Unauthorized
+ *       404:
+ *         description: User not found
+ *       405:
+ *         description: Method not allowed
+ *       500:
+ *         description: Internal server error
+ *     security:
+ *       - cookieAuth: []
+ */
+
 // API สำหรับจัดการข้อมูลโปรไฟล์ผู้ใช้
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   try {
