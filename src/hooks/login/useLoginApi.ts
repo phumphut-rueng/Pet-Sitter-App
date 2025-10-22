@@ -11,6 +11,7 @@ export function useLoginApi() {
             const result = await signIn("credentials", {
                 email,
                 password,
+                rememberMe,
                 redirect: false,
             });
 

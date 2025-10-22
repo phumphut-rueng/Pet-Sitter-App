@@ -12,19 +12,14 @@ import InputTextArea from "@/components/input/InputTextArea";
 import ImageGallery from "@/components/form/ImageGalleryUpload";
 import PetTypeSelect, { PetType } from "@/components/fields/PetTypeSelect";
 import { numberToLabel } from "@/lib/utils/experience";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import toast, { Toaster } from "react-hot-toast";
 import { uploadToCloudinary } from "@/lib/cloudinary/upload-to-cloudinary";
 import AddressSection from "@/components/form/AddressSection";
 import type { SitterFormValues } from "@/components/types/SitterForms";
 import { validatePhone, validateEmail } from "@/lib/validators/validation";
 import { PetPawLoading } from "@/components/loading/PetPawLoading";
+import { CustomSelect } from "@/components/dropdown/CustomSelect";
+import { experienceNotAllSelect } from "@/lib/utils/data-select";
 
 type GetSitterResponse = {
   exists: boolean;
@@ -109,7 +104,7 @@ export default function PetSitterProfilePage() {
     handleSubmit,
     control,
     reset,
-    setValue, 
+    setValue,
     watch,
     getValues,
     setError,
@@ -186,17 +181,18 @@ export default function PetSitterProfilePage() {
     })();
   }, [status, reset]);
 
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center h-screen">
-        <PetPawLoading
-          message="Loading Pet"
-          size="lg"
-          baseStyleCustum="flex items-center justify-center w-full h-full"
-        />
-      </div>
-    );
-  }
+  {/* nuk แก้ Loading */ }
+  // if (isLoading) {
+  //   return (
+  //     <div className="flex items-center justify-center h-screen">
+  //       <PetPawLoading
+  //         message="Loading Pet"
+  //         size="lg"
+  //         baseStyleCustum="flex items-center justify-center w-full h-full"
+  //       />
+  //     </div>
+  //   );
+  // }
 
   //ฟังก์ชันตรวจสอบข้อมูลพื้นฐานที่จำเป็นสำหรับ Request for Approval
   const validateBasicFields = () => {
@@ -301,8 +297,7 @@ export default function PetSitterProfilePage() {
         const errorData = await response.json();
         console.error("❌ Error response:", errorData);
         toast.error(
-          `Failed to submit request for approval: ${
-            errorData.message || "Unknown error"
+          `Failed to submit request for approval: ${errorData.message || "Unknown error"
           }`
         );
       }
@@ -364,343 +359,370 @@ export default function PetSitterProfilePage() {
           }
           name={watch("fullName") || ""}
         />
-        <form onSubmit={onSubmit} className="mr-auto px-6 py-8">
-          <div className="flex justify-between">
-            <div className="flex items-center gap-3">
-              <h3 className="text-gray-9 font-semibold text-2xl">
-                Pet Sitter Profile
-              </h3>
-              <StatusBadge
-                status={getStatusKey(approvalStatus)}
-                className="font-medium"
-              />
-            </div>
-            {approvalStatus === "Approved" ? (
-              <PrimaryButton
-                text={isSubmitting ? "Saving..." : "Update"}
-                type="submit"
-                bgColor="primary"
-                textColor="white"
-              />
-            ) : (
-              <PrimaryButton
-                text="Request for Approval"
-                type="button"
-                bgColor="primary"
-                textColor="white"
-                onClick={handleRequestApproval}
-              />
-            )}
-          </div>
-
-          {/* Rejected Status Banner */}
-          {approvalStatus === "Rejected" && sitterData?.admin_note && (
-            <div className="mt-4 p-4 bg-gray-200 border-l-4 border-red rounded-r-md">
-              <div className="flex items-start gap-3">
-                <div className="text-red flex-shrink-0 mt-0.5">
-                  <svg
-                    className="w-5 h-5"
-                    fill="currentColor"
-                    viewBox="0 0 20 20"
-                  >
-                    <path
-                      fillRule="evenodd"
-                      d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z"
-                      clipRule="evenodd"
-                    />
-                  </svg>
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm text-red font-medium break-words">
-                    <span className="font-medium">
-                      Your request has not been approved:
-                    </span>{" "}
-                    &apos;{sitterData.admin_note}&apos;
-                  </p>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* Basic Information */}
-          <section className="bg-white rounded-xl pt-4 pb-7 px-12 mt-4">
-            <h4 className="text-gray-4 font-bold text-xl py-4">
-              Basic Information
-            </h4>
-            <div className="grid grid-cols-1">
-              <div className="pb-4 col-span-1">
-                <p className="pb-4 font-medium text-black">Profile Image</p>
-                <AvatarUploader
-                  imageUrl={watch("profileImageUrl")}
-                  onChange={async (file) => {
-                    if (file) {
-                      const url = await uploadToCloudinary(file);
-                      setValue("profileImageUrl", url, { shouldDirty: true });
-                    }
-                  }}
-                />
-              </div>
-
-              <div className="md:col-span-2">
-                <div className="grid gap-4 md:grid-cols-2">
-                  {/* Full name */}
-                  <div>
-                    <InputText
-                      placeholder=""
-                      label="Your full name*"
-                      type="text"
-                      variant={errors.fullName ? "error" : "default"}
-                      className="w-full"
-                      {...register("fullName", {
-                        required: "Please enter your full name.",
-                        minLength: {
-                          value: 6,
-                          message: "Full name must be 6–20 characters.",
-                        },
-                        maxLength: {
-                          value: 20,
-                          message: "Full name must be 6–20 characters.",
-                        },
-                      })}
-                    />
-                    {errors.fullName && (
-                      <p className="mt-1 text-sm text-red">
-                        {errors.fullName.message}
-                      </p>
-                    )}
-                  </div>
-
-                  {/* Experience */}
-                  <div className="flex flex-col gap-1">
-                    <label className="font-medium text-black">
-                      Experience*
-                    </label>
-                    <Controller
-                      name="experience"
-                      control={control}
-                      rules={{ required: "Please select your experience." }}
-                      render={({ field }) => (
-                        <Select
-                          value={field.value}
-                          onValueChange={field.onChange}
-                        >
-                          <SelectTrigger
-                            className={` w-full rounded-xl !h-12 px-4 py-2 border !border-gray-2 ${
-                              errors.experience
-                                ? "!border-red focus:ring-red"
-                                : "border-gray-3"
-                            }`}
-                          >
-                            <SelectValue placeholder="" />
-                          </SelectTrigger>
-                          <SelectContent className="bg-white border border-gray-2">
-                            <SelectItem value="0-2 Years">0-2 Years</SelectItem>
-                            <SelectItem value="3-5 Years">3-5 Years</SelectItem>
-                            <SelectItem value="5+ Years">5+ Years</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      )}
-                    />
-                    {errors.experience && (
-                      <p className="mt-1 text-sm text-red">
-                        {errors.experience.message}
-                      </p>
-                    )}
-                  </div>
-
-                  {/* Phone */}
-                  <div>
-                    <InputText
-                      placeholder=""
-                      label="Phone Number*"
-                      type="tel"
-                      inputMode="numeric"
-                      maxLength={10}
-                      onInput={(e) => {
-                        const input = e.target as HTMLInputElement;
-                        // ลบทุกตัวที่ไม่ใช่ตัวเลขออก
-                        input.value = input.value.replace(/\D/g, "");
-                      }}
-                      variant={errors.phone ? "error" : "default"}
-                      className="w-full"
-                      {...register("phone", {
-                        validate: async (v) => {
-                          // ✅ ถ้าเบอร์ที่กรอกเหมือนเดิม → ไม่ต้องเช็กซ้ำ
-                          if (v === currentPhone) return true;
-
-                          const { message } = await validatePhone(v);
-                          return message || true;
-                        },
-                      })}
-                    />
-                    {errors.phone && (
-                      <p className="mt-1 text-sm text-red">
-                        {errors.phone.message}
-                      </p>
-                    )}
-                  </div>
-
-                  {/* Email */}
-                  <div>
-                    <InputText
-                      placeholder=""
-                      label="Email*"
-                      type="email"
-                      variant={errors.email ? "error" : "default"}
-                      className="w-full"
-                      {...register("email", {
-                        required: "Please enter your email.",
-                        validate: async (v) => {
-                          //  ถ้าอีเมลที่กรอกเหมือนกับของตัวเอง → ข้ามไม่เช็กซ้ำ
-                          if (v === currentEmail) return true;
-
-                          const base = await validateEmail(v, undefined, false);
-                          if (base.message) return base.message;
-
-                          try {
-                            const res = await fetch("/api/user/get-role", {
-                              method: "POST",
-                              headers: { "Content-Type": "application/json" },
-                              body: JSON.stringify({ email: v }),
-                            });
-
-                            if (res.ok) {
-                              const data = await res.json();
-                              if (data.exists) {
-                                return "This email is already registered";
-                              }
-                            }
-                          } catch (e) {
-                            console.error("Email duplicate check failed:", e);
-                          }
-                          return true;
-                        },
-                      })}
-                    />
-                    {errors.email && (
-                      <p className="mt-1 text-sm text-red">
-                        {errors.email.message}
-                      </p>
-                    )}
-                  </div>
-
-                  {/* Introduction */}
-                  <div className="md:col-span-2">
-                    <InputTextArea
-                      placeholder=""
-                      label="Introduction (Describe about yourself as pet sitter)"
-                      className={`w-full ${errors.introduction ? "!border-red focus:ring-red" : ""}`}
-                      {...register("introduction", {
-                        required: "Please enter introduction.",
-                      })}
-                    />
-                    {errors.introduction && (
-                      <p className="mt-1 text-sm text-red">
-                        {errors.introduction.message}
-                      </p>
-                    )}
-                  </div>
-                </div>
-              </div>
-            </div>
-          </section>
-
-          {/* Pet Sitter - แสดงเฉพาะเมื่อสถานะเป็น Approved */}
-          {approvalStatus === "Approved" && (
-            <section className="bg-white rounded-xl py-4 px-12 mt-4 pb-7">
-              <h4 className="text-gray-4 font-bold text-xl py-4">Pet Sitter</h4>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div className="col-span-1">
-                  <InputText
-                    placeholder=""
-                    label="Pet sitter name (Trade Name)*"
-                    type="text"
-                    variant={errors.tradeName ? "error" : "default"}
-                    {...register("tradeName", {
-                      required: "Please enter your trade name.",
-                    })}
-                  />
-                  {errors.tradeName && (
-                    <p className="mt-1 text-sm text-red">
-                      {errors.tradeName.message}
-                    </p>
-                  )}
-                </div>
-
-                <div className="col-span-2">
-                  <label className="block text-[16px] font-medium text-black mb-2">
-                    Pet type
-                  </label>
-                  <Controller
-                    name="petTypes"
-                    control={control}
-                    rules={{
-                      validate: (arr) =>
-                        (Array.isArray(arr) && arr.length > 0) ||
-                        "Please select at least one pet type.",
-                    }}
-                    render={({ field }) => (
-                      <PetTypeSelect
-                        value={field.value}
-                        onChange={(vals) => field.onChange(vals)}
-                        error={!!errors.petTypes}
-                      />
-                    )}
-                  />
-                  {errors.petTypes && (
-                    <p className="mt-2 text-sm text-red">
-                      {String(errors.petTypes.message)}
-                    </p>
-                  )}
-                </div>
-
-                <div className="col-span-2">
-                  <InputTextArea
-                    label="Services (Describe all of your service for pet sitting)"
-                    {...register("service_description")}
-                  />
-                </div>
-
-                <div className="col-span-2">
-                  <InputTextArea
-                    label="My Place (Describe you place)"
-                    {...register("location_description")}
-                  />
-                </div>
-
-                <div className="col-span-2">
-                  <p className="font-medium text-black pb-4">
-                    Image Gellery (Maximum 10 images)
-                  </p>
-                  <ImageGallery
-                    initialImageUrls={initialGallery}
-                    onChange={(state) => {
-                      setValue("images", state.existingImageUrls, {
-                        shouldDirty: true,
-                      });
-                      setValue("newImageFiles", state.newImageFiles, {
-                        shouldDirty: true,
-                      });
-                    }}
-                  />
-                </div>
-              </div>
-            </section>
-          )}
-
-          {/* Address - แสดงเฉพาะเมื่อสถานะเป็น Approved */}
-          {approvalStatus === "Approved" && (
-            <AddressSection
-              control={control}
-              register={register}
-              errors={errors}
-              watch={watch}
-              setValue={setValue}
-              setError={setError}
+        {/* nuk แก้ Loading */}
+        {
+          isLoading
+            ? <PetPawLoading
+              message="Loading Pet Sitter Profile"
+              size="lg"
             />
-          )}
-        </form>
+            : <>
+              <form onSubmit={onSubmit} className="mr-auto px-6 py-8">
+                <div className="flex justify-between">
+                  <div className="flex items-center gap-3">
+                    <h3 className="text-gray-9 font-semibold text-2xl">
+                      Pet Sitter Profile
+                    </h3>
+                    <StatusBadge
+                      status={getStatusKey(approvalStatus)}
+                      className="font-medium"
+                    />
+                  </div>
+                  {approvalStatus === "Approved" ? (
+                    <PrimaryButton
+                      text={isSubmitting ? "Saving..." : "Update"}
+                      type="submit"
+                      bgColor="primary"
+                      textColor="white"
+                    />
+                  ) : (
+                    <PrimaryButton
+                      text="Request for Approval"
+                      type="button"
+                      bgColor="primary"
+                      textColor="white"
+                      onClick={handleRequestApproval}
+                    />
+                  )}
+                </div>
+
+                {/* Rejected Status Banner */}
+                {approvalStatus === "Rejected" && sitterData?.admin_note && (
+                  <div className="mt-4 p-4 bg-gray-200 border-l-4 border-red rounded-r-md">
+                    <div className="flex items-start gap-3">
+                      <div className="text-red flex-shrink-0 mt-0.5">
+                        <svg
+                          className="w-5 h-5"
+                          fill="currentColor"
+                          viewBox="0 0 20 20"
+                        >
+                          <path
+                            fillRule="evenodd"
+                            d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z"
+                            clipRule="evenodd"
+                          />
+                        </svg>
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm text-red font-medium break-words">
+                          <span className="font-medium">
+                            Your request has not been approved:
+                          </span>{" "}
+                          &apos;{sitterData.admin_note}&apos;
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Basic Information */}
+                <section className="bg-white rounded-xl pt-4 pb-7 px-12 mt-4">
+                  <h4 className="text-gray-4 font-bold text-xl py-4">
+                    Basic Information
+                  </h4>
+                  <div className="grid grid-cols-1">
+                    <div className="pb-4 col-span-1">
+                      <p className="pb-4 font-medium text-black">Profile Image</p>
+                      <AvatarUploader
+                        imageUrl={watch("profileImageUrl")}
+                        onChange={async (file) => {
+                          if (file) {
+                            const url = await uploadToCloudinary(file);
+                            setValue("profileImageUrl", url, { shouldDirty: true });
+                          }
+                        }}
+                      />
+                    </div>
+
+                    <div className="md:col-span-2">
+                      <div className="grid gap-4 md:grid-cols-2">
+                        {/* Full name */}
+                        <div>
+                          <InputText
+                            placeholder=""
+                            label="Your full name*"
+                            type="text"
+                            variant={errors.fullName ? "error" : "default"}
+                            className="w-full"
+                            {...register("fullName", {
+                              required: "Please enter your full name.",
+                              minLength: {
+                                value: 6,
+                                message: "Full name must be 6–20 characters.",
+                              },
+                              maxLength: {
+                                value: 20,
+                                message: "Full name must be 6–20 characters.",
+                              },
+                            })}
+                          />
+                          {errors.fullName && (
+                            <p className="mt-1 text-sm text-red">
+                              {errors.fullName.message}
+                            </p>
+                          )}
+                        </div>
+
+                        {/* Experience */}
+                        <div className="flex flex-col gap-1">
+                          <label className="font-medium text-black">
+                            Experience*
+                          </label>
+                          <Controller
+                            name="experience"
+                            control={control}
+                            rules={{ required: "Please select your experience." }}
+                            render={({ field }) => (
+                              <CustomSelect
+                                value={field.value}
+                                onChange={field.onChange}
+                                options={experienceNotAllSelect}
+                                variant="default"
+                                triggerSize="w-full !h-12"
+                                placeholder=""
+                                error={errors.experience?.message}
+                              />
+                              // <Select
+                              //   value={field.value}
+                              //   onValueChange={field.onChange}
+                              // >
+                              //   <SelectTrigger
+                              //     className={` w-full rounded-xl !h-12 px-4 py-2 border !border-gray-2 ${errors.experience
+                              //       ? "!border-red focus:ring-red"
+                              //       : "border-gray-3"
+                              //       }`}
+                              //   >
+                              //     <SelectValue placeholder="" />
+                              //   </SelectTrigger>
+                              //   <SelectContent className="bg-white border border-gray-2 ">
+                              //     <SelectItem value="0-2 Years"
+                              //       className="bg-white hover:bg-gray-1 cursor-pointer">
+                              //       0-2 Years
+                              //     </SelectItem>
+                              //     <SelectItem value="3-5 Years"
+                              //       className="bg-white hover:bg-gray-1 cursor-pointer">
+                              //       3-5 Years
+                              //     </SelectItem>
+                              //     <SelectItem value="5+ Years"
+                              //       className="bg-white hover:bg-gray-1 cursor-pointer">
+                              //       5+ Years
+                              //     </SelectItem>
+                              //   </SelectContent>
+                              // </Select>
+                            )}
+                          />
+                          {errors.experience && (
+                            <p className="mt-1 text-sm text-red">
+                              {errors.experience.message}
+                            </p>
+                          )}
+                        </div>
+
+                        {/* Phone */}
+                        <div>
+                          <InputText
+                            placeholder=""
+                            label="Phone Number*"
+                            type="tel"
+                            inputMode="numeric"
+                            maxLength={10}
+                            onInput={(e) => {
+                              const input = e.target as HTMLInputElement;
+                              // ลบทุกตัวที่ไม่ใช่ตัวเลขออก
+                              input.value = input.value.replace(/\D/g, "");
+                            }}
+                            variant={errors.phone ? "error" : "default"}
+                            className="w-full"
+                            {...register("phone", {
+                              validate: async (v) => {
+                                // ✅ ถ้าเบอร์ที่กรอกเหมือนเดิม → ไม่ต้องเช็กซ้ำ
+                                if (v === currentPhone) return true;
+
+                                const { message } = await validatePhone(v);
+                                return message || true;
+                              },
+                            })}
+                          />
+                          {errors.phone && (
+                            <p className="mt-1 text-sm text-red">
+                              {errors.phone.message}
+                            </p>
+                          )}
+                        </div>
+
+                        {/* Email */}
+                        <div>
+                          <InputText
+                            placeholder=""
+                            label="Email*"
+                            type="email"
+                            variant={errors.email ? "error" : "default"}
+                            className="w-full"
+                            {...register("email", {
+                              required: "Please enter your email.",
+                              validate: async (v) => {
+                                //  ถ้าอีเมลที่กรอกเหมือนกับของตัวเอง → ข้ามไม่เช็กซ้ำ
+                                if (v === currentEmail) return true;
+
+                                const base = await validateEmail(v, undefined, false);
+                                if (base.message) return base.message;
+
+                                try {
+                                  const res = await fetch("/api/user/get-role", {
+                                    method: "POST",
+                                    headers: { "Content-Type": "application/json" },
+                                    body: JSON.stringify({ email: v }),
+                                  });
+
+                                  if (res.ok) {
+                                    const data = await res.json();
+                                    if (data.exists) {
+                                      return "This email is already registered";
+                                    }
+                                  }
+                                } catch (e) {
+                                  console.error("Email duplicate check failed:", e);
+                                }
+                                return true;
+                              },
+                            })}
+                          />
+                          {errors.email && (
+                            <p className="mt-1 text-sm text-red">
+                              {errors.email.message}
+                            </p>
+                          )}
+                        </div>
+
+                        {/* Introduction */}
+                        <div className="md:col-span-2">
+                          <InputTextArea
+                            placeholder=""
+                            label="Introduction (Describe about yourself as pet sitter)*"
+                            className={`w-full ${errors.introduction ? "!border-red focus:ring-red" : ""}`}
+                            {...register("introduction", {
+                              required: "Please enter introduction.",
+                            })}
+                          />
+                          {errors.introduction && (
+                            <p className="mt-1 text-sm text-red">
+                              {errors.introduction.message}
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </section>
+
+                {/* Pet Sitter - แสดงเฉพาะเมื่อสถานะเป็น Approved */}
+                {approvalStatus === "Approved" && (
+                  <section className="bg-white rounded-xl py-4 px-12 mt-4 pb-7">
+                    <h4 className="text-gray-4 font-bold text-xl py-4">Pet Sitter</h4>
+
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="col-span-1">
+                        <InputText
+                          placeholder=""
+                          label="Pet sitter name (Trade Name)*"
+                          type="text"
+                          variant={errors.tradeName ? "error" : "default"}
+                          {...register("tradeName", {
+                            required: "Please enter your trade name.",
+                          })}
+                        />
+                        {errors.tradeName && (
+                          <p className="mt-1 text-sm text-red">
+                            {errors.tradeName.message}
+                          </p>
+                        )}
+                      </div>
+
+                      <div className="col-span-2">
+                        <label className="block text-[16px] font-medium text-black mb-2">
+                          Pet type
+                        </label>
+                        <Controller
+                          name="petTypes"
+                          control={control}
+                          rules={{
+                            validate: (arr) =>
+                              (Array.isArray(arr) && arr.length > 0) ||
+                              "Please select at least one pet type.",
+                          }}
+                          render={({ field }) => (
+                            <PetTypeSelect
+                              value={field.value}
+                              onChange={(vals) => field.onChange(vals)}
+                              error={!!errors.petTypes}
+                            />
+                          )}
+                        />
+                        {errors.petTypes && (
+                          <p className="mt-2 text-sm text-red">
+                            {String(errors.petTypes.message)}
+                          </p>
+                        )}
+                      </div>
+
+                      <div className="col-span-2">
+                        <InputTextArea
+                          label="Services (Describe all of your service for pet sitting)"
+                          {...register("service_description")}
+                        />
+                      </div>
+
+                      <div className="col-span-2">
+                        <InputTextArea
+                          label="My Place (Describe you place)"
+                          {...register("location_description")}
+                        />
+                      </div>
+
+                      <div className="col-span-2">
+                        <p className="font-medium text-black pb-4">
+                          Image Gellery (Maximum 10 images)
+                        </p>
+                        <ImageGallery
+                          initialImageUrls={initialGallery}
+                          onChange={(state) => {
+                            setValue("images", state.existingImageUrls, {
+                              shouldDirty: true,
+                            });
+                            setValue("newImageFiles", state.newImageFiles, {
+                              shouldDirty: true,
+                            });
+                          }}
+                        />
+                      </div>
+                    </div>
+                  </section>
+                )}
+
+                {/* Address - แสดงเฉพาะเมื่อสถานะเป็น Approved */}
+                {approvalStatus === "Approved" && (
+                  <AddressSection
+                    control={control}
+                    register={register}
+                    errors={errors}
+                    watch={watch}
+                    setValue={setValue}
+                    setError={setError}
+                  />
+                )}
+              </form>
+            </>
+        }
       </section>
       <Toaster position="top-right" />
     </main>

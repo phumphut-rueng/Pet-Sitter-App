@@ -104,16 +104,29 @@ export default function AccountChangePasswordPage() {
   // เป็น Google → ถูก redirect ไปแล้ว (กัน flicker)
   if (authFlow === "google") return null;
 
+  if (enteringLoading) {
+    return (
+      <AccountPageShell title="Change password">
+        <PetPawLoading
+          message="Loading Change password"
+          size="lg"
+        />
+      </AccountPageShell>
+    );
+  }
+
   return (
     <AccountPageShell title="Change password">
       {/* Overlay Paw: เข้าหน้า/โหลด session/ตรวจ flow */}
-      {enteringLoading && (
+
+      {/* nuk แก้ Loading */}
+      {/* {enteringLoading && (
         <PetPawLoading
           message="Loading..."
           size="lg"
           baseStyleCustum="fixed inset-0 z-[9999] flex items-center justify-center"
         />
-      )}
+      )} */}
 
       {/* Overlay Paw: ระหว่าง Submit */}
       {busy && (
@@ -155,8 +168,8 @@ export default function AccountChangePasswordPage() {
                     placeholder=""
                     variant={
                       confirmPassword &&
-                      confirmPassword === newPassword &&
-                      /^(?=.*[A-Za-z])(?=.*\d).{8,}$/.test(confirmPassword)
+                        confirmPassword === newPassword &&
+                        /^(?=.*[A-Za-z])(?=.*\d).{8,}$/.test(confirmPassword)
                         ? "success"
                         : "default"
                     }

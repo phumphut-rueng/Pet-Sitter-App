@@ -1,18 +1,13 @@
 import { useState, useEffect, useCallback } from "react";
 import Head from "next/head";
 import AdminSidebar from "@/components/layout/AdminSidebar";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { Search } from "lucide-react";
 import { PetPawLoading } from "@/components/loading/PetPawLoading";
 import { Pagination } from "@/components/pagination/Pagination";
 import SittersTable from "@/components/admin/sitters/SittersTable";
 import axios from "axios";
+import { CustomSelect } from "@/components/dropdown/CustomSelect";
+import { SortOrderSelect, StatusAdminSelect } from "@/lib/utils/data-select";
 
 function PageHeader({ title, children }: { title: string; children?: React.ReactNode }) {
   return (
@@ -249,105 +244,123 @@ export default function AdminPetSitterPage() {
         </aside>
 
         <main className="flex-1 px-6 py-6 lg:px-8">
-            <PageHeader title="Pet Sitter">
-              <div className="flex items-center space-x-4">
-                {/* Search Input with Auto-complete */}
-                <div className="relative search-container">
-                  <input
-                    type="text"
-                    placeholder="Search by name..."
-                    value={searchTerm}
-                    onChange={handleInputChange}
-                    className="w-64 h-10 px-3 py-2 text-sm border border-border rounded-md bg-white placeholder:text-muted-text focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent pr-10"
-                  />
-                  {searchTerm && (
-                    <button
-                      onClick={handleClearSearch}
-                      className="absolute right-8 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-text hover:text-ink flex items-center justify-center"
-                    >
-                      ×
-                    </button>
-                  )}
-                  <Search className="absolute right-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-text" />
+          <PageHeader title="Pet Sitter">
+            <div className="flex items-center space-x-4">
+              {/* Search Input with Auto-complete */}
+              <div className="relative search-container">
+                <input
+                  type="text"
+                  placeholder="Search by name..."
+                  value={searchTerm}
+                  onChange={handleInputChange}
+                  className="w-64 h-10 px-3 py-2 text-sm border border-border rounded-md bg-white placeholder:text-muted-text focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent pr-10"
+                />
+                {searchTerm && (
+                  <button
+                    onClick={handleClearSearch}
+                    className="absolute right-8 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-text hover:text-ink flex items-center justify-center"
+                  >
+                    ×
+                  </button>
+                )}
+                <Search className="absolute right-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-text" />
 
-                  {/* Suggestions Dropdown */}
-                  {showSuggestions && suggestions.length > 0 && (
-                    <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-border rounded-md shadow-lg z-50 max-h-60 overflow-y-auto">
-                      {suggestions.map((suggestion, index) => {
-                        const displayName =
-                          suggestion.type === "sitter"
-                            ? suggestion.sitterName
-                            : suggestion.userName;
-                        const typeLabel =
-                          suggestion.type === "sitter"
-                            ? "Pet Sitter"
-                            : "Full Name";
+                {/* Suggestions Dropdown */}
+                {showSuggestions && suggestions.length > 0 && (
+                  <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-border rounded-md shadow-lg z-50 max-h-60 overflow-y-auto">
+                    {suggestions.map((suggestion, index) => {
+                      const displayName =
+                        suggestion.type === "sitter"
+                          ? suggestion.sitterName
+                          : suggestion.userName;
+                      const typeLabel =
+                        suggestion.type === "sitter"
+                          ? "Pet Sitter"
+                          : "Full Name";
 
-                        return (
-                          <div
-                            key={index}
-                            onClick={() => handleSuggestionClick(suggestion)}
-                            className="px-3 py-2 text-sm cursor-pointer hover:bg-muted border-b border-border last:border-b-0"
-                          >
-                            <div className="font-medium text-ink">
-                              {displayName}
-                            </div>
-                            <div className="text-xs text-muted-text">
-                              {typeLabel}
-                            </div>
+                      return (
+                        <div
+                          key={index}
+                          onClick={() => handleSuggestionClick(suggestion)}
+                          className="px-3 py-2 text-sm cursor-pointer hover:bg-muted border-b border-border last:border-b-0"
+                        >
+                          <div className="font-medium text-ink">
+                            {displayName}
                           </div>
-                        );
-                      })}
-                    </div>
-                  )}
-                </div>
-
-                {/* Sort Order Select */}
-                <Select value={sortOrder} onValueChange={setSortOrder}>
-                  <SelectTrigger className="w-32 h-10">
-                    <SelectValue placeholder="Sort by" />
-                  </SelectTrigger>
-                  <SelectContent className="bg-white">
-                    <SelectItem value="newest" className="hover:bg-muted">
-                      Newest
-                    </SelectItem>
-                    <SelectItem value="oldest" className="hover:bg-muted">
-                      Oldest
-                    </SelectItem>
-                  </SelectContent>
-                </Select>
-
-                {/* Status Select */}
-                <Select value={statusFilter} onValueChange={setStatusFilter}>
-                  <SelectTrigger className="w-40 h-10">
-                    <SelectValue placeholder="All status" />
-                  </SelectTrigger>
-                  <SelectContent className="bg-white">
-                    <SelectItem value="all" className="hover:bg-muted">
-                      All status
-                    </SelectItem>
-                    <SelectItem value="waiting" className="hover:bg-muted">
-                      Waiting for approve
-                    </SelectItem>
-                    <SelectItem value="approved" className="hover:bg-muted">
-                      Approved
-                    </SelectItem>
-                    <SelectItem value="rejected" className="hover:bg-muted">
-                      Rejected
-                    </SelectItem>
-                  </SelectContent>
-                </Select>
+                          <div className="text-xs text-muted-text">
+                            {typeLabel}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
               </div>
-            </PageHeader>
 
-            <div className="relative min-h-[400px] rounded-2xl border border-gray-2 bg-white p-4 shadow-sm md:p-5">
-              {loading ? (
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <PetPawLoading message="Loading Pet Sitters..." size="md" />
-                </div>
-              ) : (
-                <SittersTable rows={sitters} />
-              )}
+              {/* Sort Order Select */}
+              {/* nuk แก้ สร้าง component dropdown มาเพราะเห็นใช้หลายหน้า */}
+              <CustomSelect
+                value={sortOrder}
+                onChange={setSortOrder}
+                options={SortOrderSelect}
+                variant="default"
+                triggerSize="w-32 h-10"
+                placeholder="Sort by"
+              />
+
+              <CustomSelect
+                value={statusFilter}
+                onChange={setStatusFilter}
+                options={StatusAdminSelect}
+                variant="default"
+                triggerSize="w-40 h-10"
+                placeholder="All status"
+              />
+              {/* <Select value={sortOrder} onValueChange={setSortOrder}>
+                <SelectTrigger className="w-32 h-10">
+                  <SelectValue placeholder="Sort by" />
+                </SelectTrigger>
+                <SelectContent className="bg-white">
+                  <SelectItem value="newest" className="hover:bg-muted">
+                    Newest
+                  </SelectItem>
+                  <SelectItem value="oldest" className="hover:bg-muted">
+                    Oldest
+                  </SelectItem>
+                </SelectContent>
+              </Select> */}
+
+              {/* Status Select */}
+              {/* <Select value={statusFilter} onValueChange={setStatusFilter}>
+                <SelectTrigger className="w-40 h-10">
+                  <SelectValue placeholder="All status" />
+                </SelectTrigger>
+                <SelectContent className="bg-white">
+                  <SelectItem value="all" className="hover:bg-muted">
+                    All status
+                  </SelectItem>
+                  <SelectItem value="waiting" className="hover:bg-muted">
+                    Waiting for approve
+                  </SelectItem>
+                  <SelectItem value="approved" className="hover:bg-muted">
+                    Approved
+                  </SelectItem>
+                  <SelectItem value="rejected" className="hover:bg-muted">
+                    Rejected
+                  </SelectItem>
+                </SelectContent>
+              </Select> */}
+            </div>
+          </PageHeader>
+
+          <div className="relative min-h-[400px] rounded-2xl border border-gray-2 bg-white p-4 shadow-sm md:p-5">
+            {loading ? (
+              <div className="absolute inset-0 flex items-center justify-center">
+                <PetPawLoading message="Loading Pet Sitters..." size="md" />
+              </div>
+            ) : (
+              <SittersTable rows={sitters} />
+            )}
 
             {!loading && sitters.length > 0 && (
               <div className="mt-6 grid grid-cols-3 items-center">
@@ -368,7 +381,7 @@ export default function AdminPetSitterPage() {
               </div>
             )}
 
-            </div>
+          </div>
         </main>
       </div>
     </>

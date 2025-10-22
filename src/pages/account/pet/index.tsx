@@ -38,6 +38,17 @@ export default function PetListPage() {
     img: validateImageUrl(p.imageUrl),
   }));
 
+  if (loading) {
+    return (
+      <AccountPageShell title="Your Pets">
+        <PetPawLoading
+          message="Loading Your Pets"
+          size="lg"
+        />
+      </AccountPageShell>
+    );
+  }
+
   return (
     <AccountPageShell title="Your Pet">
       <div className="relative min-h-[400px]">
@@ -70,8 +81,9 @@ export default function PetListPage() {
           {viewPets.length > 0 && !loading && <CreateNewPetCard onClick={handleCreatePet} />}
         </div>
 
+        {/* nuk แก้ Loading */}
         {/* Loading Overlay */}
-        {loading && (
+        {/* {loading && (
           <div className="absolute inset-0  flex items-center justify-center">
             <PetPawLoading 
               message="Loading Your Pets..." 
@@ -79,7 +91,7 @@ export default function PetListPage() {
               baseStyleCustum="flex items-center justify-center"
             />
           </div>
-        )}
+        )} */}
       </div>
     </AccountPageShell>
   );

@@ -20,6 +20,7 @@
     opacity: 0;
     transform: translateY(20px) scale(0.95);
   }
+
   to {
     opacity: 1;
     transform: translateY(0) scale(1);
@@ -30,18 +31,23 @@
   0% {
     transform: translateX(-100%);
   }
+
   50% {
     transform: translateX(0%);
   }
+
   100% {
     transform: translateX(100%);
   }
 }
 
 @keyframes float {
-  0%, 100% {
+
+  0%,
+  100% {
     transform: translateY(0px);
   }
+
   50% {
     transform: translateY(-10px);
   }
@@ -69,9 +75,9 @@
   --color-border: var(--border);
 
   /* NEW: ink (Figma black) */
-  
+
   --color-ink: var(--ink);
-  --color-black:var(--black);
+  --color-black: var(--black);
 
   /* Brand */
   --color-brand: var(--brand);
@@ -84,11 +90,11 @@
   --color-gray-9: var(--gray-9);
   --color-gray-7: var(--gray-7);
   --color-gray-6: var(--gray-6);
-  --color-gray-4: var(--gray-4); 
+  --color-gray-4: var(--gray-4);
   --color-gray-2: var(--gray-2);
   --color-gray-1: var(--gray-1);
   --color-white: var(--white);
-  --color-white-1:var(--white-1);
+  --color-white-1: var(--white-1);
 
   /* Brown Scale */
   --color-brown-700: var(--brown-700);
@@ -186,7 +192,11 @@
 }
 
 /* ---------- BASE STYLES ---------- */
-*, *::before, *::after { box-sizing: border-box; }
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
 
 /* Reset heading defaults */
 /* h1, h2, h3, h4, h5, h6 {
@@ -195,25 +205,34 @@
   margin: 0;
 } */
 
-html, body, #__next { height: 100%; }
+html,
+body,
+#__next {
+  height: 100%;
+}
 
 :root {
   /* Global Layout Width */
   --page-max: 1200px;
   --page-pad-x: 16px;
 
-    /* Toast Notification Colors */
-    --toast-success: var(--green);
-    --toast-error: var(--red);
-    --toast-loading: var(--blue);
-    --toast-info: var(--blue);
+  /* Toast Notification Colors */
+  --toast-success: var(--green);
+  --toast-error: var(--red);
+  --toast-loading: var(--blue);
+  --toast-info: var(--blue);
 }
 
 
 
-html, body {
+html,
+body {
   max-width: 100%;
   overflow-x: hidden;
+
+  /* ไม่ให้ I-beam กระพริบบนหน้าเว็บ */
+  cursor: default !important;
+  caret-color: transparent;
 }
 
 body {
@@ -221,6 +240,14 @@ body {
   font-family: var(--font-sans);
   background: var(--gray-1);
   color: var(--color-text);
+}
+
+/* ให้ I-beam ขึ้นบน input fields */
+input,
+textarea,
+[contenteditable="true"] {
+  cursor: text;
+  caret-color: auto;
 }
 
 button:not([disabled]),
@@ -232,6 +259,7 @@ summary,
 label[for] {
   cursor: pointer;
 }
+
 /* Select Field Cursor */
 select option {
   cursor: pointer;
@@ -241,8 +269,13 @@ select option {
   border: none !important;
 }
 
-.cursor-pointer { cursor: pointer; }
-.cursor-default { cursor: default; }
+.cursor-pointer {
+  cursor: pointer;
+}
+
+.cursor-default {
+  cursor: default;
+}
 
 dialog {
   position: fixed;
@@ -259,7 +292,14 @@ dialog::backdrop {
   background: rgba(0, 0, 0, 0.5);
 }
 
-img, video, canvas, svg, iframe { max-width: 100%; height: auto; }
+img,
+video,
+canvas,
+svg,
+iframe {
+  max-width: 100%;
+  height: auto;
+}
 
 ::selection {
   background: var(--color-brand);
@@ -273,6 +313,7 @@ img, video, canvas, svg, iframe { max-width: 100%; height: auto; }
 
 /* ---------- UTILITIES ---------- */
 @layer utilities {
+
   /* ===== Global container 1200px ===== */
   .container-1200 {
     max-width: var(--page-max);
@@ -286,92 +327,277 @@ img, video, canvas, svg, iframe { max-width: 100%; height: auto; }
     padding-inline: var(--page-pad-x);
   }
 
-  .media-fluid { max-width: 100%; height: auto; }
-  .minw-0 { min-width: 0; }
+  .media-fluid {
+    max-width: 100%;
+    height: auto;
+  }
+
+  .minw-0 {
+    min-width: 0;
+  }
 
   /* Focus ring */
-  .ring-brand { --tw-ring-color: var(--color-brand); }
-  .ring-offset-bg { --tw-ring-offset-color: var(--color-bg); }
+  .ring-brand {
+    --tw-ring-color: var(--color-brand);
+  }
+
+  .ring-offset-bg {
+    --tw-ring-offset-color: var(--color-bg);
+  }
 
   /* Quick color helpers */
-  .text-brand   { color: var(--brand); }
-  .bg-brand     { background: var(--brand); }
-  .border-brand { border-color: var(--brand); }
+  .text-brand {
+    color: var(--brand);
+  }
 
-  .text-muted { color: var(--muted-text); }
-  .bg-muted   { background: var(--muted); }
+  .bg-brand {
+    background: var(--brand);
+  }
 
-  .text-success { color: var(--success); }
-  .text-waiting { color: var(--waiting); }
-  .text-error   { color: var(--red); }
-  .text-pending { color: var(--pending); }
+  .border-brand {
+    border-color: var(--brand);
+  }
 
-  .bg-success { background: var(--success); }
-  .bg-waiting { background: var(--waiting); }
-  .bg-error   { background: var(--red); }
-  .bg-pending { background: var(--pending); }
+  .text-muted {
+    color: var(--muted-text);
+  }
+
+  .bg-muted {
+    background: var(--muted);
+  }
+
+  .text-success {
+    color: var(--success);
+  }
+
+  .text-waiting {
+    color: var(--waiting);
+  }
+
+  .text-error {
+    color: var(--red);
+  }
+
+  .text-pending {
+    color: var(--pending);
+  }
+
+  .bg-success {
+    background: var(--success);
+  }
+
+  .bg-waiting {
+    background: var(--waiting);
+  }
+
+  .bg-error {
+    background: var(--red);
+  }
+
+  .bg-pending {
+    background: var(--pending);
+  }
 
   /* ===== Typography Scale (Legacy - DO NOT MODIFY) ===== */
-  .display { font-size: 88px; line-height: 96px; font-family: var(--font-sans); font-weight: 900; }
-  .h1      { font-size: 56px; line-height: 64px; font-family: var(--font-sans); font-weight: 700; }
-  .h2      { font-size: 36px; line-height: 44px; font-family: var(--font-sans); font-weight: 700; }
-  .h3      { font-size: 24px; line-height: 32px; font-family: var(--font-sans); font-weight: 700; }
-  .h4      { font-size: 20px; line-height: 28px; font-family: var(--font-sans); font-weight: 700; }
-  .body    { font-size: 18px; line-height: 26px; font-family: var(--font-sans); font-weight: 500; }
-  .body-sm { font-size: 16px; line-height: 28px; font-family: var(--font-sans); font-weight: 500; }
-  .caption { font-size: 14px; line-height: 24px; font-family: var(--font-sans); font-weight: 500; }
+  .display {
+    font-size: 88px;
+    line-height: 96px;
+    font-family: var(--font-sans);
+    font-weight: 900;
+  }
+
+  .h1 {
+    font-size: 56px;
+    line-height: 64px;
+    font-family: var(--font-sans);
+    font-weight: 700;
+  }
+
+  .h2 {
+    font-size: 36px;
+    line-height: 44px;
+    font-family: var(--font-sans);
+    font-weight: 700;
+  }
+
+  .h3 {
+    font-size: 24px;
+    line-height: 32px;
+    font-family: var(--font-sans);
+    font-weight: 700;
+  }
+
+  .h4 {
+    font-size: 20px;
+    line-height: 28px;
+    font-family: var(--font-sans);
+    font-weight: 700;
+  }
+
+  .body {
+    font-size: 18px;
+    line-height: 26px;
+    font-family: var(--font-sans);
+    font-weight: 500;
+  }
+
+  .body-sm {
+    font-size: 16px;
+    line-height: 28px;
+    font-family: var(--font-sans);
+    font-weight: 500;
+  }
+
+  .caption {
+    font-size: 14px;
+    line-height: 24px;
+    font-family: var(--font-sans);
+    font-weight: 500;
+  }
 
   /* ===== Typography Variants (New - Based on Design Tokens) ===== */
-  
+
   /* Body 1 (18px/26px) - text-base */
-  .text-base-bold    { font: 700 18px/26px var(--font-sans); }
-  .text-base-medium  { font: 500 18px/26px var(--font-sans); }
-  .text-base-regular { font: 400 18px/26px var(--font-sans); }
+  .text-base-bold {
+    font: 700 18px/26px var(--font-sans);
+  }
+
+  .text-base-medium {
+    font: 500 18px/26px var(--font-sans);
+  }
+
+  .text-base-regular {
+    font: 400 18px/26px var(--font-sans);
+  }
 
   /* Body 2 (16px/28px) - text-sm2 */
-  .text-sm2-bold     { font: 700 16px/28px var(--font-sans); }
-  .text-sm2-medium   { font: 500 16px/28px var(--font-sans); }
-  .text-sm2-regular  { font: 400 16px/28px var(--font-sans); }
+  .text-sm2-bold {
+    font: 700 16px/28px var(--font-sans);
+  }
+
+  .text-sm2-medium {
+    font: 500 16px/28px var(--font-sans);
+  }
+
+  .text-sm2-regular {
+    font: 400 16px/28px var(--font-sans);
+  }
 
   /* Body 3 (14px/24px) - text-xs2 */
-  .text-xs2-bold     { font: 700 14px/24px var(--font-sans); }
-  .text-xs2-medium   { font: 500 14px/24px var(--font-sans); }
-  .text-xs2-regular  { font: 400 14px/24px var(--font-sans); }
+  .text-xs2-bold {
+    font: 700 14px/24px var(--font-sans);
+  }
+
+  .text-xs2-medium {
+    font: 500 14px/24px var(--font-sans);
+  }
+
+  .text-xs2-regular {
+    font: 400 14px/24px var(--font-sans);
+  }
 
   /* Heading Variants */
-  .h1-bold   { font: 700 56px/64px var(--font-sans); }
-  .h2-bold   { font: 700 36px/44px var(--font-sans); }
-  .h3-bold   { font: 700 24px/32px var(--font-sans); }
-  .h4-bold   { font: 700 20px/28px var(--font-sans); }
+  .h1-bold {
+    font: 700 56px/64px var(--font-sans);
+  }
 
-  .h1-medium { font: 500 56px/64px var(--font-sans); }
-  .h2-medium { font: 500 36px/44px var(--font-sans); }
-  .h3-medium { font: 500 24px/32px var(--font-sans); }
-  .h4-medium { font: 500 20px/28px var(--font-sans); }
+  .h2-bold {
+    font: 700 36px/44px var(--font-sans);
+  }
 
-   /* เพิ่ม Body Variants (แบบเดียวกับ Heading)  */
-   .body1-bold    { font: 700 18px/150% var(--font-sans); }  /* 18px/27px */
-   .body1-medium  { font: 500 18px/150% var(--font-sans); }
-   .body1-regular { font: 400 18px/150% var(--font-sans); }
- 
-   .body2-bold    { font: 700 16px/150% var(--font-sans); }  /* 16px/24px */
-   .body2-medium  { font: 500 16px/150% var(--font-sans); }
-   .body2-regular { font: 400 16px/150% var(--font-sans); }
- 
-   .body3-bold    { font: 700 14px/150% var(--font-sans); }  /* 14px/21px */
-   .body3-medium  { font: 500 14px/150% var(--font-sans); }
-   .body3-regular { font: 400 14px/150% var(--font-sans); }
- 
-   /* เพิ่ม Gray-5 */
-   .text-gray-5 { color: #AEB1C3; }
-   .bg-gray-5 { background-color: #AEB1C3; }
-   .border-gray-5 { border-color: #AEB1C3; }
+  .h3-bold {
+    font: 700 24px/32px var(--font-sans);
+  }
+
+  .h4-bold {
+    font: 700 20px/28px var(--font-sans);
+  }
+
+  .h1-medium {
+    font: 500 56px/64px var(--font-sans);
+  }
+
+  .h2-medium {
+    font: 500 36px/44px var(--font-sans);
+  }
+
+  .h3-medium {
+    font: 500 24px/32px var(--font-sans);
+  }
+
+  .h4-medium {
+    font: 500 20px/28px var(--font-sans);
+  }
+
+  /* เพิ่ม Body Variants (แบบเดียวกับ Heading)  */
+  .body1-bold {
+    font: 700 18px/150% var(--font-sans);
+  }
+
+  /* 18px/27px */
+  .body1-medium {
+    font: 500 18px/150% var(--font-sans);
+  }
+
+  .body1-regular {
+    font: 400 18px/150% var(--font-sans);
+  }
+
+  .body2-bold {
+    font: 700 16px/150% var(--font-sans);
+  }
+
+  /* 16px/24px */
+  .body2-medium {
+    font: 500 16px/150% var(--font-sans);
+  }
+
+  .body2-regular {
+    font: 400 16px/150% var(--font-sans);
+  }
+
+  .body3-bold {
+    font: 700 14px/150% var(--font-sans);
+  }
+
+  /* 14px/21px */
+  .body3-medium {
+    font: 500 14px/150% var(--font-sans);
+  }
+
+  .body3-regular {
+    font: 400 14px/150% var(--font-sans);
+  }
+
+  /* เพิ่ม Gray-5 */
+  .text-gray-5 {
+    color: #AEB1C3;
+  }
+
+  .bg-gray-5 {
+    background-color: #AEB1C3;
+  }
+
+  .border-gray-5 {
+    border-color: #AEB1C3;
+  }
 
   /* Responsive Typography */
   @media (max-width: 768px) {
-    .display { font-size: 56px; line-height: 64px; }
-    .h1      { font-size: 36px; line-height: 44px; }
-    .h2      { font-size: 24px; line-height: 32px; }
+    .display {
+      font-size: 56px;
+      line-height: 64px;
+    }
+
+    .h1 {
+      font-size: 36px;
+      line-height: 44px;
+    }
+
+    .h2 {
+      font-size: 24px;
+      line-height: 32px;
+    }
   }
 }
 
@@ -415,4 +641,8 @@ Colors:
   background: var(--toast-info) !important;
   color: var(--white) !important;
   font-weight: 500 !important;
+}
+
+[data-scroll-locked][data-scroll-locked] {
+  overflow: scroll !important;
 }

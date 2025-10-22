@@ -7,7 +7,7 @@ import { PetSitterCardSmall } from '@/components/cards/PetSitterCard';
 import { PetPawLoadingSmall } from '@/components/loading/PetPawLoadingSmall';
 
 // ใช้ LeafletMap component ที่มีอยู่แล้ว
-const LeafletMap = dynamic(() => import('@/components/form/LeafletMap'), { 
+const LeafletMap = dynamic(() => import('@/components/form/LeafletMap'), {
   ssr: false,
   loading: () => (
     <div className="h-[600px] w-full rounded-xl border border-gray-200 bg-gray-50 flex items-center justify-center">
@@ -16,10 +16,10 @@ const LeafletMap = dynamic(() => import('@/components/form/LeafletMap'), {
   )
 });
 
-type Pin = { 
-  id: number; 
-  latitude: number; 
-  longitude: number; 
+type Pin = {
+  id: number;
+  latitude: number;
+  longitude: number;
   sitter: Sitter;
 };
 
@@ -29,10 +29,10 @@ interface PetSitterMapProps {
   onSitterSelect?: (sitter: Sitter) => void;
 }
 
-export default function PetSitterMap({ 
-  sitters, 
-  loading = false, 
-  onSitterSelect 
+export default function PetSitterMap({
+  sitters,
+  loading = false,
+  onSitterSelect
 }: PetSitterMapProps) {
   const [selectedPinId, setSelectedPinId] = useState<number | null>(null);
   const [pins, setPins] = useState<Pin[]>([]);
@@ -48,9 +48,9 @@ export default function PetSitterMap({
         longitude: sitter.longitude!,
         sitter
       }));
-    
+
     setPins(validPins);
-    
+
     // Auto-select first pin if none selected and pins exist
     if (validPins.length > 0 && !selectedPinId) {
       setSelectedPinId(validPins[0].id);
@@ -82,7 +82,7 @@ export default function PetSitterMap({
       if (cardIndex !== -1) {
         const cardWidth = 320; // ความกว้างของ card + gap
         const scrollPosition = cardIndex * cardWidth - (carouselRef.current.clientWidth / 2) + (cardWidth / 2);
-        
+
         carouselRef.current.scrollTo({
           left: scrollPosition,
           behavior: 'smooth'
@@ -96,7 +96,7 @@ export default function PetSitterMap({
     if (selectedPinId) {
       scrollToSelectedCard(selectedPinId);
     }
-  }, [selectedPinId, pins]);
+  }, [selectedPinId, scrollToSelectedCard]);
 
   // คำนวณจุดกึ่งกลางของ pins ทั้งหมด (คำนวณใหม่ทุกครั้งที่ pins เปลี่ยน)
   const { centerLat, centerLng } = useMemo(() => {
@@ -106,17 +106,17 @@ export default function PetSitterMap({
         centerLng: 100.5018
       };
     }
-    
+
     const avgLat = pins.reduce((sum, pin) => sum + pin.latitude, 0) / pins.length;
     const avgLng = pins.reduce((sum, pin) => sum + pin.longitude, 0) / pins.length;
-    
+
     return {
       centerLat: avgLat,
       centerLng: avgLng
     };
   }, [pins]);
 
-  const selectedSitter = pins.find(pin => pin.id === selectedPinId)?.sitter;
+  // const selectedSitter = pins.find(pin => pin.id === selectedPinId)?.sitter;
 
   if (loading) {
     return (
@@ -154,11 +154,11 @@ export default function PetSitterMap({
           className="h-full w-full rounded-xl border border-gray-200"
         />
       </div>
-      
+
       {/* Sitter Cards Carousel on the right side */}
       {pins.length > 0 && (
         <div className="absolute flex justify-center w-full bottom-4 left-0 right-0 z-999">
-          <div 
+          <div
             ref={carouselRef}
             className="flex overflow-x-auto space-x-4 scrollbar-hide"
             style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
@@ -168,7 +168,7 @@ export default function PetSitterMap({
               const isSelected = selectedPinId === pin.id;
               return (
                 <div key={sitter.id} className="flex-shrink-0">
-                  <a 
+                  <a
                     href={`/findpetsitter/${sitter.id}`}
                     onClick={() => handleCardNavigation(sitter)}
                   >
@@ -181,11 +181,10 @@ export default function PetSitterMap({
                       coverUrl={sitter.sitter_image[0]?.image_url || "/images/cards/pet-sitter-cover.svg"}
                       avatarUrl={sitter.user_profile_image || sitter.sitter_image[0]?.image_url || "/images/cards/pet-sitter-cover.svg"}
                       smPreset="compact"
-                      className={`cursor-pointer shadow-lg hover:shadow-xl transition-all duration-300 max-w-[400px] ${
-                        isSelected 
-                          ? 'border-orange-6 border-2 rounded-xl' 
-                          : 'border-gray-200 border hover:border-gray-300'
-                      }`}
+                      className={`cursor-pointer shadow-lg hover:shadow-xl transition-all duration-300 max-w-[400px] ${isSelected
+                        ? 'border-orange-6 border-2 rounded-xl'
+                        : 'border-gray-200 border hover:border-gray-300'
+                        }`}
                     />
                   </a>
                 </div>

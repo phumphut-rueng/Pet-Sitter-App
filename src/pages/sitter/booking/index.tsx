@@ -5,16 +5,11 @@ import { useSession } from "next-auth/react";
 import SitterSidebar from "@/components/layout/SitterSidebar";
 import PetSitterNavbar from "@/components/PetSitterNavbar";
 import { Input } from "@/components/ui/input";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { StatusBadge, StatusKey } from "@/components/badges/StatusBadge";
 import { PetPawLoading } from "@/components/loading/PetPawLoading";
 import { Pagination } from "@/components/pagination/Pagination";
+import { CustomSelect } from "@/components/dropdown/CustomSelect";
+import { statusSelect } from "@/lib/utils/data-select";
 
 type Booking = {
   id: number;
@@ -59,8 +54,10 @@ export default function PetSitterBookingPage() {
           setLoadingBookings(true);
           const { data } = await axios.get("/api/sitter/get-booking");
           setBookings(data);
-        } catch (error) {
-          console.error("Failed to fetch bookings:", error);
+        } catch {
+          // nuk แก้ ถ้าคนไม่ใช้ sitter มาเปิดจะ error เลย เพิ่ม setBookings และปิด console.error
+          setBookings([]);
+          // console.error("Failed to fetch bookings:", error);
         } finally {
           setLoadingBookings(false);
         }
@@ -72,16 +69,17 @@ export default function PetSitterBookingPage() {
     setCurrentPage(1);
   }, [search, statusFilter]);
 
-  if (status === "loading")
-    return (
-      <div className="flex items-center justify-center h-screen">
-        <PetPawLoading
-          message="Loading Pet"
-          size="lg"
-          baseStyleCustum="flex items-center justify-center w-full h-full"
-        />
-      </div>
-    );
+  {/* nuk แก้ Loading */ }
+  // if (status === "loading")
+  //   return (
+  //     <div className="flex items-center justify-center h-screen">
+  //       <PetPawLoading
+  //         message="Loading Pet"
+  //         size="lg"
+  //         baseStyleCustum="flex items-center justify-center w-full h-full"
+  //       />
+  //     </div>
+  //   );
 
   const filteredBookings = bookings.filter((b) => {
     const matchesSearch = b.ownerName
@@ -103,108 +101,129 @@ export default function PetSitterBookingPage() {
       <SitterSidebar className="min-w-0" />
       <section className="flex-1 min-w-0">
         <PetSitterNavbar avatarUrl={avatarUrl} name={userName} />
+        {
+          loadingBookings
+            ? <PetPawLoading
+              message="Loading Booking List"
+              size="lg"
+            />
+            : <>
+              <div className="px-8 py-6">
+                <div className="flex items-center justify-between gap-4 mb-6">
+                  <h2 className="text-2xl font-semibold text-gray-9">Booking List</h2>
 
-        <div className="px-6 py-8">
-          <div className="flex items-center justify-between gap-4 mb-6">
-            <h2 className="text-2xl font-semibold text-gray-9">Booking List</h2>
+                  {/* Search + Filter */}
 
-            {/* Search + Filter */}
-            <div className="flex flex-row items-center justify-between gap-3">
-              <div className="relative w-1/2">
-                <Input
-                  placeholder="Search..."
-                  value={search}
-                  onChange={(e) => setSearch(e.target.value)}
-                  className="pl-4 pr-10 h-10 rounded-sm border-gray-2 bg-white placeholder:text-gray-6"
-                />
-              </div>
 
-              <Select value={statusFilter} onValueChange={setStatusFilter}>
-                <SelectTrigger className="w-[200px] !h-10 rounded-sm border-gray-2 bg-white">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent className="bg-white border-gray-1 cursor-pointer">
-                  <SelectItem value="All" className="cursor-pointer hover:bg-gray-1">All status</SelectItem>
-                  <SelectItem value="waitingConfirm" className="cursor-pointer hover:bg-gray-1">
-                    Waiting for confirm
-                  </SelectItem>
-                  <SelectItem value="waitingService" className="cursor-pointer hover:bg-gray-1">
-                    Waiting for service
-                  </SelectItem>
-                  <SelectItem value="inService" className="cursor-pointer hover:bg-gray-1">In service</SelectItem>
-                  <SelectItem value="success" className="cursor-pointer hover:bg-gray-1">Success</SelectItem>
-                  <SelectItem value="canceled" className="cursor-pointer hover:bg-gray-1">Canceled</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-
-          {/* Table */}
-          <div className="overflow-hidden rounded-2xl border border-gray-1">
-            <table className="w-full text-left overflow-hidden rounded-2xl">
-              <thead className="bg-black text-white">
-                <tr>
-                  <th className="py-3 px-5 text-sm font-medium">
-                    Pet Owner Name
-                  </th>
-                  <th className="py-3 px-4 text-sm font-medium">Pet(s)</th>
-                  <th className="py-3 px-5 text-sm font-medium">Duration</th>
-                  <th className="py-3 px-5 text-sm font-medium">Booked Date</th>
-                  <th className="py-3 px-7 text-sm font-medium">Status</th>
-                </tr>
-              </thead>
-              <tbody className="bg-white">
-                {loadingBookings ? (
-                  <tr>
-                    <td colSpan={5} className="py-10 text-center">
-                      <PetPawLoading
-                        message="Loading Bookings..."
-                        size="lg"
-                        baseStyleCustum="flex items-center justify-center w-full h-full"
+                  <div className="flex flex-row items-center justify-between gap-3">
+                    <div className="relative w-1/2">
+                      <Input
+                        placeholder="Search..."
+                        value={search}
+                        onChange={(e) => setSearch(e.target.value)}
+                        className="pl-4 pr-10 h-10 rounded-sm border-gray-2 bg-white placeholder:text-gray-6"
                       />
-                    </td>
-                  </tr>
-                ) : currentBookings.length > 0 ? (
-                  currentBookings.map((b) => (
-                    <tr
-                      key={b.id}
-                      className="border-t-2 border-gray-1 font-medium text-black cursor-pointer hover:bg-gray-1 transition"
-                      onClick={() => router.push(`/sitter/booking/${b.id}`)}
-                    >
-                      <td className="py-4 px-5">
-                        <span className="inline-flex items-center gap-2">
-                          {b.status === "waitingConfirm" && (
-                            <span className="inline-block w-2 h-2 bg-orange-5 rounded-full" />
-                          )}
-                          {b.ownerName}
-                        </span>
-                      </td>
-                      <td className="py-4 px-5">{b.pets}</td>
-                      <td className="py-4 px-5">{b.duration}</td>
-                      <td className="py-4 px-5">{b.bookedDate}</td>
-                      <td className="py-4 px-5">
-                        <StatusBadge status={b.status} />
-                      </td>
-                    </tr>
-                  ))
-                ) : (
-                  <tr>
-                    <td colSpan={5} className="py-4 px-5 text-center">
-                      No bookings found
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
-            <div className="flex items-center justify-center mt-6">
-              <Pagination
-                currentPage={currentPage}
-                totalPages={totalPages}
-                onClick={(page) => setCurrentPage(page)}
-              />
-            </div>
-          </div>
-        </div>
+                    </div>
+
+                    {/* nuk แก้ สร้าง component dropdown มาเพราะเห็นใช้หลายหน้า */}
+                    <CustomSelect
+                      value={statusFilter}
+                      onChange={setStatusFilter}
+                      options={statusSelect}
+                      variant="filter"
+                      triggerSize="w-[200px] !h-10"
+                    />
+
+                    {/* <Select value={statusFilter} onValueChange={setStatusFilter}>
+                      <SelectTrigger className="w-[200px] !h-10 rounded-sm border-gray-2 bg-white">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent className="bg-white border-gray-1 cursor-pointer">
+                        <SelectItem value="All" className="cursor-pointer hover:bg-gray-1">All status</SelectItem>
+                        <SelectItem value="waitingConfirm" className="cursor-pointer hover:bg-gray-1">
+                          Waiting for confirm
+                        </SelectItem>
+                        <SelectItem value="waitingService" className="cursor-pointer hover:bg-gray-1">
+                          Waiting for service
+                        </SelectItem>
+                        <SelectItem value="inService" className="cursor-pointer hover:bg-gray-1">In service</SelectItem>
+                        <SelectItem value="success" className="cursor-pointer hover:bg-gray-1">Success</SelectItem>
+                        <SelectItem value="canceled" className="cursor-pointer hover:bg-gray-1">Canceled</SelectItem>
+                      </SelectContent>
+                    </Select> */}
+                  </div>
+                </div>
+
+                {/* Table */}
+                <div className="overflow-hidden rounded-2xl border border-gray-1">
+                  <table className="w-full text-left overflow-hidden rounded-2xl">
+                    <thead className="bg-black text-white">
+                      <tr>
+                        <th className="py-3 px-5 text-sm font-medium">
+                          Pet Owner Name
+                        </th>
+                        <th className="py-3 px-4 text-sm font-medium">Pet(s)</th>
+                        <th className="py-3 px-5 text-sm font-medium">Duration</th>
+                        <th className="py-3 px-5 text-sm font-medium">Booked Date</th>
+                        <th className="py-3 px-7 text-sm font-medium">Status</th>
+                      </tr>
+                    </thead>
+                    <tbody className="bg-white">
+                      {
+                        // loadingBookings ? (
+                        //   <tr>
+                        //     <td colSpan={5} className="py-10 text-center">
+                        //       <PetPawLoading
+                        //         message="Loading Bookings..."
+                        //         size="lg"
+                        //         baseStyleCustum="flex items-center justify-center w-full h-full"
+                        //       />
+                        //     </td>
+                        //   </tr>
+                        // ) : 
+                        currentBookings.length > 0 ? (
+                          currentBookings.map((b) => (
+                            <tr
+                              key={b.id}
+                              className="border-t-2 border-gray-1 font-medium text-black cursor-pointer hover:bg-gray-1 transition"
+                              onClick={() => router.push(`/sitter/booking/${b.id}`)}
+                            >
+                              <td className="py-4 px-5">
+                                <span className="inline-flex items-center gap-2">
+                                  {b.status === "waitingConfirm" && (
+                                    <span className="inline-block w-2 h-2 bg-orange-5 rounded-full" />
+                                  )}
+                                  {b.ownerName}
+                                </span>
+                              </td>
+                              <td className="py-4 px-5">{b.pets}</td>
+                              <td className="py-4 px-5">{b.duration}</td>
+                              <td className="py-4 px-5">{b.bookedDate}</td>
+                              <td className="py-4 px-5">
+                                <StatusBadge status={b.status} />
+                              </td>
+                            </tr>
+                          ))
+                        ) : (
+                          <tr>
+                            <td colSpan={5} className="py-4 px-5 text-center">
+                              No bookings found
+                            </td>
+                          </tr>
+                        )}
+                    </tbody>
+                  </table>
+                  <div className="flex items-center justify-center mt-6">
+                    <Pagination
+                      currentPage={currentPage}
+                      totalPages={totalPages}
+                      onClick={(page) => setCurrentPage(page)}
+                    />
+                  </div>
+                </div>
+              </div>
+            </>
+        }
       </section>
     </main>
   );

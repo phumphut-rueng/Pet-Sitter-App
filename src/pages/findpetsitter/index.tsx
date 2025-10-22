@@ -8,10 +8,11 @@ import { usePetSitterData } from "@/hooks/usePetSitterData";
 import { useViewMode } from "@/hooks/useViewMode";
 import { useEffect, useState } from "react";
 import { SearchFilters } from "@/hooks/useSearchFilter";
+import { safeSessionStorage } from "@/lib/utils/storage";
 
 function FindPetsitter() {
   const [searchFilters, setSearchFilters] = useState<SearchFilters | undefined>(undefined);
-  
+
   const {
     sitters,
     loading,
@@ -31,13 +32,13 @@ function FindPetsitter() {
 
   // Read filters from sessionStorage when component mounts
   useEffect(() => {
-    const storedFilters = sessionStorage.getItem('searchFilters');
+    const storedFilters = safeSessionStorage.getItem('searchFilters');
     if (storedFilters) {
       try {
         const parsedFilters = JSON.parse(storedFilters);
         setSearchFilters(parsedFilters);
         // Clear the stored filters after using them
-        sessionStorage.removeItem('searchFilters');
+        safeSessionStorage.removeItem('searchFilters');
         // Scroll to top เมื่อมาจาก landingpage (บนสุดของเว็บไซต์)
         setTimeout(() => {
           document.documentElement.scrollTop = 0;
@@ -53,7 +54,7 @@ function FindPetsitter() {
     <div className="min-h-screen bg-gray-50 flex flex-col">
       <div className="flex-1">
         <div className="container-1200 py-4 md:py-8">
-          <PageHeader 
+          <PageHeader
             title="Search For Pet Sitter"
             viewMode={viewMode}
             onViewModeChange={setViewMode}
@@ -61,18 +62,18 @@ function FindPetsitter() {
 
           {/* Mobile Layout - SearchFilter on top */}
           <div className="block lg:hidden mb-6">
-            <SearchFilter 
-              onSearch={handleSearch} 
+            <SearchFilter
+              onSearch={handleSearch}
               onClear={handleClear}
               initialFilters={searchFilters || filters}
             />
           </div>
-          
+
           {/* Desktop Layout - Side by side */}
           <div className="hidden lg:flex gap-8">
             <div className="w-90 flex-shrink-0 sticky top-4 h-fit">
-              <SearchFilter 
-                onSearch={handleSearch} 
+              <SearchFilter
+                onSearch={handleSearch}
                 onClear={handleClear}
                 initialFilters={searchFilters || filters}
               />
@@ -84,14 +85,14 @@ function FindPetsitter() {
                 viewMode={viewMode}
                 onClear={handleClear}
                 onSwitchToList={switchToList}
-                onSitterSelect={(sitter) => {
+                onSitterSelect={() => {
                   // Optional: Handle sitter selection (e.g., scroll to details, highlight, etc.)
                 }}
                 variant="desktop"
               />
             </div>
           </div>
-          
+
           {/* Mobile Cards - Full width */}
           <div className="block lg:hidden space-y-4">
             <PetSitterList
@@ -100,7 +101,7 @@ function FindPetsitter() {
               viewMode={viewMode}
               onClear={handleClear}
               onSwitchToList={switchToList}
-              onSitterSelect={(sitter) => {
+              onSitterSelect={() => {
                 // Optional: Handle sitter selection (e.g., scroll to details, highlight, etc.)
               }}
               variant="mobile"
@@ -117,9 +118,9 @@ function FindPetsitter() {
                 totalPages={pagination.totalPages}
                 limit={pagination.limit}
               />
-              <Pagination 
-                currentPage={currentPage} 
-                totalPages={pagination.totalPages} 
+              <Pagination
+                currentPage={currentPage}
+                totalPages={pagination.totalPages}
                 onClick={handlePageChange}
               />
             </div>

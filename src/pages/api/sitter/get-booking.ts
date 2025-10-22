@@ -119,6 +119,7 @@ export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse
 ) {
+
   const session = await getServerSession(req, res, authOptions);
   if (!session?.user?.email)
     return res.status(401).json({ message: "Unauthorized" });
@@ -127,6 +128,7 @@ export default async function handler(
     where: { user_sitter_id: Number(session.user.id) },
   });
 
+  console.log("sitter", sitter);
   if (!sitter) return res.status(404).json({ message: "Sitter not found" });
 
   if (req.method === "GET") {
@@ -217,20 +219,20 @@ export default async function handler(
         paymentMethod: b.payment_type ?? "-",
         transactionDate: b.transaction_date
           ? new Date(b.transaction_date).toLocaleString("en-US", {
-              day: "numeric",
-              month: "short",
-              year: "numeric",
-              hour: "numeric",
-              minute: "2-digit",
-              hour12: true,
-              timeZone: "Asia/Bangkok",
-            })
+            day: "numeric",
+            month: "short",
+            year: "numeric",
+            hour: "numeric",
+            minute: "2-digit",
+            hour12: true,
+            timeZone: "Asia/Bangkok",
+          })
           : "-",
         transactionId: b.transaction_id ?? "-",
         message: b.additional ?? "-",
         status: mapStatusNameToKey(
           b.status_booking_booking_status_idTostatus?.name ??
-            "waiting for confirm"
+          "waiting for confirm"
         ),
         petsDetail: pets,
         ownerEmail: b.email,
@@ -238,10 +240,10 @@ export default async function handler(
         ownerIdNumber: b.booking?.id_number ?? "-",
         ownerDOB: b.booking?.dob
           ? new Date(b.booking.dob).toLocaleDateString("en-GB", {
-              day: "numeric",
-              month: "short",
-              year: "numeric",
-            })
+            day: "numeric",
+            month: "short",
+            year: "numeric",
+          })
           : "-",
         avatarUrl: b.booking?.profile_image || "/icons/avatar-placeholder.svg",
       };
@@ -272,7 +274,7 @@ export default async function handler(
         ),
         status: mapStatusNameToKey(
           b.status_booking_booking_status_idTostatus?.name ??
-            "waiting for confirm"
+          "waiting for confirm"
         ),
         date_start: b.date_start,
         transaction_id: b.transaction_id || "-",

@@ -3,13 +3,6 @@
 import dynamic from "next/dynamic";
 import { useEffect, useMemo, useState } from "react";
 import InputText from "@/components/input/InputText";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { getLatLngFromAddress } from "@/lib/utils/nominatim";
 import { Controller } from "react-hook-form";
 import type {
@@ -20,6 +13,7 @@ import type {
   UseFormWatch,
 } from "react-hook-form";
 import type { SitterFormValues } from "../types/SitterForms";
+import { CustomSelect } from "../dropdown/CustomSelect";
 
 const LeafletMap = dynamic(() => import("@/components/form/LeafletMap"), {
   ssr: false,
@@ -213,34 +207,45 @@ export default function AddressSection({
             control={control}
             rules={{ required: "Please select a province." }}
             render={({ field }) => (
-              <Select
+              <CustomSelect
                 value={field.value || ""}
-                onValueChange={(val) => field.onChange(val)}
-              >
-                <SelectTrigger
-                  className={`!h-12 w-full rounded-xl border px-4 text-left ${
-                    errors.address_province
-                      ? "!border-red focus:ring-red"
-                      : "border-gray-2"
-                  }`}
-                >
-                  <SelectValue placeholder="Select province" />
-                </SelectTrigger>
-                <SelectContent className="bg-white border border-gray-2 max-h-72 overflow-auto">
-                  {provinceOpts.map((p) => (
-                    <SelectItem key={p.code} value={p.name}>
-                      {p.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+                onChange={(val) => field.onChange(val)}
+                options={provinceOpts}
+                getOptionValue={(p) => p.name}
+                getOptionLabel={(p) => p.name}
+                placeholder="Select province"
+                variant="default"
+                triggerSize="w-full !h-12"
+                error={errors.address_province?.message}
+              />
+              // <Select
+              //   value={field.value || ""}
+              //   onValueChange={(val) => field.onChange(val)}
+              // >
+              //   <SelectTrigger
+              //     className={`!h-12 w-full rounded-xl border px-4 text-left ${errors.address_province
+              //       ? "!border-red focus:ring-red"
+              //       : "border-gray-2"
+              //       }`}
+              //   >
+              //     <SelectValue placeholder="Select province" />
+              //   </SelectTrigger>
+              //   <SelectContent className="bg-white border border-gray-2 max-h-72 overflow-auto cursor-pointer">
+              //     {provinceOpts.map((p, i) => (
+              //       <SelectItem
+              //         key={`${p.code}-${p.name}-${i}`} value={p.name}>
+              //         {p.name}
+              //       </SelectItem>
+              //     ))}
+              //   </SelectContent>
+              // </Select>
             )}
           />
-          {errors.address_province && (
+          {/* {errors.address_province && (
             <p className="mt-1 text-sm text-red">
               {errors.address_province.message as string}
             </p>
-          )}
+          )} */}
         </div>
 
         {/* District */}
@@ -251,35 +256,48 @@ export default function AddressSection({
             control={control}
             rules={{ required: "Please select a district." }}
             render={({ field }) => (
-              <Select
+              <CustomSelect
                 value={field.value || ""}
-                onValueChange={(val) => field.onChange(val)}
+                onChange={(val) => field.onChange(val)}
+                options={districtOpts}
+                getOptionValue={(d) => d.name}
+                getOptionLabel={(d) => d.name}
+                placeholder="Select district"
                 disabled={!watchProvince}
-              >
-                <SelectTrigger
-                  className={`!h-12 w-full rounded-xl border px-4 text-left ${
-                    errors.address_district
-                      ? "!border-red focus:ring-red"
-                      : "border-gray-2"
-                  }`}
-                >
-                  <SelectValue placeholder="Select district" />
-                </SelectTrigger>
-                <SelectContent className="bg-white border border-gray-2 max-h-72 overflow-auto">
-                  {districtOpts.map((d) => (
-                    <SelectItem key={d.code} value={d.name}>
-                      {d.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+                variant="default"
+                triggerSize="w-full !h-12"
+                error={errors.address_district?.message}
+              />
+              // <Select
+              //   value={field.value || ""}
+              //   onValueChange={(val) => field.onChange(val)}
+              //   disabled={!watchProvince}
+              // >
+              //   <SelectTrigger
+              //     className={`!h-12 w-full rounded-xl border border-gray-2 px-4 text-left ${errors.address_district
+              //       ? "!border-red focus:ring-red"
+              //       : "border-gray-2"
+              //       }`}
+              //   >
+              //     <SelectValue placeholder="Select district" />
+              //   </SelectTrigger>
+              //   <SelectContent className="bg-white border border-gray-2 max-h-72 overflow-auto">
+              //     {districtOpts.map((d, i) => (
+              //       <SelectItem
+              //         key={`${d.code}-${d.name}-${i}`}
+              //         value={d.name}>
+              //         {d.name}
+              //       </SelectItem>
+              //     ))}
+              //   </SelectContent>
+              // </Select>
             )}
           />
-          {errors.address_district && (
+          {/* {errors.address_district && (
             <p className="mt-1 text-sm text-red">
               {errors.address_district.message as string}
             </p>
-          )}
+          )} */}
         </div>
 
         {/* Sub-district */}
@@ -290,35 +308,49 @@ export default function AddressSection({
             control={control}
             rules={{ required: "Please select a sub-district." }}
             render={({ field }) => (
-              <Select
+              <CustomSelect
                 value={field.value || ""}
-                onValueChange={(val) => field.onChange(val)}
+                onChange={(val) => field.onChange(val)}
+                options={subdistrictOpts}
+                getOptionValue={(s) => s.name}
+                getOptionLabel={(s) => s.name}
+                placeholder="Select sub-district"
                 disabled={!watchDistrict}
-              >
-                <SelectTrigger
-                  className={`!h-12 w-full rounded-xl border px-4 text-left ${
-                    errors.address_sub_district
-                      ? "!border-red focus:ring-red"
-                      : "border-gray-2"
-                  }`}
-                >
-                  <SelectValue placeholder="Select sub-district" />
-                </SelectTrigger>
-                <SelectContent className="bg-white border border-gray-2 max-h-72 overflow-auto">
-                  {subdistrictOpts.map((s) => (
-                    <SelectItem key={s.code} value={s.name}>
-                      {s.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+                variant="default"
+                triggerSize="w-full !h-12"
+                error={errors.address_sub_district?.message}
+              />
+              // <Select
+              //   value={field.value || ""}
+              //   onValueChange={(val) => field.onChange(val)}
+              //   disabled={!watchDistrict}
+              // >
+              //   <SelectTrigger
+              //     className={`!h-12 w-full rounded-xl border px-4 text-left 
+              //       ${errors.address_sub_district
+              //         ? "!border-red focus:ring-red"
+              //         : "border-gray-2"
+              //       }`}
+              //   >
+              //     <SelectValue placeholder="Select sub-district" />
+              //   </SelectTrigger>
+              //   <SelectContent className="bg-white border border-gray-2 max-h-72 overflow-auto">
+              //     {subdistrictOpts.map((s, i) => (
+              //       <SelectItem
+              //         key={`${s.code}-${s.name}-${i}`}
+              //         value={s.name}>
+              //         {s.name}
+              //       </SelectItem>
+              //     ))}
+              //   </SelectContent>
+              // </Select>
             )}
           />
-          {errors.address_sub_district && (
+          {/* {errors.address_sub_district && (
             <p className="mt-1 text-sm text-red">
               {errors.address_sub_district.message as string}
             </p>
-          )}
+          )} */}
         </div>
 
         {/* Post code (readOnly) */}

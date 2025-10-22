@@ -1,18 +1,20 @@
-import * as React from "react";
-import { X } from "lucide-react";
 
-export type PetType = "Dog" | "Cat" | "Bird" | "Rabbit" ;
+import { ChevronDown, X } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+
+export type PetType = "Dog" | "Cat" | "Bird" | "Rabbit";
 
 const options: PetType[] = ["Dog", "Cat", "Bird", "Rabbit"];
 
 interface PetTypeSelectProps {
-  value: PetType[] ;
+  value: PetType[];
   onChange: (value: PetType[]) => void;
   error?: boolean;
 }
 
 export default function PetTypeSelect({ value, onChange, error = false, }: PetTypeSelectProps) {
-  const [open, setOpen] = React.useState(false);
+  const [open, setOpen] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
 
   const toggleOption = (pet: PetType) => {
     if (value.includes(pet)) {
@@ -26,11 +28,27 @@ export default function PetTypeSelect({ value, onChange, error = false, }: PetTy
     onChange(value.filter((v) => v !== pet));
   };
 
+  // ปิด dropdown เมื่อคลิกนอก element
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        dropdownRef.current &&
+        !dropdownRef.current.contains(event.target as Node)
+      ) {
+        setOpen(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
   return (
-    <div className="relative">
+    <div className="relative" ref={dropdownRef}>
       {/* Input area showing selected tags */}
       <div
-        className={`w-full min-h-[48px] rounded-xl px-3 py-2 flex items-center flex-wrap gap-2 cursor-pointer
+        className={`w-full min-h-[48px] rounded-xl px-3 py-2 flex items-center flex-wrap gap-2 
+          cursor-pointer
           border ${error ? "border-red" : "border-gray-2"}`}
 
         onClick={() => setOpen(!open)}
@@ -55,17 +73,25 @@ export default function PetTypeSelect({ value, onChange, error = false, }: PetTy
             </span>
           ))
         ) : null}
+
+        <ChevronDown
+          size={18}
+          className={`w-4 ml-auto text-gray-5 transition-transform ${open ? "rotate-180" : ""
+            }`}
+        />
       </div>
 
       {/* Dropdown list */}
       {open && (
-        <div className="absolute mt-1 w-full bg-white border border-gray-2 rounded-xl shadow-md z-10">
+        <div className="absolute mt-1 w-full bg-white border border-gray-2 rounded-xl shadow-md z-10 ">
           {options.map((pet) => (
             <div
               key={pet}
-              className={`px-4 py-2 hover:bg-gray-1 ${
-                value.includes(pet) ? "text-orange-6" : ""
-              }`}
+              className={`px-4 py-2 cursor-pointer hover:bg-orange-1/40 hover:text-orange-5 
+                ${value.includes(pet)
+                  ? "text-orange-6"
+                  : ""
+                }`}
               onClick={() => toggleOption(pet)}
             >
               {pet}

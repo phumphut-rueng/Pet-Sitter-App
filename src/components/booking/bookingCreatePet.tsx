@@ -93,7 +93,7 @@ export default function BookingCreatePet(
         : <dialog
           ref={dialogRef}
           onClose={() => onOpenChange(false)}
-          className="fixed w-[800px] p-0 rounded-2xl bg-white shadow-xl"
+          className="fixed w-[800px] p-0 rounded-2xl bg-white shadow-xl overflow-x-hidden"
         >
           {/* Header */}
           <div className="h-[80px] px-10 py-6 border-b border-gray-2 flex items-center justify-between">
@@ -109,14 +109,16 @@ export default function BookingCreatePet(
             </button>
           </div>
 
-          <div className="w-[800px] max-h-[90vh] p-10">
-            <PetForm
-              key={formKey}
-              mode="create"
-              loading={loading}
-              onSubmit={handleSubmit}
-              onCancel={handleCancel}
-            />
+          <div className="w-[800px] max-h-[90vh]">
+            <div className="px-10 pb-10 pt-5">
+              <PetForm
+                key={formKey}
+                mode="create"
+                loading={loading}
+                onSubmit={handleSubmit}
+                onCancel={handleCancel}
+              />
+            </div>
           </div>
         </dialog>
       }
