@@ -1,13 +1,14 @@
 // hooks/useLogin.ts
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/router";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useLoginForm } from "./useLoginForm";
 import { useLoginApi } from "./useLoginApi";
 
 export function useLogin() {
     const { data: session, status } = useSession();
     const router = useRouter();
+    const [loading, setLoading] = useState(false);
 
     const {
         email,
@@ -28,16 +29,22 @@ export function useLogin() {
     const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
 
-        const { emailValid, passwordValid } = await validate();
-        if (!emailValid || !passwordValid) return;
+        setLoading(true)
+        try {
+            const { emailValid, passwordValid } = await validate();
+            if (!emailValid || !passwordValid) return;
 
-        const result = await login(email, password, rememberMe);
-        if (!result.success) {
-            setLoginError(result.message);
-            return;
+            const result = await login(email, password, rememberMe);
+            if (!result.success) {
+                setLoginError(result.message);
+
+                setLoading(false)
+                return;
+            }
+            router.push("/");
         }
-
-        router.push("/");
+        finally {
+        }
     };
 
     // redirect if already logged in
@@ -58,6 +65,7 @@ export function useLogin() {
         passwordError,
         loginError,
         status,
+        loading,
         handleSubmit,
     };
 }

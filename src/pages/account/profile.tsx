@@ -70,6 +70,17 @@ const AccountProfilePage: NextPage = () => {
     }
   });
 
+  if (opening || saving) {
+    return (
+      <AccountPageShell title="Your Profile">
+        <PetPawLoading
+          message={opening ? "Loading Your Profile" : "Updating"}
+          size="lg"
+        />
+      </AccountPageShell>
+    );
+  }
+
   return (
     <AccountPageShell title="Profile" showTitle>
       {/* ให้ตำแหน่ง loader เหมือนหน้า Pets: ครอบด้วย relative + absolute overlay */}
@@ -81,7 +92,8 @@ const AccountProfilePage: NextPage = () => {
           onSubmit={handleSubmit}
         />
 
-        {(opening || saving) && (
+        {/* nuk แก้ Loading */}
+        {/* {(opening || saving) && (
           <div className="absolute inset-0 flex items-center justify-center">
             <PetPawLoading
               message={opening ? "Loading Your Profile..." : "Updating..."}
@@ -89,7 +101,7 @@ const AccountProfilePage: NextPage = () => {
               baseStyleCustum="flex items-center justify-center"
             />
           </div>
-        )}
+        )} */}
       </div>
     </AccountPageShell>
   );

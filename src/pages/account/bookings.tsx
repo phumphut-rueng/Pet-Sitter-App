@@ -57,9 +57,9 @@ export default function BookingHistoryPage() {
     return (
       <AccountPageShell title="Booking History">
         <PetPawLoading
-        message="Loading booking history"
-        size="lg"
-      />
+          message="Loading booking history"
+          size="lg"
+        />
       </AccountPageShell>
     );
   }
@@ -155,7 +155,7 @@ export default function BookingHistoryPage() {
         onOpenChange={setOpenSummary}
         user={{
           name: session?.user?.name,
-          avatarUrl: session?.user?.image 
+          avatarUrl: session?.user?.image
         }}
         data={reviewData}
       />

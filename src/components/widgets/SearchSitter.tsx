@@ -9,6 +9,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { CustomSelect } from "../dropdown/CustomSelect";
+import { experienceSelect } from "@/lib/utils/data-select";
 
 export default function SearchSitter() {
   const {
@@ -106,7 +108,15 @@ export default function SearchSitter() {
               <label className="text-sm font-semibold text-gray-7 whitespace-nowrap">
                 Experience:
               </label>
-              <Select value={selectedExperience} onValueChange={setSelectedExperience}>
+              {/* nuk แก้ สร้าง component dropdown มาเพราะเห็นใช้หลายหน้า */}
+              <CustomSelect
+                value={selectedExperience}
+                onChange={setSelectedExperience}
+                options={experienceSelect}
+                variant="default"
+                placeholder="All Experience"
+              />
+              {/* <Select value={selectedExperience} onValueChange={setSelectedExperience}>
                 <SelectTrigger className="w-full sm:w-[180px] hover:cursor-pointer bg-white border-gray-2 focus:border-orange-5 focus:ring-orange-5">
                   <SelectValue placeholder="All Experience" />
                 </SelectTrigger>
@@ -116,14 +126,14 @@ export default function SearchSitter() {
                   <SelectItem value="3-5" className="bg-white hover:bg-gray-1">3-5 Years</SelectItem>
                   <SelectItem value="5+" className="bg-white hover:bg-gray-1">5+ Years</SelectItem>
                 </SelectContent>
-              </Select>
+              </Select> */}
             </div>
 
             {/* Search Button */}
             <div className="flex justify-center lg:justify-end lg:ml-auto">
-              <PrimaryButton 
-                text="Search" 
-                textColor="white" 
+              <PrimaryButton
+                text="Search"
+                textColor="white"
                 bgColor="primary"
                 onClick={handleSearch}
                 className="w-full sm:w-auto px-6 sm:px-8 py-2 sm:py-3 text-sm sm:text-base font-semibold shadow-md hover:shadow-lg transition-all duration-200"

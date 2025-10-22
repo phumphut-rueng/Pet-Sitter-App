@@ -5,6 +5,7 @@ import PrimaryButton from "@/components/buttons/PrimaryButton";
 import InputText from "@/components/input/InputText"
 import BookingConfirmation from "@/components/modal/BookingConfirmation";
 import { useRegister } from "@/hooks/register/useRegister"
+import { PetPawLoading } from "@/components/loading/PetPawLoading";
 
 export default function RegisterPage() {
   const {
@@ -20,6 +21,15 @@ export default function RegisterPage() {
     handleChangeRole,
     handleOnConfirm,
   } = useRegister()
+
+  if (isLoading) {
+    return (
+      <PetPawLoading
+        message="Loading Pet Sitter Register"
+        size="lg"
+      />
+    );
+  }
 
   return (
     <div className="relative min-h-screen flex items-center justify-center">

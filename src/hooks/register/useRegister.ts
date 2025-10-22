@@ -20,10 +20,12 @@ export function useRegister() {
             saveData(role_ids)
         } else {
             setError(newErrors)
+            setIsLoading(false)
         }
     }
 
     const handleOnConfirm = async () => {
+        setIsLoading(true)
         await addRole()
         setIsOpen(false)
     }
@@ -39,6 +41,7 @@ export function useRegister() {
                 saveOwnerData(newErrors, [2, 3])
             } else if (newErrors.email && newErrors.email !== "Conflict") {
                 setIsOpen(true)
+                setIsLoading(false)
             } else {
                 setError(newErrors)
             }
@@ -46,7 +49,6 @@ export function useRegister() {
             saveOwnerData(newErrors, [2])
         }
 
-        setIsLoading(false)
     }
 
     return {

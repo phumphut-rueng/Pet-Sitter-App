@@ -5,6 +5,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import Link from "next/link";
 import SocialLogin from "@/components/login-register/SocialLogin";
 import { useLogin } from "@/hooks/login/useLogin";
+import { PetPawLoading } from "@/components/loading/PetPawLoading";
 
 export default function Login() {
   const {
@@ -18,15 +19,17 @@ export default function Login() {
     passwordError,
     loginError,
     status,
+    loading,
     handleSubmit,
   } = useLogin();
 
   // Show loading while checking authentication
-  if (status === 'loading') {
+  if (loading) {
     return (
-      <div className="flex items-center justify-center h-screen">
-        <div>Loading...</div>
-      </div>
+      <PetPawLoading
+        message="Loading Pet Sitter Login"
+        size="lg"
+      />
     );
   }
 
