@@ -11,6 +11,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { CustomSelect } from "@/components/dropdown/CustomSelect";
+import { BankSelect } from "@/lib/utils/data-select";
+import InputText from "@/components/input/InputText";
 
 const mockBankAccount = {
   accountNumber: "11333-45-543-444",
@@ -91,7 +94,16 @@ export default function PetSitterAccountPage() {
               </div>
               <div>
                 <label className="block font-medium mb-1">Bank Name*</label>
-                <Select value={bankName} onValueChange={setBankName}>
+                <CustomSelect
+                  value={bankName}
+                  onChange={setBankName}
+                  options={BankSelect}
+                  placeholder="Select bank"
+                  variant="default"
+                  triggerSize="w-full !h-12"
+                />
+
+                {/* <Select value={bankName} onValueChange={setBankName}>
                   <SelectTrigger className="w-full border-gray-2 !h-12 px-4 bg-white focus:invisible">
                     <SelectValue placeholder="Select bank" />
                   </SelectTrigger>
@@ -187,7 +199,7 @@ export default function PetSitterAccountPage() {
                       Thai Credit Bank
                     </SelectItem>
                   </SelectContent>
-                </Select>
+                </Select> */}
               </div>
             </div>
           </div>

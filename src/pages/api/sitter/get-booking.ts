@@ -219,16 +219,6 @@ export default async function handler(
         paymentMethod: b.payment_type ?? "-",
         transactionDate: b.transaction_date
           ? new Date(b.transaction_date).toLocaleString("en-US", {
-<<<<<<< Updated upstream
-              day: "numeric",
-              month: "short",
-              year: "numeric",
-              hour: "numeric",
-              minute: "2-digit",
-              hour12: true,
-              timeZone: "Asia/Bangkok",
-            })
-=======
             day: "numeric",
             month: "short",
             year: "numeric",
@@ -237,7 +227,6 @@ export default async function handler(
             hour12: true,
             timeZone: "Asia/Bangkok",
           })
->>>>>>> Stashed changes
           : "-",
         transactionId: b.transaction_id ?? "-",
         message: b.additional ?? "-",

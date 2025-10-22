@@ -32,3 +32,21 @@ export const StatusAdminSelect = [
     { value: "Approved", label: "Approved" },
     { value: "Rejected", label: "Rejected" },
 ];
+
+export const BankSelect = [
+    { value: "SCB", label: "SCB" },
+    { value: "KBank", label: "KBank" },
+    { value: "BBL", label: "BBL" },
+    { value: "KTB", label: "KTB" },
+    { value: "TTB", label: "TTB" },
+    { value: "GSB", label: "GSB" },
+    { value: "BAY", label: "BAY" },
+    { value: "KKP", label: "KKP" },
+    { value: "CIMBT", label: "CIMBT" },
+    { value: "TISCO", label: "TISCO" },
+    { value: "UOBT", label: "UOBT" },
+    { value: "LHFG", label: "LHFG" },
+    { value: "ICBCT", label: "ICBCT" },
+    { value: "ISBT", label: "ISBT" },
+    { value: "Thai Credit Bank", label: "Thai Credit Bank" },
+];

@@ -6,10 +6,11 @@ import { satoshi } from "@/fonts";
 import { useSession } from "next-auth/react";
 
 const PetSitterHero = () => {
-  const { data: session } = useSession();
-  
+  const { data: session, status } = useSession();
+
   // ตรวจสอบว่าผู้ใช้มี role sitter หรือไม่
   const isSitter = session?.user?.roles?.includes("Sitter");
+  const checkLogin = status === "authenticated";
 
   return (
     <div className={`${satoshi.className} py-20`}>
@@ -53,11 +54,11 @@ const PetSitterHero = () => {
             {/* Become A Pet Sitter Button - แสดงเฉพาะผู้ใช้ที่ยังไม่ได้เป็น sitter */}
             {!isSitter && (
               <Link
-                href="/auth/register"
+                href={checkLogin ? "/sitter/profile" : "/auth/register"}
                 aria-label="Go to register page"
               >
                 <button className="cursor-pointer text-orange-5 font-semibold hover:text-orange-6 hover:bg-orange-1 transition-all duration-200 min-w-[200px] sm:min-w-[220px] px-6 py-3 rounded-full border-2 border-orange-5 hover:border-orange-6">
-                  Register
+                  {checkLogin ? "Become A Pet Sitter" : "Register"}
                 </button>
               </Link>
             )}

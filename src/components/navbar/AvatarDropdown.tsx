@@ -73,8 +73,9 @@ const AvatarDropdown = ({ user, menuItems, onLogout, onNavigate }: AvatarDropdow
               onClick={() => handleMenuItemClick(item)}
               className="
                 group flex items-center gap-3 px-6 py-3 cursor-pointer
-                text-ink hover:text-orange-5 active:text-orange-5
-                hover:bg-orange-1/40 active:bg-orange-1/40
+                text-ink 
+                active:text-orange-5 active:bg-orange-1/40
+                hover:bg-orange-1/40 hover:text-orange-5
                 rounded-lg transition-colors
               "
             >
