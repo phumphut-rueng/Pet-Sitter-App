@@ -5,9 +5,9 @@ import type { Prisma } from "@prisma/client";
 import { user_status } from "@prisma/client";
 import { OWNER_ROLE_NAMES } from "@/lib/constants/roles";
 import { toInt, apiHandler, methodNotAllowed } from "@/lib/api/api-utils";
+import type { ErrorResponse } from "@/lib/types/api";
 
 type StatusFilter = "all" | "normal" | "ban";
-type ErrorResponse = { message: string };
 
 function getStatusFilter(status?: string | string[]): StatusFilter {
   if (!status) return "all";

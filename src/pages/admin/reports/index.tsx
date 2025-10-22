@@ -9,7 +9,7 @@ import { PetPawLoading } from "@/components/loading/PetPawLoading";
 import { Pagination } from "@/components/pagination/Pagination";
 
 import { api } from "@/lib/api/axios";
-import { getErrorMessage } from "@/lib/api/api-utils";
+import { getErrorMessage } from "@/lib/utils/error";
 import type { ReportsResponse, ReportRow, ReportStatusUI } from "@/types/admin/reports";
 import { toReportRow, toDBStatus } from "@/types/admin/reports";
 

@@ -34,6 +34,7 @@ export type OwnerDetail = {
   status?: UserStatus;
   banned_at?: string | null;
   ban_reason?: string | null;
+  admin_note?: string | null;
   
   /** @deprecated use `banned_at` instead */
   suspended_at?: string | null;
@@ -48,7 +49,7 @@ export type OwnerDetail = {
     age_month: number | null;
     color: string | null;
     weight_kg?: string;
-    about: string | null;  // ← เพิ่มบรรทัดนี้
+    about: string | null;
     image_url: string | null;
     created_at: string;
     is_banned?: boolean | null;

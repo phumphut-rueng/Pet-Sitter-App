@@ -1,23 +1,6 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 import { prisma } from "@/lib/prisma/prisma";
-
-
-function sendError(res: NextApiResponse, status: number, message: string) {
-  return res.status(status).json({ message });
-}
-
-// รองรับทั้ง /owners/[ownerId]/reviews และ fallback ?id=
-function parseOwnerId(q: NextApiRequest["query"]): number | null {
-  const raw = (q.ownerId ?? q.id) as string | string[] | undefined;
-  const v = Array.isArray(raw) ? raw[0] : raw;
-  const n = Number(v);
-  return Number.isFinite(n) ? n : null;
-}
-
-function parsePositiveInt(v: unknown, fallback: number): number {
-  const n = Number(v);
-  return Number.isFinite(n) && n > 0 ? Math.floor(n) : fallback;
-}
+import { sendError, toInt, toPositiveInt } from "@/lib/api/api-utils";
 
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
@@ -26,12 +9,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     return sendError(res, 405, "Method not allowed");
   }
 
-  const ownerId = parseOwnerId(req.query);
-  if (ownerId == null) return sendError(res, 400, "Invalid owner id");
+  const ownerId = toPositiveInt(req.query.ownerId ?? req.query.id);
+  if (!ownerId) return sendError(res, 400, "Invalid owner id");
 
   // pagination (ปลอดภัย + ค่าดีฟอลต์)
-  const page = Math.max(1, parsePositiveInt(req.query.page, 1));
-  const pageSize = Math.min(50, Math.max(1, parsePositiveInt(req.query.pageSize, 10)));
+  const page = Math.max(1, toInt(req.query.page, 1));
+  const pageSize = Math.min(50, Math.max(1, toInt(req.query.pageSize, 10)));
   const skip = (page - 1) * pageSize;
 
   try {

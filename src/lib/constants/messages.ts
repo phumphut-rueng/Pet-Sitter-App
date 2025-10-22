@@ -25,11 +25,8 @@ export const PET_ERROR_MESSAGES = {
   unknown: "Unknown error",
 } as const;
 
-export const PET_SUCCESS_MESSAGES = {
-  petCreated: "Pet created!",
-  petUpdated: "Pet updated!",
-  petDeleted: "Pet deleted!",
-} as const;
+// Re-export for backward compatibility
+export const PET_SUCCESS_MESSAGES = SUCCESS_MESSAGES;
 
 // Change Password messages
 export const PASSWORD_ERROR_MESSAGES = {

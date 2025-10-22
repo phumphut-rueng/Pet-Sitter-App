@@ -40,7 +40,7 @@ export default function AdminOwnerListPage() {
       setLoading(true);
       try {
 
-        const { data } = await api.get<OwnerListResponse>("/admin/owners/get-owners", {
+        const { data } = await api.get<OwnerListResponse>("/admin/owners", {
           params: { page, limit: LIMIT, q: q.trim() },
         });
         if (!alive) return;

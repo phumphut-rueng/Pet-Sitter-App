@@ -1,7 +1,6 @@
 import { useCallback, useRef } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import axios from "axios";
 
 import { ownerProfileSchema, type OwnerProfileInput } from "@/lib/validators/profile";
 import {
@@ -19,14 +18,7 @@ import {
   DEFAULT_VALUES,
   type OwnerProfileDTO,
 } from "@/components/features/account/profile/transform";
-
-const isDataUrl = (s?: string) => !!s && /^data:image\/[a-zA-Z]+;base64,/.test(s);
-
-async function dataUrlToFile(dataUrl: string, filename = "profile.png"): Promise<File> {
-  const res = await axios.get(dataUrl, { responseType: "blob" });
-  const blob = res.data as Blob;
-  return new File([blob], filename, { type: blob.type || "image/png" });
-}
+import { isDataUrl, dataUrlToFile } from "@/lib/cloudinary/image-helpers";
 
 function toFormValues(v: unknown): Partial<OwnerProfileInput> {
   const r = (v ?? {}) as Record<string, unknown>;

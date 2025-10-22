@@ -21,10 +21,10 @@ import {
   ROUTES,
   SUCCESS_MESSAGES,
   getErrorMessage,
-  parsePetId,
   formValuesToPayload,
   petService,
 } from "@/lib/pet/pet-utils";
+import { toPositiveInt } from "@/lib/api/api-utils";
 
 function BackButton({ onClick }: { onClick: () => void }) {
   return (
@@ -107,7 +107,7 @@ export default function EditPetPage() {
   const { getPetTypes } = usePetsApi();
 
   const petId = React.useMemo<number | null>(
-    () => (parsePetId(router.query.id) ?? null),
+    () => toPositiveInt(router.query.id),
     [router.query.id]
   );
 

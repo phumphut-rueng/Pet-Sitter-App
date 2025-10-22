@@ -2,22 +2,7 @@ import { useCallback } from "react";
 import type { Pet, PetType } from "@/lib/pet/pet-utils";
 import { petService } from "@/lib/pet/pet-utils";
 import { api } from "@/lib/api/axios";
-import { isAxiosError } from "axios";
-
-/** ดึงข้อความ error  */
-function getErrorMessage(err: unknown, fallback = "Request failed"): string {
-  if (isAxiosError(err)) {
-    const data = err.response?.data as { message?: string; error?: string } | undefined;
-    return data?.message || data?.error || err.message || fallback;
-  }
-  if (err instanceof Error) return err.message;
-  if (typeof err === "string") return err;
-  try {
-    return JSON.stringify(err);
-  } catch {
-    return fallback;
-  }
-}
+import { getErrorMessage } from "@/lib/utils/error";
 
 export function usePetsApi() {
   const listPets = useCallback(async (): Promise<Pet[]> => {

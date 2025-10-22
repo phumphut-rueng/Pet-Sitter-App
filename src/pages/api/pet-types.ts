@@ -1,30 +1,17 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 import { prisma } from "@/lib/prisma/prisma";
-
-type PetTypeResponse = {
-  id: number;
-  name: string;
-};
-
-type ErrorResponse = {
-  message: string;
-};
-
-const HTTP_STATUS = {
-  OK: 200,
-  METHOD_NOT_ALLOWED: 405,
-  INTERNAL_SERVER_ERROR: 500,
-} as const;
+import type { PetType } from "@/types/pet.types";
+import type { ErrorResponse } from "@/lib/types/api";
+import { HTTP_STATUS } from "@/lib/api/api-http";
 
 const ERROR_MESSAGES = {
   METHOD_NOT_ALLOWED: "Method not allowed",
   INTERNAL_SERVER_ERROR: "Internal Server Error",
 } as const;
 
-/* ------------------------------- repository ------------------------------- */
 
 const petTypeRepository = {
-  async findAll(): Promise<PetTypeResponse[]> {
+  async findAll(): Promise<PetType[]> {
     const types = await prisma.pet_type.findMany({
       orderBy: { id: "asc" },
       select: { id: true, pet_type_name: true },
@@ -33,11 +20,10 @@ const petTypeRepository = {
   },
 };
 
-/* --------------------------------- handler -------------------------------- */
 
 export default async function handler(
   req: NextApiRequest,
-  res: NextApiResponse<PetTypeResponse[] | ErrorResponse>
+  res: NextApiResponse<PetType[] | ErrorResponse>
 ) {
   // allow only GET
   if (req.method !== "GET") {
@@ -57,3 +43,4 @@ export default async function handler(
       .json({ message: ERROR_MESSAGES.INTERNAL_SERVER_ERROR });
   }
 }
+

@@ -56,7 +56,7 @@ export function useResetPassword() {
 
         if (Object.values(err).every((val) => val === "")) {
             try {
-                await axios.post("/api/auth/reset-password",
+                await axios.post("/api/auth/reset-password-user",
                     {
                         token,
                         password: form.password

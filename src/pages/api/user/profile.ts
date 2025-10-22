@@ -2,7 +2,7 @@ import type { NextApiRequest, NextApiResponse } from "next";
 import { getServerSession } from "next-auth";
 import { Prisma } from "@prisma/client";
 import { authOptions } from "../auth/[...nextauth]";
-
+import type { ErrorResponse } from "@/lib/types/api";
 import { HTTP_STATUS } from "@/lib/api/api-http";
 import {
   updateProfileSchema,
@@ -18,14 +18,8 @@ import { userRepository, type UpdateData } from "@/lib/repo/user.repo";
 
 type UnknownRecord = Record<string, unknown>;
 
-function sendError(
-  res: NextApiResponse,
-  status: number,
-  message: string,
-  extra?: Record<string, unknown>
-) {
-  return res.status(status).json({ message, ...(extra ?? {}) });
-}
+// Now using sendError from api-utils
+import { sendError } from "@/lib/api/api-utils";
 
 function getProp<T = unknown>(obj: unknown, key: string): T | undefined {
   if (obj && typeof obj === "object") {
@@ -62,14 +56,13 @@ type UserProfileResponse = {
   phone: string;
   dob: string;
   idNumber?: string;
-  image?: string; // ← เพิ่มบรรทัดนี้
+  image?: string;
   profileImage: string;
   profileImagePublicId?: string;
 };
 
 type UpdateResponse = { message: string };
-type ErrorResponse = {
-  message: string;
+type ProfileErrorResponse = ErrorResponse & {
   details?: ValidationDetails;
   fields?: string[];
 };
@@ -98,7 +91,7 @@ async function handleGetProfile(
 async function handleUpdateProfile(
   userId: number,
   req: NextApiRequest,
-  res: NextApiResponse<UpdateResponse | ErrorResponse>
+  res: NextApiResponse<UpdateResponse | ProfileErrorResponse>
 ) {
   const idNumberRaw = pickIdNumber(req.body);
 
@@ -164,7 +157,7 @@ async function handleUpdateProfile(
 
 export default async function handler(
   req: NextApiRequest,
-  res: NextApiResponse<UserProfileResponse | UpdateResponse | ErrorResponse>
+  res: NextApiResponse<UserProfileResponse | UpdateResponse | ProfileErrorResponse>
 ) {
   try {
     const userId = await getUserIdFromSession(req, res);

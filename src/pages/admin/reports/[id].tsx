@@ -7,7 +7,7 @@ import ConfirmDialog from "@/components/admin/shared/ConfirmDialog";
 import { StatusBadge } from "@/components/badges/StatusBadge";
 import { PetPawLoading } from "@/components/loading/PetPawLoading";
 import { api } from "@/lib/api/axios";
-import { getErrorMessage } from "@/lib/api/api-utils";
+import { getErrorMessage } from "@/lib/utils/error";
 import { formatToddMMyyyy } from "@/lib/utils/date";
 
 import type { Report, ReportStatus } from "@/types/admin/reports";
