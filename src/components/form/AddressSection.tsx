@@ -3,13 +3,6 @@
 import dynamic from "next/dynamic";
 import { useEffect, useMemo, useState } from "react";
 import InputText from "@/components/input/InputText";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { getLatLngFromAddress } from "@/lib/utils/nominatim";
 import { Controller } from "react-hook-form";
 import type {

@@ -6,7 +6,7 @@ import {
     SelectValue,
 } from "@/components/ui/select";
 
-interface CustomSelectProps<T = any> {
+interface CustomSelectProps<T = unknown> {
     value: string;
     onChange: (value: string) => void;
     options: T[];

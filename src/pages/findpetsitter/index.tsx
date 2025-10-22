@@ -85,7 +85,7 @@ function FindPetsitter() {
                 viewMode={viewMode}
                 onClear={handleClear}
                 onSwitchToList={switchToList}
-                onSitterSelect={(sitter) => {
+                onSitterSelect={() => {
                   // Optional: Handle sitter selection (e.g., scroll to details, highlight, etc.)
                 }}
                 variant="desktop"
@@ -101,7 +101,7 @@ function FindPetsitter() {
               viewMode={viewMode}
               onClear={handleClear}
               onSwitchToList={switchToList}
-              onSitterSelect={(sitter) => {
+              onSitterSelect={() => {
                 // Optional: Handle sitter selection (e.g., scroll to details, highlight, etc.)
               }}
               variant="mobile"

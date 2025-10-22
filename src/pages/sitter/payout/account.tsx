@@ -4,16 +4,8 @@ import { useRouter } from "next/navigation";
 import SitterSidebar from "@/components/layout/SitterSidebar";
 import PetSitterNavbar from "@/components/PetSitterNavbar";
 import Image from "next/image";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { CustomSelect } from "@/components/dropdown/CustomSelect";
 import { BankSelect } from "@/lib/utils/data-select";
-import InputText from "@/components/input/InputText";
 
 const mockBankAccount = {
   accountNumber: "11333-45-543-444",

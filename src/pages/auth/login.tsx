@@ -18,7 +18,6 @@ export default function Login() {
     emailError,
     passwordError,
     loginError,
-    status,
     loading,
     handleSubmit,
   } = useLogin();

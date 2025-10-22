@@ -4,7 +4,6 @@ import { NoResultsFound } from "@/components/empty-states/NoResultsFound";
 import { MapViewPlaceholder } from "@/components/empty-states/MapViewPlaceholder";
 import PetSitterMap from "@/components/map/PetSitterMap";
 import { Sitter } from "@/types/sitter.types";
-import Link from "next/link";
 
 interface PetSitterListProps {
   sitters: Sitter[];
@@ -28,22 +27,22 @@ export function PetSitterList({
   if (viewMode === "map") {
     // Check if sitters have location data
     const sittersWithLocation = sitters.filter(sitter => sitter.latitude && sitter.longitude);
-    
+
     if (sittersWithLocation.length === 0 && !loading) {
       // Show placeholder if no sitters have location data
       const reason = sitters.length > 0 ? 'no-location' : 'no-data';
       return (
-        <MapViewPlaceholder 
-          onSwitchToList={onSwitchToList} 
+        <MapViewPlaceholder
+          onSwitchToList={onSwitchToList}
           variant={variant}
           reason={reason}
         />
       );
     }
-    
+
     return (
-      <PetSitterMap 
-        sitters={sitters} 
+      <PetSitterMap
+        sitters={sitters}
         loading={loading}
         onSitterSelect={onSitterSelect}
       />
@@ -69,7 +68,7 @@ export function PetSitterList({
       {sitters.map((sitterData, index) => {
         const coverUrl = sitterData.sitter_image[0]?.image_url || "https://placehold.co/400x192";
         const avatarUrl = sitterData.user_profile_image || coverUrl;
-       
+
         return (
           <div key={sitterData.id} className="mb-4">
             <a href={`/findpetsitter/${sitterData.id}`}>

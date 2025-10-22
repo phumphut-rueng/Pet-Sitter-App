@@ -1,10 +1,3 @@
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { CustomSelect } from "../dropdown/CustomSelect";
 import { experienceSelect } from "@/lib/utils/data-select";
 
@@ -22,14 +15,7 @@ export function ExperienceFilter({
   onExperienceChange,
   className = '',
   label,
-  size = 'md'
 }: ExperienceFilterProps) {
-  const sizeClasses = {
-    sm: 'h-10',
-    md: 'h-12',
-    lg: 'h-14'
-  };
-
   return (
     <div className={className}>
       {label && (

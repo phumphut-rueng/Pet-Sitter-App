@@ -5,13 +5,6 @@ import { useSession } from "next-auth/react";
 import SitterSidebar from "@/components/layout/SitterSidebar";
 import PetSitterNavbar from "@/components/PetSitterNavbar";
 import { Input } from "@/components/ui/input";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { StatusBadge, StatusKey } from "@/components/badges/StatusBadge";
 import { PetPawLoading } from "@/components/loading/PetPawLoading";
 import { Pagination } from "@/components/pagination/Pagination";
@@ -61,7 +54,7 @@ export default function PetSitterBookingPage() {
           setLoadingBookings(true);
           const { data } = await axios.get("/api/sitter/get-booking");
           setBookings(data);
-        } catch (error) {
+        } catch {
           // nuk แก้ ถ้าคนไม่ใช้ sitter มาเปิดจะ error เลย เพิ่ม setBookings และปิด console.error
           setBookings([]);
           // console.error("Failed to fetch bookings:", error);

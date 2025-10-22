@@ -12,13 +12,6 @@ import InputTextArea from "@/components/input/InputTextArea";
 import ImageGallery from "@/components/form/ImageGalleryUpload";
 import PetTypeSelect, { PetType } from "@/components/fields/PetTypeSelect";
 import { numberToLabel } from "@/lib/utils/experience";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import toast, { Toaster } from "react-hot-toast";
 import { uploadToCloudinary } from "@/lib/cloudinary/upload-to-cloudinary";
 import AddressSection from "@/components/form/AddressSection";

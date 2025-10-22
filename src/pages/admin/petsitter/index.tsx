@@ -1,13 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import Head from "next/head";
 import AdminSidebar from "@/components/layout/AdminSidebar";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { Search } from "lucide-react";
 import { PetPawLoading } from "@/components/loading/PetPawLoading";
 import { Pagination } from "@/components/pagination/Pagination";

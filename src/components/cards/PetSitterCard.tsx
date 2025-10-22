@@ -53,14 +53,14 @@ const CARD_STYLES = {
     lg: "text-[24px] leading-8 font-semibold text-ink",
     md: "text-[20px] leading-7 font-semibold text-ink",
   },
-  subtitle: "text-[14px] leading-[22px] text-muted-text",    
-  location: "flex items-center gap-2 text-muted-text",      
-  locationText: "truncate text-[14px] leading-[22px]",        
+  subtitle: "text-[14px] leading-[22px] text-muted-text",
+  location: "flex items-center gap-2 text-muted-text",
+  locationText: "truncate text-[14px] leading-[22px]",
   tagContainer: "flex flex-row flex-wrap items-center gap-x-2 gap-y-2.5",
   avatar: {
-    sm: "h-9 w-9 rounded-full object-cover",    
-    md: "h-10 w-10 rounded-full object-cover",  
-    lg: "h-16 w-16 rounded-full object-cover",  
+    sm: "h-9 w-9 rounded-full object-cover",
+    md: "h-10 w-10 rounded-full object-cover",
+    lg: "h-16 w-16 rounded-full object-cover",
   },
   image: "h-full w-full object-cover object-center",
   imageContainer: "overflow-hidden rounded-xl bg-muted relative",
@@ -83,12 +83,12 @@ export const LocationIcon: React.FC<{ className?: string }> = ({ className = "h-
 );
 
 const StarIcon: React.FC<{ className?: string }> = ({ className = "h-4 w-4" }) => (
-  <Image 
-    src="/icons/Rating-Star.svg" 
-    alt="star" 
-    width={16} 
-    height={16} 
-    className={cn("fill-current", className)} 
+  <Image
+    src="/icons/Rating-Star.svg"
+    alt="star"
+    width={16}
+    height={16}
+    className={cn("fill-current", className)}
   />
 );
 
@@ -143,7 +143,7 @@ const CardHeader: React.FC<{
   coverUrl: string;
   showAvatar: boolean;
   titleSize: "lg" | "md";
-  avatarSize: "sm" | "md" | "lg"; 
+  avatarSize: "sm" | "md" | "lg";
   ratingSize: keyof typeof RATING_SIZES;
 }> = React.memo(
   ({ title, hostName, rating, avatarUrl, coverUrl, showAvatar, titleSize, avatarSize, ratingSize }) => (
@@ -189,12 +189,12 @@ export const TagList: React.FC<{ tags: string[] }> = React.memo(({ tags }) => (
 TagList.displayName = "TagList";
 
 const CoverImage: React.FC<{ src: string; alt: string; width: number; height: number; className?: string }> =
-  React.memo(({ src, alt, width, height, className }) => (
+  React.memo(({ src, alt, width, className }) => (
     <div className={cn(CARD_STYLES.imageContainer, className)}>
-      <Image 
-        src={src} 
-        alt={alt} 
-        className={CARD_STYLES.image} 
+      <Image
+        src={src}
+        alt={alt}
+        className={CARD_STYLES.image}
         fill
         sizes={`${width}px`}
       />
@@ -259,15 +259,15 @@ const LargeSideLayout: React.FC<{
         coverUrl={props.coverUrl}
         showAvatar={props.showAvatar}
         titleSize="lg"
-        avatarSize="lg"   
+        avatarSize="lg"
         ratingSize="md"
       />
-    <div className="mt-0.5">
-     <LocationInfo location={props.location} />
-   </div>
-     <div className="mt-1">
-       <TagList tags={props.tags} />
-   </div>
+      <div className="mt-0.5">
+        <LocationInfo location={props.location} />
+      </div>
+      <div className="mt-1">
+        <TagList tags={props.tags} />
+      </div>
     </div>
   </article>
 ));

@@ -2,13 +2,6 @@ import PrimaryButton from "../buttons/PrimaryButton";
 import RatingSelect from "../ratingStar";
 import PetTypeCheckBox from "../petTypeCheckBox";
 import { useSearchFilter, type SearchFilters } from "@/hooks/useSearchFilter";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { CustomSelect } from "../dropdown/CustomSelect";
 import { experienceSelect } from "@/lib/utils/data-select";
 
