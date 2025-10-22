@@ -1,5 +1,5 @@
 import * as React from "react";
-import ConfirmDialog from "@/components/admin/shared/ConfirmDialog";
+import ConfirmDialog from "@/components/common/ConfirmDialog";
 
 type Props = {
   open: boolean;
