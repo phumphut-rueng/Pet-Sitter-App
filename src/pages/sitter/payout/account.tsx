@@ -3,6 +3,7 @@ import axios from "axios";
 import { useRouter } from "next/navigation";
 import SitterSidebar from "@/components/layout/SitterSidebar";
 import PetSitterNavbar from "@/components/PetSitterNavbar";
+import Image from "next/image";
 import {
   Select,
   SelectContent,
@@ -50,9 +51,11 @@ export default function PetSitterAccountPage() {
                 onClick={() => router.back()}
                 className="text-gray-6 text-2xl"
               >
-                <img
+                <Image
                   src="/icons/arrow-left.svg"
                   alt="arrow-left"
+                  width={12}
+                  height={12}
                   className="w-3 h-3"
                 />
               </button>
@@ -64,9 +67,7 @@ export default function PetSitterAccountPage() {
           </div>
 
           <div className="bg-white p-6 rounded-2xl shadow-sm">
-            <label className="block font-medium mb-3">
-              Book Bank Image*
-            </label>
+            <label className="block font-medium mb-3">Book Bank Image*</label>
             <div className="w-50 h-60 bg-gray-2 mb-10"></div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -81,9 +82,7 @@ export default function PetSitterAccountPage() {
                 />
               </div>
               <div>
-                <label className="block font-medium mb-1">
-                  Account Name*
-                </label>
+                <label className="block font-medium mb-1">Account Name*</label>
                 <input
                   type="text"
                   defaultValue={mockBankAccount.accountName}
@@ -91,29 +90,102 @@ export default function PetSitterAccountPage() {
                 />
               </div>
               <div>
-                <label className="block font-medium mb-1">
-                  Bank Name*
-                </label>
+                <label className="block font-medium mb-1">Bank Name*</label>
                 <Select value={bankName} onValueChange={setBankName}>
                   <SelectTrigger className="w-full border-gray-2 !h-12 px-4 bg-white focus:invisible">
                     <SelectValue placeholder="Select bank" />
                   </SelectTrigger>
                   <SelectContent className="bg-white border-gray-2 cursor-pointer">
-                    <SelectItem value="SCB" className="cursor-pointer hover:bg-gray-1">SCB</SelectItem>
-                    <SelectItem value="KBank" className="cursor-pointer hover:bg-gray-1">KBank</SelectItem>
-                    <SelectItem value="BBL" className="cursor-pointer hover:bg-gray-1">BBL</SelectItem>
-                    <SelectItem value="KTB" className="cursor-pointer hover:bg-gray-1">KTB</SelectItem>
-                    <SelectItem value="TTB" className="cursor-pointer hover:bg-gray-1">TTB</SelectItem>
-                    <SelectItem value="GSB" className="cursor-pointer hover:bg-gray-1">GSB</SelectItem>
-                    <SelectItem value="BAY" className="cursor-pointer hover:bg-gray-1">BAY</SelectItem>
-                    <SelectItem value="KKP" className="cursor-pointer hover:bg-gray-1">KKP</SelectItem>
-                    <SelectItem value="CIMBT" className="cursor-pointer hover:bg-gray-1">CIMBT</SelectItem>
-                    <SelectItem value="TISCO" className="cursor-pointer hover:bg-gray-1">TISCO</SelectItem>
-                    <SelectItem value="UOBT" className="cursor-pointer hover:bg-gray-1">UOBT</SelectItem>
-                    <SelectItem value="LHFG" className="cursor-pointer hover:bg-gray-1">LHFG</SelectItem>
-                    <SelectItem value="ICBCT" className="cursor-pointer hover:bg-gray-1">ICBCT</SelectItem>
-                    <SelectItem value="ISBT" className="cursor-pointer hover:bg-gray-1">ISBT</SelectItem>
-                    <SelectItem value="Thai Credit Bank" className="cursor-pointer hover:bg-gray-1">Thai Credit Bank</SelectItem>
+                    <SelectItem
+                      value="SCB"
+                      className="cursor-pointer hover:bg-gray-1"
+                    >
+                      SCB
+                    </SelectItem>
+                    <SelectItem
+                      value="KBank"
+                      className="cursor-pointer hover:bg-gray-1"
+                    >
+                      KBank
+                    </SelectItem>
+                    <SelectItem
+                      value="BBL"
+                      className="cursor-pointer hover:bg-gray-1"
+                    >
+                      BBL
+                    </SelectItem>
+                    <SelectItem
+                      value="KTB"
+                      className="cursor-pointer hover:bg-gray-1"
+                    >
+                      KTB
+                    </SelectItem>
+                    <SelectItem
+                      value="TTB"
+                      className="cursor-pointer hover:bg-gray-1"
+                    >
+                      TTB
+                    </SelectItem>
+                    <SelectItem
+                      value="GSB"
+                      className="cursor-pointer hover:bg-gray-1"
+                    >
+                      GSB
+                    </SelectItem>
+                    <SelectItem
+                      value="BAY"
+                      className="cursor-pointer hover:bg-gray-1"
+                    >
+                      BAY
+                    </SelectItem>
+                    <SelectItem
+                      value="KKP"
+                      className="cursor-pointer hover:bg-gray-1"
+                    >
+                      KKP
+                    </SelectItem>
+                    <SelectItem
+                      value="CIMBT"
+                      className="cursor-pointer hover:bg-gray-1"
+                    >
+                      CIMBT
+                    </SelectItem>
+                    <SelectItem
+                      value="TISCO"
+                      className="cursor-pointer hover:bg-gray-1"
+                    >
+                      TISCO
+                    </SelectItem>
+                    <SelectItem
+                      value="UOBT"
+                      className="cursor-pointer hover:bg-gray-1"
+                    >
+                      UOBT
+                    </SelectItem>
+                    <SelectItem
+                      value="LHFG"
+                      className="cursor-pointer hover:bg-gray-1"
+                    >
+                      LHFG
+                    </SelectItem>
+                    <SelectItem
+                      value="ICBCT"
+                      className="cursor-pointer hover:bg-gray-1"
+                    >
+                      ICBCT
+                    </SelectItem>
+                    <SelectItem
+                      value="ISBT"
+                      className="cursor-pointer hover:bg-gray-1"
+                    >
+                      ISBT
+                    </SelectItem>
+                    <SelectItem
+                      value="Thai Credit Bank"
+                      className="cursor-pointer hover:bg-gray-1"
+                    >
+                      Thai Credit Bank
+                    </SelectItem>
                   </SelectContent>
                 </Select>
               </div>

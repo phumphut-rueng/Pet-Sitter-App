@@ -7,8 +7,9 @@ import SitterSidebar from "@/components/layout/SitterSidebar";
 import PetSitterNavbar from "@/components/PetSitterNavbar";
 import { PetPawLoading } from "@/components/loading/PetPawLoading";
 import { Pagination } from "@/components/pagination/Pagination";
+import Image from "next/image";
 
-type Payout = {
+type PayoutItem = {
   date: string;
   from: string;
   transactionNo: string;
@@ -35,7 +36,7 @@ export default function PetSitterPayoutPage() {
   const [userName, setUserName] = useState("");
   const [avatarUrl, setAvatarUrl] = useState("/icons/avatar-placeholder.svg");
   const [bankDisplay, setBankDisplay] = useState("-");
-  const [payouts, setPayouts] = useState<Payout[]>([]);
+  const [payouts, setPayouts] = useState<PayoutItem[]>([]);
   const [loadingPayouts, setLoadingPayouts] = useState(true);
 
   const [currentPage, setCurrentPage] = useState(1);
@@ -67,12 +68,12 @@ export default function PetSitterPayoutPage() {
     (async () => {
       try {
         setLoadingPayouts(true);
-        const { data } = await axios.get("/api/sitter/get-booking?payout=true");
-        const formatted = data.map((b: any) => ({
-          date: b.date,             
-          from: b.from,              
-          transactionNo: b.transactionNo, 
-          amount: parseFloat(b.amount),
+        const { data } = await axios.get<PayoutItem[]>("/api/sitter/get-booking?payout=true");
+        const formatted = data.map((b) => ({
+          date: b.date,
+          from: b.from,
+          transactionNo: b.transactionNo,
+          amount: parseFloat(b.amount.toString()),
         }));
         setPayouts(formatted);
       } catch (error) {
@@ -103,7 +104,13 @@ export default function PetSitterPayoutPage() {
           <div className="flex flex-col md:flex-row gap-5 mb-8">
             <div className="flex-1 bg-white px-6 py-5 rounded-2xl flex items-center justify-between border border-gray-2">
               <div className="flex items-center gap-2">
-                <img src="/icons/money.svg" alt="earning" className="w-5 h-5" />
+                <Image
+                  src="/icons/money.svg"
+                  alt="earning"
+                  width={12}
+                  height={12}
+                  className="w-5 h-5"
+                />
                 <span className="font-medium text-gray-8">Total Earning</span>
               </div>
               <span className="font-semibold text-gray-9">
@@ -116,16 +123,24 @@ export default function PetSitterPayoutPage() {
               className="flex-1 bg-white px-6 py-5 rounded-2xl flex items-center justify-between hover:bg-orange-1 border border-gray-2 transition"
             >
               <div className="flex items-center gap-2">
-                <img src="/icons/wallet.svg" alt="bank" className="w-5 h-5" />
+                <Image
+                  src="/icons/wallet.svg"
+                  alt="bank"
+                  width={12}
+                  height={12}
+                  className="w-5 h-5"
+                />
                 <span className="text-gray-9 font-medium">Bank Account</span>
               </div>
               <div className="flex gap-4">
                 <span className="text-orange-5 font-semibold">
                   {bankDisplay}
                 </span>
-                <img
+                <Image
                   src="/icons/arrow-right.svg"
                   alt="arrow"
+                  width={12}
+                  height={12}
                   className="w-2 h-2"
                 />
               </div>

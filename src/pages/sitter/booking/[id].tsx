@@ -11,6 +11,7 @@ import PetDetailModal from "@/components/modal/PetDetail";
 import { PetPawLoading } from "@/components/loading/PetPawLoading";
 import BookingRejectConfirmation from "@/components/modal/BookingRejectConfirmation";
 import toast, { Toaster } from "react-hot-toast";
+import Image from "next/image";
 
 type BookingDetail = {
   id: number;
@@ -150,27 +151,30 @@ export default function BookingDetailPage() {
             >
               Reject Booking
             </Button>
-            <Button className="h-12 w-42 bg-orange-5 text-white rounded-full font-bold hover:bg-orange-4"
+            <Button
+              className="h-12 w-42 bg-orange-5 text-white rounded-full font-bold hover:bg-orange-4"
               onClick={() => updateBookingStatus(4)} // waiting for service
-              >
+            >
               Confirm Booking
             </Button>
           </div>
         );
       case "waitingService":
         return (
-          <Button className="h-12 w-32 bg-orange-5 text-white font-bold rounded-full px-5"
+          <Button
+            className="h-12 w-32 bg-orange-5 text-white font-bold rounded-full px-5"
             onClick={() => updateBookingStatus(6)} // in service
-            >
-              In service
+          >
+            In service
           </Button>
         );
       case "inService":
         return (
-          <Button className="h-12 w-30 bg-orange-5 text-white font-bold rounded-full px-5"
+          <Button
+            className="h-12 w-30 bg-orange-5 text-white font-bold rounded-full px-5"
             onClick={() => updateBookingStatus(7)} // success
-            >
-              Success
+          >
+            Success
           </Button>
         );
       default:
@@ -200,7 +204,7 @@ export default function BookingDetailPage() {
 
   return (
     <main className="flex container-1200 !px-0 bg-gray-1">
-      <Toaster position="top-right"/>
+      <Toaster position="top-right" />
       <SitterSidebar className="min-w-0" />
       <section className="flex-1 min-w-0">
         <PetSitterNavbar avatarUrl={avatarUrl} name={userName} />
@@ -211,7 +215,13 @@ export default function BookingDetailPage() {
               onClick={() => router.back()}
               className="text-gray-6 text-2xl"
             >
-              <img src="/icons/arrow-left.svg" alt="arrow-left" className="w-3 h-3"/>
+              <Image
+                src="/icons/arrow-left.svg"
+                alt="arrow-left"
+                width={12}
+                height={12}
+                className="w-3 h-3"
+              />
             </button>
             <h2 className="text-2xl font-semibold text-black">
               {booking.ownerName}
