@@ -19,11 +19,11 @@ import { usePetDetail } from "@/hooks/usePetDetail";
 import {
   PetFormValues,
   ROUTES,
-  SUCCESS_MESSAGES,
   getErrorMessage,
   formValuesToPayload,
   petService,
 } from "@/lib/pet/pet-utils";
+import { SUCCESS_MESSAGES } from "@/lib/constants/messages";
 import { toPositiveInt } from "@/lib/api/api-utils";
 
 function BackButton({ onClick }: { onClick: () => void }) {
@@ -126,12 +126,28 @@ export default function EditPetPage() {
     async (formValues: PetFormValues) => {
       if (!petId) return;
       try {
-        setOverlayMessage("Updating pet...");
+        // แสดง toast ถ้ามีรูปใหม่ที่จะอัปโหลด (data URL)
+        const hasImageToUpload = formValues.image && formValues.image.startsWith("data:");
+        if (hasImageToUpload) {
+          setOverlayMessage("Uploading pet image...");
+          toast.loading("Uploading pet image...", { id: "pet-save" });
+        } else {
+          setOverlayMessage("Updating pet...");
+        }
+
         const payload = await formValuesToPayload(formValues, getPetTypes);
+
+        // Dismiss loading toast (ไม่แสดง success แยก เพื่อไม่ให้ซ้อน)
+        if (hasImageToUpload) {
+          toast.dismiss("pet-save");
+        }
+
+        setOverlayMessage("Updating pet...");
         await petService.updatePet(petId, payload);
         toast.success(SUCCESS_MESSAGES.petUpdated);
         goList();
       } catch (err) {
+        toast.dismiss("pet-save");
         const msg = getErrorMessage(err);
         toast.error(msg);
         console.error("Update pet failed:", err);

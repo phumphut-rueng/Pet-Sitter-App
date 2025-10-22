@@ -232,6 +232,14 @@ summary,
 label[for] {
   cursor: pointer;
 }
+/* Select Field Cursor */
+select option {
+  cursor: pointer;
+}
+
+[data-slot="select-content"] {
+  border: none !important;
+}
 
 .cursor-pointer { cursor: pointer; }
 .cursor-default { cursor: default; }

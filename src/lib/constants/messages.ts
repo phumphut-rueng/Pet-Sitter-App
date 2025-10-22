@@ -23,6 +23,7 @@ export const PET_ERROR_MESSAGES = {
   createFailed: "Create failed",
   invalidPetType: "Please select a valid Pet Type",
   unknown: "Unknown error",
+  imageTooLarge: "Image is too large", 
 } as const;
 
 // Re-export for backward compatibility

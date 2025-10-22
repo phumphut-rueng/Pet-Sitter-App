@@ -41,11 +41,26 @@ const AccountProfilePage: NextPage = () => {
   const handleSubmit = form.handleSubmit(async (values: OwnerProfileInput) => {
     setServerError(null);
     setSaving(true);
+    
+    // ตรวจสอบว่ามีรูปใหม่ที่จะอัปโหลดหรือไม่ (data URL)
+    const hasImageToUpload = typeof values.image === "string" && values.image.startsWith("data:");
+    
     try {
+      if (hasImageToUpload) {
+        toast.loading("Uploading profile image...", { id: "profile-save" });
+      }
+      
       const ok = await save(values);
+      
+      // Dismiss loading toast (ไม่แสดง success แยก เพื่อไม่ให้ซ้อน)
+      if (hasImageToUpload) {
+        toast.dismiss("profile-save");
+      }
+      
       if (ok) toast.success(SUCCESS_MESSAGES.profileUpdated);
       else toast.error(ERROR_MESSAGES.fixFields);
     } catch (err) {
+      toast.dismiss("profile-save");
       console.error("Profile save error:", err);
       const msg = getErrorMessage(err) || ERROR_MESSAGES.unknown;
       setServerError(msg);

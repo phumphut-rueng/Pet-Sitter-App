@@ -9,11 +9,11 @@ import { usePetsApi } from "@/hooks/usePets";
 import {
   PetFormValues,
   ROUTES,
-  SUCCESS_MESSAGES,
   getErrorMessage,
   formValuesToPayload,
   petService,
 } from "@/lib/pet/pet-utils";
+import { SUCCESS_MESSAGES } from "@/lib/constants/messages";
 
 /** แปลงค่า query.refresh เป็น key สำหรับ remount ฟอร์ม */
 function getRefreshKey(refresh: string | string[] | undefined): string {
@@ -59,16 +59,31 @@ export default function CreatePetPage() {
       if (isSubmitting) return;              // กันดับเบิลคลิก
       try {
         setIsSubmitting(true);
-        setOverlayMessage("Creating pet..."); //  ข้อความ overlay
+
+        // แสดง toast ถ้ามีรูปใหม่ที่จะอัปโหลด (data URL)
+        const hasImageToUpload = values.image && values.image.startsWith("data:");
+        if (hasImageToUpload) {
+          setOverlayMessage("Uploading pet image...");
+          toast.loading("Uploading pet image...", { id: "pet-save" });
+        } else {
+          setOverlayMessage("Creating pet...");
+        }
 
         // อาจมีอัปโหลดรูป → ใช้ overlay คลุมช่วงนี้ไว้
         const payload = await formValuesToPayload(values, getPetTypes);
 
+        // Dismiss loading toast (ไม่แสดง success แยก เพื่อไม่ให้ซ้อน)
+        if (hasImageToUpload) {
+          toast.dismiss("pet-save");
+        }
+
+        setOverlayMessage("Creating pet...");
         await petService.createPet(payload);
 
         toast.success(SUCCESS_MESSAGES.petCreated);
         goList();
       } catch (err) {
+        toast.dismiss("pet-save");
         toast.error(getErrorMessage(err));
         console.error("Create pet failed:", err);
       } finally {
