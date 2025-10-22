@@ -16,7 +16,7 @@ model pet_type {
 
 model role {
   id        Int         @id @default(autoincrement())
-  role_name String      @unique
+  role_name String      @db.VarChar(50)
   user_role user_role[]
 }
 
@@ -42,6 +42,10 @@ model sitter {
   admin_note              String?                   @db.VarChar(1000)
   latitude                Float?
   longitude               Float?
+  book_bank_image         String?                   @db.VarChar(255)
+  bank_account_number     String?                   @db.VarChar(30)
+  account_name            String?                   @db.VarChar(100)
+  bank_name               String?                   @db.VarChar(20)
   booking                 booking[]
   reviews                 review[]
   sitter_approval_status  sitter_approval_status    @relation(fields: [approval_status_id], references: [id], onDelete: NoAction, onUpdate: NoAction)

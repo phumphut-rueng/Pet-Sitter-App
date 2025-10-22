@@ -104,7 +104,7 @@ export default function PetSitterBookingPage() {
       <section className="flex-1 min-w-0">
         <PetSitterNavbar avatarUrl={avatarUrl} name={userName} />
 
-        <div className="px-8 py-6">
+        <div className="px-6 py-8">
           <div className="flex items-center justify-between gap-4 mb-6">
             <h2 className="text-2xl font-semibold text-gray-9">Booking List</h2>
 

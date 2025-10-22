@@ -76,6 +76,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         latitude: sitter.latitude,
         longitude: sitter.longitude,
         images: sitter.sitter_image.map((i) => i.image_url),
+        bank_name: sitter.bank_name,
+        bank_account_number: sitter.bank_account_number,
         petTypes: sitter.sitter_pet_type.map((sp) => ({
           id: sp.pet_type_id,
           name: sp.pet_type.pet_type_name,

@@ -265,7 +265,7 @@ export default async function handler(
         });
 
         if (sitter.approval_status_id === 4) {
-          const sitterRole = await tx.role.findUnique({
+          const sitterRole = await tx.role.findFirst({
             where: { role_name: "Sitter" },
             select: { id: true },
           });

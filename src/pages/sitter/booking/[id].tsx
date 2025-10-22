@@ -11,6 +11,7 @@ import PetDetailModal from "@/components/modal/PetDetail";
 import { PetPawLoading } from "@/components/loading/PetPawLoading";
 import BookingRejectConfirmation from "@/components/modal/BookingRejectConfirmation";
 import toast, { Toaster } from "react-hot-toast";
+import Image from "next/image";
 
 type BookingDetail = {
   id: number;
@@ -150,27 +151,30 @@ export default function BookingDetailPage() {
             >
               Reject Booking
             </Button>
-            <Button className="h-12 w-42 bg-orange-5 text-white rounded-full font-bold hover:bg-orange-4"
+            <Button
+              className="h-12 w-42 bg-orange-5 text-white rounded-full font-bold hover:bg-orange-4"
               onClick={() => updateBookingStatus(4)} // waiting for service
-              >
+            >
               Confirm Booking
             </Button>
           </div>
         );
       case "waitingService":
         return (
-          <Button className="h-12 w-32 bg-orange-5 text-white font-bold rounded-full px-5"
+          <Button
+            className="h-12 w-32 bg-orange-5 text-white font-bold rounded-full px-5"
             onClick={() => updateBookingStatus(6)} // in service
-            >
-              In service
+          >
+            In service
           </Button>
         );
       case "inService":
         return (
-          <Button className="h-12 w-30 bg-orange-5 text-white font-bold rounded-full px-5"
+          <Button
+            className="h-12 w-30 bg-orange-5 text-white font-bold rounded-full px-5"
             onClick={() => updateBookingStatus(7)} // success
-            >
-              Success
+          >
+            Success
           </Button>
         );
       default:
@@ -200,18 +204,24 @@ export default function BookingDetailPage() {
 
   return (
     <main className="flex container-1200 !px-0 bg-gray-1">
-      <Toaster position="top-right"/>
+      <Toaster position="top-right" />
       <SitterSidebar className="min-w-0" />
       <section className="flex-1 min-w-0">
         <PetSitterNavbar avatarUrl={avatarUrl} name={userName} />
 
-        <div className="flex items-center justify-between px-8 py-6">
-          <div className="flex items-center gap-3">
+        <div className="flex items-center justify-between px-6 py-8">
+          <div className="flex items-center gap-4">
             <button
               onClick={() => router.back()}
-              className="text-gray-6 text-2xl hover:text-gray-9"
+              className="text-gray-6 text-2xl"
             >
-              ←
+              <Image
+                src="/icons/arrow-left.svg"
+                alt="arrow-left"
+                width={12}
+                height={12}
+                className="w-3 h-3"
+              />
             </button>
             <h2 className="text-2xl font-semibold text-black">
               {booking.ownerName}
@@ -221,7 +231,7 @@ export default function BookingDetailPage() {
           {renderActionButtons()}
         </div>
 
-        <div className="px-8 pb-10">
+        <div className="px-6 pb-10">
           <div className="bg-white rounded-2xl px-18 py-8 space-y-6">
             <h4 className="text-gray-4 font-bold text-xl mb-1">
               Pet Owner Name
