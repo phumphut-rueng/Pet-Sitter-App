@@ -8,6 +8,58 @@ import {
 } from "formidable";
 import { cloudinary } from "@/lib/cloudinary/server";
 
+
+/**
+ * @openapi
+ * /upload-image:
+ *   post:
+ *     tags: [Upload]
+ *     summary: Upload single image to Cloudinary
+ *     description: "อัปโหลดรูปภาพแบบ multipart/form-data ชื่อฟิลด์ไฟล์คือ `file` และเลือกส่ง `folder` ได้"
+ *     security:
+ *       - cookieAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         multipart/form-data:
+ *           schema:
+ *             type: object
+ *             required: [file]
+ *             properties:
+ *               file:
+ *                 type: string
+ *                 format: binary
+ *                 description: "ไฟล์รูปภาพ"
+ *               folder:
+ *                 type: string
+ *                 description: "โฟลเดอร์ใน Cloudinary (ถ้าไม่ส่งใช้ค่าเริ่มต้น pet-sitter-app)"
+ *           encoding:
+ *             file:
+ *               contentType: image/*
+ *     responses:
+ *       '200':
+ *         description: "อัปโหลดสำเร็จ"
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 url:
+ *                   type: string
+ *                   format: uri
+ *                   example: "https://res.cloudinary.com/demo/image/upload/v1730000000/pet-sitter-app/abc123.jpg"
+ *                 public_id:
+ *                   type: string
+ *                   example: "pet-sitter-app/abc123"
+ *       '400':
+ *         description: "Invalid upload (ไม่มีไฟล์ หรือพาร์สไฟล์ไม่สำเร็จ)"
+ *       '405':
+ *         description: "Method not allowed"
+ *       '500':
+ *         description: "Upload failed"
+ */
+
+
 export const config = {
   api: {
     bodyParser: false, // [ADDED] ปิด bodyParser ของ Next เพื่อให้ formidable อ่านไฟล์ได้จาก stream

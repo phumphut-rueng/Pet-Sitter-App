@@ -3,6 +3,36 @@ import { prisma } from '@/lib/prisma/prisma';
 import { getServerSession } from 'next-auth/next';
 import { authOptions } from '../auth/[...nextauth]';
 
+/**
+ * @openapi
+ * /chat/unread-count:
+ *   get:
+ *     tags: [Chat]
+ *     summary: Get total unread messages count
+ *     description: >
+ *       Return the sum of `unread_count` across all chats for the current session user
+ *       (only chats that are not hidden).
+ *     responses:
+ *       200:
+ *         description: Unread count fetched successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success: { type: boolean, example: true }
+ *                 totalUnreadCount: { type: integer, example: 7 }
+ *                 message: { type: string, example: "Unread count fetched successfully" }
+ *       401:
+ *         description: Unauthorized - Please login first
+ *       405:
+ *         description: Method Not Allowed
+ *       500:
+ *         description: Internal server error
+ *     security:
+ *       - cookieAuth: []
+ */
+
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'GET') {
     return res.status(405).json({ 

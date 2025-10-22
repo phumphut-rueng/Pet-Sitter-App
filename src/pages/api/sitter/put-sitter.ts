@@ -6,6 +6,76 @@ import { labelToNumber } from "@/lib/utils/experience";
 import type { Prisma } from "@prisma/client";
 import { emailRegex, phoneRegex } from "@/lib/validators/validation";
 
+
+/**
+ * @openapi
+ * /sitter/put-sitter:
+ *   put:
+ *     tags: [Sitter]
+ *     summary: Create or update my sitter profile
+ *     description: >
+ *       Create sitter profile if not exists, otherwise update existing one.  
+ *       Requires signed-in session via cookie.
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               fullName: { type: string, nullable: true, example: "Jane Sitter" }
+ *               experience: { type: string, nullable: true, example: "3-5 years" }
+ *               phone: { type: string, nullable: true, example: "0812345678" }
+ *               email: { type: string, nullable: true, example: "jane@example.com" }
+ *               tradeName: { type: string, nullable: true, example: "Happy Paws" }
+ *               petTypes:
+ *                 type: array
+ *                 items: { type: string }
+ *                 example: ["Dog","Cat"]
+ *               introduction: { type: string, nullable: true, example: "Animal lover." }
+ *               location_description: { type: string, nullable: true, example: "Near central park" }
+ *               service_description: { type: string, nullable: true, example: "Walking, boarding" }
+ *               address_detail: { type: string, nullable: true, example: "123/45 Soi 1" }
+ *               address_province: { type: string, nullable: true, example: "Bangkok" }
+ *               address_district: { type: string, nullable: true, example: "Bang Kapi" }
+ *               address_sub_district: { type: string, nullable: true, example: "Hua Mak" }
+ *               address_post_code: { type: string, nullable: true, example: "10240" }
+ *               profileImageUrl: { type: string, nullable: true, example: "https://..." }
+ *               images:
+ *                 type: array
+ *                 items: { type: string }
+ *                 example: ["https://cdn/img1.jpg","https://cdn/img2.jpg"]
+ *               latitude:
+ *                 type: number
+ *                 nullable: true
+ *                 minimum: -90
+ *                 maximum: 90
+ *                 example: 13.7563
+ *               longitude:
+ *                 type: number
+ *                 nullable: true
+ *                 minimum: -180
+ *                 maximum: 180
+ *                 example: 100.5018
+ *     responses:
+ *       200:
+ *         description: Sitter saved
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               additionalProperties: true
+ *       400: { description: Invalid input or format }
+ *       401: { description: Unauthorized }
+ *       404: { description: User not found }
+ *       405: { description: Method not allowed }
+ *       409:
+ *         description: Conflict (duplicate email/phone or pet types)
+ *       500: { description: Server error while saving sitter }
+ *     security:
+ *       - cookieAuth: []
+ */
+
 const phoneRe = phoneRegex;
 const emailRe = emailRegex;
 

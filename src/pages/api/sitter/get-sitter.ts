@@ -1,6 +1,96 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 import { prisma } from "@/lib/prisma/prisma";
 
+/**
+ * @openapi
+ * /sitter/get-sitter:
+ *   get:
+ *     tags: [Sitter]
+ *     summary: Search sitters (public)
+ *     description: >
+ *       Search pet sitters with filters (text, pet types, rating band, experience) and pagination.
+ *       For multiple pet types, pass **petTypes** as repeated query params (e.g. `?petTypes=Dog&petTypes=Cat`)
+ *       or a comma-separated string (e.g. `?petTypes=Dog,Cat`).
+ *     parameters:
+ *       - in: query
+ *         name: searchTerm
+ *         required: false
+ *         schema: { type: string }
+ *         description: Free text (sitter name / owner name / province / district / sub-district)
+ *       - in: query
+ *         name: petTypes
+ *         required: false
+ *         schema:
+ *           oneOf:
+ *             - type: array
+ *               items: { type: string }
+ *             - type: string
+ *         style: form
+ *         explode: true
+ *         description: One or more pet type names (e.g. Dog, Cat). Must match ALL selected types.
+ *       - in: query
+ *         name: rating
+ *         required: false
+ *         schema: { type: integer, minimum: 1, maximum: 5 }
+ *         description: Rating band. Example 4 = 4.00 ≤ avg < 5.00
+ *       - in: query
+ *         name: experience
+ *         required: false
+ *         schema:
+ *           type: string
+ *           enum: [all, 0-2, 3-5, 5+]
+ *           default: all
+ *         description: Experience range in years.
+ *       - in: query
+ *         name: page
+ *         required: false
+ *         schema: { type: integer, minimum: 1, default: 1 }
+ *         description: Page (1-based)
+ *       - in: query
+ *         name: limit
+ *         required: false
+ *         schema: { type: integer, minimum: 1, maximum: 50, default: 5 }
+ *         description: Items per page
+ *     responses:
+ *       200:
+ *         description: Sitters list
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 data:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     additionalProperties: true
+ *                     example:
+ *                       id: 12
+ *                       name: "Happy Paws"
+ *                       user_sitter_id: 101
+ *                       user_name: "Jane"
+ *                       user_profile_image: "https://cdn.example.com/u/101.png"
+ *                       address_province: "Bangkok"
+ *                       address_district: "Bang Kapi"
+ *                       averageRating: 4.5
+ *                       sitter_image: [{ id: 1, image_url: "https://..." }]
+ *                       sitter_pet_type: [{ pet_type: { pet_type_name: "Dog" } }]
+ *                 pagination:
+ *                   type: object
+ *                   properties:
+ *                     page: { type: integer, example: 1 }
+ *                     limit: { type: integer, example: 5 }
+ *                     totalCount: { type: integer, example: 27 }
+ *                     totalPages: { type: integer, example: 6 }
+ *                 message:
+ *                   type: string
+ *                   nullable: true
+ *                   example: ไม่พบข้อมูล
+ *       405:
+ *         description: Method not allowed
+ *       500:
+ *         description: Error fetching sitters
+ */
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== "GET") {

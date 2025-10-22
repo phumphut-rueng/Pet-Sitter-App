@@ -7,6 +7,56 @@ import { OWNER_ROLE_NAMES } from "@/lib/constants/roles";
 import { toInt, apiHandler, methodNotAllowed } from "@/lib/api/api-utils";
 import type { ErrorResponse } from "@/lib/types/api";
 
+/**
+ * @openapi
+ * /admin/owners:
+ *   get:
+ *     tags: [Admin]
+ *     summary: List owners (admin)
+ *     description: Return a paginated list of owners with optional search and status filters.
+ *     parameters:
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: integer
+ *           minimum: 1
+ *           default: 1
+ *         description: Page number.
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *           minimum: 1
+ *           maximum: 50
+ *           default: 10
+ *         description: Page size.
+ *       - in: query
+ *         name: q
+ *         schema:
+ *           type: string
+ *         description: Search by name, phone, or email.
+ *       - in: query
+ *         name: status
+ *         schema:
+ *           type: string
+ *           enum: [all, normal, ban]
+ *         description: Filter by status. Use "all" to include every status.
+ *     responses:
+ *       '200':
+ *         description: Owners list
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/AdminOwnersListResponse'
+ *       '405':
+ *         description: Method not allowed
+ *       '500':
+ *         description: Failed to load owners
+ *     security:
+ *       - cookieAuth: []
+ *       - AdminApiKey: []
+ */
+
 type StatusFilter = "all" | "normal" | "ban";
 
 function getStatusFilter(status?: string | string[]): StatusFilter {

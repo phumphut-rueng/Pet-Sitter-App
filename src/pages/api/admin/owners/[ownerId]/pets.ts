@@ -3,6 +3,55 @@ import { prisma } from "@/lib/prisma/prisma";
 import { apiHandler, methodNotAllowed, toInt, toPositiveInt } from "@/lib/api/api-utils";
 import type { ErrorResponse } from "@/lib/types/api";
 
+/**
+ * @openapi
+ * /admin/owners/{ownerId}/pet:
+ *   get:
+ *     tags: [Admin]
+ *     summary: List pets by owner (admin)
+ *     description: Return paginated pets of a given owner for admin dashboard.
+ *     parameters:
+ *       - in: path
+ *         name: ownerId
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: Owner ID
+ *       - in: query
+ *         name: page
+ *         required: false
+ *         schema:
+ *           type: integer
+ *           minimum: 1
+ *           default: 1
+ *         description: Page number (1-based)
+ *       - in: query
+ *         name: limit
+ *         required: false
+ *         schema:
+ *           type: integer
+ *           minimum: 1
+ *           maximum: 50
+ *           default: 12
+ *         description: Items per page (max 50)
+ *     responses:
+ *       200:
+ *         description: List of pets
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/AdminOwnerPetList'
+ *       400:
+ *         description: Invalid owner id
+ *       405:
+ *         description: Method not allowed
+ *       500:
+ *         description: Failed to load pets
+ *     security:
+ *       - cookieAuth: []
+ *       - AdminApiKey: []
+ */
+
 type PetListResponse = {
   items: Array<{
     id: number;

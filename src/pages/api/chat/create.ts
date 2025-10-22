@@ -5,6 +5,60 @@ import { prisma } from '@/lib/prisma/prisma';
 import { getServerSession } from 'next-auth/next';
 import { authOptions } from '../auth/[...nextauth]';
 
+/**
+ * @openapi
+ * /chat/create:
+ *   post:
+ *     tags: [Chat]
+ *     summary: Create (or unhide) a one-to-one chat
+ *     description: >
+ *       Create a chat between the current session user and another user.
+ *       If a chat already exists, it will be unhidden for the requester and returned.
+ *     security:
+ *       - cookieAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [otherUserId]
+ *             properties:
+ *               otherUserId:
+ *                 type: integer
+ *                 example: 42
+ *     responses:
+ *       201:
+ *         description: Chat created
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success: { type: boolean, example: true }
+ *                 chatId: { type: integer, example: 123 }
+ *                 isNewChat: { type: boolean, example: true }
+ *                 message: { type: string, example: "Chat created successfully" }
+ *       200:
+ *         description: Chat already existed and was unhidden
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success: { type: boolean, example: true }
+ *                 chatId: { type: integer, example: 123 }
+ *                 isNewChat: { type: boolean, example: false }
+ *                 message: { type: string, example: "Chat already exists and unhidden" }
+ *       400:
+ *         description: Missing or invalid otherUserId / self-chat not allowed
+ *       401:
+ *         description: Unauthorized
+ *       405:
+ *         description: Method not allowed
+ *       500:
+ *         description: Internal server error
+ */
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'POST') {
     return res.status(405).json({ 

@@ -4,6 +4,43 @@ import type { PetType } from "@/types/pet.types";
 import type { ErrorResponse } from "@/lib/types/api";
 import { HTTP_STATUS } from "@/lib/api/api-http";
 
+
+/**
+ * @openapi
+ * /pet-types:
+ *   get:
+ *     tags: [Public]
+ *     summary: List pet types
+ *     description: >
+ *       Return a list of available pet types.
+ *     responses:
+ *       200:
+ *         description: OK
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 type: object
+ *                 properties:
+ *                   id:
+ *                     type: integer
+ *                     example: 1
+ *                   name:
+ *                     type: string
+ *                     example: Dog
+ *             examples:
+ *               sample:
+ *                 summary: Example list
+ *                 value:
+ *                   - { id: 1, name: "Dog" }
+ *                   - { id: 2, name: "Cat" }
+ *       405:
+ *         description: Method not allowed
+ *       500:
+ *         description: Internal Server Error
+ */
+
 const ERROR_MESSAGES = {
   METHOD_NOT_ALLOWED: "Method not allowed",
   INTERNAL_SERVER_ERROR: "Internal Server Error",

@@ -3,6 +3,91 @@ import { prisma } from "@/lib/prisma/prisma";
 import { Prisma } from "@prisma/client";
 import { z } from "zod";
 
+/**
+ * @openapi
+ * /bookings/change-date:
+ *   put:
+ *     tags: [Bookings]
+ *     summary: Change booking date range
+ *     description: >
+ *       Update `date_start` และ `date_end` ของการจองที่มีอยู่แล้ว
+ *       โดยระบบจะเช็คว่า sitter เดียวกันไม่ถูกจองซ้อนช่วงเวลา
+ *       (เงื่อนไข overlap: start < otherEnd && end > otherStart).
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [bookingId, date_start, date_end]
+ *             properties:
+ *               bookingId:
+ *                 type: integer
+ *                 example: 123
+ *               date_start:
+ *                 type: string
+ *                 format: date-time
+ *                 example: "2025-10-21T09:00:00.000Z"
+ *               date_end:
+ *                 type: string
+ *                 format: date-time
+ *                 example: "2025-10-23T09:00:00.000Z"
+ *     responses:
+ *       200:
+ *         description: Booking date updated successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message: { type: string, example: "Booking date updated successfully" }
+ *                 booking:
+ *                   type: object
+ *                   description: Prisma Booking entity after update
+ *                   additionalProperties: true
+ *       400:
+ *         description: Invalid input (zod validation failed)
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error: { type: string, example: "Invalid input" }
+ *                 details:
+ *                   type: object
+ *                   description: Flattened Zod error
+ *                   additionalProperties: true
+ *       404:
+ *         description: Booking not found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error: { type: string, example: "Booking not found" }
+ *       409:
+ *         description: Overlapping booking exists for the same sitter
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error: { type: string, example: "This sitter is already booked in that date range." }
+ *                 conflict:
+ *                   type: object
+ *                   properties:
+ *                     id: { type: integer, example: 456 }
+ *                     date_start: { type: string, format: date-time, example: "2025-10-22T00:00:00.000Z" }
+ *                     date_end: { type: string, format: date-time, example: "2025-10-24T00:00:00.000Z" }
+ *       405:
+ *         description: Method not allowed
+ *       500:
+ *         description: Internal Server Error
+ *     security:
+ *       - cookieAuth: []
+ */
+
+
 /** Validate & coerce body */
 const ChangeDateSchema = z
   .object({

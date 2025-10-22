@@ -3,6 +3,50 @@ import { getServerSession } from "next-auth";
 import { prisma } from "@/lib/prisma/prisma";
 import { authOptions } from "../auth/[...nextauth]";
 
+/**
+ * @openapi
+ * /sitter/request-approval:
+ *   post:
+ *     tags: [Sitter]
+ *     summary: Send/renew sitter approval request
+ *     description: >
+ *       Create (if absent) or update your sitter profile and set status to
+ *       "Waiting for approve". Requires a logged-in session (cookie).
+ *     requestBody:
+ *       required: false
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               fullName: { type: string, example: "Jane Sitter" }
+ *               phone: { type: string, example: "0812345678" }
+ *               email: { type: string, example: "jane@example.com" }
+ *               experience:
+ *                 oneOf:
+ *                   - { type: integer, example: 3 }
+ *                   - { type: string, example: "3" }
+ *               introduction: { type: string, example: "I love caring for pets." }
+ *     responses:
+ *       200:
+ *         description: Request submitted
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message: { type: string }
+ *                 status: { type: string, example: "Waiting for approve" }
+ *                 action: { type: string, enum: ["created","updated"] }
+ *       401: { description: Unauthorized }
+ *       404: { description: User not found }
+ *       405: { description: Method not allowed }
+ *       500: { description: Error requesting approval }
+ *     security:
+ *       - cookieAuth: []
+ */
+
+
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   try {
     if (req.method !== "POST") {

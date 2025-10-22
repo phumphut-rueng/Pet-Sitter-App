@@ -1,6 +1,60 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 import { prisma } from "@/lib/prisma/prisma";
 
+/**
+ * @openapi
+ * /user/post-role:
+ *   post:
+ *     tags: [User]
+ *     summary: Add a role to a user (by email)
+ *     description: >
+ *       เพิ่ม role ให้ผู้ใช้ด้วยอีเมลที่ระบุ ถ้าผู้ใช้มี role นั้นอยู่แล้วจะได้ 409.
+ *       (หมายเหตุ: โค้ดปัจจุบัน **ยังไม่ได้**ตรวจสิทธิ์ — แนะนำให้ป้องกันเฉพาะแอดมิน)
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [email, role_ids]
+ *             properties:
+ *               email:
+ *                 type: string
+ *                 format: email
+ *                 example: "user@example.com"
+ *               role_ids:
+ *                 type: integer
+ *                 example: 2
+ *           examples:
+ *             addOwnerRole:
+ *               summary: Add role_id 2 (e.g. Owner)
+ *               value: { email: "user@example.com", role_ids: 2 }
+ *     responses:
+ *       201:
+ *         description: Role added successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: Role added successfully
+ *       400:
+ *         description: Missing email or role_id
+ *       404:
+ *         description: User not found by given email
+ *       409:
+ *         description: User already has this role
+ *       405:
+ *         description: Method not allowed
+ *       500:
+ *         description: Server error
+ *     security:
+ *       - cookieAuth: []   # แนะนำให้ใช้ session-based auth
+ */
+
+
 export default async function handler(
     req: NextApiRequest,
     res: NextApiResponse

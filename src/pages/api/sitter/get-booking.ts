@@ -3,6 +3,43 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "../auth/[...nextauth]";
 import { prisma } from "@/lib/prisma/prisma";
 
+/**
+ * @openapi
+ * /sitter/get-booking:
+ *   get:
+ *     tags: [Sitter]
+ *     summary: List sitter bookings or get one booking detail
+ *     description: Return bookings of the authenticated sitter (from session cookie). If query param "id" is provided, returns only that booking detail.
+ *     parameters:
+ *       - in: query
+ *         name: id
+ *         required: false
+ *         schema:
+ *           type: integer
+ *         description: Booking ID (optional). When provided, returns a single booking detail.
+ *     responses:
+ *       200:
+ *         description: OK. When "id" is not provided, returns an array; when "id" is provided, returns an object.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               oneOf:
+ *                 - type: array
+ *                   items:
+ *                     type: object
+ *                     additionalProperties: true
+ *                 - type: object
+ *                   additionalProperties: true
+ *       401:
+ *         description: Unauthorized
+ *       404:
+ *         description: Booking not found (when "id" is provided but not owned by sitter)
+ *       405:
+ *         description: Method not allowed
+ *     security:
+ *       - cookieAuth: []
+ */
+
 function mapStatusNameToKey(name: string) {
   switch (name.toLowerCase()) {
     case "waiting for confirm":

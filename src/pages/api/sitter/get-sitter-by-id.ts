@@ -1,6 +1,70 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 import { prisma } from "@/lib/prisma/prisma";
 
+
+/**
+ * @openapi
+ * /sitter/get-sitter-by-id:
+ *   get:
+ *     tags: [Sitter]
+ *     summary: Get sitter detail by id (with paginated reviews)
+ *     parameters:
+ *       - in: query
+ *         name: id
+ *         required: true
+ *         schema: { type: integer, minimum: 1 }
+ *         description: Sitter ID
+ *       - in: query
+ *         name: page
+ *         required: false
+ *         schema: { type: integer, minimum: 1, default: 1 }
+ *         description: Review page (1-based)
+ *       - in: query
+ *         name: limit
+ *         required: false
+ *         schema: { type: integer, minimum: 1, default: 5 }
+ *         description: Reviews per page
+ *     responses:
+ *       200:
+ *         description: OK
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 data:
+ *                   type: object
+ *                   additionalProperties: true
+ *                   example:
+ *                     id: 42
+ *                     name: "Happy Paws"
+ *                     phone: "0891112222"
+ *                     user_sitter_id: 123
+ *                     owner: { id: 123, name: "Jane", profile_image: "https://..." }
+ *                     sitter_image: [{ id: 1, sitter_id: 42, image_url: "https://..." }]
+ *                     sitter_pet_type: [{ pet_type: { id: 1, pet_type_name: "Dog" } }]
+ *                     averageRating: 4.6
+ *                     reviews: [
+ *                       {
+ *                         id: 9001,
+ *                         rating: 5,
+ *                         comment: "Great service",
+ *                         created_at: "2025-10-20T10:00:00.000Z",
+ *                         user: { id: 7, name: "Bob", profile_image: "https://..." }
+ *                       }
+ *                     ]
+ *                     reviewPagination: { page: 1, limit: 5, totalCount: 12, totalPages: 3 }
+ *       400:
+ *         description: Invalid sitter ID
+ *       404:
+ *         description: Not found
+ *       405:
+ *         description: Method not allowed
+ *       500:
+ *         description: Error fetching sitter
+ */
+
+
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== "GET") {
     res.setHeader("Allow", ["GET"]);
