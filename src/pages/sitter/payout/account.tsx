@@ -9,8 +9,11 @@ import { BankSelect } from "@/lib/utils/data-select";
 import InputText from "@/components/input/InputText";
 import toast, { Toaster } from "react-hot-toast";
 import { PetPawLoading } from "@/components/loading/PetPawLoading";
-import BookBankUpload, { BookBankState } from "@/components/form/BookBankUpload";
+import BookBankUpload, {
+  BookBankState,
+} from "@/components/form/BookBankUpload";
 import { uploadToCloudinary } from "@/lib/cloudinary/upload-to-cloudinary";
+import PayoutConfirmation from "@/components/modal/PayoutConfirmation";
 
 type GetSitterResponse = {
   user: { id: number; name: string; profile_image: string | null };
@@ -35,26 +38,29 @@ export default function PetSitterAccountPage() {
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
   const [isSaving, setIsSaving] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   useEffect(() => {
     (async () => {
       try {
-      const { data } = await axios.get<GetSitterResponse>(
-        "/api/sitter/get-profile-sitter"
-      );
-      setUserName(data.user.name || data.sitter?.name || "");
-      setAvatarUrl(data.user.profile_image || "/icons/avatar-placeholder.svg");
-      setAccountNumber(data.sitter?.bank_account_number || "");
-      setAccountName(data.sitter?.account_name || "");
-      setBankName(data.sitter?.bank_name || "");
-      setBookBankState({
-        existingImageUrl: data.sitter?.book_bank_image || "",
-      });
-    } catch {
-      toast.error("Failed to load bank account information.");
-    } finally {
-      setLoading(false);
-    }
+        const { data } = await axios.get<GetSitterResponse>(
+          "/api/sitter/get-profile-sitter"
+        );
+        setUserName(data.user.name || data.sitter?.name || "");
+        setAvatarUrl(
+          data.user.profile_image || "/icons/avatar-placeholder.svg"
+        );
+        setAccountNumber(data.sitter?.bank_account_number || "");
+        setAccountName(data.sitter?.account_name || "");
+        setBankName(data.sitter?.bank_name || "");
+        setBookBankState({
+          existingImageUrl: data.sitter?.book_bank_image || "",
+        });
+      } catch {
+        toast.error("Failed to load bank account information.");
+      } finally {
+        setLoading(false);
+      }
     })();
   }, []);
 
@@ -89,21 +95,23 @@ export default function PetSitterAccountPage() {
     }
     try {
       setIsSaving(true);
-      
       let bookBankImageUrl = bookBankState.existingImageUrl;
-      
+
       // Upload new image
       if (bookBankState.newImageFile) {
         try {
-          bookBankImageUrl = await uploadToCloudinary(bookBankState.newImageFile, {
-            folder: "sitter-book-bank"
-          });
+          bookBankImageUrl = await uploadToCloudinary(
+            bookBankState.newImageFile,
+            {
+              folder: "sitter-book-bank",
+            }
+          );
         } catch {
           toast.error("Failed to upload book bank image. Please try again.");
           return;
         }
       }
-      
+
       await axios.put("/api/sitter/put-sitter", {
         bank_account_number: accountNumber,
         account_name: accountName,
@@ -113,7 +121,7 @@ export default function PetSitterAccountPage() {
       toast.success("Bank information updated successfully!");
     } catch {
       toast.error("Failed to update bank information. Please try again.");
-    } finally {
+    }finally {
       setIsSaving(false);
     }
   };
@@ -126,89 +134,95 @@ export default function PetSitterAccountPage() {
         {loading ? (
           <PetPawLoading message="Loading Bank Account" size="lg" />
         ) : (
-        <div className="px-6 py-8">
-          <div className="flex items-center justify-between mb-6">
-            <div className=" flex gap-4">
+          <div className="px-6 py-8">
+            <div className="flex items-center justify-between mb-6">
+              <div className=" flex gap-4">
+                <button
+                  onClick={() => router.back()}
+                  className="text-gray-6 text-2xl cursor-pointer"
+                >
+                  <Image
+                    src="/icons/arrow-left.svg"
+                    alt="arrow-left"
+                    width={12}
+                    height={12}
+                    className="w-3 h-3"
+                  />
+                </button>
+                <h1 className="text-2xl font-semibold">Payout Option</h1>
+              </div>
               <button
-                onClick={() => router.back()}
-                className="text-gray-6 text-2xl cursor-pointer"
+                onClick={() => setIsModalOpen(true)}
+                className="bg-orange-5 text-white px-9 py-3 rounded-full font-semibold hover:bg-orange-6 cursor-pointer"
               >
-                <Image
-                  src="/icons/arrow-left.svg"
-                  alt="arrow-left"
-                  width={12}
-                  height={12}
-                  className="w-3 h-3"
-                />
+                {isSaving ? "Saving..." : "Update"}
               </button>
-              <h1 className="text-2xl font-semibold">Payout Option</h1>
-            </div>
-            <button
-              onClick={handleUpdate}
-              className="bg-orange-5 text-white px-9 py-3 rounded-full font-semibold hover:bg-orange-6 cursor-pointer"
-            >
-              {isSaving ? "Saving..." : "Update"}
-            </button>
-          </div>
-
-          <div className="bg-white p-6 rounded-2xl shadow-sm">
-            <div className="flex flex-col items-start mb-6">
-            <label className="block font-medium mb-3">Book Bank Image*</label>
-            <BookBankUpload
-              initialImageUrl={bookBankState.existingImageUrl}
-              onChange={setBookBankState}
-            />
-            {errors.book_bank_image && (
-              <p className="text-red text-sm mt-1">{errors.book_bank_image}</p>
-            )}
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div>
-                <InputText
-                  placeholder=""
-                  label="Bank Account Number*"
-                  type="text"
-                  value={accountNumber}
-                  onChange={(e) => setAccountNumber(e.target.value)}
-                  variant={errors.bank_account_number ? "error" : "default"}
-                  className="w-full h-12 border border-gray-2 rounded-md px-4 py-3"
+            <div className="bg-white p-6 rounded-2xl shadow-sm">
+              <div className="flex flex-col items-start mb-6">
+                <label className="block font-medium mb-3">
+                  Book Bank Image*
+                </label>
+                <BookBankUpload
+                  initialImageUrl={bookBankState.existingImageUrl}
+                  onChange={setBookBankState}
                 />
-                {errors.bank_account_number && (
+                {errors.book_bank_image && (
                   <p className="text-red text-sm mt-1">
-                    {errors.bank_account_number}
+                    {errors.book_bank_image}
                   </p>
                 )}
               </div>
-              <div>
-                <InputText
-                  placeholder=""
-                  label="Account Name*"
-                  type="text"
-                  value={accountName}
-                  onChange={(e) => setAccountName(e.target.value)}
-                  variant={errors.account_name ? "error" : "default"}
-                  className="w-full h-12 border border-gray-2 rounded-md px-4 py-3"
-                />
-                {errors.account_name && (
-                  <p className="text-red text-sm mt-1">{errors.account_name}</p>
-                )}
-              </div>
-              <div>
-                <CustomSelect
-                  placeholder="Select Bank"
-                  label="Bank Name*"
-                  value={bankName}
-                  onChange={setBankName}
-                  options={BankSelect}
-                  variant="default"
-                  triggerSize="w-full !h-12"
-                />
-                {errors.bank_name && (
-                  <p className="text-red text-sm mt-1">{errors.bank_name}</p>
-                )}
 
-                {/* <Select value={bankName} onValueChange={setBankName}>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <InputText
+                    placeholder=""
+                    label="Bank Account Number*"
+                    type="text"
+                    value={accountNumber}
+                    onChange={(e) => setAccountNumber(e.target.value)}
+                    variant={errors.bank_account_number ? "error" : "default"}
+                    className="w-full h-12 border border-gray-2 rounded-md px-4 py-3"
+                  />
+                  {errors.bank_account_number && (
+                    <p className="text-red text-sm mt-1">
+                      {errors.bank_account_number}
+                    </p>
+                  )}
+                </div>
+                <div>
+                  <InputText
+                    placeholder=""
+                    label="Account Name*"
+                    type="text"
+                    value={accountName}
+                    onChange={(e) => setAccountName(e.target.value)}
+                    variant={errors.account_name ? "error" : "default"}
+                    className="w-full h-12 border border-gray-2 rounded-md px-4 py-3"
+                  />
+                  {errors.account_name && (
+                    <p className="text-red text-sm mt-1">
+                      {errors.account_name}
+                    </p>
+                  )}
+                </div>
+                <div>
+                  <CustomSelect
+                    placeholder="Select Bank"
+                    label="Bank Name*"
+                    value={bankName}
+                    onChange={setBankName}
+                    options={BankSelect}
+                    variant="default"
+                    triggerSize="w-full !h-12"
+                  />
+                  {errors.bank_name && (
+                    <p className="text-red text-sm mt-1">{errors.bank_name}</p>
+                  )}
+
+                  {/* <Select value={bankName} onValueChange={setBankName}>
                   <SelectTrigger className="w-full border-gray-2 !h-12 px-4 bg-white focus:invisible">
                     <SelectValue placeholder="Select bank" />
                   </SelectTrigger>
@@ -305,13 +319,22 @@ export default function PetSitterAccountPage() {
                     </SelectItem>
                   </SelectContent>
                 </Select> */}
+                </div>
               </div>
             </div>
           </div>
-        </div>
         )}
       </section>
       <Toaster position="top-right" />
+
+      <PayoutConfirmation
+        open={isModalOpen}
+        onOpenChange={setIsModalOpen}
+        onConfirm={() => {
+          setIsModalOpen(false);
+          handleUpdate();
+        }}
+      />
     </main>
   );
 }
