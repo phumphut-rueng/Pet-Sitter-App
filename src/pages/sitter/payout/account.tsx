@@ -9,6 +9,8 @@ import { BankSelect } from "@/lib/utils/data-select";
 import InputText from "@/components/input/InputText";
 import toast, { Toaster } from "react-hot-toast";
 import { PetPawLoading } from "@/components/loading/PetPawLoading";
+import BookBankUpload, { BookBankState } from "@/components/form/BookBankUpload";
+import { uploadToCloudinary } from "@/lib/cloudinary/upload-to-cloudinary";
 
 type GetSitterResponse = {
   user: { id: number; name: string; profile_image: string | null };
@@ -18,6 +20,7 @@ type GetSitterResponse = {
     bank_account_number: string | null;
     account_name: string | null;
     bank_name: string | null;
+    book_bank_image: string | null;
   };
 };
 
@@ -28,6 +31,7 @@ export default function PetSitterAccountPage() {
   const [accountNumber, setAccountNumber] = useState("");
   const [accountName, setAccountName] = useState("");
   const [bankName, setBankName] = useState("");
+  const [bookBankState, setBookBankState] = useState<BookBankState>({});
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
   const [isSaving, setIsSaving] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -43,6 +47,9 @@ export default function PetSitterAccountPage() {
       setAccountNumber(data.sitter?.bank_account_number || "");
       setAccountName(data.sitter?.account_name || "");
       setBankName(data.sitter?.bank_name || "");
+      setBookBankState({
+        existingImageUrl: data.sitter?.book_bank_image || "",
+      });
     } catch (error) {
       toast.error("Failed to load bank account information.");
     } finally {
@@ -68,6 +75,10 @@ export default function PetSitterAccountPage() {
       newErrors.bank_name = "Please select a bank.";
     }
 
+    if (!bookBankState.existingImageUrl && !bookBankState.newImageFile) {
+      newErrors.book_bank_image = "Please upload your book bank image.";
+    }
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -78,10 +89,26 @@ export default function PetSitterAccountPage() {
     }
     try {
       setIsSaving(true);
+      
+      let bookBankImageUrl = bookBankState.existingImageUrl;
+      
+      // Upload new image
+      if (bookBankState.newImageFile) {
+        try {
+          bookBankImageUrl = await uploadToCloudinary(bookBankState.newImageFile, {
+            folder: "sitter-book-bank"
+          });
+        } catch (uploadError) {
+          toast.error("Failed to upload book bank image. Please try again.");
+          return;
+        }
+      }
+      
       await axios.put("/api/sitter/put-sitter", {
         bank_account_number: accountNumber,
         account_name: accountName,
         bank_name: bankName,
+        book_bank_image: bookBankImageUrl,
       });
       toast.success("Bank information updated successfully!");
     } catch (error) {
@@ -104,7 +131,7 @@ export default function PetSitterAccountPage() {
             <div className=" flex gap-4">
               <button
                 onClick={() => router.back()}
-                className="text-gray-6 text-2xl"
+                className="text-gray-6 text-2xl cursor-pointer"
               >
                 <Image
                   src="/icons/arrow-left.svg"
@@ -118,15 +145,23 @@ export default function PetSitterAccountPage() {
             </div>
             <button
               onClick={handleUpdate}
-              className="bg-orange-5 text-white px-9 py-3 rounded-full font-semibold hover:bg-orange-6"
+              className="bg-orange-5 text-white px-9 py-3 rounded-full font-semibold hover:bg-orange-6 cursor-pointer"
             >
               {isSaving ? "Saving..." : "Update"}
             </button>
           </div>
 
           <div className="bg-white p-6 rounded-2xl shadow-sm">
+            <div className="flex flex-col items-start mb-6">
             <label className="block font-medium mb-3">Book Bank Image*</label>
-            <div className="w-50 h-60 bg-gray-2 mb-10"></div>
+            <BookBankUpload
+              initialImageUrl={bookBankState.existingImageUrl}
+              onChange={setBookBankState}
+            />
+            {errors.book_bank_image && (
+              <p className="text-red text-sm mt-1">{errors.book_bank_image}</p>
+            )}
+            </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>

@@ -141,6 +141,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         bank_name: sitter.bank_name,
         bank_account_number: sitter.bank_account_number,
         account_name: sitter.account_name,
+        book_bank_image: sitter.book_bank_image,
         petTypes: sitter.sitter_pet_type.map((sp) => ({
           id: sp.pet_type_id,
           name: sp.pet_type.pet_type_name,

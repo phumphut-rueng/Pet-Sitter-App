@@ -101,6 +101,7 @@ type Body = {
   bank_account_number?: string;
   account_name?: string;
   bank_name?: string;
+  book_bank_image?: string;
 };
 
 export default async function handler(
@@ -253,6 +254,7 @@ export default async function handler(
             ? { account_name: b.account_name || null }
             : {}),
           ...(b.bank_name !== undefined ? { bank_name: b.bank_name || null } : {}),
+          ...(b.book_bank_image !== undefined ? { book_bank_image: b.book_bank_image || null } : {}),
           updated_at: new Date(),
         };
 
@@ -293,6 +295,7 @@ export default async function handler(
             ? { account_name: b.account_name || null }
             : {}),
           ...(b.bank_name !== undefined ? { bank_name: b.bank_name || null } : {}),
+          ...(b.book_bank_image !== undefined ? { book_bank_image: b.book_bank_image || null } : {}),
           updated_at: new Date(),
         };
 
