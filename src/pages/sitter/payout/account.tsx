@@ -50,7 +50,7 @@ export default function PetSitterAccountPage() {
       setBookBankState({
         existingImageUrl: data.sitter?.book_bank_image || "",
       });
-    } catch (error) {
+    } catch {
       toast.error("Failed to load bank account information.");
     } finally {
       setLoading(false);
@@ -98,7 +98,7 @@ export default function PetSitterAccountPage() {
           bookBankImageUrl = await uploadToCloudinary(bookBankState.newImageFile, {
             folder: "sitter-book-bank"
           });
-        } catch (uploadError) {
+        } catch {
           toast.error("Failed to upload book bank image. Please try again.");
           return;
         }
@@ -111,7 +111,7 @@ export default function PetSitterAccountPage() {
         book_bank_image: bookBankImageUrl,
       });
       toast.success("Bank information updated successfully!");
-    } catch (error) {
+    } catch {
       toast.error("Failed to update bank information. Please try again.");
     } finally {
       setIsSaving(false);
