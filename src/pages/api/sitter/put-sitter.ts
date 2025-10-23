@@ -98,6 +98,9 @@ type Body = {
   images?: string[];
   latitude?: number | null;
   longitude?: number | null;
+  bank_account_number?: string;
+  account_name?: string;
+  bank_name?: string;
 };
 
 export default async function handler(
@@ -243,6 +246,13 @@ export default async function handler(
             : {}),
           ...(hasLatitude ? { latitude: b.latitude ?? null } : {}),
           ...(hasLongtitude ? { longitude: b.longitude ?? null } : {}),
+          ...(b.bank_account_number !== undefined
+            ? { bank_account_number: b.bank_account_number || null }
+            : {}),
+          ...(b.account_name !== undefined
+            ? { account_name: b.account_name || null }
+            : {}),
+          ...(b.bank_name !== undefined ? { bank_name: b.bank_name || null } : {}),
           updated_at: new Date(),
         };
 
@@ -276,6 +286,13 @@ export default async function handler(
             : {}),
           ...(hasLatitude ? { latitude: b.latitude ?? null } : {}),
           ...(hasLongtitude ? { longitude: b.longitude ?? null } : {}),
+          ...(b.bank_account_number !== undefined
+            ? { bank_account_number: b.bank_account_number || null }
+            : {}),
+          ...(b.account_name !== undefined
+            ? { account_name: b.account_name || null }
+            : {}),
+          ...(b.bank_name !== undefined ? { bank_name: b.bank_name || null } : {}),
           updated_at: new Date(),
         };
 

@@ -6,39 +6,99 @@ import PetSitterNavbar from "@/components/PetSitterNavbar";
 import Image from "next/image";
 import { CustomSelect } from "@/components/dropdown/CustomSelect";
 import { BankSelect } from "@/lib/utils/data-select";
-
-const mockBankAccount = {
-  accountNumber: "11333-45-543-444",
-  accountName: "Jane Maison",
-  bankName: "SCB",
-};
+import InputText from "@/components/input/InputText";
+import toast, { Toaster } from "react-hot-toast";
+import { PetPawLoading } from "@/components/loading/PetPawLoading";
 
 type GetSitterResponse = {
   user: { id: number; name: string; profile_image: string | null };
-  sitter: null | { id: number; name: string | null };
+  sitter: null | {
+    id: number;
+    name: string | null;
+    bank_account_number: string | null;
+    account_name: string | null;
+    bank_name: string | null;
+  };
 };
 
 export default function PetSitterAccountPage() {
   const router = useRouter();
   const [userName, setUserName] = useState("");
   const [avatarUrl, setAvatarUrl] = useState("/icons/avatar-placeholder.svg");
-  const [bankName, setBankName] = useState(mockBankAccount.bankName);
+  const [accountNumber, setAccountNumber] = useState("");
+  const [accountName, setAccountName] = useState("");
+  const [bankName, setBankName] = useState("");
+  const [errors, setErrors] = useState<{ [key: string]: string }>({});
+  const [isSaving, setIsSaving] = useState(false);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     (async () => {
+      try {
       const { data } = await axios.get<GetSitterResponse>(
         "/api/sitter/get-profile-sitter"
       );
       setUserName(data.user.name || data.sitter?.name || "");
       setAvatarUrl(data.user.profile_image || "/icons/avatar-placeholder.svg");
+      setAccountNumber(data.sitter?.bank_account_number || "");
+      setAccountName(data.sitter?.account_name || "");
+      setBankName(data.sitter?.bank_name || "");
+    } catch (error) {
+      toast.error("Failed to load bank account information.");
+    } finally {
+      setLoading(false);
+    }
     })();
   }, []);
+
+  const validateFields = () => {
+    const newErrors: Record<string, string> = {};
+
+    if (!accountNumber.trim()) {
+      newErrors.bank_account_number = "Please enter your bank account number.";
+    } else if (!/^\d{10,14}$/.test(accountNumber.trim())) {
+      newErrors.bank_account_number = "Invalid bank account number format.";
+    }
+
+    if (!accountName.trim()) {
+      newErrors.account_name = "Please enter the account holder name.";
+    }
+
+    if (!bankName.trim()) {
+      newErrors.bank_name = "Please select a bank.";
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  const handleUpdate = async () => {
+    if (!validateFields()) {
+      return;
+    }
+    try {
+      setIsSaving(true);
+      await axios.put("/api/sitter/put-sitter", {
+        bank_account_number: accountNumber,
+        account_name: accountName,
+        bank_name: bankName,
+      });
+      toast.success("Bank information updated successfully!");
+    } catch (error) {
+      toast.error("Failed to update bank information. Please try again.");
+    } finally {
+      setIsSaving(false);
+    }
+  };
 
   return (
     <main className="flex container-1200 !px-0 bg-gray-1">
       <SitterSidebar className="min-w-0" />
       <section className="flex-1 min-w-0">
         <PetSitterNavbar avatarUrl={avatarUrl} name={userName} />
+        {loading ? (
+          <PetPawLoading message="Loading Bank Account" size="lg" />
+        ) : (
         <div className="px-6 py-8">
           <div className="flex items-center justify-between mb-6">
             <div className=" flex gap-4">
@@ -56,8 +116,11 @@ export default function PetSitterAccountPage() {
               </button>
               <h1 className="text-2xl font-semibold">Payout Option</h1>
             </div>
-            <button className="bg-orange-5 text-white px-9 py-3 rounded-full font-semibold hover:bg-orange-6">
-              Update
+            <button
+              onClick={handleUpdate}
+              className="bg-orange-5 text-white px-9 py-3 rounded-full font-semibold hover:bg-orange-6"
+            >
+              {isSaving ? "Saving..." : "Update"}
             </button>
           </div>
 
@@ -67,33 +130,48 @@ export default function PetSitterAccountPage() {
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
-                <label className="block font-medium mb-1">
-                  Bank Account Number*
-                </label>
-                <input
+                <InputText
+                  placeholder=""
+                  label="Bank Account Number*"
                   type="text"
-                  defaultValue={mockBankAccount.accountNumber}
-                  className="w-full border border-gray-2 rounded-md px-4 py-3"
+                  value={accountNumber}
+                  onChange={(e) => setAccountNumber(e.target.value)}
+                  variant={errors.bank_account_number ? "error" : "default"}
+                  className="w-full h-12 border border-gray-2 rounded-md px-4 py-3"
                 />
+                {errors.bank_account_number && (
+                  <p className="text-red text-sm mt-1">
+                    {errors.bank_account_number}
+                  </p>
+                )}
               </div>
               <div>
-                <label className="block font-medium mb-1">Account Name*</label>
-                <input
+                <InputText
+                  placeholder=""
+                  label="Account Name*"
                   type="text"
-                  defaultValue={mockBankAccount.accountName}
-                  className="w-full border border-gray-2 rounded-md px-4 py-3"
+                  value={accountName}
+                  onChange={(e) => setAccountName(e.target.value)}
+                  variant={errors.account_name ? "error" : "default"}
+                  className="w-full h-12 border border-gray-2 rounded-md px-4 py-3"
                 />
+                {errors.account_name && (
+                  <p className="text-red text-sm mt-1">{errors.account_name}</p>
+                )}
               </div>
               <div>
-                <label className="block font-medium mb-1">Bank Name*</label>
                 <CustomSelect
+                  placeholder="Select Bank"
+                  label="Bank Name*"
                   value={bankName}
                   onChange={setBankName}
                   options={BankSelect}
-                  placeholder="Select bank"
                   variant="default"
                   triggerSize="w-full !h-12"
                 />
+                {errors.bank_name && (
+                  <p className="text-red text-sm mt-1">{errors.bank_name}</p>
+                )}
 
                 {/* <Select value={bankName} onValueChange={setBankName}>
                   <SelectTrigger className="w-full border-gray-2 !h-12 px-4 bg-white focus:invisible">
@@ -196,7 +274,9 @@ export default function PetSitterAccountPage() {
             </div>
           </div>
         </div>
+        )}
       </section>
+      <Toaster position="top-right" />
     </main>
   );
 }
