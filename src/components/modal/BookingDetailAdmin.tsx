@@ -1,30 +1,17 @@
-import AlertConfirm from "@/components/modal/AlertConfirm";
+import Image from "next/image";
+
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogClose,
+} from "@/components/ui/dialog";
+
 import type {
   BookingCardProps,
-  BookingStatus,
 } from "@/components/cards/BookingCard";
-
-const STATUS_CONFIG = {
-  waiting: { dot: "bg-gray-4", text: "text-gray-9", label: "Waiting for confirm" },
-  waiting_for_service: { dot: "bg-pink", text: "text-pink", label: "Waiting for Service"},
-  in_service: { dot: "bg-blue", text: "text-blue", label: "In service" },
-  success: { dot: "bg-green", text: "text-green", label: "Success" },
-  canceled: { dot: "bg-red", text: "text-red", label: "Canceled" },
-} as const;
-
-const ICONS = {
-  edit: "M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25ZM20.71 7.04a1 1 0 0 0 0-1.41l-2.34-2.34a1 1 0 0 0-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83Z",
-  mapPin:
-    "M12 2a7 7 0 0 0-7 7c0 5.25 7 13 7 13s7-7.75 7-13a7 7 0 0 0-7-7Zm0 9.5A2.5 2.5 0 1 1 12 6a2.5 2.5 0 0 1 0 5Z",
-};
-
-function Icon({ d, className = "h-4 w-4" }: { d: string; className?: string }) {
-  return (
-    <svg viewBox="0 0 24 24" fill="currentColor" className={className}>
-      <path d={d} />
-    </svg>
-  );
-}
+import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
 
 export interface BookingDetailDialogProps {
   open: boolean;
@@ -35,7 +22,12 @@ export interface BookingDetailDialogProps {
         transactionNo?: string;
         ownerName?: string;
         pets?: number;
-        petsDetail?: Array<{ id: number; name: string; img?: string | null; species?: string }>;
+        petsDetail?: Array<{
+          id: number;
+          name: string;
+          img?: string | null;
+          species?: string;
+        }>;
       })
     | null;
   onChangeDateTime?: () => void;
@@ -46,178 +38,86 @@ export default function BookingDetailDialog({
   open,
   onOpenChange,
   booking,
-  onChangeDateTime,
-  onViewMap,
 }: BookingDetailDialogProps) {
   if (!booking) return null;
-  const statusCfg = STATUS_CONFIG[booking.status as BookingStatus];
-
-  function truncateText(text: string, maxLength: number): string {
-    if (!text) return "";
-    return text.length > maxLength ? text.slice(0, maxLength) + "..." : text;
-  }
 
   const formatTHB = (n: number) =>
-    new Intl.NumberFormat("th-TH", { style: "currency", currency: "THB", minimumFractionDigits: 2 }).format(n);
-  
+    new Intl.NumberFormat("th-TH", {
+      style: "currency",
+      currency: "THB",
+      minimumFractionDigits: 2,
+    }).format(n);
 
   return (
-    <AlertConfirm
-      open={open}
-      onOpenChange={onOpenChange}
-      width={600}
-      maxWidth="95vw"
-      title="Booking Detail"
-      description={
-        <div className="px-5 md:px-8 pt-3 pb-4 text-[15px] md:text-[16px] font-medium w-full max-w-full mx-auto overflow-x-hidden">
-          {/* Status */}
-          <div
-            className={`mb-4 md:mb-6 ${statusCfg.text} text-[15px] md:text-[16px] font-medium`}
-          >
-            <span
-              className={`mr-2 inline-block h-2 w-2 rounded-full ${statusCfg.dot}`}
-            />
-            {statusCfg.label}
-          </div>
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="sm:max-w-[700px] p-8">
+        <DialogHeader>
+          <DialogTitle className="text-2xl font-bold">
+            {booking.ownerName}
+          </DialogTitle>
+          <DialogClose />
+        </DialogHeader>
+        <div className="mt-4 space-y-6">
+          <InfoRow label="Pet Owner Name" value={booking.ownerName} />
+          <InfoRow label="Pet(s)" value={booking.pets} />
 
-          {/* Transaction Info */}
-          <div className="mb-5 md:mb-6 text-[14px] md:text-[16px] leading-5 font-medium text-gray-4">
-            <div>Transaction date: {booking.transactionDate}</div>
-            <div>Transaction No.: {booking.transactionNo ?? "—"}</div>
-          </div>
-
-          {/* Pet Sitter */}
-          <Section label="Pet Sitter:">
-            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-2 md:gap-4">
-            <div
-  className="text-gray-9 text-[15px] min-w-0"
-  title={`${booking.title} By ${booking.sitterName}`}
->
-  {truncateText(booking.title, 25)}{" "}
-  <span className="text-gray-9">By</span>{" "}
-  {truncateText(booking.sitterName, 20)}
-</div>
-              <button
-                className="flex items-center gap-1 text-[14px] md:text-[16px] font-medium text-orange-5 hover:text-orange-6"
-                onClick={onViewMap}
-              >
-                <Icon d={ICONS.mapPin} className="h-4 w-4" />
-                View Map
-              </button>
-            </div>
-          </Section>
-
-          {/* Owner + Pets Summary */}
-          {booking.ownerName && (
-            <Section label="Pet Owner Name">
-              <div className="text-gray-9 text-[15px] md:text-[16px]">{booking.ownerName}</div>
-            </Section>
-          )}
-          {typeof booking.pets === "number" && (
-            <Section label="Pet(s)">
-              <div className="text-gray-9 text-[15px] md:text-[16px]">{booking.pets}</div>
-            </Section>
-          )}
-
-          {/* Pets Detail Grid */}
-          {booking.petsDetail && booking.petsDetail.length > 0 && (
-            <Section label="Pet Detail">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 md:gap-4">
-                {booking.petsDetail.map((p) => (
-                  <div key={p.id} className="flex items-center gap-3 rounded-lg border border-gray-2 bg-white p-3">
-                    <div className="relative h-14 w-14 rounded-full overflow-hidden ring-1 ring-border flex-shrink-0">
-                      {p.img ? (
-                        // eslint-disable-next-line @next/next/no-img-element
-                        <img src={p.img} alt={p.name} className="h-full w-full object-cover" />
-                      ) : (
-                        <div className="h-full w-full bg-gray-200" />
-                      )}
-                    </div>
-                    <div className="min-w-0">
-                      <div className="text-gray-9 text-[15px] md:text-[16px] font-medium truncate">{p.name}</div>
-                      {p.species && (
-                        <span className="inline-block mt-1 rounded-full border border-green-300 text-green px-2 py-[2px] text-[12px]">
-                          {p.species}
-                        </span>
-                      )}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </Section>
-          )}
-
-          {/* Date & Time */}
-          <Section label="Date & Time:">
-            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-2 md:gap-4">
-              <div className="text-gray-9 text-[15px] md:text-[16px] break-words">
-                {booking.dateTime}
-              </div>
-              {(booking.status === "waiting" || booking.status === "waiting_for_service") && (
-                <button
-                  onClick={onChangeDateTime}
-                  className="flex items-center gap-1 text-[14px] md:text-[16px] font-medium text-orange-5 hover:text-orange-6"
+          <div>
+            <p className="text-sm text-gray-500 mb-2">Pet Detail</p>
+            <div className="flex justify-center gap-4 flex-wrap">
+              {booking.petsDetail?.map((pet) => (
+                <div
+                  key={pet.id}
+                  className="flex flex-col items-center w-full sm:w-[40%] text-center p-4 border rounded-xl"
                 >
-                  <Icon d={ICONS.edit} className="h-4 w-4" />
-                  Change
-                </button>
-              )}
+                  <Avatar className="w-24 h-24">
+                    <AvatarImage
+                      src={pet.img || "/images/avatar-default.png"}
+                      alt={pet.name}
+                      className="object-cover"
+                    />
+                    <AvatarFallback>{pet.name.charAt(0)}</AvatarFallback>
+                  </Avatar>
+                  <p className="font-semibold mt-2">{pet.name}</p>
+                  {pet.species && (
+                    <span className="mt-1 text-sm text-green-600 bg-green-100 border border-green-200 px-3 py-0.5 rounded-full">
+                      {pet.species}
+                    </span>
+                  )}
+                </div>
+              ))}
             </div>
-          </Section>
+          </div>
 
-          {/* Duration */}
-          <Section label="Duration:">
-            <div className="text-gray-9 text-[15px] md:text-[16px]">
-              {booking.duration}
+          <InfoRow label="Duration" value={booking.duration} />
+          <InfoRow label="Booking Date" value={booking.dateTime} />
+
+          <div className="pt-4">
+            <div className="flex justify-between items-center">
+              <p className="text-sm text-gray-500">Total Paid</p>
+              <p className="font-bold text-lg">
+                {typeof booking.totalTHB === "number"
+                  ? formatTHB(booking.totalTHB)
+                  : "— THB"}
+              </p>
             </div>
-          </Section>
-
-          {/* Pet */}
-          <Section label="Pet:">
-            <div className="text-gray-9 text-[15px] md:text-[16px]">
-              {booking.pet}
-            </div>
-          </Section>
-
-          {/* Divider + Total */}
-          {/* Divider + Total */}
-<div className="mt-5 md:mt-6 border-t border-gray-2 pt-4">
-  <div className="flex items-center justify-between">
-    <span className="text-[15px] md:text-[16px] font-medium text-black">
-      Total
-    </span>
-
-    {typeof booking.totalTHB === "number" ? (
-      <span className="text-[15px] md:text-[16px] font-bold text-gray-9">
-        {formatTHB(booking.totalTHB)}
-        {/* ถ้าอยากได้สไตล์ `1,234 THB` แบบเดิมก็ใช้:
-            {booking.totalTHB.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} THB
-        */}
-      </span>
-    ) : (
-      <span className="text-[16px] font-bold text-ink">— THB</span>
-    )}
-  </div>
-</div>
+          </div>
         </div>
-      }
-    />
+      </DialogContent>
+    </Dialog>
   );
 }
 
-function Section({
+function InfoRow({
   label,
-  children,
+  value,
 }: {
   label: string;
-  children: React.ReactNode;
+  value: string | number | undefined;
 }) {
   return (
-    <div className="mb-4 md:mb-5">
-      <div className="mb-1 text-[13px] md:text-[14px] font-medium text-gray-6">
-        {label}
-      </div>
-      {children}
+    <div>
+      <p className="text-sm text-gray-500">{label}</p>
+      <p className="font-semibold">{value}</p>
     </div>
   );
 }
