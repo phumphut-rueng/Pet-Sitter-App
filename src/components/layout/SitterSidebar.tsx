@@ -19,7 +19,7 @@ type SitterSidebarProps = {
 const SITTER_ITEMS: SidebarItem[] = [
   { id: "profile",  label: "Pet Sitter Profile", href: "/sitter/profile",  icon: "/icons/ic-user.svg" },
   { id: "booking",  label: "Booking List",       href: "/sitter/booking",  icon: "/icons/ic-list.svg" },
-  { id: "calendar", label: "Calendar",           href: "/sitter/calendar", icon: "/icons/ic-calendar.svg" },
+  //{ id: "calendar", label: "Calendar",           href: "/sitter/calendar", icon: "/icons/ic-calendar.svg" },
   { id: "payout",   label: "Payout Option",      href: "/sitter/payout",   icon: "/icons/ic-creditcard.svg" },
 ];
 
