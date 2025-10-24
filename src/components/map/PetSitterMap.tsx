@@ -138,7 +138,7 @@ export default function PetSitterMap({
   }
 
   return (
-    <div className="relative">
+    <div className="relative z-10">
       <div className="h-[600px] w-full">
         <LeafletMap
           latitude={centerLat}
@@ -157,7 +157,7 @@ export default function PetSitterMap({
 
       {/* Sitter Cards Carousel on the right side */}
       {pins.length > 0 && (
-        <div className="absolute flex justify-center w-full bottom-4 left-0 right-0 z-999">
+        <div className="absolute flex justify-center w-full bottom-4 left-0 right-0 z-[999]">
           <div
             ref={carouselRef}
             className="flex overflow-x-auto space-x-4 scrollbar-hide"
