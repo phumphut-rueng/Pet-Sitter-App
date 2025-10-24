@@ -1,3 +1,4 @@
+"use client";
 import {
     AlertDialog,
     AlertDialogCancel,
@@ -6,7 +7,7 @@ import {
 } from "@/components/ui/alert-dialog"
 
 interface AlertConfirmProps {
-    title: string
+    title: React.ReactNode; 
     open: boolean
     width?: number
     maxWidth?: string
