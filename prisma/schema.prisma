@@ -2,6 +2,13 @@ generator client {
   provider = "prisma-client-js"
 }
 
+generator erd {
+  provider = "prisma-erd-generator"
+  output   = "erd.svg"
+  layout = "fdp" // ลองเปลี่ยนเป็น "neato" หรือ "fdp"
+  theme = "neutral" // หรือ "forest", "dark", "light"
+}
+
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
