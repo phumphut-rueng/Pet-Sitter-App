@@ -42,7 +42,7 @@ export default function PetSitterNavbar({
           href="/chat"
           aria-label="Messages"
           className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-gray-1
-          hover:bg-orange-1/40 hover:text-orange-5"
+          hover:bg-orange-1/40 hover:text-orange-5 cursor-pointer"
         >
           {/* <Image
             src="/icons/Messages.svg"

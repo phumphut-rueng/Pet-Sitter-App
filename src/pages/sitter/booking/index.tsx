@@ -132,6 +132,7 @@ export default function PetSitterBookingPage() {
                       options={statusSelect}
                       variant="filter"
                       triggerSize="w-[200px] !h-10"
+                      className="bg-white"
                     />
 
                     {/* <Select value={statusFilter} onValueChange={setStatusFilter}>

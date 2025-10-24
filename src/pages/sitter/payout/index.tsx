@@ -97,7 +97,7 @@ export default function PetSitterPayoutPage() {
         {
           loadingPayouts
             ? <PetPawLoading
-              message="Loading Pet Sitter Profile"
+              message="Loading Payout Option"
               size="lg"
             />
             : <>
