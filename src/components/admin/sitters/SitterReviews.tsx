@@ -1,9 +1,11 @@
+import { useState } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Star } from "lucide-react";
 import { Pagination } from "@/components/pagination/Pagination";
 import { PaginationInfo } from "@/components/pagination/PaginationInfo";
 import { PetPawLoadingSmall } from "@/components/loading/PetPawLoadingSmall";
 import { Trash2, Check } from "lucide-react";
+import ConfirmDeleteModal from "@/components/modal/ConfirmDeleteModal";
 
 interface Review {
   id: number;
@@ -53,6 +55,22 @@ export default function SitterReviews({
   itemsPerPage,
   onDelete,
 }: SitterReviewsProps) {
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [selectedReviewId, setSelectedReviewId] = useState<number | null>(null);
+
+  const handleDeleteClick = (reviewId: number) => {
+    setSelectedReviewId(reviewId);
+    setIsDeleteModalOpen(true);
+  };
+
+  const handleConfirmDelete = () => {
+    if (selectedReviewId) {
+      onDelete(selectedReviewId);
+    }
+    setIsDeleteModalOpen(false);
+    setSelectedReviewId(null);
+  };
+
   if (loading) {
     return (
       <div className="flex justify-center py-10">
@@ -96,10 +114,13 @@ export default function SitterReviews({
                   </p>
                 </div>
                 <div className="flex items-center gap-2">
-                    <button onClick={() => onDelete(review.id)} className="p-2 rounded-full hover:bg-red-100 text-gray-500 hover:text-red-600 transition-colors">
-                        <Trash2 className="h-5 w-5" />
-                    </button>
-                    <button className="p-2 rounded-full hover:bg-green-100 text-gray-500 hover:text-green-600 transition-colors">
+                  <button
+                    onClick={() => handleDeleteClick(review.id)}
+                    className="p-2 rounded-full hover:bg-red-100 text-gray-500 hover:text-red-600 transition-colors"
+                  >
+                    <Trash2 className="h-5 w-5" />
+                  </button>
+                  <button className="p-2 rounded-full hover:bg-green-100 text-gray-500 hover:text-green-600 transition-colors">
                         <Check className="h-5 w-5" />
                     </button>
                 </div>
@@ -129,6 +150,14 @@ export default function SitterReviews({
           />
         </div>
       )}
+
+      <ConfirmDeleteModal
+        open={isDeleteModalOpen}
+        onOpenChange={setIsDeleteModalOpen}
+        onConfirm={handleConfirmDelete}
+        title="Delete Confirmation"
+        description="Are you sure you want to delete this review?"
+      />
     </div>
   );
 }
