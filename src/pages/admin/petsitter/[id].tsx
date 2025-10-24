@@ -3,28 +3,16 @@ import { useState, useEffect, useCallback } from "react";
 import Head from "next/head";
 import AdminSidebar from "@/components/layout/AdminSidebar";
 import Link from "next/link";
-import Image from "next/image";
 import { ChevronLeft, X } from "lucide-react";
 import { StatusBadge, StatusKey } from "@/components/badges/StatusBadge";
-import { PetTypeBadge, PetTypeKey } from "@/components/badges/PetTypeBadge";
 import { PetPawLoading } from "@/components/loading/PetPawLoading";
-import { PetPawLoadingSmall } from "@/components/loading/PetPawLoadingSmall";
-import { Pagination } from "@/components/pagination/Pagination";
-import { PaginationInfo } from "@/components/pagination/PaginationInfo";
 import axios from "axios";
 import toast, { Toaster } from "react-hot-toast";
-import dynamic from "next/dynamic";
-import BookingDetailDialogAdmin from "@/components/modal/BookingDetailAdmin";
 import type { BookingCardProps, BookingStatus } from "@/components/cards/BookingCard";
-
-const LeafletMap = dynamic(() => import("@/components/form/LeafletMap"), {
-  ssr: false,
-  loading: () => (
-    <div className="h-[300px] w-full rounded-xl border border-gray-200 grid place-items-center">
-      <span className="text-sm text-gray-500">Loading map…</span>
-    </div>
-  ),
-});
+import SitterProfile from "@/components/admin/sitters/SitterProfile";
+import SitterBookings from "@/components/admin/sitters/SitterBookings";
+import SitterReviews from "@/components/admin/sitters/SitterReviews";
+import SitterHistory from "@/components/admin/sitters/SitterHistory";
 
 interface SitterDetail {
   id: number;
@@ -75,12 +63,12 @@ export default function PetSitterDetailPage() {
   const [rejectReason, setRejectReason] = useState("");
   const [historyData, setHistoryData] = useState([]);
   const [loadingHistory, setLoadingHistory] = useState(false);
-  const [currentPage, setCurrentPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
+  const [historyCurrentPage, setHistoryCurrentPage] = useState(1);
+  const [historyTotalPages, setHistoryTotalPages] = useState(1);
   const [totalHistoryCount, setTotalHistoryCount] = useState(0);
   const itemsPerPage = 8;
   const bookingsPerPage = 10;
-  
+
   // -------------------- Bookings (API) --------------------
   type BookingRowStatus =
     | "waitingConfirm"
@@ -109,28 +97,31 @@ export default function PetSitterDetailPage() {
     (BookingCardProps & { totalTHB?: number; transactionNo?: string }) | null
   >(null);
 
-  const fetchBookings = useCallback(async (page = 1) => {
-    if (!id) return;
-    try {
-      setLoadingBookings(true);
-      const resp = await axios.get(`/api/admin/petsitter/bookings`, {
-        params: { 
-          sitterId: Array.isArray(id) ? id[0] : id,
-          page,
-          limit: bookingsPerPage,
-        },
-      });
-      setBookings(resp.data?.data ?? []);
-      setBookingTotalPages(resp.data?.pagination?.totalPages ?? 1);
-      setBookingTotalRecords(resp.data?.pagination?.totalRecords ?? 0);
-      setBookingCurrentPage(page);
-    } catch (e) {
-      console.error("Error fetching bookings:", e);
-      setBookings([]);
-    } finally {
-      setLoadingBookings(false);
-    }
-  }, [id]);
+  const fetchBookings = useCallback(
+    async (page = 1) => {
+      if (!id) return;
+      try {
+        setLoadingBookings(true);
+        const resp = await axios.get(`/api/admin/petsitter/bookings`, {
+          params: {
+            sitterId: Array.isArray(id) ? id[0] : id,
+            page,
+            limit: bookingsPerPage,
+          },
+        });
+        setBookings(resp.data?.data ?? []);
+        setBookingTotalPages(resp.data?.pagination?.totalPages ?? 1);
+        setBookingTotalRecords(resp.data?.pagination?.totalRecords ?? 0);
+        setBookingCurrentPage(page);
+      } catch (e) {
+        console.error("Error fetching bookings:", e);
+        setBookings([]);
+      } finally {
+        setLoadingBookings(false);
+      }
+    },
+    [id]
+  );
 
   useEffect(() => {
     if (activeTab === "booking") {
@@ -145,7 +136,10 @@ export default function PetSitterDetailPage() {
         params: { sitterId: Array.isArray(id) ? id[0] : id, id: row.id },
       });
       const d = resp.data as any;
-      const booking: BookingCardProps & { totalTHB?: number; transactionNo?: string } = {
+      const booking: BookingCardProps & {
+        totalTHB?: number;
+        transactionNo?: string;
+      } = {
         id: d.id,
         status: d.status as BookingStatus,
         title: "Boarding",
@@ -161,7 +155,8 @@ export default function PetSitterDetailPage() {
         duration: d.duration,
         pet: `${d.pets} Pet(s)`,
         transactionNo: d.transactionNo,
-        totalTHB: typeof d.totalPaid === "number" ? d.totalPaid : Number(d.totalPaid ?? 0),
+        totalTHB:
+          typeof d.totalPaid === "number" ? d.totalPaid : Number(d.totalPaid ?? 0),
       };
       // attach owner + pets detail via type extension
       (booking as any).ownerName = d.ownerName;
@@ -201,7 +196,8 @@ export default function PetSitterDetailPage() {
         if (response.status === 200) {
           setHistoryData(response.data.data);
           setTotalHistoryCount(response.data.pagination.totalRecords);
-          setTotalPages(response.data.pagination.totalPages);
+          setHistoryTotalPages(response.data.pagination.totalPages);
+          setHistoryCurrentPage(page);
         }
       } catch (error) {
         console.error("Error fetching history:", error);
@@ -209,7 +205,7 @@ export default function PetSitterDetailPage() {
         setLoadingHistory(false);
       }
     },
-    [id, itemsPerPage]
+    [id]
   );
 
   useEffect(() => {
@@ -220,9 +216,9 @@ export default function PetSitterDetailPage() {
 
   useEffect(() => {
     if (activeTab === "history" && id) {
-      fetchHistory(currentPage);
+      fetchHistory(historyCurrentPage);
     }
-  }, [activeTab, id, currentPage, fetchHistory]);
+  }, [activeTab, id, fetchHistory]);
 
   const getStatusKey = (status: string): StatusKey => {
     switch (status) {
@@ -234,21 +230,6 @@ export default function PetSitterDetailPage() {
         return "rejected";
       default:
         return "waitingApprove";
-    }
-  };
-
-  const getPetTypeKey = (petTypeName: string): PetTypeKey => {
-    switch (petTypeName.toLowerCase()) {
-      case "dog":
-        return "dog";
-      case "cat":
-        return "cat";
-      case "bird":
-        return "bird";
-      case "rabbit":
-        return "rabbit";
-      default:
-        return "dog"; // fallback
     }
   };
 
@@ -300,15 +281,6 @@ export default function PetSitterDetailPage() {
   }
 
   const statusKey = getStatusKey(sitter.approval_status);
-
-  const formatDateOfBirth = (dob: string) => {
-    if (!dob) return null;
-    const date = new Date(dob);
-    const day = date.getDate();
-    const month = date.toLocaleString("en-US", { month: "long" });
-    const year = date.getFullYear();
-    return `${day} ${month} ${year}`;
-  };
 
   return (
     <>
@@ -504,525 +476,37 @@ export default function PetSitterDetailPage() {
 
             {/* Main Content */}
             <div className="bg-white rounded-tr-xl rounded-br-xl rounded-bl-xl p-8">
-              {activeTab === "profile" && (
-                <div className="flex flex-col gap-6">
-                  {/* ส่วน Profile (Full Name - Introduction) - แสดงทุกสถานะ */}
-                  <div className="flex gap-10">
-                    {/* Left Column - Profile Image */}
-                    <div className="w-64 flex-shrink-0">
-                      <div className="w-64 h-64 rounded-full overflow-hidden bg-muted">
-                        {sitter.user_profile_image ? (
-                          <Image
-                            src={sitter.user_profile_image}
-                            alt={sitter.user_name}
-                            width={256}
-                            height={256}
-                            className="w-full h-full object-cover"
-                          />
-                        ) : (
-                          <div className="w-full h-full flex items-center justify-center bg-muted">
-                            <span className="text-4xl font-bold text-muted-text">
-                              {sitter.user_name.charAt(0).toUpperCase()}
-                            </span>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-
-                    {/* Right Column - Details */}
-                    <div className="flex-1 rounded-md bg-muted">
-                      <div className="space-y-8 py-8 px-8">
-                        <div>
-                          <label className="text-xl font-medium text-muted-text">
-                            Full Name
-                          </label>
-                          <p className="text-xl font-normal mt-3 text-ink">
-                            {sitter.user_name}
-                          </p>
-                        </div>
-
-                        <div>
-                          <label className="text-xl font-medium text-muted-text">
-                            Experience
-                          </label>
-                          <p className="text-xl font-normal mt-3 text-ink">
-                            {sitter.experience || 0} Years
-                          </p>
-                        </div>
-
-                        <div>
-                          <label className="text-xl font-medium text-muted-text">
-                            Phone
-                          </label>
-                          {sitter.phone ? (
-                            <p className="text-xl font-normal mt-3 text-ink">
-                              {sitter.phone}
-                            </p>
-                          ) : (
-                            <div className="text-center py-8 text-muted-text text-xl">
-                              No phone provided
-                            </div>
-                          )}
-                        </div>
-
-                        <div>
-                          <label className="text-xl font-medium text-muted-text">
-                            Date of Birth
-                          </label>
-                          {formatDateOfBirth(sitter.user_dob) ? (
-                            <p className="text-xl font-normal mt-3 text-ink">
-                              {formatDateOfBirth(sitter.user_dob)}
-                            </p>
-                          ) : (
-                            <div className="text-center py-8 text-muted-text text-xl">
-                              No date of birth provided
-                            </div>
-                          )}
-                        </div>
-
-                        <div>
-                          <label className="text-xl font-medium text-muted-text">
-                            Introduction
-                          </label>
-                          {sitter.introduction ? (
-                            <p className="text-xl font-normal mt-3 leading-relaxed text-ink">
-                              {sitter.introduction}
-                            </p>
-                          ) : (
-                            <div className="text-center py-8 text-muted-text text-xl">
-                              No introduction provided
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* ส่วน Pet Sitter + Address - แสดงเฉพาะเมื่อสถานะเป็น Approved */}
-                  {sitter.approval_status === "Approved" && (
-                    <>
-                      {/* Pet Sitter Details */}
-                      <div className="space-y-10 py-10 px-8 rounded-md bg-muted">
-                        {/* Pet Sitter Name */}
-                        <div className="space-y-3">
-                          <h3 className="text-xl font-medium text-muted-text">
-                            Pet sitter name (Trade Name)
-                          </h3>
-                          {sitter.name ? (
-                            <p className="text-xl font-normal text-ink">
-                              {sitter.name}
-                            </p>
-                          ) : (
-                            <div className="text-center py-8 text-muted-text text-xl">
-                              No trade name available
-                            </div>
-                          )}
-                        </div>
-
-                        {/* Pet Type */}
-                        <div className="space-y-4">
-                          <div className="text-xl font-medium text-muted-text">
-                            Pet type
-                          </div>
-                          {sitter.sitter_pet_type &&
-                          sitter.sitter_pet_type.length > 0 ? (
-                            <div className="flex flex-wrap gap-2">
-                              {sitter.sitter_pet_type.map((petType, index) => (
-                                <PetTypeBadge
-                                  key={index}
-                                  typeKey={getPetTypeKey(
-                                    petType.pet_type.pet_type_name
-                                  )}
-                                />
-                              ))}
-                            </div>
-                          ) : (
-                            <div className="text-center py-8 text-muted-text text-xl">
-                              No pet types available
-                            </div>
-                          )}
-                        </div>
-
-                        {/* Services */}
-                        <div className="space-y-4">
-                          <div className="text-xl font-medium text-muted-text">
-                            Services
-                          </div>
-                          {sitter.service_description ? (
-                            <div className="text-xl font-normal leading-relaxed whitespace-pre-line text-ink">
-                              {sitter.service_description}
-                            </div>
-                          ) : (
-                            <div className="text-center py-8 text-muted-text text-xl">
-                              No services available
-                            </div>
-                          )}
-                        </div>
-
-                        {/* My Place */}
-                        <div className="space-y-4">
-                          <div className="text-xl font-medium text-muted-text">
-                            My Place
-                          </div>
-                          {sitter.location_description ? (
-                            <p className="text-xl font-normal leading-relaxed text-ink">
-                              {sitter.location_description}
-                            </p>
-                          ) : (
-                            <div className="text-center py-8 text-muted-text text-xl">
-                              No place description provided
-                            </div>
-                          )}
-                        </div>
-
-                        {/* Image Gallery */}
-                        <div className="space-y-4">
-                          <div className="text-xl font-medium text-muted-text">
-                            Image Gallery
-                          </div>
-                          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                            {sitter.sitter_image &&
-                            sitter.sitter_image.length > 0 ? (
-                              sitter.sitter_image.map((image, index) => (
-                                <div
-                                  key={index}
-                                  className="relative w-full h-64 rounded-lg overflow-hidden bg-muted"
-                                >
-                                  <Image
-                                    src={image.image_url}
-                                    alt={`Sitter image ${index + 1}`}
-                                    width={300}
-                                    height={256}
-                                    className="object-cover"
-                                    style={{
-                                      width: "100%",
-                                      height: "100%",
-                                    }}
-                                  />
-                                </div>
-                              ))
-                            ) : (
-                              <div className="col-span-3 text-center py-8 text-muted-text text-xl">
-                                No images available
-                              </div>
-                            )}
-                          </div>
-                        </div>
-                      </div>
-
-                      {/* Address and Location Map */}
-                      <div className="space-y-10 py-10 px-8 rounded-md bg-muted">
-                        {/* Address */}
-                        <div className="space-y-3">
-                          <div className="text-xl font-medium text-muted-text">
-                            Address
-                          </div>
-                          {sitter.address_detail ||
-                          sitter.address_province ||
-                          sitter.address_district ||
-                          sitter.address_sub_district ||
-                          sitter.address_post_code ? (
-                            <div className="text-xl font-normal leading-relaxed text-ink">
-                              {sitter.address_detail && (
-                                <div>{sitter.address_detail}</div>
-                              )}
-                              {(sitter.address_sub_district ||
-                                sitter.address_district ||
-                                sitter.address_province ||
-                                sitter.address_post_code) && (
-                                <div>
-                                  {[
-                                    sitter.address_sub_district,
-                                    sitter.address_district,
-                                    sitter.address_province,
-                                    sitter.address_post_code,
-                                  ]
-                                    .filter(Boolean)
-                                    .join(", ")}
-                                </div>
-                              )}
-                            </div>
-                          ) : (
-                            <div className="text-center py-8 text-muted-text text-xl">
-                              No address available
-                            </div>
-                          )}
-                        </div>
-
-                        {/* Location Map */}
-                        <div className="space-y-4">
-                          <div className="text-xl font-medium text-muted-text">
-                            Location Map
-                          </div>
-                          {sitter.address_detail ||
-                          sitter.address_province ||
-                          sitter.address_district ||
-                          sitter.address_sub_district ||
-                          sitter.address_post_code ? (
-                            sitter.latitude && sitter.longitude ? (
-                              <LeafletMap
-                                latitude={sitter.latitude}
-                                longitude={sitter.longitude}
-                                zoom={15}
-                                className="h-[300px] w-full rounded-xl border border-gray-200"
-                              />
-                            ) : (
-                              <div className="w-full h-64 bg-muted rounded-lg flex items-center justify-center">
-                                <div className="text-center text-muted-text text-xl">
-                                  <div className="text-4xl mb-2">📍</div>
-                                  <div>Location coordinates not available</div>
-                                  <div className="text-sm mt-1">Address: {sitter.address_detail || "No address detail"}</div>
-                                </div>
-                              </div>
-                            )
-                          ) : (
-                            <div className="text-center py-8 text-muted-text text-xl">
-                              No location available
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    </>
-                  )}
-                </div>
-              )}
-
+              {activeTab === "profile" && <SitterProfile sitter={sitter} />}
+              
               {activeTab === "booking" && (
-                <div className="space-y-6">
-                  <div className="overflow-hidden rounded-2xl border border-border bg-bg">
-                    {loadingBookings ? (
-                      <div className="flex justify-center py-10">
-                        <PetPawLoadingSmall message="Loading Bookings" />
-                      </div>
-                    ) : (
-                      <table className="min-w-full">
-                        <thead>
-                          <tr className="bg-ink/90 text-white">
-                            <th className="px-5 py-3 text-xs2-medium text-left">
-                              Pet Owner
-                            </th>
-                            <th className="px-5 py-3 text-xs2-medium text-left">
-                              Pet(s)
-                            </th>
-                            <th className="px-5 py-3 text-xs2-medium text-left">
-                              Duration
-                            </th>
-                            <th className="px-5 py-3 text-xs2-medium text-left">
-                              Booked Date
-                            </th>
-                            <th className="px-5 py-3 text-xs2-medium text-left">
-                              Status
-                            </th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {bookings.length === 0 ? (
-                            <tr>
-                              <td
-                                colSpan={5}
-                                className="px-5 py-8 text-center text-xs2-medium text-muted-text"
-                              >
-                                No bookings
-                              </td>
-                            </tr>
-                          ) : (
-                            bookings.map((row) => (
-                              <tr
-                                key={row.id}
-                                className="border-t border-border last:border-b hover:bg-muted/20 cursor-pointer"
-                                onClick={() => openBookingDetail(row)}
-                              >
-                                <td className="px-5 py-4 text-sm2-medium text-left text-ink">
-                                  {row.ownerName}
-                                </td>
-                                <td className="px-5 py-4 text-sm2-medium text-left text-ink">
-                                  {row.petCount}
-                                </td>
-                                <td className="px-5 py-4 text-sm2-medium text-left text-ink">
-                                  {row.duration}
-                                </td>
-                                <td className="px-5 py-4 text-sm2-medium text-left text-ink">
-                                  {row.bookedDate}
-                                </td>
-                                <td className="px-5 py-4">
-                                  <StatusBadge status={row.status} />
-                                </td>
-                              </tr>
-                            ))
-                          )}
-                        </tbody>
-                      </table>
-                    )}
-                  </div>
-
-                  {/* Pagination for bookings */}
-                  {bookingTotalPages > 1 && !loadingBookings && (
-                    <div className="flex items-center justify-between px-2 py-4">
-                       <PaginationInfo
-                          currentCount={bookings.length}
-                          totalCount={bookingTotalRecords}
-                          currentPage={bookingCurrentPage}
-                          totalPages={bookingTotalPages}
-                          limit={bookingsPerPage}
-                        />
-                      <Pagination
-                        currentPage={bookingCurrentPage}
-                        totalPages={bookingTotalPages}
-                        onClick={(page) => {
-                          fetchBookings(page);
-                        }}
-                      />
-                    </div>
-                  )}
-
-                  {/* Booking Detail Modal */}
-                  <BookingDetailDialogAdmin
-                    open={bookingDialogOpen}
-                    onOpenChange={setBookingDialogOpen}
-                    booking={selectedBooking}
-                  />
-                </div>
+                <SitterBookings
+                  bookings={bookings}
+                  loadingBookings={loadingBookings}
+                  bookingDialogOpen={bookingDialogOpen}
+                  onBookingDialogChange={setBookingDialogOpen}
+                  selectedBooking={selectedBooking}
+                  openBookingDetail={openBookingDetail}
+                  totalPages={bookingTotalPages}
+                  currentPage={bookingCurrentPage}
+                  onPageChange={fetchBookings}
+                  totalRecords={bookingTotalRecords}
+                  itemsPerPage={bookingsPerPage}
+                />
               )}
 
-              {activeTab === "reviews" && (
-                <div className="text-center py-12">
-                  <h3 className="text-xl font-semibold text-ink mb-2">
-                    Reviews
-                  </h3>
-                  <p className="text-xl text-muted-text">
-                    Customer reviews will be displayed here.
-                  </p>
-                </div>
-              )}
+              {activeTab === "reviews" && <SitterReviews />}
 
               {activeTab === "history" && (
-                <div className="space-y-8">
-                  <h3 className="text-xl font-semibold text-ink mb-6">
-                    Approval History
-                  </h3>
-
-                  {loadingHistory ? (
-                    <div className="flex justify-center py-8">
-                      <PetPawLoadingSmall message="Loading History" />
-                    </div>
-                  ) : historyData.length > 0 ? (
-                    <div className="bg-white rounded-lg shadow-sm border border-border overflow-hidden">
-                      <div className="overflow-x-auto">
-                        <table className="min-w-full divide-y divide-border">
-                          <thead className="bg-muted">
-                            <tr>
-                              <th className="px-8 py-5 text-left text-sm font-medium text-muted-text uppercase tracking-wider">
-                                Status
-                              </th>
-                              <th className="px-8 py-5 text-left text-sm font-medium text-muted-text uppercase tracking-wider">
-                                Approved By
-                              </th>
-                              <th className="px-8 py-5 text-left text-sm font-medium text-muted-text uppercase tracking-wider">
-                                Note
-                              </th>
-                              <th className="px-8 py-5 text-left text-sm font-medium text-muted-text uppercase tracking-wider">
-                                Date
-                              </th>
-                            </tr>
-                          </thead>
-                          <tbody className="bg-white divide-y divide-border">
-                            {historyData.map(
-                              (
-                                record: {
-                                  id: number;
-                                  statusName: string;
-                                  adminName?: string;
-                                  adminNote?: string;
-                                  changedAt: string;
-                                },
-                                index: number
-                              ) => (
-                                <tr
-                                  key={record.id}
-                                  className={
-                                    index % 2 === 0 ? "bg-white" : "bg-muted"
-                                  }
-                                >
-                                  <td className="px-8 py-6 whitespace-nowrap">
-                                    <StatusBadge
-                                      status={getStatusKey(record.statusName)}
-                                    />
-                                  </td>
-                                  <td className="px-8 py-6 whitespace-nowrap text-sm text-ink">
-                                    {record.adminName || "System"}
-                                  </td>
-                                  <td className="px-8 py-6 text-sm text-ink">
-                                    <div className="max-w-lg">
-                                      <p className="text-sm text-muted-text break-words leading-relaxed">
-                                        {record.adminNote || "No note provided"}
-                                      </p>
-                                    </div>
-                                  </td>
-                                  <td className="px-8 py-6 whitespace-nowrap text-sm text-muted-text">
-                                    {new Date(
-                                      record.changedAt
-                                    ).toLocaleDateString("en-US", {
-                                      year: "numeric",
-                                      month: "short",
-                                      day: "numeric",
-                                      hour: "2-digit",
-                                      minute: "2-digit",
-                                    })}
-                                  </td>
-                                </tr>
-                              )
-                            )}
-                          </tbody>
-                        </table>
-                      </div>
-
-                      {/* Pagination */}
-                      {totalPages > 1 && (
-                        <div className="flex items-center justify-between px-6 py-4 bg-white border-t border-border">
-                          <PaginationInfo
-                            currentCount={historyData.length}
-                            totalCount={totalHistoryCount}
-                            currentPage={currentPage}
-                            totalPages={totalPages}
-                            limit={itemsPerPage}
-                          />
-                          <Pagination
-                            currentPage={currentPage}
-                            totalPages={totalPages}
-                            onClick={(page) => {
-                              setCurrentPage(page);
-                              fetchHistory(page);
-                            }}
-                          />
-                        </div>
-                      )}
-                    </div>
-                  ) : (
-                    <div className="text-center py-12">
-                      <div className="text-muted-text mb-4">
-                        <svg
-                          className="mx-auto h-12 w-12"
-                          fill="none"
-                          viewBox="0 0 24 24"
-                          stroke="currentColor"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={1}
-                            d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
-                          />
-                        </svg>
-                      </div>
-                      <h3 className="text-xl font-medium text-ink mb-2">
-                        No History Found
-                      </h3>
-                      <p className="text-xl text-muted-text">
-                        No approval history available for this pet sitter.
-                      </p>
-                    </div>
-                  )}
-                </div>
+                <SitterHistory
+                  historyData={historyData}
+                  loadingHistory={loadingHistory}
+                  totalPages={historyTotalPages}
+                  currentPage={historyCurrentPage}
+                  onPageChange={fetchHistory}
+                  totalRecords={totalHistoryCount}
+                  itemsPerPage={itemsPerPage}
+                  getStatusKey={getStatusKey}
+                />
               )}
             </div>
 
