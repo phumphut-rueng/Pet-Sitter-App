@@ -14,6 +14,8 @@ import { PaginationInfo } from "@/components/pagination/PaginationInfo";
 import axios from "axios";
 import toast, { Toaster } from "react-hot-toast";
 import dynamic from "next/dynamic";
+import BookingDetailDialogAdmin from "@/components/modal/BookingDetailAdmin";
+import type { BookingCardProps, BookingStatus } from "@/components/cards/BookingCard";
 
 const LeafletMap = dynamic(() => import("@/components/form/LeafletMap"), {
   ssr: false,
@@ -77,6 +79,87 @@ export default function PetSitterDetailPage() {
   const [totalPages, setTotalPages] = useState(1);
   const [totalHistoryCount, setTotalHistoryCount] = useState(0);
   const itemsPerPage = 8;
+  
+  // -------------------- Bookings (API) --------------------
+  type BookingRowStatus =
+    | "waitingConfirm"
+    | "waitingService"
+    | "inService"
+    | "success"
+    | "canceled";
+
+  interface BookingRow {
+    id: number;
+    ownerName: string;
+    petCount: number;
+    duration: string;
+    bookedDate: string;
+    status: BookingRowStatus;
+  }
+
+  const [bookings, setBookings] = useState<BookingRow[]>([]);
+  const [loadingBookings, setLoadingBookings] = useState(false);
+  const [bookingDialogOpen, setBookingDialogOpen] = useState(false);
+  const [selectedBooking, setSelectedBooking] = useState<
+    (BookingCardProps & { totalTHB?: number; transactionNo?: string }) | null
+  >(null);
+
+  const fetchBookings = useCallback(async () => {
+    if (!id) return;
+    try {
+      setLoadingBookings(true);
+      const resp = await axios.get(`/api/admin/petsitter/bookings`, {
+        params: { sitterId: Array.isArray(id) ? id[0] : id },
+      });
+      setBookings(resp.data?.data ?? []);
+    } catch (e) {
+      console.error("Error fetching bookings:", e);
+      setBookings([]);
+    } finally {
+      setLoadingBookings(false);
+    }
+  }, [id]);
+
+  useEffect(() => {
+    if (activeTab === "booking") {
+      fetchBookings();
+    }
+  }, [activeTab, fetchBookings]);
+
+  const openBookingDetail = async (row: BookingRow) => {
+    try {
+      const resp = await axios.get(`/api/admin/petsitter/bookings`, {
+        params: { sitterId: Array.isArray(id) ? id[0] : id, id: row.id },
+      });
+      const d = resp.data as any;
+      const booking: BookingCardProps & { totalTHB?: number; transactionNo?: string } = {
+        id: d.id,
+        status: d.status as BookingStatus,
+        title: "Boarding",
+        sitterName: sitter?.name || sitter?.user_name || "Pet Sitter",
+        transactionDate: d.transactionDate
+          ? new Date(d.transactionDate).toLocaleDateString("en-GB", {
+              day: "2-digit",
+              month: "short",
+              year: "numeric",
+            })
+          : "-",
+        dateTime: d.bookingDate,
+        duration: d.duration,
+        pet: `${d.pets} Pet(s)`,
+        transactionNo: d.transactionNo,
+        totalTHB: typeof d.totalPaid === "number" ? d.totalPaid : Number(d.totalPaid ?? 0),
+      };
+      // attach owner + pets detail via type extension
+      (booking as any).ownerName = d.ownerName;
+      (booking as any).pets = d.pets;
+      (booking as any).petsDetail = d.petsDetail || [];
+      setSelectedBooking(booking);
+      setBookingDialogOpen(true);
+    } catch (e) {
+      console.error("Error fetching booking detail:", e);
+    }
+  };
 
   const fetchSitterDetail = useCallback(async () => {
     try {
@@ -689,13 +772,56 @@ export default function PetSitterDetailPage() {
               )}
 
               {activeTab === "booking" && (
-                <div className="text-center py-12">
-                  <h3 className="text-xl font-semibold text-ink mb-2">
-                    Booking Information
-                  </h3>
-                  <p className="text-xl text-muted-text">
-                    Booking details will be displayed here.
-                  </p>
+                <div className="space-y-6">
+                  <div className="overflow-hidden rounded-2xl border border-border bg-bg">
+                    {loadingBookings ? (
+                      <div className="flex justify-center py-10">
+                        <PetPawLoadingSmall message="Loading Bookings" />
+                      </div>
+                    ) : (
+                    <table className="min-w-full">
+                      <thead>
+                        <tr className="bg-ink/90 text-white">
+                          <th className="px-5 py-3 text-xs2-medium text-left">Pet Owner</th>
+                          <th className="px-5 py-3 text-xs2-medium text-left">Pet(s)</th>
+                          <th className="px-5 py-3 text-xs2-medium text-left">Duration</th>
+                          <th className="px-5 py-3 text-xs2-medium text-left">Booked Date</th>
+                          <th className="px-5 py-3 text-xs2-medium text-left">Status</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {bookings.length === 0 ? (
+                          <tr>
+                            <td colSpan={5} className="px-5 py-8 text-center text-xs2-medium text-muted-text">No bookings</td>
+                          </tr>
+                        ) : (
+                          bookings.map((row, idx) => (
+                            <tr
+                              key={row.id}
+                              className="border-t border-border last:border-b hover:bg-muted/20 cursor-pointer"
+                              onClick={() => openBookingDetail(row)}
+                            >
+                              <td className="px-5 py-4 text-sm2-medium text-left text-ink">{row.ownerName}</td>
+                              <td className="px-5 py-4 text-sm2-medium text-left text-ink">{row.petCount}</td>
+                              <td className="px-5 py-4 text-sm2-medium text-left text-ink">{row.duration}</td>
+                              <td className="px-5 py-4 text-sm2-medium text-left text-ink">{row.bookedDate}</td>
+                              <td className="px-5 py-4">
+                                <StatusBadge status={row.status} />
+                              </td>
+                            </tr>
+                          ))
+                        )}
+                      </tbody>
+                    </table>
+                    )}
+                  </div>
+
+                  {/* Booking Detail Modal */}
+                  <BookingDetailDialogAdmin
+                    open={bookingDialogOpen}
+                    onOpenChange={setBookingDialogOpen}
+                    booking={selectedBooking}
+                  />
                 </div>
               )}
 
