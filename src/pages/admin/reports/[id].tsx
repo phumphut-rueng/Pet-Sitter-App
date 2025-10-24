@@ -3,7 +3,7 @@ import { useRouter } from "next/router";
 import toast from "react-hot-toast";
 
 import AdminLayout from "@/components/layout/AdminLayout";
-import ConfirmDialog from "@/components/admin/shared/ConfirmDialog";
+import ConfirmDialog from "@/components/common/ConfirmDialog";
 import { StatusBadge } from "@/components/badges/StatusBadge";
 import { PetPawLoading } from "@/components/loading/PetPawLoading";
 import { api } from "@/lib/api/axios";
