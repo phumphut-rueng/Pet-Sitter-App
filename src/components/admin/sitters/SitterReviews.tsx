@@ -4,7 +4,7 @@ import { Star } from "lucide-react";
 import { Pagination } from "@/components/pagination/Pagination";
 import { PaginationInfo } from "@/components/pagination/PaginationInfo";
 import { PetPawLoadingSmall } from "@/components/loading/PetPawLoadingSmall";
-import { Trash2, Check } from "lucide-react";
+import { Trash2 } from "lucide-react";
 import ConfirmDeleteModal from "@/components/modal/ConfirmDeleteModal";
 
 interface Review {
@@ -94,48 +94,57 @@ export default function SitterReviews({
     <div className="space-y-6">
       <div className="space-y-6">
         {reviews.map((review) => (
-          <div key={review.id} className="flex gap-4 border-b pb-6 last:border-b-0 last:pb-0">
-            <Avatar className="h-12 w-12">
-              <AvatarImage src={review.user.profile_image || undefined} alt={review.user.name || "User"} />
-              <AvatarFallback>
-                {review.user.name?.charAt(0).toUpperCase() || "U"}
-              </AvatarFallback>
-            </Avatar>
-            <div className="flex-1">
-              <div className="flex justify-between items-start">
-                <div>
-                  <p className="font-semibold">{review.user.name}</p>
-                  <p className="text-sm text-gray-500">
-                    {new Date(review.created_at).toLocaleDateString("en-US", {
-                      month: "short",
-                      day: "numeric",
-                      year: "numeric",
-                    })}
-                  </p>
-                </div>
-                <div className="flex items-center gap-2">
-                  <button
-                    onClick={() => handleDeleteClick(review.id)}
-                    className="p-2 rounded-full hover:bg-red-100 text-gray-500 hover:text-red-600 transition-colors"
-                  >
-                    <Trash2 className="h-5 w-5" />
-                  </button>
-                  <button className="p-2 rounded-full hover:bg-green-100 text-gray-500 hover:text-green-600 transition-colors">
-                        <Check className="h-5 w-5" />
-                    </button>
-                </div>
+          <div
+            key={review.id}
+            className="grid grid-cols-1 md:grid-cols-[250px_1fr] gap-2 md:gap-8 border-b-2 border-gray-300 pb-8 pt-8 last:border-b-0 last:pb-0"
+          >
+            {/* Left: avatar + name + date */}
+            <div className="flex items-center md:items-start gap-5">
+              <Avatar className="h-12 w-12">
+                <AvatarImage
+                  src={review.user.profile_image || undefined}
+                  alt={review.user.name || "User"}
+                />
+                <AvatarFallback>
+                  {review.user.name?.charAt(0).toUpperCase() || "U"}
+                </AvatarFallback>
+              </Avatar>
+              <div className="min-w-0">
+                <p className="font-semibold truncate max-w-[180px]">
+                  {review.user.name}
+                </p>
+                <p className="text-sm text-gray-500">
+                  {new Date(review.created_at).toLocaleDateString("en-US", {
+                    month: "short",
+                    day: "numeric",
+                    year: "numeric",
+                  })}
+                </p>
               </div>
-              <div className="mt-2">
+            </div>
+
+            {/* Right: stars + content + delete button */}
+            <div className="relative">
+              <div className="flex items-center justify-between">
                 <StarRating rating={review.rating} />
+                <button
+                  onClick={() => handleDeleteClick(review.id)}
+                  className="p-2 rounded-full border border-border text-gray-500 bg-gray-100 hover:text-red hover:bg-red-bg transition-colors"
+                  title="Delete review"
+                >
+                  <Trash2 className="h-5 w-5" />
+                </button>
               </div>
-              <p className="mt-2 text-gray-700">{review.comment}</p>
+              <p className="mt-2 leading-relaxed text-gray-700">
+                {review.comment}
+              </p>
             </div>
           </div>
         ))}
       </div>
       
       {totalPages > 1 && (
-        <div className="flex items-center justify-between pt-4">
+        <div className="flex items-center justify-between pt-10">
            <PaginationInfo
               currentCount={reviews.length}
               totalCount={totalRecords}
@@ -156,7 +165,7 @@ export default function SitterReviews({
         onOpenChange={setIsDeleteModalOpen}
         onConfirm={handleConfirmDelete}
         title="Delete Confirmation"
-        description="Are you sure you want to delete this review?"
+        description="Are you sure to delete this review?"
       />
     </div>
   );
