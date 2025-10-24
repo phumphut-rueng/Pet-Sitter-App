@@ -11,6 +11,7 @@
     "postinstall": "prisma generate",
     "lint": "eslint",
     "prisma:generate": "prisma generate",
+    "prisma:erd": "prisma generate --schema prisma/schema.dev.prisma",
     "build:address": "node scripts/build-th-address.mjs"
   },
   "dependencies": {
