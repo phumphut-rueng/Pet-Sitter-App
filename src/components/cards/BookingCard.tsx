@@ -29,8 +29,17 @@ export interface BookingCardProps {
   onReport?: () => void;
   onReview?: () => void;
   onChange?: () => void;
+  onMessage?: () => void;
   dateStart?: string; 
   dateEnd?: string
+  sitterLat?: number;
+  sitterLng?: number;
+  hasUserReview?: boolean;
+  userReview?: {
+    rating: number;
+    comment: string;
+    date: string;
+  };
 }
 
 /* ---------- Icons ---------- */
@@ -43,8 +52,8 @@ const ICON_PATHS = {
 
 /* ---------- Config ---------- */
 const STATUS_CONFIG = {
-  waiting: { dot: "bg-gray-4", text: "text-gray-6", label: "Waiting for Confirm", bg: "bg-gray-1" },
-  waiting_for_service: { dot: "bg-pink", text: "text-pink", label: "Waiting for Service", bg: "bg-pink-50" },
+  waiting: { dot: "bg-pink", text: "text-pink", label: "Waiting for Confirm", bg: "bg-pink-50" },
+  waiting_for_service: { dot: "bg-yellow", text: "text-yellow", label: "Waiting for Service", bg: "bg-yellow-50" },
   in_service: { dot: "bg-blue", text: "text-blue", label: "In Service", bg: "bg-blue-bg" },
   success: { dot: "bg-green", text: "text-green", label: "Success", bg: "bg-green-bg" },
   canceled: { dot: "bg-red", text: "text-red", label: "Canceled", bg: "bg-red-bg" },
@@ -242,11 +251,11 @@ export const BookingCard: React.FC<BookingCardProps> = (props) => {
       {status === "waiting" && (
         <div className={`mt-6 rounded-xl p-4 ring-1 ring-border ${cfg.bg}`}>
           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
-            <p className="text-[13px] md:text-[14px] text-gray-500 text-center md:text-left">
+            <p className="text-[13px] md:text-[14px] text-pink text-center md:text-left">
               {STATUS_NOTES.waiting}
             </p>
             <div className="flex justify-center md:justify-end gap-3">
-              <PrimaryButton onClick={actions[0].onClick}>Send Message</PrimaryButton>
+              <PrimaryButton onClick={props.onMessage ?? (() => {})}>Send Message</PrimaryButton>
               <CallButton onClick={actions[1].onClick} />
             </div>
           </div>
@@ -257,11 +266,11 @@ export const BookingCard: React.FC<BookingCardProps> = (props) => {
 {status === "waiting_for_service" && (
   <div className={`mt-6 rounded-xl p-4 ring-1 ring-border ${cfg.bg}`}>
     <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
-      <p className="text-[13px] md:text-[14px] text-pink text-center md:text-left">
+      <p className="text-[13px] md:text-[14px] text-yellow text-center md:text-left">
         {STATUS_NOTES.waiting_for_service}
       </p>
       <div className="flex justify-center md:justify-end gap-3">
-        <PrimaryButton onClick={actions[0].onClick}>Send Message</PrimaryButton>
+        <PrimaryButton onClick={props.onMessage ?? (() => {})}>Send Message</PrimaryButton>
         <CallButton onClick={actions[1].onClick} />
       </div>
     </div>
@@ -275,7 +284,7 @@ export const BookingCard: React.FC<BookingCardProps> = (props) => {
               {STATUS_NOTES.in_service}
             </p>
             <div className="flex justify-center md:justify-end gap-3">
-              <PrimaryButton onClick={actions[0].onClick}>Send Message</PrimaryButton>
+              <PrimaryButton onClick={props.onMessage ?? (() => {})}>Send Message</PrimaryButton>
               <CallButton onClick={actions[1].onClick} />
             </div>
           </div>
@@ -296,7 +305,9 @@ export const BookingCard: React.FC<BookingCardProps> = (props) => {
               >
                 Report
               </button>
-              <PrimaryButton onClick={onReview ?? (() => {})}>Review</PrimaryButton>
+              <PrimaryButton onClick={onReview ?? (() => {})}>
+          {props.hasUserReview ? "Your Review" : "Review"}
+        </PrimaryButton>
             </div>
           </div>
         </div>
@@ -322,7 +333,7 @@ export const BookingCard: React.FC<BookingCardProps> = (props) => {
               >
                 Report
               </button>
-              <PrimaryButton onClick={() => {}}>Send Message</PrimaryButton>
+              <PrimaryButton onClick={props.onMessage ?? (() => {})}>Send Message</PrimaryButton>
             </div>
           </div>
         </div>

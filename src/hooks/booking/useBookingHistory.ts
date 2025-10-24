@@ -22,17 +22,25 @@ type BookingApiItem = {
   sitterId: number | null;
   sitterUserId: number | null;
   sitterName: string | null;
+  sitterOwnerName: string | null; 
   sitterAvatar: string | null;
+  sitterLat: number | null;
+  sitterLng: number | null;
   status: string;
   paymentStatus: string | null;
-  dateStart: string;        // ISO string from API
-  dateEnd: string;   
-  transactionId?: string | null;       // ISO string from API
+  dateStart: string; // ISO string from API
+  dateEnd: string;
+  transactionId?: string | null; // ISO string from API
   transactionDate: string | null;
   pets: ApiPet[];
-  amount?: number | null; 
+  amount?: number | null;
   paymentType?: string | null;
   note?: string | null;
+  userReview: null | {
+    rating: number;
+    comment: string;
+    date: string;
+  };
 };
 
 type HistoryApiResponse = {
@@ -70,7 +78,7 @@ export function useBookingHistory(userId: number | null): UseBookingHistory {
         id: b.id,
         status: mapStatus(b.status, b.paymentStatus ?? undefined),
         title: b.sitterName ?? "Pet Sitter",
-        sitterName: b.sitterName ?? "-",
+        sitterName: b.sitterOwnerName ?? "-",
         avatarUrl: b.sitterAvatar ?? undefined,
         transactionDate: formatDate(b.transactionDate ?? null),
         dateTime: formatBookingDateRange(b.dateStart, b.dateEnd),
@@ -91,14 +99,31 @@ export function useBookingHistory(userId: number | null): UseBookingHistory {
 
         totalTHB: asNumber(b.amount),
         transactionNo: b.transactionId ?? undefined,
+
+        sitterLat: asNumber(b.sitterLat),
+        sitterLng: asNumber(b.sitterLng),
+
+        hasUserReview: !!b.userReview,
+        userReview: b.userReview
+          ? {
+              rating: b.userReview.rating,
+              comment: b.userReview.comment,
+              date: b.userReview.date,
+            }
+          : undefined,
       }));
 
       setBookings(formatted);
       setError(null);
     } catch (err: unknown) {
       const axErr = err as AxiosError<{ error?: string }>;
-      console.error("❌ Fetch booking history error:", axErr?.response?.data || axErr);
-      setError(axErr?.response?.data?.error ?? "Failed to load booking history.");
+      console.error(
+        "❌ Fetch booking history error:",
+        axErr?.response?.data || axErr
+      );
+      setError(
+        axErr?.response?.data?.error ?? "Failed to load booking history."
+      );
     } finally {
       setLoading(false);
     }
