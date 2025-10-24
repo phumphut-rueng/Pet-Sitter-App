@@ -79,6 +79,7 @@ export default function PetSitterDetailPage() {
   const [totalPages, setTotalPages] = useState(1);
   const [totalHistoryCount, setTotalHistoryCount] = useState(0);
   const itemsPerPage = 8;
+  const bookingsPerPage = 10;
   
   // -------------------- Bookings (API) --------------------
   type BookingRowStatus =
@@ -99,19 +100,30 @@ export default function PetSitterDetailPage() {
 
   const [bookings, setBookings] = useState<BookingRow[]>([]);
   const [loadingBookings, setLoadingBookings] = useState(false);
+  const [bookingCurrentPage, setBookingCurrentPage] = useState(1);
+  const [bookingTotalPages, setBookingTotalPages] = useState(1);
+  const [bookingTotalRecords, setBookingTotalRecords] = useState(0);
   const [bookingDialogOpen, setBookingDialogOpen] = useState(false);
+  const [isBookingDetailLoading, setIsBookingDetailLoading] = useState(false);
   const [selectedBooking, setSelectedBooking] = useState<
     (BookingCardProps & { totalTHB?: number; transactionNo?: string }) | null
   >(null);
 
-  const fetchBookings = useCallback(async () => {
+  const fetchBookings = useCallback(async (page = 1) => {
     if (!id) return;
     try {
       setLoadingBookings(true);
       const resp = await axios.get(`/api/admin/petsitter/bookings`, {
-        params: { sitterId: Array.isArray(id) ? id[0] : id },
+        params: { 
+          sitterId: Array.isArray(id) ? id[0] : id,
+          page,
+          limit: bookingsPerPage,
+        },
       });
       setBookings(resp.data?.data ?? []);
+      setBookingTotalPages(resp.data?.pagination?.totalPages ?? 1);
+      setBookingTotalRecords(resp.data?.pagination?.totalRecords ?? 0);
+      setBookingCurrentPage(page);
     } catch (e) {
       console.error("Error fetching bookings:", e);
       setBookings([]);
@@ -122,12 +134,13 @@ export default function PetSitterDetailPage() {
 
   useEffect(() => {
     if (activeTab === "booking") {
-      fetchBookings();
+      fetchBookings(bookingCurrentPage);
     }
   }, [activeTab, fetchBookings]);
 
   const openBookingDetail = async (row: BookingRow) => {
     try {
+      setIsBookingDetailLoading(true);
       const resp = await axios.get(`/api/admin/petsitter/bookings`, {
         params: { sitterId: Array.isArray(id) ? id[0] : id, id: row.id },
       });
@@ -158,6 +171,9 @@ export default function PetSitterDetailPage() {
       setBookingDialogOpen(true);
     } catch (e) {
       console.error("Error fetching booking detail:", e);
+      toast.error("Failed to load booking details.");
+    } finally {
+      setIsBookingDetailLoading(false);
     }
   };
 
@@ -779,42 +795,85 @@ export default function PetSitterDetailPage() {
                         <PetPawLoadingSmall message="Loading Bookings" />
                       </div>
                     ) : (
-                    <table className="min-w-full">
-                      <thead>
-                        <tr className="bg-ink/90 text-white">
-                          <th className="px-5 py-3 text-xs2-medium text-left">Pet Owner</th>
-                          <th className="px-5 py-3 text-xs2-medium text-left">Pet(s)</th>
-                          <th className="px-5 py-3 text-xs2-medium text-left">Duration</th>
-                          <th className="px-5 py-3 text-xs2-medium text-left">Booked Date</th>
-                          <th className="px-5 py-3 text-xs2-medium text-left">Status</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {bookings.length === 0 ? (
-                          <tr>
-                            <td colSpan={5} className="px-5 py-8 text-center text-xs2-medium text-muted-text">No bookings</td>
+                      <table className="min-w-full">
+                        <thead>
+                          <tr className="bg-ink/90 text-white">
+                            <th className="px-5 py-3 text-xs2-medium text-left">
+                              Pet Owner
+                            </th>
+                            <th className="px-5 py-3 text-xs2-medium text-left">
+                              Pet(s)
+                            </th>
+                            <th className="px-5 py-3 text-xs2-medium text-left">
+                              Duration
+                            </th>
+                            <th className="px-5 py-3 text-xs2-medium text-left">
+                              Booked Date
+                            </th>
+                            <th className="px-5 py-3 text-xs2-medium text-left">
+                              Status
+                            </th>
                           </tr>
-                        ) : (
-                          bookings.map((row, idx) => (
-                            <tr
-                              key={row.id}
-                              className="border-t border-border last:border-b hover:bg-muted/20 cursor-pointer"
-                              onClick={() => openBookingDetail(row)}
-                            >
-                              <td className="px-5 py-4 text-sm2-medium text-left text-ink">{row.ownerName}</td>
-                              <td className="px-5 py-4 text-sm2-medium text-left text-ink">{row.petCount}</td>
-                              <td className="px-5 py-4 text-sm2-medium text-left text-ink">{row.duration}</td>
-                              <td className="px-5 py-4 text-sm2-medium text-left text-ink">{row.bookedDate}</td>
-                              <td className="px-5 py-4">
-                                <StatusBadge status={row.status} />
+                        </thead>
+                        <tbody>
+                          {bookings.length === 0 ? (
+                            <tr>
+                              <td
+                                colSpan={5}
+                                className="px-5 py-8 text-center text-xs2-medium text-muted-text"
+                              >
+                                No bookings
                               </td>
                             </tr>
-                          ))
-                        )}
-                      </tbody>
-                    </table>
+                          ) : (
+                            bookings.map((row) => (
+                              <tr
+                                key={row.id}
+                                className="border-t border-border last:border-b hover:bg-muted/20 cursor-pointer"
+                                onClick={() => openBookingDetail(row)}
+                              >
+                                <td className="px-5 py-4 text-sm2-medium text-left text-ink">
+                                  {row.ownerName}
+                                </td>
+                                <td className="px-5 py-4 text-sm2-medium text-left text-ink">
+                                  {row.petCount}
+                                </td>
+                                <td className="px-5 py-4 text-sm2-medium text-left text-ink">
+                                  {row.duration}
+                                </td>
+                                <td className="px-5 py-4 text-sm2-medium text-left text-ink">
+                                  {row.bookedDate}
+                                </td>
+                                <td className="px-5 py-4">
+                                  <StatusBadge status={row.status} />
+                                </td>
+                              </tr>
+                            ))
+                          )}
+                        </tbody>
+                      </table>
                     )}
                   </div>
+
+                  {/* Pagination for bookings */}
+                  {bookingTotalPages > 1 && !loadingBookings && (
+                    <div className="flex items-center justify-between px-2 py-4">
+                       <PaginationInfo
+                          currentCount={bookings.length}
+                          totalCount={bookingTotalRecords}
+                          currentPage={bookingCurrentPage}
+                          totalPages={bookingTotalPages}
+                          limit={bookingsPerPage}
+                        />
+                      <Pagination
+                        currentPage={bookingCurrentPage}
+                        totalPages={bookingTotalPages}
+                        onClick={(page) => {
+                          fetchBookings(page);
+                        }}
+                      />
+                    </div>
+                  )}
 
                   {/* Booking Detail Modal */}
                   <BookingDetailDialogAdmin
@@ -1106,6 +1165,12 @@ export default function PetSitterDetailPage() {
           </div>
         </main>
       </div>
+
+      {isBookingDetailLoading && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50">
+          <PetPawLoading message="Loading Details..." size="md" />
+        </div>
+      )}
     </>
   );
 }

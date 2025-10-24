@@ -64,7 +64,7 @@ export default function BookingDetailDialog({
           <div>
             <p className="text-sm text-gray-500 mb-2">Pet Detail</p>
             <div className="flex justify-center gap-4 flex-wrap">
-              {booking.petsDetail?.map((pet) => (
+              {booking.petsDetail && booking.petsDetail.length > 0 ? booking.petsDetail.map((pet) => (
                 <div
                   key={pet.id}
                   className="flex flex-col items-center w-full sm:w-[40%] text-center p-4 border rounded-xl"
@@ -84,7 +84,7 @@ export default function BookingDetailDialog({
                     </span>
                   )}
                 </div>
-              ))}
+              )) : <p className="text-sm text-gray-500">No pets detail</p>}
             </div>
           </div>
 

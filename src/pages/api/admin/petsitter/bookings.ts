@@ -97,7 +97,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   }
 
   try {
-    const { sitterId, id } = req.query as { sitterId?: string; id?: string };
+    const { sitterId, id, page, limit } = req.query as {
+      sitterId?: string;
+      id?: string;
+      page?: string;
+      limit?: string;
+    };
     if (!sitterId || isNaN(Number(sitterId))) {
       return res.status(400).json({ message: "Missing or invalid sitterId" });
     }
@@ -160,8 +165,18 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     }
 
     // List mode
+    const pageNum = parseInt(page || "1", 10);
+    const limitNum = parseInt(limit || "10", 10);
+    const skip = (pageNum - 1) * limitNum;
+
+    const totalRecords = await prisma.booking.count({
+      where: { pet_sitter_id: sid },
+    });
+
     const bookings = await prisma.booking.findMany({
       where: { pet_sitter_id: sid },
+      skip,
+      take: limitNum,
       include: {
         status_booking_booking_status_idTostatus: true,
         booking_pet_detail: true,
@@ -180,7 +195,17 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       ),
     }));
 
-    return res.status(200).json({ data: list });
+    const totalPages = Math.ceil(totalRecords / limitNum);
+
+    return res.status(200).json({
+      data: list,
+      pagination: {
+        page: pageNum,
+        limit: limitNum,
+        totalPages,
+        totalRecords,
+      },
+    });
   } catch (error) {
     console.error("❌ Error fetching sitter bookings (admin):", error);
     return res.status(500).json({ message: "Internal Server Error" });
