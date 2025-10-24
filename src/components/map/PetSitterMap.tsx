@@ -151,7 +151,7 @@ export default function PetSitterMap({
 
   return (
     <div className="relative z-10">
-      <div className="h-[600px] w-full">
+      <div className="h-[450px] sm:h-[600px] w-full">
         <LeafletMap
           latitude={mapCenter.lat}
           longitude={mapCenter.lng}
@@ -193,7 +193,9 @@ export default function PetSitterMap({
                       coverUrl={sitter.sitter_image[0]?.image_url || "/images/cards/pet-sitter-cover.svg"}
                       avatarUrl={sitter.user_profile_image || sitter.sitter_image[0]?.image_url || "/images/cards/pet-sitter-cover.svg"}
                       smPreset="compact"
-                      className={`cursor-pointer shadow-lg hover:shadow-xl transition-all duration-300 max-w-[400px] ${isSelected
+                      className={`cursor-pointer shadow-lg hover:shadow-xl transition-all duration-300 max-w-[400px] 
+                        origin-bottom scale-90 sm:scale-100
+                        ${isSelected
                         ? 'border-orange-6 border-2 rounded-xl'
                         : 'border-gray-200 border hover:border-gray-300'
                         }`}
