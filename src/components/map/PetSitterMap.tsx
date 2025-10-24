@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState, useRef, useMemo, useCallback } from 'react';
+import { useRouter } from 'next/router';
 import { Sitter } from '@/types/sitter.types';
 import dynamic from 'next/dynamic';
 import { PetSitterCardSmall } from '@/components/cards/PetSitterCard';
@@ -34,7 +35,10 @@ export default function PetSitterMap({
   loading = false,
   onSitterSelect
 }: PetSitterMapProps) {
+  const router = useRouter();
   const [selectedPinId, setSelectedPinId] = useState<number | null>(null);
+  const [lastClickedSitterId, setLastClickedSitterId] = useState<number | null>(null);
+  const [mapCenter, setMapCenter] = useState({ lat: 13.7563, lng: 100.5018 }); // Default Bangkok
   const [pins, setPins] = useState<Pin[]>([]);
   const carouselRef = useRef<HTMLDivElement>(null);
 
@@ -59,19 +63,30 @@ export default function PetSitterMap({
 
   const handlePinClick = (pinId: number) => {
     setSelectedPinId(pinId);
+    setLastClickedSitterId(pinId); // Also set this to allow second click nav
     const selectedSitter = pins.find(pin => pin.id === pinId)?.sitter;
     if (selectedSitter) {
       onSitterSelect?.(selectedSitter);
+      setMapCenter({ lat: selectedSitter.latitude!, lng: selectedSitter.longitude! });
     }
   };
 
 
-  const handleCardNavigation = (sitter: Sitter) => {
-    // เลือก pin ที่ตรงกับ card ที่คลิก
-    const pin = pins.find(p => p.sitter.id === sitter.id);
-    if (pin) {
-      setSelectedPinId(pin.id);
-      onSitterSelect?.(sitter);
+  const handleCardNavigation = (e: React.MouseEvent, sitter: Sitter) => {
+    if (sitter.id === lastClickedSitterId) {
+      // Second click: navigate to the page
+      router.push(`/findpetsitter/${sitter.id}`);
+    } else {
+      // First click: prevent navigation, select pin, and center map
+      e.preventDefault();
+      setLastClickedSitterId(sitter.id);
+
+      const pin = pins.find(p => p.sitter.id === sitter.id);
+      if (pin) {
+        setSelectedPinId(pin.id);
+        onSitterSelect?.(sitter);
+        setMapCenter({ lat: pin.latitude, lng: pin.longitude });
+      }
     }
   };
 
@@ -98,22 +113,19 @@ export default function PetSitterMap({
     }
   }, [selectedPinId, scrollToSelectedCard]);
 
-  // คำนวณจุดกึ่งกลางของ pins ทั้งหมด (คำนวณใหม่ทุกครั้งที่ pins เปลี่ยน)
-  const { centerLat, centerLng } = useMemo(() => {
-    if (pins.length === 0) {
-      return {
-        centerLat: 13.7563, // Default Bangkok coordinates
-        centerLng: 100.5018
-      };
+  // Set initial map center based on average of pins, but only when sitters data changes
+  useEffect(() => {
+    if (pins.length > 0) {
+      const avgLat = pins.reduce((sum, pin) => sum + pin.latitude, 0) / pins.length;
+      const avgLng = pins.reduce((sum, pin) => sum + pin.longitude, 0) / pins.length;
+      
+      // Only update if the center is still the default (or very close to it)
+      // This prevents overriding the center after a user clicks a pin/card.
+      if (Math.abs(mapCenter.lat - 13.7563) < 0.0001) {
+        setMapCenter({ lat: avgLat, lng: avgLng });
+      }
     }
-
-    const avgLat = pins.reduce((sum, pin) => sum + pin.latitude, 0) / pins.length;
-    const avgLng = pins.reduce((sum, pin) => sum + pin.longitude, 0) / pins.length;
-
-    return {
-      centerLat: avgLat,
-      centerLng: avgLng
-    };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pins]);
 
   // const selectedSitter = pins.find(pin => pin.id === selectedPinId)?.sitter;
@@ -141,8 +153,8 @@ export default function PetSitterMap({
     <div className="relative z-10">
       <div className="h-[600px] w-full">
         <LeafletMap
-          latitude={centerLat}
-          longitude={centerLng}
+          latitude={mapCenter.lat}
+          longitude={mapCenter.lng}
           zoom={pins.length === 1 ? 15 : 10}
           pins={pins.map(pin => ({
             id: pin.id,
@@ -170,7 +182,7 @@ export default function PetSitterMap({
                 <div key={sitter.id} className="flex-shrink-0">
                   <a
                     href={`/findpetsitter/${sitter.id}`}
-                    onClick={() => handleCardNavigation(sitter)}
+                    onClick={(e) => handleCardNavigation(e, sitter)}
                   >
                     <PetSitterCardSmall
                       title={sitter.name || 'Happy House!'}
