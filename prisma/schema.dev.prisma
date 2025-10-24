@@ -7,6 +7,13 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+generator erd {
+  provider = "prisma-erd-generator"
+  output   = "./erd.svg"
+  layout = "fdp" // ลองเปลี่ยนเป็น "neato" หรือ "fdp"
+  theme = "neutral" // หรือ "forest", "dark", "light"
+}	
+
 model pet_type {
   id              Int               @id @default(autoincrement())
   pet_type_name   String            @unique @db.VarChar(100)
