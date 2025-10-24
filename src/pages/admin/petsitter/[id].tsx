@@ -68,6 +68,25 @@ export default function PetSitterDetailPage() {
   const [totalHistoryCount, setTotalHistoryCount] = useState(0);
   const itemsPerPage = 8;
   const bookingsPerPage = 10;
+  const reviewsPerPage = 5;
+
+  // -------------------- Reviews --------------------
+  interface Review {
+    id: number;
+    rating: number;
+    comment: string | null;
+    created_at: string;
+    user: {
+      id: number;
+      name: string | null;
+      profile_image: string | null;
+    };
+  }
+  const [reviews, setReviews] = useState<Review[]>([]);
+  const [loadingReviews, setLoadingReviews] = useState(false);
+  const [reviewCurrentPage, setReviewCurrentPage] = useState(1);
+  const [reviewTotalPages, setReviewTotalPages] = useState(1);
+  const [reviewTotalRecords, setReviewTotalRecords] = useState(0);
 
   // -------------------- Bookings (API) --------------------
   type BookingRowStatus =
@@ -172,6 +191,50 @@ export default function PetSitterDetailPage() {
     }
   };
 
+  const fetchReviews = useCallback(async (page = 1) => {
+    if (!id) return;
+    try {
+      setLoadingReviews(true);
+      const resp = await axios.get(`/api/admin/petsitter/reviews`, {
+        params: {
+          sitterId: Array.isArray(id) ? id[0] : id,
+          page,
+          limit: reviewsPerPage,
+        },
+      });
+      setReviews(resp.data?.data ?? []);
+      setReviewTotalPages(resp.data?.pagination?.totalPages ?? 1);
+      setReviewTotalRecords(resp.data?.pagination?.totalRecords ?? 0);
+      setReviewCurrentPage(page);
+    } catch (e) {
+      console.error("Error fetching reviews:", e);
+      setReviews([]);
+    } finally {
+      setLoadingReviews(false);
+    }
+  }, [id]);
+
+  const handleDeleteReview = async (reviewId: number) => {
+    try {
+      const result = await toast.promise(
+        axios.delete(`/api/admin/petsitter/reviews?reviewId=${reviewId}`),
+        {
+          loading: "Deleting review...",
+          success: "Review deleted successfully!",
+          error: "Failed to delete review.",
+        }
+      );
+
+      if (result.status === 200) {
+        // Refresh reviews
+        fetchReviews(reviewCurrentPage);
+      }
+    } catch (error) {
+      console.error("Error deleting review:", error);
+    }
+  };
+
+
   const fetchSitterDetail = useCallback(async () => {
     try {
       setLoading(true);
@@ -218,7 +281,10 @@ export default function PetSitterDetailPage() {
     if (activeTab === "history" && id) {
       fetchHistory(historyCurrentPage);
     }
-  }, [activeTab, id, fetchHistory]);
+    if (activeTab === "reviews" && id) {
+      fetchReviews(reviewCurrentPage);
+    }
+  }, [activeTab, id, historyCurrentPage, fetchHistory, reviewCurrentPage, fetchReviews]);
 
   const getStatusKey = (status: string): StatusKey => {
     switch (status) {
@@ -494,7 +560,18 @@ export default function PetSitterDetailPage() {
                 />
               )}
 
-              {activeTab === "reviews" && <SitterReviews />}
+              {activeTab === "reviews" && 
+                <SitterReviews
+                  reviews={reviews}
+                  loading={loadingReviews}
+                  totalPages={reviewTotalPages}
+                  currentPage={reviewCurrentPage}
+                  onPageChange={fetchReviews}
+                  totalRecords={reviewTotalRecords}
+                  itemsPerPage={reviewsPerPage}
+                  onDelete={handleDeleteReview}
+                />
+              }
 
               {activeTab === "history" && (
                 <SitterHistory
