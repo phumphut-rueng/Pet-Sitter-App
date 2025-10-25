@@ -1,3 +1,12 @@
+/**
+ * NotificationContext - Global notification state management
+ * 
+ * 🔧 Added Features:
+ * - Real-time notification updates via Socket.IO events
+ * - Auto-refresh when window becomes visible or gains focus
+ * - Centralized error handling with standardized error messages
+ * - Socket event listeners for new_notification, notification_update, notification_delete
+ */
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { useSession } from 'next-auth/react';
 import axios from 'axios';
@@ -33,6 +42,7 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [refreshTimeout, setRefreshTimeout] = useState<NodeJS.Timeout | null>(null);
 
   const fetchNotifications = useCallback(async () => {
     if (!session?.user?.id) {
@@ -124,17 +134,6 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
     }
   }, [session?.user?.id, fetchNotifications]);
 
-  // Auto-refresh notifications every 10 seconds for faster updates
-  useEffect(() => {
-    if (!session?.user?.id) return;
-
-    const interval = setInterval(() => {
-      // Auto-refresh notifications silently
-      fetchNotifications();
-    }, 10000); // 10 seconds for faster updates
-
-    return () => clearInterval(interval);
-  }, [session?.user?.id, fetchNotifications]);
 
   // Refresh notifications when page becomes visible
   useEffect(() => {
@@ -205,14 +204,41 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
     notificationSocket.on('socket:notification_count_update', handleNotificationCountUpdate);
     notificationSocket.on('socket:notification_refresh', handleNotificationRefresh);
 
+    // Listen for window events (fallback for external socket server issues)
+    const handleWindowNotificationRefresh = () => {
+      
+      // Clear existing timeout
+      if (refreshTimeout) {
+        clearTimeout(refreshTimeout);
+      }
+      
+      // ใช้ debounce เพื่อป้องกันการ refresh ซ้ำ
+      const timeout = setTimeout(() => {
+        fetchNotifications();
+        setRefreshTimeout(null);
+      }, 200);
+      
+      setRefreshTimeout(timeout);
+    };
+
+    window.addEventListener('socket:notification_refresh', handleWindowNotificationRefresh);
+
     return () => {
       notificationSocket.off('socket:new_notification', handleNewNotification);
       notificationSocket.off('socket:notification_update', handleNotificationUpdate);
       notificationSocket.off('socket:notification_delete', handleNotificationDelete);
       notificationSocket.off('socket:notification_count_update', handleNotificationCountUpdate);
       notificationSocket.off('socket:notification_refresh', handleNotificationRefresh);
+      
+      // Clean up window event listener
+      window.removeEventListener('socket:notification_refresh', handleWindowNotificationRefresh);
+      
+      // Clear timeout on cleanup
+      if (refreshTimeout) {
+        clearTimeout(refreshTimeout);
+      }
     };
-  }, [fetchNotifications]);
+  }, [fetchNotifications, refreshTimeout]);
 
   // Calculate unread count
   const unreadCount = notifications.filter(n => !n.isRead).length;

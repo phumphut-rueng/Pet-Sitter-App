@@ -156,7 +156,7 @@ export default function NotificationsPage() {
               )}
             </div>
             
-            <div className="flex gap-3">
+            <div className="flex gap-3 justify-end">
               {unreadCount > 0 && (
                 <button
                   onClick={handleMarkAllAsRead}

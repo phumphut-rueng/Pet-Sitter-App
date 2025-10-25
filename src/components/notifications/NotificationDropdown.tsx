@@ -140,12 +140,14 @@ export default function NotificationDropdown({ isOpen, onClose }: NotificationDr
           </div>
           
           {unreadCount > 0 && (
-            <button
-              onClick={handleMarkAllAsRead}
-              className="text-orange-5 hover:text-orange-6 text-sm2-regular transition-colors bg-red-5"
-            >
-              Mark all as read
-            </button>
+            <div className="flex justify-end">
+              <button
+                onClick={handleMarkAllAsRead}
+                className="text-orange-5 hover:text-orange-6 text-sm2-regular transition-colors"
+              >
+                Mark all as read
+              </button>
+            </div>
           )}
         </div>
 

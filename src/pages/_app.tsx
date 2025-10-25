@@ -9,7 +9,7 @@ import { SocketProvider } from "@/components/chat/SocketProvider";
 import MessageNotification from "@/components/chat/MessageNotification";
 import PageToaster from "@/components/ui/PageToaster";
 import { NotificationProvider } from "@/lib/notifications/NotificationContext";
-import { satoshi, notoThai } from "@/fonts"; 
+import { satoshi, notoThai } from "@/fonts";
 
 const NAV_HIDE_ROUTES = new Set([
   "/login",
@@ -45,6 +45,7 @@ export default function App({ Component, pageProps: { session, ...pageProps } }:
   return (
     <SessionProvider session={session}>
       <SocketProvider>
+        {/* 🔧 Added: NotificationProvider for global notification state management */}
         <NotificationProvider>
           {/* เพิ่ม font variables ที่ wrapper div */}
           <div className={`${satoshi.variable} ${notoThai.variable}`}>

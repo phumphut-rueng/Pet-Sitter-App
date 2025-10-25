@@ -8,6 +8,11 @@ import { useNotificationContext } from '@/lib/notifications/NotificationContext'
  * 
  * ใช้งานใน Navbar โดยครอบ button และ dropdown ด้วย relative container
  * เพื่อให้ dropdown แสดงในตำแหน่งที่สัมพันธ์กับปุ่มอย่างถูกต้อง
+ * 
+ * Updated Features:
+ * - Integrated with NotificationContext for centralized state management
+ * - Real-time unread count updates via Socket.IO
+ * - Removed debug logs for production use
  */
 export default function NotificationButton() {
   const [isOpen, setIsOpen] = useState(false);
