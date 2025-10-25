@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Bell } from 'lucide-react';
 import NotificationDropdown from './NotificationDropdown';
 import { useNotificationContext } from '@/lib/notifications/NotificationContext';
@@ -16,7 +16,22 @@ import { useNotificationContext } from '@/lib/notifications/NotificationContext'
  */
 export default function NotificationButton() {
   const [isOpen, setIsOpen] = useState(false);
-  const { unreadCount } = useNotificationContext();
+  const { unreadCount, fetchNotifications } = useNotificationContext();
+
+  // Listen for immediate updates and sync with context
+  useEffect(() => {
+    const handleImmediateUpdate = () => {
+      // Also refresh notifications to get accurate count
+      fetchNotifications();
+    };
+
+    window.addEventListener('update:notification_count', handleImmediateUpdate);
+    return () => window.removeEventListener('update:notification_count', handleImmediateUpdate);
+  }, [fetchNotifications]);
+
+  // Use context count as primary source of truth
+  const displayCount = unreadCount;
+  
 
   return (
     <div className="relative">
@@ -30,9 +45,9 @@ export default function NotificationButton() {
         <Bell className="w-5 h-5" />
         
         {/* Unread indicator */}
-        {unreadCount > 0 && (
+        {displayCount > 0 && (
           <span className="absolute -top-1 -right-1 bg-orange-5 text-white text-xs min-w-[20px] h-5 px-1 rounded-full flex items-center justify-center font-medium">
-            {unreadCount > 99 ? '99+' : unreadCount}
+            {displayCount > 99 ? '99+' : displayCount}
           </span>
         )}
       </button>

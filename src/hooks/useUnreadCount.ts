@@ -8,6 +8,7 @@
  * - Returns unreadCount, loading state, and refresh function
  */
 import { useState, useEffect, useCallback } from 'react';
+import axios from 'axios';
 
 export const useUnreadCount = (userId: string | undefined) => {
   const [unreadCount, setUnreadCount] = useState<number>(0);
@@ -23,13 +24,8 @@ export const useUnreadCount = (userId: string | undefined) => {
     setLoading(true);
     try {
       // ดึง unread count จาก API
-      const response = await fetch('/api/chat/unread-count');
-      if (response.ok) {
-        const data = await response.json();
-        setUnreadCount(data.totalUnreadCount || 0);
-      } else {
-        setUnreadCount(0);
-      }
+      const response = await axios.get('/api/chat/unread-count');
+      setUnreadCount(response.data.totalUnreadCount || 0);
     } catch (error) {
       console.error('Error fetching unread count:', error);
       setUnreadCount(0);

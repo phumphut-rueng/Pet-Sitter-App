@@ -8,6 +8,7 @@ import InputText from "@/components/input/InputText";
 import PrimaryButton from "@/components/buttons/PrimaryButton";
 import { PetPawLoading } from "@/components/loading/PetPawLoading";
 import { PASSWORD_ERROR_MESSAGES, PASSWORD_SUCCESS_MESSAGES } from "@/lib/constants/messages";
+import axios from "axios";
 
 export default function AccountChangePasswordPage() {
   const { data: session, status } = useSession();
@@ -29,12 +30,10 @@ export default function AccountChangePasswordPage() {
     if (status !== "authenticated" || !session?.user?.email) return;
     (async () => {
       try {
-        const res = await fetch("/api/auth/check-auth-type", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ email: session.user.email.toLowerCase() }),
+        const res = await axios.post("/api/auth/check-auth-type", {
+          email: session.user.email.toLowerCase()
         });
-        const data = await res.json();
+        const data = res.data;
         if (data?.flow === "google") {
           setAuthFlow("google");
           router.replace("/auth/forgot-password?email=" + encodeURIComponent(session.user.email));
@@ -68,16 +67,12 @@ export default function AccountChangePasswordPage() {
 
     try {
       setBusy(true); // ⬅️ แสดง Paw ตอน submit
-      const res = await fetch("/api/auth/change-password", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          email: session?.user?.email?.toLowerCase(),
-          newPassword,
-        }),
+      const res = await axios.post("/api/auth/change-password", {
+        email: session?.user?.email?.toLowerCase(),
+        newPassword,
       });
-      const data = await res.json();
-      if (!res.ok) {
+      const data = res.data;
+      if (res.status !== 200) {
         const errorMsg = data?.message || PASSWORD_ERROR_MESSAGES.changeFailed;
         setShowError(errorMsg);
         toast.error(errorMsg);

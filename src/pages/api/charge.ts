@@ -351,7 +351,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       });
       
       
-      // แจ้ง customer ว่าชำระเงินสำเร็จ
+      // Notify customer of successful payment
       await notifyPaymentSuccess(
         booking.user_id,
         Number(booking.amount),
@@ -359,11 +359,26 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       );
       
       
-      // Trigger real-time update for frontend
+      // Trigger real-time notification update
       try {
-        // ส่ง event เพื่อให้ frontend อัปเดต notification
-        // Trigger real-time notification update
-        
+        // Send event to frontend directly
+        if (typeof global !== 'undefined' && global.window) {
+          // Notify sitter
+          global.window.dispatchEvent(new CustomEvent('socket:notification_refresh', {
+            detail: { userId: sitterUserId }
+          }));
+          global.window.dispatchEvent(new CustomEvent('update:notification_count', {
+            detail: { userId: sitterUserId }
+          }));
+
+          // Notify customer
+          global.window.dispatchEvent(new CustomEvent('socket:notification_refresh', {
+            detail: { userId: booking.user_id }
+          }));
+          global.window.dispatchEvent(new CustomEvent('update:notification_count', {
+            detail: { userId: booking.user_id }
+          }));
+        }
       } catch {
         // Real-time update failed silently
       }

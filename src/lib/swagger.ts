@@ -72,7 +72,7 @@ export const swaggerSpec = swaggerJsdoc({
           properties: {
             id: { type: "integer", example: 1 },
             type: { type: "string", enum: ["message", "booking", "payment", "system", "admin"], example: "booking" },
-            title: { type: "string", example: "Booking Confirmed! 🎉" },
+            title: { type: "string", example: "Booking Confirmed!" },
             message: { type: "string", example: "Your booking with John Doe has been confirmed" },
             isRead: { type: "boolean", example: false },
             time: { type: "string", example: "Just now" },
@@ -96,7 +96,7 @@ export const swaggerSpec = swaggerJsdoc({
           properties: {
             userId: { type: "integer", example: 123 },
             type: { type: "string", enum: ["message", "booking", "payment", "system", "admin"], example: "booking" },
-            title: { type: "string", example: "Booking Confirmed! 🎉" },
+            title: { type: "string", example: "Booking Confirmed!" },
             message: { type: "string", example: "Your booking has been confirmed" },
           },
         },
@@ -724,4 +724,86 @@ AdminReportsListResponse: {
   },
   // ให้สแกนทุกไฟล์ API ของ Next.js
   apis: ["./src/pages/api/**/*.ts"],
+  // เพิ่ม API ใหม่ที่ไม่มี OpenAPI comments
+  paths: {
+    "/api/notifications/trigger-realtime": {
+      post: {
+        tags: ["Notifications"],
+        summary: "Trigger real-time notification update",
+        description: "Trigger real-time notification refresh for a specific user",
+        requestBody: {
+          required: true,
+          content: {
+            "application/json": {
+              schema: {
+                type: "object",
+                required: ["userId"],
+                properties: {
+                  userId: { type: "integer", example: 123 }
+                }
+              }
+            }
+          }
+        },
+        responses: {
+          "200": {
+            description: "Real-time notification update triggered successfully",
+            content: {
+              "application/json": {
+                schema: {
+                  type: "object",
+                  properties: {
+                    success: { type: "boolean", example: true },
+                    message: { type: "string", example: "Real-time notification update triggered" }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            description: "Bad request - missing userId",
+            content: {
+              "application/json": {
+                schema: {
+                  type: "object",
+                  properties: {
+                    success: { type: "boolean", example: false },
+                    message: { type: "string", example: "User ID is required" }
+                  }
+                }
+              }
+            }
+          },
+          "405": {
+            description: "Method not allowed",
+            content: {
+              "application/json": {
+                schema: {
+                  type: "object",
+                  properties: {
+                    success: { type: "boolean", example: false },
+                    message: { type: "string", example: "Method not allowed" }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            description: "Internal server error",
+            content: {
+              "application/json": {
+                schema: {
+                  type: "object",
+                  properties: {
+                    success: { type: "boolean", example: false },
+                    message: { type: "string", example: "Internal server error" }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
 });

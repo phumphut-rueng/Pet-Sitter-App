@@ -147,15 +147,33 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         include: { pet_type: true },
       });
 
-      // NOTIFICATION SYSTEM: สร้าง notification เมื่อเพิ่ม pet ใหม่
-      // เพิ่มโค้ดนี้เพื่อแจ้ง user เมื่อเพิ่ม pet ใหม่ - เพื่อยืนยันการเพิ่ม pet
+      // NOTIFICATION SYSTEM: Create notification when adding new pet
       try {
-        const { notifyPetRegistration } = await import('@/lib/notifications/pet-sitter-notifications');
-        // แจ้ง user เมื่อเพิ่ม pet ใหม่ - เพื่อยืนยันการเพิ่ม pet สำเร็จ
-        await notifyPetRegistration(ownerId, created.name, created.pet_type?.pet_type_name ?? "");
+        const { createSystemNotification } = await import('@/lib/notifications/notification-utils');
+        
+        // Create notification directly
+        await createSystemNotification(
+          ownerId,
+          'Pet Added!',
+          `Your pet "${created.name}" (${created.pet_type?.pet_type_name ?? ""}) has been added to your profile.`
+        );
+        
+        // Trigger real-time notification update
+        try {
+          // Send event to frontend directly
+          if (typeof global !== 'undefined' && global.window) {
+            global.window.dispatchEvent(new CustomEvent('socket:notification_refresh', {
+              detail: { userId: ownerId }
+            }));
+            global.window.dispatchEvent(new CustomEvent('update:notification_count', {
+              detail: { userId: ownerId }
+            }));
+          }
+        } catch (error) {
+          console.error('Failed to trigger real-time update:', error);
+        }
       } catch (notificationError) {
         console.error('Failed to create pet registration notification:', notificationError);
-        // ไม่ throw error เพื่อไม่ให้กระทบการเพิ่ม pet - notification เป็น secondary feature
       }
 
       return res.status(201).json({

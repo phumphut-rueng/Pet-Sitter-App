@@ -69,6 +69,7 @@ function NotificationItem({ notification, onMarkAsRead }: {
 export default function NotificationDropdown({ isOpen, onClose }: NotificationDropdownProps) {
   const { notifications, unreadCount, markAsRead, markAllAsRead, refreshNotifications } = useNotificationContext();
   const dropdownRef = useRef<HTMLDivElement>(null);
+  
 
   // Refresh notifications when dropdown opens
   useEffect(() => {

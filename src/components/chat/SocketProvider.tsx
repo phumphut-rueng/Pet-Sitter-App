@@ -37,7 +37,6 @@ export const SocketProvider: React.FC<SocketProviderProps> = ({ children }) => {
   const [unreadUpdates, setUnreadUpdates] = useState<UnreadUpdateData[]>([]);
   const [onlineUsers, setOnlineUsers] = useState<string[]>([]);
   const processedMessageIds = useRef<Set<string>>(new Set());
-  const notificationTimeout = useRef<NodeJS.Timeout | null>(null);
 
   // ฟังก์ชันสำหรับส่งข้อความ
   const sendMessage = (data: SendMessageData) => {
@@ -48,10 +47,9 @@ export const SocketProvider: React.FC<SocketProviderProps> = ({ children }) => {
     }
   };
 
-  useEffect(() => {
+        useEffect(() => {
     // Copy ref values to avoid cleanup warnings
     const currentProcessedIds = processedMessageIds.current;
-    const currentTimeout = notificationTimeout.current;
 
     // โหลด online users เริ่มต้นจาก API
     const fetchOnlineUsers = async () => {
@@ -80,7 +78,7 @@ export const SocketProvider: React.FC<SocketProviderProps> = ({ children }) => {
       
       // ตรวจสอบว่าเป็นข้อความใหม่หรือไม่ (ใช้ useRef เพื่อป้องกันการสร้าง notification ซ้ำ)
       if (processedMessageIds.current.has(messageKey)) {
-        console.log('🔔 Duplicate message detected, skipping notification creation');
+        console.log(' Duplicate message detected, skipping notification creation');
         return;
       }
       
@@ -91,39 +89,23 @@ export const SocketProvider: React.FC<SocketProviderProps> = ({ children }) => {
       
       // สร้าง notification สำหรับข้อความใหม่ (เฉพาะเมื่อผู้ใช้ปัจจุบันเป็นผู้รับ)
       if (message.senderId !== userId) {
-        
-        // ใช้ debounce เพื่อป้องกันการสร้าง notification ซ้ำ
-        if (notificationTimeout.current) {
-          clearTimeout(notificationTimeout.current);
-        }
-        
-        notificationTimeout.current = setTimeout(async () => {
-          try {
-            const response = await fetch('/api/notifications/create', {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json',
-              },
-              body: JSON.stringify({
-                userId: parseInt(userId || '0'),
-                type: 'message',
-                title: 'New Message',
-                message: `You have a new message from ${message.senderName}`,
-              }),
-            });
-            
-            
-            if (response.ok) {
-              // Trigger notification refresh
-              window.dispatchEvent(new CustomEvent('socket:notification_refresh', { 
-                detail: { userId: parseInt(userId || '0') } 
-              }));
-            } else {
-              await response.json();
-            }
-          } catch {
+        try {
+          const response = await axios.post('/api/notifications/create', {
+            userId: parseInt(userId || '0'),
+            type: 'message',
+            title: 'New Message',
+            message: `You have a new message from ${message.senderName}`,
+          });
+          
+          if (response.data.success) {
+            // Trigger notification refresh
+            window.dispatchEvent(new CustomEvent('socket:notification_refresh', { 
+              detail: { userId: parseInt(userId || '0') } 
+            }));
           }
-        }, 100); // รอ 100ms ก่อนสร้าง notification
+        } catch (error) {
+          console.error('Failed to create notification:', error);
+        }
       }
     };
 
@@ -156,10 +138,26 @@ export const SocketProvider: React.FC<SocketProviderProps> = ({ children }) => {
 
     const handleConnectionError = (event: CustomEvent<Error>) => {
       console.error('Socket connection error received:', event.detail);
-      // สามารถเพิ่ม logic สำหรับจัดการ error ได้ที่นี่
+      // Can add logic for error handling here
     };
 
-    // เพิ่ม event listeners
+           // Add handler for notification refresh
+           const handleNotificationRefresh = async (event: CustomEvent) => {
+             const { userId: refreshUserId } = event.detail;
+
+             // If it's the current user, fetch new notification count
+             if (refreshUserId === parseInt(userId || '0')) {
+               try {
+                 // Trigger notification count update
+                 // Send event to NotificationBell component
+                 window.dispatchEvent(new CustomEvent('update:notification_count'));
+               } catch (error) {
+                 console.error('Failed to update notification count:', error);
+               }
+             }
+           };
+
+    // Add event listeners
     window.addEventListener('socket:receive_message', handleReceiveMessage as unknown as EventListener);
     window.addEventListener('socket:unread_update', handleUnreadUpdate as EventListener);
     window.addEventListener('socket:user_online', handleUserOnline as EventListener);
@@ -167,6 +165,7 @@ export const SocketProvider: React.FC<SocketProviderProps> = ({ children }) => {
     window.addEventListener('socket:online_users_list', handleOnlineUsersList as EventListener);
     window.addEventListener('socket:chat_list_update', handleChatListUpdate as EventListener);
     window.addEventListener('socket:connection_error', handleConnectionError as EventListener);
+    window.addEventListener('socket:notification_refresh', handleNotificationRefresh as unknown as EventListener);
 
     // Cleanup event listeners
     return () => {
@@ -177,14 +176,10 @@ export const SocketProvider: React.FC<SocketProviderProps> = ({ children }) => {
       window.removeEventListener('socket:online_users_list', handleOnlineUsersList as EventListener);
       window.removeEventListener('socket:chat_list_update', handleChatListUpdate as EventListener);
       window.removeEventListener('socket:connection_error', handleConnectionError as EventListener);
+      window.removeEventListener('socket:notification_refresh', handleNotificationRefresh as unknown as EventListener);
       
-      // Clear processed message IDs
-      currentProcessedIds.clear();
-      
-      // Clear notification timeout
-      if (currentTimeout) {
-        clearTimeout(currentTimeout);
-      }
+           // Clear processed message IDs
+           currentProcessedIds.clear();
     };
   }, [isConnected, messages, userId]);
 

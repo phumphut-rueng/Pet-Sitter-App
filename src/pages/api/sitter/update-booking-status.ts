@@ -2,6 +2,7 @@ import { NextApiRequest, NextApiResponse } from "next";
 import { getServerSession } from "next-auth";
 import { authOptions } from "../auth/[...nextauth]";
 import { prisma } from "@/lib/prisma/prisma";
+import axios from "axios";
 
 /**
  * @openapi
@@ -61,33 +62,52 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       }
     });
 
-    // NOTIFICATION SYSTEM: สร้าง notification เมื่อ sitter อัปเดต booking status
-    // เพิ่มโค้ดนี้เพื่อแจ้ง customer เมื่อ booking status เปลี่ยน (confirmed, cancelled, completed)
+    // NOTIFICATION SYSTEM: สร้าง notification เมื่อ sitter อัปเดต booking status (เร็วเหมือนแชท)
     try {
-      const { createBookingNotification } = await import('@/lib/notifications/notification-utils');
+      const { createSystemNotification } = await import('@/lib/notifications/notification-utils');
       
       // Map status ID to action - เพื่อแปลง status ID เป็น action ที่เข้าใจได้
-      const statusMap: { [key: number]: 'confirmed' | 'cancelled' | 'completed' | 'in_service' } = {
-        1: 'confirmed',   // ยืนยันการจอง
-        2: 'cancelled',   // ยกเลิกการจอง
-        3: 'completed',   // เสร็จสิ้นการจอง
-        4: 'confirmed',   // waiting for service (Confirm Booking)
-        5: 'confirmed',   // ยืนยันการจอง
-        6: 'in_service',  // in service
-        7: 'completed'    // success/completed
+      const statusMap: { [key: number]: { title: string; message: string } } = {
+        1: { title: 'Booking Confirmed!', message: `Your booking with ${updatedBooking.sitter.name || 'Pet Sitter'} has been confirmed` },
+        2: { title: 'Booking Cancelled', message: `Your booking with ${updatedBooking.sitter.name || 'Pet Sitter'} has been cancelled` },
+        3: { title: 'Service Completed!', message: `Your booking with ${updatedBooking.sitter.name || 'Pet Sitter'} has been completed` },
+        4: { title: 'Booking Confirmed!', message: `Your booking with ${updatedBooking.sitter.name || 'Pet Sitter'} has been confirmed` },
+        5: { title: 'Booking Confirmed!', message: `Your booking with ${updatedBooking.sitter.name || 'Pet Sitter'} has been confirmed` },
+        6: { title: 'Service Started!', message: `Your booking with ${updatedBooking.sitter.name || 'Pet Sitter'} is now in service` },
+        7: { title: 'Service Completed!', message: `Your booking with ${updatedBooking.sitter.name || 'Pet Sitter'} has been completed` }
       };
       
-      const action = statusMap[Number(statusId)] || 'confirmed';
+      const notificationData = statusMap[Number(statusId)] || statusMap[1];
       
-      // แจ้ง customer เมื่อ booking status เปลี่ยน - เพื่อให้ customer รู้สถานะล่าสุด
-      await createBookingNotification(
+      // Create notification directly
+      await createSystemNotification(
         updatedBooking.user_id,
-        updatedBooking.sitter.name || 'Pet Sitter',
-        action
+        notificationData.title,
+        notificationData.message
       );
+      
+      // Trigger real-time notification update
+      try {
+        // Send event to frontend via Socket.IO server
+        const socketServerUrl = process.env.NEXT_PUBLIC_SOCKET_SERVER_URL || 'https://pet-sitter-socket-server-production.up.railway.app';
+        
+        // Send 2 events: notification_refresh and count_update
+        await axios.post(`${socketServerUrl}/emit-notification-refresh`, {
+          userId: updatedBooking.user_id
+        });
+        
+        // Add: Send event for direct count update
+        await axios.post(`${socketServerUrl}/emit-event`, {
+          event: 'notification_count_update',
+          userId: updatedBooking.user_id,
+          data: { shouldRefetch: true }
+        });
+        
+      } catch (error) {
+        console.error('Failed to trigger real-time update:', error);
+      }
     } catch (notificationError) {
       console.error('Failed to create booking notification:', notificationError);
-      // ไม่ throw error เพื่อไม่ให้กระทบการอัปเดต - notification เป็น secondary feature
     }
 
     return res.status(200).json({ message: "Booking status updated successfully" });

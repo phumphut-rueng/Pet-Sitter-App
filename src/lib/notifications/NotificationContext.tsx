@@ -1,7 +1,7 @@
 /**
  * NotificationContext - Global notification state management
  * 
- * 🔧 Added Features:
+ * Added Features:
  * - Real-time notification updates via Socket.IO events
  * - Auto-refresh when window becomes visible or gains focus
  * - Centralized error handling with standardized error messages
@@ -163,86 +163,108 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
     return () => window.removeEventListener('focus', handleFocus);
   }, [session?.user?.id, fetchNotifications]);
 
-  // Listen for real-time notification updates
-  useEffect(() => {
-    const handleNewNotification = (data: unknown) => {
-      setNotifications(prev => [data as Notification, ...prev]);
-    };
+         // Listen for real-time notification updates
+         useEffect(() => {
+           const handleNewNotification = (data: unknown) => {
+             setNotifications(prev => [data as Notification, ...prev]);
+           };
 
-    const handleNotificationUpdate = (data: unknown) => {
-      const notification = data as Notification;
-      setNotifications(prev => 
-        prev.map(notif => 
-          notif.id === notification.id 
-            ? { ...notif, ...notification }
-            : notif
-        )
-      );
-    };
+           const handleNotificationUpdate = (data: unknown) => {
+             const notification = data as Notification;
+             setNotifications(prev =>
+               prev.map(notif =>
+                 notif.id === notification.id
+                   ? { ...notif, ...notification }
+                   : notif
+               )
+             );
+           };
 
-    const handleNotificationDelete = (data: unknown) => {
-      const notification = data as { id: number };
-      setNotifications(prev => 
-        prev.filter(notif => notif.id !== notification.id)
-      );
-    };
+           const handleNotificationDelete = (data: unknown) => {
+             const notification = data as { id: number };
+             setNotifications(prev =>
+               prev.filter(notif => notif.id !== notification.id)
+             );
+           };
 
-    const handleNotificationCountUpdate = () => {
-      // Trigger a refresh when count changes
-      fetchNotifications();
-    };
+           const handleNotificationCountUpdate = () => {
+             // Trigger a refresh when count changes
+             fetchNotifications();
+           };
 
-    const handleNotificationRefresh = () => {
-      // Force refresh notifications
-      fetchNotifications();
-    };
+           const handleNotificationRefresh = () => {
+             // Force refresh notifications
+             fetchNotifications();
+           };
 
-    // Listen for socket events
-    notificationSocket.on('socket:new_notification', handleNewNotification);
-    notificationSocket.on('socket:notification_update', handleNotificationUpdate);
-    notificationSocket.on('socket:notification_delete', handleNotificationDelete);
-    notificationSocket.on('socket:notification_count_update', handleNotificationCountUpdate);
-    notificationSocket.on('socket:notification_refresh', handleNotificationRefresh);
+           // Listen for socket events using new NotificationSocket
+           notificationSocket.on('socket:new_notification', handleNewNotification);
+           notificationSocket.on('socket:notification_update', handleNotificationUpdate);
+           notificationSocket.on('socket:notification_delete', handleNotificationDelete);
+           notificationSocket.on('socket:notification_count_update', handleNotificationCountUpdate);
+           notificationSocket.on('socket:notification_refresh', handleNotificationRefresh);
 
-    // Listen for window events (fallback for external socket server issues)
-    const handleWindowNotificationRefresh = () => {
-      
-      // Clear existing timeout
-      if (refreshTimeout) {
-        clearTimeout(refreshTimeout);
-      }
-      
-      // ใช้ debounce เพื่อป้องกันการ refresh ซ้ำ
-      const timeout = setTimeout(() => {
-        fetchNotifications();
-        setRefreshTimeout(null);
-      }, 200);
-      
-      setRefreshTimeout(timeout);
-    };
+           // Listen for window events (fallback for external socket server issues)
+           const handleWindowNotificationRefresh = () => {
+             // Clear existing timeout
+             if (refreshTimeout) {
+               clearTimeout(refreshTimeout);
+             }
 
-    window.addEventListener('socket:notification_refresh', handleWindowNotificationRefresh);
+             // Use debounce to prevent duplicate refreshes
+             const timeout = setTimeout(() => {
+               fetchNotifications();
+               setRefreshTimeout(null);
+             }, 1);
 
-    return () => {
-      notificationSocket.off('socket:new_notification', handleNewNotification);
-      notificationSocket.off('socket:notification_update', handleNotificationUpdate);
-      notificationSocket.off('socket:notification_delete', handleNotificationDelete);
-      notificationSocket.off('socket:notification_count_update', handleNotificationCountUpdate);
-      notificationSocket.off('socket:notification_refresh', handleNotificationRefresh);
-      
-      // Clean up window event listener
-      window.removeEventListener('socket:notification_refresh', handleWindowNotificationRefresh);
-      
-      // Clear timeout on cleanup
-      if (refreshTimeout) {
-        clearTimeout(refreshTimeout);
-      }
-    };
-  }, [fetchNotifications, refreshTimeout]);
+             setRefreshTimeout(timeout);
+           };
+
+           // Add handler for update:notification_count
+           const handleUpdateNotificationCount = () => {
+             // Optimistic update: add count immediately
+             setNotifications(prev => {
+               const newNotification = {
+                 id: Date.now(), // temporary ID
+                 type: 'system' as const,
+                 title: 'New Notification',
+                 message: 'You have a new notification',
+                 time: 'Just now',
+                 isRead: false,
+                 createdAt: new Date().toISOString()
+               };
+               return [newNotification, ...prev];
+             });
+             
+             // Then fetch real data
+             fetchNotifications();
+           };
+
+           window.addEventListener('socket:notification_refresh', handleWindowNotificationRefresh);
+           window.addEventListener('update:notification_count', handleUpdateNotificationCount);
+
+           return () => {
+             notificationSocket.off('socket:new_notification', handleNewNotification);
+             notificationSocket.off('socket:notification_update', handleNotificationUpdate);
+             notificationSocket.off('socket:notification_delete', handleNotificationDelete);
+             notificationSocket.off('socket:notification_count_update', handleNotificationCountUpdate);
+             notificationSocket.off('socket:notification_refresh', handleNotificationRefresh);
+
+             // Clean up window event listener
+             window.removeEventListener('socket:notification_refresh', handleWindowNotificationRefresh);
+             window.removeEventListener('update:notification_count', handleUpdateNotificationCount);
+
+             // Clear timeout on cleanup
+             if (refreshTimeout) {
+               clearTimeout(refreshTimeout);
+             }
+           };
+         }, [fetchNotifications, refreshTimeout]);
 
   // Calculate unread count
   const unreadCount = notifications.filter(n => !n.isRead).length;
   const hasUnread = unreadCount > 0;
+  
 
   return (
     <NotificationContext.Provider

@@ -24,10 +24,10 @@ export async function createBookingNotification(userId: number, sitterName: stri
   }[action];
 
   const titleText = {
-    confirmed: 'Booking Confirmed! 🎉',
+    confirmed: 'Booking Confirmed!',
     cancelled: 'Booking Cancelled',
-    completed: 'Service Completed! ✅',
-    in_service: 'Service Started! 🚀',
+    completed: 'Service Completed!',
+    in_service: 'Service Started!',
   }[action];
 
   return await createNotification({

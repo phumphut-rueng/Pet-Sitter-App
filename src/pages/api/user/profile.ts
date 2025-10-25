@@ -205,15 +205,32 @@ async function handleUpdateProfile(
   try {
     await userRepository.updateById(userId, updateData);
     
-    // NOTIFICATION SYSTEM: สร้าง notification เมื่ออัปเดต profile
-    // เพิ่มโค้ดนี้เพื่อแจ้ง user เมื่ออัปเดต profile - เพื่อยืนยันการเปลี่ยนแปลง
+    // NOTIFICATION SYSTEM: Create notification when updating profile
     try {
-      const { notifyProfileUpdate } = await import('@/lib/notifications/pet-sitter-notifications');
-      // แจ้ง user เมื่ออัปเดต profile - เพื่อยืนยันการเปลี่ยนแปลงข้อมูลส่วนตัว
-      await notifyProfileUpdate(userId);
+      // Create notification directly
+      const { createSystemNotification } = await import('@/lib/notifications/notification-utils');
+      await createSystemNotification(
+        userId,
+        'Profile Updated!',
+        'Your profile information has been successfully updated.'
+      );
+      
+      // Trigger real-time notification update
+      try {
+        // Send event to frontend directly
+        if (typeof global !== 'undefined' && global.window) {
+          global.window.dispatchEvent(new CustomEvent('socket:notification_refresh', {
+            detail: { userId }
+          }));
+          global.window.dispatchEvent(new CustomEvent('update:notification_count', {
+            detail: { userId }
+          }));
+        }
+      } catch (error) {
+        console.error('Failed to trigger real-time update:', error);
+      }
     } catch (notificationError) {
       console.error('Failed to create profile update notification:', notificationError);
-      // ไม่ throw error เพื่อไม่ให้กระทบการอัปเดต profile - notification เป็น secondary feature
     }
     
     return res.status(HTTP_STATUS.OK).json({ message: "Profile updated successfully" });
