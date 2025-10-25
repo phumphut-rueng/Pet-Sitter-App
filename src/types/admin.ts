@@ -65,10 +65,10 @@ export interface Review {
 
 export interface HistoryRow {
   id: number;
-  status: string;
-  approver: string;
-  note: string;
-  date: string;
+  statusName: string;
+  adminName?: string;
+  adminNote?: string;
+  changedAt: string;
 }
 
 export type TabType = "profile" | "booking" | "reviews" | "history";

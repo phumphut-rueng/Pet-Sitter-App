@@ -51,33 +51,40 @@ export function useSitterBookings(id: string | string[] | undefined) {
         id: row.id,
       });
       const d = resp as bookingData;
+      
+      // Map booking_status number to BookingStatus string
+      const getBookingStatus = (statusId: number): BookingStatus => {
+        switch (statusId) {
+          case 1: return "waiting";
+          case 2: return "waiting_for_service";
+          case 3: return "in_service";
+          case 4: return "success";
+          case 5: return "canceled";
+          default: return "waiting";
+        }
+      };
+      
       const booking: BookingCardProps & {
         totalTHB?: number;
         transactionNo?: string;
       } = {
         id: d.id,
-        status: d.status as BookingStatus,
+        status: getBookingStatus(d.booking_status),
         title: "Boarding",
         sitterName: sitterName || "Pet Sitter",
-        transactionDate: d.transactionDate
-          ? new Date(d.transactionDate).toLocaleDateString("en-GB", {
+        transactionDate: d.transaction_date
+          ? new Date(d.transaction_date).toLocaleDateString("en-GB", {
               day: "2-digit",
               month: "short",
               year: "numeric",
             })
           : "-",
-        dateTime: d.bookingDate,
-        duration: d.duration,
-        pet: `${d.pets} Pet(s)`,
-        transactionNo: d.transactionNo,
-        totalTHB:
-          typeof d.totalPaid === "number" ? d.totalPaid : Number(d.totalPaid ?? 0),
+        dateTime: d.date_start,
+        duration: `${d.date_start} - ${d.date_end}`,
+        pet: "Pet(s)",
+        transactionNo: d.transaction_id || "",
+        totalTHB: d.amount,
       };
-      
-      // Attach additional data
-      (booking as bookingData).ownerName = d.ownerName;
-      (booking as bookingData).pets = d.pets;
-      (booking as bookingData).petsDetail = d.petsDetail || [];
       
       setSelectedBooking(booking);
       setBookingDialogOpen(true);
