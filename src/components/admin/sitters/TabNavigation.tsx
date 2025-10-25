@@ -1,4 +1,3 @@
-import { ReactNode } from "react";
 import type { TabType } from "@/types/admin";
 
 interface TabNavigationProps {

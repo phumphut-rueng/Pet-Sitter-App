@@ -2,26 +2,27 @@ import SitterProfile from "@/components/admin/sitters/SitterProfile";
 import SitterBookings from "@/components/admin/sitters/SitterBookings";
 import SitterReviews from "@/components/admin/sitters/SitterReviews";
 import SitterHistory from "@/components/admin/sitters/SitterHistory";
-import type { TabType, SitterDetail } from "@/types/admin";
-import type { BookingCardProps, BookingStatus } from "@/components/cards/BookingCard";
+import type { TabType, SitterDetail, BookingRow, Review, HistoryRow } from "@/types/admin";
+import type { BookingCardProps } from "@/components/cards/BookingCard";
+import type { StatusKey } from "@/components/badges/StatusBadge";
 
 interface TabContentProps {
   activeTab: TabType;
   sitter: SitterDetail;
   // Bookings props
-  bookings: any[];
+  bookings: BookingRow[];
   loadingBookings: boolean;
   bookingDialogOpen: boolean;
   onBookingDialogChange: (open: boolean) => void;
   selectedBooking: (BookingCardProps & { totalTHB?: number; transactionNo?: string }) | null;
-  openBookingDetail: (row: any) => void;
+  openBookingDetail: (row: BookingRow) => void;
   totalPages: number;
   currentPage: number;
   onPageChange: (page: number) => void;
   totalRecords: number;
   itemsPerPage: number;
   // Reviews props
-  reviews: any[];
+  reviews: Review[];
   loading: boolean;
   reviewTotalPages: number;
   reviewCurrentPage: number;
@@ -30,14 +31,14 @@ interface TabContentProps {
   reviewsPerPage: number;
   onDelete: (reviewId: number) => void;
   // History props
-  historyData: any[];
+  historyData: HistoryRow[];
   loadingHistory: boolean;
   historyTotalPages: number;
   historyCurrentPage: number;
   onHistoryPageChange: (page: number) => void;
   totalHistoryCount: number;
   historyItemsPerPage: number;
-  getStatusKey: (status: string) => any;
+  getStatusKey: (status: string) => StatusKey;
 }
 
 export function TabContent({

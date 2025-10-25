@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import type { TabType } from "@/types/admin";
 
 export function useTabNavigation(

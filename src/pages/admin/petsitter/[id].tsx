@@ -1,11 +1,11 @@
 import { useRouter } from "next/router";
-import { useState, useEffect } from "react";
+import { useEffect } from "react";
 import Head from "next/head";
 import AdminSidebar from "@/components/layout/AdminSidebar";
 import Link from "next/link";
 import { ChevronLeft } from "lucide-react";
 import { PetPawLoading } from "@/components/loading/PetPawLoading";
-import toast, { Toaster } from "react-hot-toast";
+import { Toaster } from "react-hot-toast";
 import { useSitterDetail } from "@/hooks/admin/useSitterDetail";
 import { useSitterBookings } from "@/hooks/admin/useSitterBookings";
 import { useSitterReviews } from "@/hooks/admin/useSitterReviews";
@@ -17,10 +17,8 @@ import { SitterHeader } from "@/components/admin/sitters/SitterHeader";
 import { RejectedBanner } from "@/components/admin/sitters/RejectedBanner";
 import { TabNavigation } from "@/components/admin/sitters/TabNavigation";
 import { TabContent } from "@/components/admin/sitters/TabContent";
-import { LoadingContainer } from "@/components/admin/sitters/LoadingContainer";
 import { LoadingOverlay } from "@/components/admin/sitters/LoadingOverlay";
 import { RejectModal } from "@/components/admin/sitters/RejectModal";
-import BookingDetailDialogAdmin from "@/components/modal/BookingDetailAdmin";
 
 export default function PetSitterDetailPage() {
   const router = useRouter();
@@ -160,8 +158,6 @@ export default function PetSitterDetailPage() {
       </>
     );
   }
-
-  const statusKey = getStatusKey(sitter.approval_status);
 
   return (
     <>

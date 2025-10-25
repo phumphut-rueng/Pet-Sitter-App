@@ -2,6 +2,7 @@ import { useState, useCallback } from "react";
 import { AdminSitterService } from "@/lib/services/adminSitterService";
 import type { BookingRow } from "@/types/admin";
 import type { BookingCardProps, BookingStatus } from "@/components/cards/BookingCard";
+import { bookingData } from "@/types/booking.types";
 
 export function useSitterBookings(id: string | string[] | undefined) {
   const [bookings, setBookings] = useState<BookingRow[]>([]);
@@ -49,7 +50,7 @@ export function useSitterBookings(id: string | string[] | undefined) {
         sitterId: Array.isArray(id) ? id[0] : id!,
         id: row.id,
       });
-      const d = resp as any;
+      const d = resp as bookingData;
       const booking: BookingCardProps & {
         totalTHB?: number;
         transactionNo?: string;
@@ -74,9 +75,9 @@ export function useSitterBookings(id: string | string[] | undefined) {
       };
       
       // Attach additional data
-      (booking as any).ownerName = d.ownerName;
-      (booking as any).pets = d.pets;
-      (booking as any).petsDetail = d.petsDetail || [];
+      (booking as bookingData).ownerName = d.ownerName;
+      (booking as bookingData).pets = d.pets;
+      (booking as bookingData).petsDetail = d.petsDetail || [];
       
       setSelectedBooking(booking);
       setBookingDialogOpen(true);

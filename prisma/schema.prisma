@@ -111,6 +111,7 @@ model user {
   chat_chat_user1_idTouser chat[]                    @relation("chat_user1_idTouser")
   chat_chat_user2_idTouser chat[]                    @relation("chat_user2_idTouser")
   message                  message[]
+  notification             notification[]
   password_reset_tokens    password_reset_tokens[]
   pets                     pet[]
   reported_reports         report[]                  @relation("ReportedUser")
@@ -373,6 +374,22 @@ model password_reset_tokens {
   token      String   @unique
   expires_at DateTime @db.Timestamp(6)
   user       user     @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+}
+
+model notification {
+  id         Int       @id @default(autoincrement())
+  user_id    Int
+  type       String    @db.VarChar(20)
+  title      String    @db.VarChar(255)
+  message    String    @db.VarChar(1000)
+  is_read    Boolean   @default(false)
+  created_at DateTime  @default(now()) @db.Timestamp(6)
+  updated_at DateTime? @db.Timestamp(6)
+  user       user      @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@index([created_at], map: "idx_notification_created_at")
+  @@index([is_read], map: "idx_notification_is_read")
+  @@index([user_id], map: "idx_notification_user_id")
 }
 
 enum report_status {

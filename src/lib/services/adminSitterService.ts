@@ -1,5 +1,5 @@
 import axios from "axios";
-import type { SitterDetail, BookingRow, Review, HistoryRow } from "@/types/admin";
+import type { SitterDetail } from "@/types/admin";
 
 export class AdminSitterService {
   private static readonly BASE_URL = "/api/admin/petsitter";
