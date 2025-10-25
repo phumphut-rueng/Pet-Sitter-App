@@ -111,7 +111,7 @@ export default async function handler(
             const { createSystemNotification } = await import('@/lib/notifications/notification-utils');
             await createSystemNotification(
                 tokenRecord.user_id,
-                'Password Changed',
+                'Password Changed 🔑',
                 'Your password has been successfully changed. If you did not make this change, please contact support immediately.'
             );
             

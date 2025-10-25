@@ -154,7 +154,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         // Create notification directly
         await createSystemNotification(
           ownerId,
-          'Pet Added!',
+          'Pet Added! 🐾',
           `Your pet "${created.name}" (${created.pet_type?.pet_type_name ?? ""}) has been added to your profile.`
         );
         

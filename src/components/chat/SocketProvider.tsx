@@ -93,7 +93,7 @@ export const SocketProvider: React.FC<SocketProviderProps> = ({ children }) => {
           const response = await axios.post('/api/notifications/create', {
             userId: parseInt(userId || '0'),
             type: 'message',
-            title: 'New Message',
+            title: 'New Message 💬',
             message: `You have a new message from ${message.senderName}`,
           });
           

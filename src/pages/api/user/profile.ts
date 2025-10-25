@@ -211,7 +211,7 @@ async function handleUpdateProfile(
       const { createSystemNotification } = await import('@/lib/notifications/notification-utils');
       await createSystemNotification(
         userId,
-        'Profile Updated!',
+        'Profile Updated! 👤',
         'Your profile information has been successfully updated.'
       );
       

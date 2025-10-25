@@ -7,7 +7,7 @@ export async function createMessageNotification(userId: number, senderName: stri
   return await createNotification({
     userId,
     type: 'message',
-    title: 'New Message',
+    title: 'New Message 💬',
     message: `You have a new message from ${senderName}`,
   });
 }
@@ -24,10 +24,10 @@ export async function createBookingNotification(userId: number, sitterName: stri
   }[action];
 
   const titleText = {
-    confirmed: 'Booking Confirmed!',
-    cancelled: 'Booking Cancelled',
-    completed: 'Service Completed!',
-    in_service: 'Service Started!',
+    confirmed: 'Booking Confirmed! 🎉',
+    cancelled: 'Booking Cancelled ❌',
+    completed: 'Service Completed! ✅',
+    in_service: 'Service Started! 🚀',
   }[action];
 
   return await createNotification({
@@ -68,11 +68,12 @@ export async function createAdminNotification(userId: number, title: string, mes
 export async function createBanNotification(userId: number, action: 'banned' | 'unbanned', reason?: string) {
   const actionText = action === 'banned' ? 'banned' : 'unbanned';
   const reasonText = reason ? ` Reason: ${reason}` : '';
+  const emoji = action === 'banned' ? '⚠️' : '✅';
   
   return await createNotification({
     userId,
     type: 'admin',
-    title: `Account ${actionText.charAt(0).toUpperCase() + actionText.slice(1)}`,
+    title: `Account ${actionText.charAt(0).toUpperCase() + actionText.slice(1)} ${emoji}`,
     message: `Your account has been ${actionText}.${reasonText}`,
   });
 }
@@ -83,11 +84,12 @@ export async function createBanNotification(userId: number, action: 'banned' | '
 export async function createPetBanNotification(userId: number, petName: string, action: 'banned' | 'unbanned', reason?: string) {
   const actionText = action === 'banned' ? 'suspended' : 'unsuspended';
   const reasonText = reason ? ` Reason: ${reason}` : '';
+  const emoji = action === 'banned' ? '🐾⚠️' : '🐾✅';
   
   return await createNotification({
     userId,
     type: 'admin',
-    title: `Pet ${actionText.charAt(0).toUpperCase() + actionText.slice(1)}`,
+    title: `Pet ${actionText.charAt(0).toUpperCase() + actionText.slice(1)} ${emoji}`,
     message: `Your pet "${petName}" has been ${actionText}.${reasonText}`,
   });
 }

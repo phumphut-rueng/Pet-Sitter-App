@@ -68,13 +68,13 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       
       // Map status ID to action - เพื่อแปลง status ID เป็น action ที่เข้าใจได้
       const statusMap: { [key: number]: { title: string; message: string } } = {
-        1: { title: 'Booking Confirmed!', message: `Your booking with ${updatedBooking.sitter.name || 'Pet Sitter'} has been confirmed` },
-        2: { title: 'Booking Cancelled', message: `Your booking with ${updatedBooking.sitter.name || 'Pet Sitter'} has been cancelled` },
-        3: { title: 'Service Completed!', message: `Your booking with ${updatedBooking.sitter.name || 'Pet Sitter'} has been completed` },
-        4: { title: 'Booking Confirmed!', message: `Your booking with ${updatedBooking.sitter.name || 'Pet Sitter'} has been confirmed` },
-        5: { title: 'Booking Confirmed!', message: `Your booking with ${updatedBooking.sitter.name || 'Pet Sitter'} has been confirmed` },
-        6: { title: 'Service Started!', message: `Your booking with ${updatedBooking.sitter.name || 'Pet Sitter'} is now in service` },
-        7: { title: 'Service Completed!', message: `Your booking with ${updatedBooking.sitter.name || 'Pet Sitter'} has been completed` }
+        1: { title: 'Booking Confirmed! 🎉', message: `Your booking with ${updatedBooking.sitter.name || 'Pet Sitter'} has been confirmed` },
+        2: { title: 'Booking Cancelled ❌', message: `Your booking with ${updatedBooking.sitter.name || 'Pet Sitter'} has been cancelled` },
+        3: { title: 'Service Completed! ✅', message: `Your booking with ${updatedBooking.sitter.name || 'Pet Sitter'} has been completed` },
+        4: { title: 'Booking Confirmed! 🎉', message: `Your booking with ${updatedBooking.sitter.name || 'Pet Sitter'} has been confirmed` },
+        5: { title: 'Booking Confirmed! 🎉', message: `Your booking with ${updatedBooking.sitter.name || 'Pet Sitter'} has been confirmed` },
+        6: { title: 'Service Started! 🚀', message: `Your booking with ${updatedBooking.sitter.name || 'Pet Sitter'} is now in service` },
+        7: { title: 'Service Completed! ✅', message: `Your booking with ${updatedBooking.sitter.name || 'Pet Sitter'} has been completed` }
       };
       
       const notificationData = statusMap[Number(statusId)] || statusMap[1];

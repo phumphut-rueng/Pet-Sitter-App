@@ -16,7 +16,7 @@ export async function notifyNewBooking(sitterId: number, customerName: string, p
   return await createNotification({
     userId: sitterId,
     type: 'booking',
-    title: 'New Booking Request',
+    title: 'New Booking Request! 🐕',
     message: `${customerName} wants to book pet sitting for ${petNames.join(', ')} on ${bookingDate}`,
   });
 }
@@ -40,7 +40,7 @@ export async function notifyBookingCancelled(customerId: number, sitterName: str
   return await createNotification({
     userId: customerId,
     type: 'booking',
-    title: 'Booking Cancelled',
+    title: 'Booking Cancelled ❌',
     message: `Your booking with ${sitterName} has been cancelled${reason ? `. Reason: ${reason}` : ''}`,
   });
 }
@@ -95,7 +95,7 @@ export async function notifyNewMessage(receiverId: number, senderName: string, m
   return await createNotification({
     userId: receiverId,
     type: 'message',
-    title: `New Message from ${senderName}`,
+    title: `New Message from ${senderName} 💬`,
     message: messagePreview.length > 50 ? `${messagePreview.substring(0, 50)}...` : messagePreview,
   });
 }
@@ -122,7 +122,7 @@ export async function notifyReviewResponse(customerId: number, sitterName: strin
   return await createNotification({
     userId: customerId,
     type: 'system',
-    title: 'Review Response',
+    title: 'Review Response 💬',
     message: `${sitterName} has responded to your review`,
   });
 }
@@ -160,7 +160,7 @@ export async function notifyPetBanned(ownerId: number, petName: string, reason: 
   return await createNotification({
     userId: ownerId,
     type: 'admin',
-    title: 'Pet Profile Suspended',
+    title: 'Pet Profile Suspended 🐾⚠️',
     message: `Your pet "${petName}" profile has been suspended. Reason: ${reason}`,
   });
 }
@@ -174,7 +174,7 @@ export async function notifySystemUpdate(userId: number, updateTitle: string, up
   return await createNotification({
     userId,
     type: 'system',
-    title: `System Update: ${updateTitle}`,
+    title: `System Update: ${updateTitle} 🔄`,
     message: updateMessage,
   });
 }
@@ -276,7 +276,7 @@ export async function notifyPetRegistration(userId: number, petName: string, pet
   return await createNotification({
     userId,
     type: 'system',
-    title: 'Pet Added Successfully!',
+    title: 'Pet Added Successfully! 🐾',
     message: `Your pet "${petName}" (${petType}) has been added to your profile.`,
   });
 }
@@ -288,7 +288,7 @@ export async function notifyProfileUpdate(userId: number) {
   return await createNotification({
     userId,
     type: 'system',
-    title: 'Profile Updated!',
+    title: 'Profile Updated! 👤',
     message: 'Your profile information has been successfully updated.',
   });
 }
@@ -300,7 +300,7 @@ export async function notifyPetBan(userId: number, petName: string, reason?: str
   return await createNotification({
     userId,
     type: 'admin',
-    title: `Pet "${petName}" Banned`,
+    title: `Pet "${petName}" Banned 🚫`,
     message: `Your pet "${petName}" has been banned. Reason: ${reason || 'Violated policy'}.`,
   });
 }
@@ -312,7 +312,7 @@ export async function notifyPetUnban(userId: number, petName: string) {
   return await createNotification({
     userId,
     type: 'admin',
-    title: `Pet "${petName}" Unbanned`,
+    title: `Pet "${petName}" Unbanned ✅`,
     message: `Your pet "${petName}" has been unbanned.`,
   });
 }
