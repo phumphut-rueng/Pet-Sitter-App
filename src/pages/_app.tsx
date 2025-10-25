@@ -8,6 +8,7 @@ import Navbar from "@/components/navbar/Navbar";
 import { SocketProvider } from "@/components/chat/SocketProvider";
 import MessageNotification from "@/components/chat/MessageNotification";
 import PageToaster from "@/components/ui/PageToaster";
+import { NotificationProvider } from "@/lib/notifications/NotificationContext";
 import { satoshi, notoThai } from "@/fonts"; 
 
 const NAV_HIDE_ROUTES = new Set([
@@ -44,33 +45,35 @@ export default function App({ Component, pageProps: { session, ...pageProps } }:
   return (
     <SessionProvider session={session}>
       <SocketProvider>
-        {/* เพิ่ม font variables ที่ wrapper div */}
-        <div className={`${satoshi.variable} ${notoThai.variable}`}>
-          {showNavbar && <Navbar />}
-          <Component {...pageProps} />
-          
-          {/* Global Toaster  ใช้ className จาก globals.css */}
-          <Toaster 
-            position="top-right"
-            toastOptions={{
-              duration: 3000,
-              className: '',
-              success: {
-                className: 'toast-success',
-              },
-              error: {
-                className: 'toast-error',
-              },
-              loading: {
-                className: 'toast-loading',
-              },
-            }}
-          />
-          {/* แสดง notification เมื่อมีข้อความใหม่ */}
-          <MessageNotification />
-          {/* เพิ่ม PageToaster เพื่อให้ toast แสดงได้ทั่วทั้งแอป */}
-          <PageToaster />
-        </div>
+        <NotificationProvider>
+          {/* เพิ่ม font variables ที่ wrapper div */}
+          <div className={`${satoshi.variable} ${notoThai.variable}`}>
+            {showNavbar && <Navbar />}
+            <Component {...pageProps} />
+            
+            {/* Global Toaster  ใช้ className จาก globals.css */}
+            <Toaster 
+              position="top-right"
+              toastOptions={{
+                duration: 3000,
+                className: '',
+                success: {
+                  className: 'toast-success',
+                },
+                error: {
+                  className: 'toast-error',
+                },
+                loading: {
+                  className: 'toast-loading',
+                },
+              }}
+            />
+            {/* แสดง notification เมื่อมีข้อความใหม่ */}
+            <MessageNotification />
+            {/* เพิ่ม PageToaster เพื่อให้ toast แสดงได้ทั่วทั้งแอป */}
+            <PageToaster />
+          </div>
+        </NotificationProvider>
       </SocketProvider>
     </SessionProvider>
   );

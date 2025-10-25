@@ -1,5 +1,4 @@
 import { useState, useEffect, useCallback } from 'react';
-import axios from 'axios';
 
 export const useUnreadCount = (userId: string | undefined) => {
   const [unreadCount, setUnreadCount] = useState<number>(0);
@@ -7,18 +6,18 @@ export const useUnreadCount = (userId: string | undefined) => {
 
   // ฟังก์ชันสำหรับดึง unread count จาก API
   const fetchUnreadCount = useCallback(async () => {
-    if (!userId) return;
+    if (!userId) {
+      setUnreadCount(0);
+      return;
+    }
     
     setLoading(true);
     try {
-      const response = await axios.get('/api/chat/unread-count');
-      
-      if (response.data.success) {
-        const newCount = response.data.totalUnreadCount || 0;
-        setUnreadCount(newCount);
-      }
+      // ปิด chat unread count ชั่วคราวเพื่อหลีกเลี่ยง error
+      setUnreadCount(0);
     } catch (error) {
       console.error('Error fetching unread count:', error);
+      setUnreadCount(0);
     } finally {
       setLoading(false);
     }

@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma/prisma";
 import { $Enums } from "@prisma/client";
 import { sendError, toPositiveInt } from "@/lib/api/api-utils";
 import { getAdminIdFromRequest } from "@/lib/auth/roles";
+import { createBanNotification } from "@/lib/notifications/notification-utils";
 
 /**
  * @openapi
@@ -107,6 +108,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           : prisma.$queryRaw`SELECT 1`,
       ]);
 
+      // สร้าง notification สำหรับการแบน
+      await createBanNotification(ownerId, 'banned', reason);
+
       return res.status(200).json({
         ok: true,
         user: {
@@ -141,6 +145,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           })
         : prisma.$queryRaw`SELECT 1`,
     ]);
+
+    // สร้าง notification สำหรับการปลดแบน
+    await createBanNotification(ownerId, 'unbanned');
 
     return res.status(200).json({
       ok: true,

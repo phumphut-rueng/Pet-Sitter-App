@@ -147,6 +147,17 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         include: { pet_type: true },
       });
 
+      // NOTIFICATION SYSTEM: สร้าง notification เมื่อเพิ่ม pet ใหม่
+      // เพิ่มโค้ดนี้เพื่อแจ้ง user เมื่อเพิ่ม pet ใหม่ - เพื่อยืนยันการเพิ่ม pet
+      try {
+        const { notifyPetRegistration } = await import('@/lib/notifications/pet-sitter-notifications');
+        // แจ้ง user เมื่อเพิ่ม pet ใหม่ - เพื่อยืนยันการเพิ่ม pet สำเร็จ
+        await notifyPetRegistration(ownerId, created.name, created.pet_type?.pet_type_name ?? "");
+      } catch (notificationError) {
+        console.error('Failed to create pet registration notification:', notificationError);
+        // ไม่ throw error เพื่อไม่ให้กระทบการเพิ่ม pet - notification เป็น secondary feature
+      }
+
       return res.status(201).json({
         id: created.id,
         name: created.name,

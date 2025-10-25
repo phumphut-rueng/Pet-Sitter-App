@@ -93,6 +93,17 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       data: { password: hashed } 
     });
 
+    // NOTIFICATION SYSTEM: สร้าง notification เมื่อเปลี่ยนรหัสผ่าน
+    // เพิ่มโค้ดนี้เพื่อแจ้ง user เมื่อมีการเปลี่ยนรหัสผ่าน - เพื่อความปลอดภัย
+    try {
+      const { notifyPasswordChanged } = await import('@/lib/notifications/pet-sitter-notifications');
+      // แจ้ง user เมื่อเปลี่ยนรหัสผ่าน - เพื่อให้ user รู้ว่ามีการเปลี่ยนแปลงบัญชี
+      await notifyPasswordChanged(user.id);
+    } catch (notificationError) {
+      console.error('Failed to create password change notification:', notificationError);
+      // ไม่ throw error เพื่อไม่ให้กระทบการเปลี่ยนรหัสผ่าน - notification เป็น secondary feature
+    }
+
     return res.status(200).json({ message: PASSWORD_SUCCESS_MESSAGES.passwordChanged });
   } catch (e) {
     console.error(e);

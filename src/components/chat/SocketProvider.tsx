@@ -4,6 +4,7 @@ import { MessagePayload, UnreadUpdateData, ChatListUpdateData, SendMessageData }
 import axios from 'axios';
 import SocketLoading from '@/components/loading/SocketLoading';
 import { Socket } from 'socket.io-client';
+import { notificationSocket } from '@/lib/notifications/NotificationSocket';
 
 interface SocketContextType {
   socket: Socket | null;
@@ -68,6 +69,38 @@ export const SocketProvider: React.FC<SocketProviderProps> = ({ children }) => {
     // ฟังก์ชันสำหรับจัดการ custom events
     const handleReceiveMessage = (event: CustomEvent<MessagePayload>) => {
       setMessages(prev => [...prev, event.detail]);
+      
+    // NOTIFICATION SYSTEM: สร้าง notification เมื่อได้รับข้อความใหม่
+    const message = event.detail;
+    if (message.senderId !== userId) { // ไม่ใช่ข้อความที่เราส่งเอง
+      
+      // ตรวจสอบว่าเป็นข้อความใหม่จริงๆ (ไม่ใช่ข้อความเก่าที่ re-render)
+      const isNewMessage = !messages.some(msg => 
+        msg.id === message.id && msg.senderId === message.senderId
+      );
+      
+      if (isNewMessage) {
+        // สร้าง notification จริงใน database
+        fetch('/api/notifications/create', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            userId: parseInt(userId || '0'),
+            type: 'message',
+            title: 'New Message',
+            message: `You have a new message from ${message.senderName}`,
+          })
+        })
+      .then(() => {
+        // Notification created successfully
+      })
+      .catch(() => {
+        // Failed to create notification
+      });
+      }
+    }
     };
 
     const handleUnreadUpdate = (event: CustomEvent<UnreadUpdateData>) => {
@@ -121,7 +154,14 @@ export const SocketProvider: React.FC<SocketProviderProps> = ({ children }) => {
       window.removeEventListener('socket:chat_list_update', handleChatListUpdate as EventListener);
       window.removeEventListener('socket:connection_error', handleConnectionError as EventListener);
     };
-  }, [isConnected]);
+  }, [isConnected, messages, userId]);
+
+  // Connect notification socket when main socket is ready
+  useEffect(() => {
+    if (socket && isConnected) {
+      notificationSocket.setSocket(socket);
+    }
+  }, [socket, isConnected]);
 
   const value: SocketContextType = {
     socket,

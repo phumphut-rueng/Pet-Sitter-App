@@ -67,6 +67,39 @@ export const swaggerSpec = swaggerJsdoc({
             pet_type_name: { type: "string", nullable: true, example: "Dog" },
           },
         },
+        Notification: {
+          type: "object",
+          properties: {
+            id: { type: "integer", example: 1 },
+            type: { type: "string", enum: ["message", "booking", "payment", "system", "admin"], example: "booking" },
+            title: { type: "string", example: "Booking Confirmed! 🎉" },
+            message: { type: "string", example: "Your booking with John Doe has been confirmed" },
+            isRead: { type: "boolean", example: false },
+            time: { type: "string", example: "Just now" },
+            createdAt: { type: "string", example: "2025-10-25T10:00:00.000Z" },
+          },
+        },
+        NotificationResponse: {
+          type: "object",
+          properties: {
+            success: { type: "boolean", example: true },
+            notifications: {
+              type: "array",
+              items: { $ref: "#/components/schemas/Notification" },
+            },
+            unreadCount: { type: "integer", example: 3 },
+          },
+        },
+        CreateNotificationRequest: {
+          type: "object",
+          required: ["userId", "type", "title", "message"],
+          properties: {
+            userId: { type: "integer", example: 123 },
+            type: { type: "string", enum: ["message", "booking", "payment", "system", "admin"], example: "booking" },
+            title: { type: "string", example: "Booking Confirmed! 🎉" },
+            message: { type: "string", example: "Your booking has been confirmed" },
+          },
+        },
         AdminOwnerDetail: {
           type: "object",
           properties: {

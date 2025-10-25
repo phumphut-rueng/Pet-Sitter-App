@@ -14,6 +14,22 @@ export interface SocketEvents {
   unread_update: (data: UnreadUpdateData) => void;
   online_users_list: (onlineUsers: string[]) => void;
   chat_list_update: (data: ChatListUpdateData) => void;
+  new_notification: (notification: {
+    id: number;
+    type: string;
+    title: string;
+    message: string;
+    isRead: boolean;
+    createdAt: string;
+  }) => void;
+  notification_update: (notification: {
+    id: number;
+    type: string;
+    title: string;
+    message: string;
+    isRead: boolean;
+    createdAt: string;
+  }) => void;
 }
 
 export interface SendMessageData {

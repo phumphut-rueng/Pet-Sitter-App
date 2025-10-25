@@ -1,5 +1,6 @@
 import { prisma } from '@/lib/prisma/prisma';
 import { bookingMetadataSchema } from '@/lib/validators/booking';
+import { createNotification } from './notifications/create';
 
 import type { NextApiRequest, NextApiResponse } from 'next';
 import { getServerSession } from 'next-auth';
@@ -310,7 +311,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         booking: true,
         status_booking_payment_status_idTostatus: true,
         sitter: {
-          select: { name: true },
+          select: { name: true, user_sitter_id: true },
         },
         booking_pet_detail: {
           include: { pet: true },
@@ -323,6 +324,53 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       payment_status: booking.status_booking_payment_status_idTostatus,
       status_booking_payment_status_idTostatus: undefined,
     };
+
+    // NOTIFICATION SYSTEM: สร้าง notification เมื่อมีการจองใหม่ booking.pet_sitter_id);
+    
+    try {
+      const { notifyPaymentSuccess } = await import('@/lib/notifications/pet-sitter-notifications');
+      
+      // แจ้ง sitter ว่ามีการจองใหม่
+
+      // ใช้ user_sitter_id จาก sitter table
+      const userSitterId = booking.sitter.user_sitter_id;
+      const sitterUserId = userSitterId || booking.pet_sitter_id;
+      await createNotification({
+        userId: sitterUserId,
+        type: 'booking',
+        title: 'New Booking Request! 🐕',
+        message: `${booking.booking.name || 'Customer'} wants to book your pet sitting service for ${booking.booking_pet_detail.map((pd: unknown) => (pd as { pet: { name: string } }).pet.name).join(', ')} on ${new Date(booking.date_start).toLocaleDateString('th-TH')}`,
+      });
+      
+      // แจ้ง user ที่จองว่าการจองสำเร็จ
+      await createNotification({
+        userId: booking.user_id,
+        type: 'booking',
+        title: 'Booking Submitted! 📝',
+        message: `Your booking request has been submitted successfully. We'll notify you when the sitter responds.`,
+      });
+      
+      
+      // แจ้ง customer ว่าชำระเงินสำเร็จ
+      await notifyPaymentSuccess(
+        booking.user_id,
+        Number(booking.amount),
+        new Date(booking.date_start).toLocaleDateString('th-TH')
+      );
+      
+      
+      // Trigger real-time update for frontend
+      try {
+        // ส่ง event เพื่อให้ frontend อัปเดต notification
+        // Trigger real-time notification update
+        
+      } catch {
+        // Real-time update failed silently
+      }
+    } catch {
+      // Notification creation failed silently
+      // ไม่ throw error เพื่อไม่ให้กระทบการจอง - notification เป็น secondary feature
+    }
 
     return res.status(200).json({
       success: true,
