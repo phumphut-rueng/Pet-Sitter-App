@@ -85,6 +85,34 @@ async function handler(
       },
     });
 
+    // NOTIFICATION SYSTEM: สร้าง notification เมื่อ pet ถูก ban/unban
+    // เพิ่มโค้ดนี้เพื่อแจ้ง owner เมื่อ pet ถูก ban/unban - เพื่อให้ owner รู้สถานะ pet
+    try {
+      const { notifyPetBan, notifyPetUnban } = await import('@/lib/notifications/pet-sitter-notifications');
+      
+      // หา owner ของ pet เพื่อส่ง notification
+      const petWithOwner = await prisma.pet.findUnique({
+        where: { id: petId },
+        select: { 
+          owner_id: true,
+          name: true
+        }
+      });
+      
+      if (petWithOwner) {
+        if (action === "ban") {
+          // แจ้ง owner เมื่อ pet ถูก ban - เพื่อให้ owner รู้ว่า pet ถูก ban
+          await notifyPetBan(petWithOwner.owner_id, petWithOwner.name, reason);
+        } else {
+          // แจ้ง owner เมื่อ pet ถูก unban - เพื่อให้ owner รู้ว่า pet ถูก unban
+          await notifyPetUnban(petWithOwner.owner_id, petWithOwner.name);
+        }
+      }
+    } catch (notificationError) {
+      console.error('Failed to create pet ban notification:', notificationError);
+      // ไม่ throw error เพื่อไม่ให้กระทบการ ban pet - notification เป็น secondary feature
+    }
+
     return res.status(200).json({
       message: "Pet status updated successfully",
       petId: updated.id,

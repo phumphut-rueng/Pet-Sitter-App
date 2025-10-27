@@ -204,6 +204,35 @@ async function handleUpdateProfile(
 
   try {
     await userRepository.updateById(userId, updateData);
+    
+    // NOTIFICATION SYSTEM: Create notification when updating profile
+    try {
+      // Create notification directly
+      const { createSystemNotification } = await import('@/lib/notifications/notification-utils');
+      await createSystemNotification(
+        userId,
+        'Profile Updated! 👤',
+        'Your profile information has been successfully updated.'
+      );
+      
+      // Trigger real-time notification update
+      try {
+        // Send event to frontend directly
+        if (typeof global !== 'undefined' && global.window) {
+          global.window.dispatchEvent(new CustomEvent('socket:notification_refresh', {
+            detail: { userId }
+          }));
+          global.window.dispatchEvent(new CustomEvent('update:notification_count', {
+            detail: { userId }
+          }));
+        }
+      } catch (error) {
+        console.error('Failed to trigger real-time update:', error);
+      }
+    } catch (notificationError) {
+      console.error('Failed to create profile update notification:', notificationError);
+    }
+    
     return res.status(HTTP_STATUS.OK).json({ message: "Profile updated successfully" });
   } catch (error: unknown) {
     if (isP2002(error)) {

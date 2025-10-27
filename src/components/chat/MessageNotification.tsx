@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
 import { useRouter } from 'next/router';
 import { useSocketContext } from './SocketProvider';
+import { MessageSquare } from 'lucide-react';
 
 const MessageNotification: React.FC = () => {
   const { messages, userId } = useSocketContext();
@@ -25,21 +26,28 @@ const MessageNotification: React.FC = () => {
       
       if (isMessageForCurrentUser && isNotOnChatPage) {
         // Show toast notification for new message
-        toast.success(`📨 New Message from ${latestMessage.senderName}!`, {
-          duration: 3000,
+        toast.custom((t) => (
+          <div
+            className={`${
+              t.visible ? 'animate-enter' : 'animate-leave'
+            } w-auto max-w-sm bg-white text-orange-5 border-none rounded-xl p-3 shadow-lg pointer-events-auto`}
+          >
+            <div className="flex items-start">
+              <div className="flex-shrink-0">
+                <div className="w-8 h-8 rounded-full bg-orange-5 flex items-center justify-center">
+                  <MessageSquare className="w-4 h-4 text-white" />
+                </div>
+              </div>
+              <div className="ml-3 flex-1">
+                <p className="text-sm2-medium text-orange-5">
+                  New Message from {latestMessage.senderName}!
+                </p>
+              </div>
+            </div>
+          </div>
+        ), {
+          duration: 3000, // 3 วินาทีแล้วหายไป
           position: 'top-right',
-          style: {
-            background: '#fff',
-            color: '#F97316', // orange-500
-            border: '1px solid rgba(249, 115, 22, 0.3)',
-            borderRadius: '14px',
-            padding: '10px 14px',
-            boxShadow: '0 10px 30px rgba(16,24,40,.12)',
-          },
-          iconTheme: { 
-            primary: '#F97316', // orange-500
-            secondary: '#fff' 
-          },
         });
       }
     }

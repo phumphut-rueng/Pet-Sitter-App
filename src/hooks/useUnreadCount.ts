@@ -1,3 +1,12 @@
+/**
+ * useUnreadCount Hook - Chat unread count management
+ * 
+ *  Updated Features:
+ * - Fetches unread count from /api/chat/unread-count endpoint
+ * - Listens to socket:unread_update and socket:receive_message events
+ * - Auto-refreshes when receiving new messages
+ * - Returns unreadCount, loading state, and refresh function
+ */
 import { useState, useEffect, useCallback } from 'react';
 import axios from 'axios';
 
@@ -7,18 +16,19 @@ export const useUnreadCount = (userId: string | undefined) => {
 
   // ฟังก์ชันสำหรับดึง unread count จาก API
   const fetchUnreadCount = useCallback(async () => {
-    if (!userId) return;
+    if (!userId) {
+      setUnreadCount(0);
+      return;
+    }
     
     setLoading(true);
     try {
+      // ดึง unread count จาก API
       const response = await axios.get('/api/chat/unread-count');
-      
-      if (response.data.success) {
-        const newCount = response.data.totalUnreadCount || 0;
-        setUnreadCount(newCount);
-      }
+      setUnreadCount(response.data.totalUnreadCount || 0);
     } catch (error) {
       console.error('Error fetching unread count:', error);
+      setUnreadCount(0);
     } finally {
       setLoading(false);
     }
@@ -51,7 +61,7 @@ export const useUnreadCount = (userId: string | undefined) => {
       window.removeEventListener('socket:unread_update', handleUnreadUpdate as EventListener);
       window.removeEventListener('socket:receive_message', handleReceiveMessage as EventListener);
     };
-  }, [fetchUnreadCount]); // ✅ เพิ่ม fetchUnreadCount ใน dependency array
+  }, [fetchUnreadCount]); //  เพิ่ม fetchUnreadCount ใน dependency array
 
   return {
     unreadCount,

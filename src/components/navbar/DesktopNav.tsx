@@ -1,10 +1,11 @@
 import React from "react";
 import Link from "next/link";
-import { Bell, MessageSquare } from "lucide-react";
+import { MessageSquare } from "lucide-react";
 
 import IconButton from "./IconButton";
 import AvatarDropdown from "./AvatarDropdown";
 import PrimaryButton from "@/components/buttons/PrimaryButton";
+import NotificationButton from "@/components/notifications/NotificationButton";
 import { NavigationProps } from "@/types/navigation.types";
 import { useUnreadCount } from "@/hooks/useUnreadCount";
 
@@ -22,13 +23,7 @@ const DesktopNav: React.FC<NavigationProps> = ({
     <div className="hidden md:flex items-center justify-end space-x-4">
       {isAuthenticated ? (
         <>
-          <IconButton
-            icon={Bell}
-            route="/notifications"
-            hasIndicator={false}
-            aria-label="Notifications"
-            onNavigate={onNavigate}
-          />
+          <NotificationButton />
 
           <IconButton
             icon={MessageSquare}

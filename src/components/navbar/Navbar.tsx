@@ -7,6 +7,7 @@ import type { DefaultSession } from "next-auth";
 import { UserRound, History, LogOut, Heart, User } from "lucide-react";
 import Navigation from "./Navigation";
 import type { MenuItem } from "@/types/navigation.types";
+import axios from "axios";
 
 const Navbar: React.FC = () => {
   const router = useRouter();
@@ -45,8 +46,8 @@ const Navbar: React.FC = () => {
     async function check() {
       if (!isAuthenticated) return setDbSaysSitter(false);
       try {
-        const res = await fetch("/api/user/is-sitter");
-        const data = await res.json().catch(() => ({}));
+        const res = await axios.get("/api/user/is-sitter");
+        const data = res.data;
         if (!cancelled) setDbSaysSitter(!!data?.isSitter);
       } catch {
         if (!cancelled) setDbSaysSitter(false);

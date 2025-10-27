@@ -66,9 +66,17 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     });
   } catch (error) {
     console.error('Error fetching online users:', error);
-    return res.status(500).json({
-      success: false,
-      message: 'Failed to fetch online users'
+    console.error('Error details:', {
+      message: error instanceof Error ? error.message : 'Unknown error',
+      stack: error instanceof Error ? error.stack : undefined
+    });
+    
+    // Return empty array as fallback
+    return res.status(200).json({
+      success: true,
+      onlineUsers: [],
+      count: 0,
+      message: 'No online users found (fallback)'
     });
   }
 }

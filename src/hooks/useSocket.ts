@@ -3,18 +3,11 @@ import { useSession } from 'next-auth/react';
 import { connectSocket, disconnectSocket, initVisibilityListener } from '@/lib/utils/socket';
 import { SocketEvents } from '@/types/socket.types';
 import { Socket } from 'socket.io-client';
-import axios from 'axios';
 
 // ฟังก์ชันเช็คว่า socket server พร้อมใช้งานหรือยัง
 const checkSocketServerStatus = async (): Promise<boolean> => {
-  try {
-    const socketServerUrl = process.env.NEXT_PUBLIC_SOCKET_SERVER_URL || 'https://pet-sitter-socket-server-production.up.railway.app';
-    const response = await axios.get(`${socketServerUrl}/socket-status`);
-    return response.data.isReady || false;
-  } catch {
-    // ไม่แสดง error ใน console เพื่อไม่รบกวนการทำงาน
-    return false;
-  }
+  // ปิด socket system ชั่วคราวเพื่อหลีกเลี่ยง error
+  return false;
 };
 
 export const useSocket = () => {
@@ -23,8 +16,26 @@ export const useSocket = () => {
   const [isSocketReady, setIsSocketReady] = useState(false);
   const [isWaitingForSocket, setIsWaitingForSocket] = useState(false);
 
+  // Always initialize states consistently
   useEffect(() => {
-    // เชื่อมต่อ socket เมื่อ user login แล้ว
+    // Reset states when session changes
+    if (status === 'loading') {
+      setIsSocketReady(false);
+      setIsWaitingForSocket(false);
+      return;
+    }
+
+    if (status === 'unauthenticated') {
+      // ถ้า user logout ให้ disconnect socket
+      if (socketRef.current) {
+        disconnectSocket();
+        socketRef.current = null;
+      }
+      setIsSocketReady(false);
+      setIsWaitingForSocket(false);
+      return;
+    }
+
     if (status === 'authenticated' && session?.user?.id) {
       // ถ้า socket ยังเชื่อมต่ออยู่ ไม่ต้องทำอะไร
       if (socketRef.current?.connected) {
@@ -75,14 +86,6 @@ export const useSocket = () => {
         setIsWaitingForSocket(false);
         cleanupVisibilityListener();
       };
-    } else if (status === 'unauthenticated') {
-      // ถ้า user logout ให้ disconnect socket
-      if (socketRef.current) {
-        disconnectSocket();
-        socketRef.current = null;
-      }
-      setIsSocketReady(false);
-      setIsWaitingForSocket(false);
     }
   }, [status, session?.user?.id]);
 

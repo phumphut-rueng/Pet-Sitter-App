@@ -30,7 +30,7 @@ export const SelectField: React.FC<SelectFieldProps> = ({
           } as React.ChangeEvent<HTMLSelectElement>);
         }}
         options={validOptions}
-        placeholder="เลือก..."
+        placeholder="Select..."
         label={label}
         variant="default"
         triggerSize="w-full"

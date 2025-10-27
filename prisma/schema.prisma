@@ -121,6 +121,7 @@ model user {
   sitter_approval_status   sitter_approval_status    @relation(fields: [approval_status_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   user_chat_settings       user_chat_settings[]
   user_role                user_role[]
+  notifications            notification[]
 
   @@index([approval_status_id], map: "idx_user_approval_status_id")
   @@index([name], map: "idx_user_name")
@@ -384,4 +385,20 @@ enum report_status {
 enum user_status {
   normal
   ban
+}
+
+model notification {
+  id          Int      @id @default(autoincrement())
+  user_id     Int
+  type        String   @db.VarChar(20) // "message", "booking", "system", "admin"
+  title       String   @db.VarChar(255)
+  message     String   @db.VarChar(1000)
+  is_read     Boolean  @default(false)
+  created_at  DateTime @default(now()) @db.Timestamp(6)
+  updated_at  DateTime? @db.Timestamp(6)
+  user        user     @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@index([user_id], map: "idx_notification_user_id")
+  @@index([is_read], map: "idx_notification_is_read")
+  @@index([created_at], map: "idx_notification_created_at")
 }

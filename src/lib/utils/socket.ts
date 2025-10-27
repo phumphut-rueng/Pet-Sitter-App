@@ -1,5 +1,3 @@
-// file: utils/socket.ts
-
 import { io, Socket } from 'socket.io-client';
 import { SocketEvents, SendMessageData } from '@/types/socket.types';
 import axios from 'axios';
@@ -27,8 +25,7 @@ export const checkSocketServerReady = async (): Promise<boolean> => {
     }
     return false;
   } catch {
-    // ไม่แสดง error ใน console เพื่อไม่รบกวนการทำงาน
-    console.log('Socket server not available, continuing without real-time features');
+    // Socket server not available, continuing without real-time features
     return false;
   }
 };
@@ -45,8 +42,7 @@ export const waitForSocketServer = async (maxAttempts: number = 3, delayMs: numb
     }
   }
   
-  // ไม่แสดง error ใน console เพื่อไม่รบกวนการทำงาน
-  // console.log('Socket server not available, continuing without real-time features');
+  // Socket server not available, continuing without real-time features
   return false;
 };
 
@@ -74,8 +70,7 @@ export const connectSocket = (userId: string): Socket<SocketEvents> | null => {
     withCredentials: true // ส่ง credentials
   };
 
-  // ไม่แสดง log เพื่อไม่รบกวนการทำงาน
-  // console.log(`🔌 Connecting to Socket.IO server: ${socketServerUrl}`);
+    // Connecting to Socket.IO server
   socket = io(socketServerUrl, socketConfig);
 
   // เชื่อมต่อ socket หลังจากสร้างเสร็จ
@@ -86,10 +81,7 @@ export const connectSocket = (userId: string): Socket<SocketEvents> | null => {
   });
 
   socket.on('connect_error', (error) => {
-    // ไม่แสดง error ใน console เพื่อไม่รบกวนการทำงาน
-    // console.log('Socket connection not available, continuing without real-time features');
-    
-    // ส่ง event เพื่อแจ้ง frontend ว่าเกิด error (แต่ไม่แสดงใน console)
+    // ส่ง event เพื่อแจ้ง frontend ว่าเกิด error
     if (typeof window !== 'undefined') {
       window.dispatchEvent(new CustomEvent('socket:connection_error', { detail: error }));
     }
@@ -124,9 +116,17 @@ export const connectSocket = (userId: string): Socket<SocketEvents> | null => {
     window.dispatchEvent(new CustomEvent('socket:chat_list_update', { detail: data }));
   });
 
+  // เพิ่ม Listener สำหรับ Notification Events
+  socket.on('new_notification', (notification) => {
+    window.dispatchEvent(new CustomEvent('socket:new_notification', { detail: notification }));
+  });
+
+  socket.on('notification_update', (notification) => {
+    window.dispatchEvent(new CustomEvent('socket:notification_update', { detail: notification }));
+  });
+
   // เพิ่ม error handler สำหรับ error ที่ส่งมาจาก server
   (socket as Socket & { on: (event: string, callback: (...args: unknown[]) => void) => void }).on('error', (error: Error) => {
-    // ไม่แสดง error ใน console เพื่อไม่รบกวนการทำงาน
     if (typeof window !== 'undefined') {
       window.dispatchEvent(new CustomEvent('socket:server_error', { detail: error }));
     }
@@ -140,8 +140,7 @@ export const sendMessage = (data: SendMessageData): void => {
   if (socket && socket.connected) {
     socket.emit('send_message', data);
   } else {
-    // ไม่แสดง error ใน console เพื่อไม่รบกวนการทำงาน
-    // console.log('Socket not connected. Message will be sent when connection is available.');
+    // Socket not connected. Message will be sent when connection is available.
   }
 };
 

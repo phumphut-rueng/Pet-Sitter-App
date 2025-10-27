@@ -97,14 +97,41 @@ export default async function handler(
         // hash password ใหม่
         const hashedPassword = await bcrypt.hash(password, 10)
 
-        // อัปเดตรหัสผ่าน
+        // Update password
         await prisma.user.update({
             where: { id: tokenRecord.user_id },
             data: { password: hashedPassword },
         })
 
-        // ลบ token ทิ้งหลังใช้แล้ว
+        // Delete token after use
         await prisma.password_reset_tokens.delete({ where: { id: tokenRecord.id } })
+
+        // NOTIFICATION SYSTEM: Create notification when reset password
+        try {
+            const { createSystemNotification } = await import('@/lib/notifications/notification-utils');
+            await createSystemNotification(
+                tokenRecord.user_id,
+                'Password Changed 🔑',
+                'Your password has been successfully changed. If you did not make this change, please contact support immediately.'
+            );
+            
+            // Trigger real-time notification update
+            try {
+                // Send event to frontend directly
+                if (typeof global !== 'undefined' && global.window) {
+                    global.window.dispatchEvent(new CustomEvent('socket:notification_refresh', {
+                        detail: { userId: tokenRecord.user_id }
+                    }));
+                    global.window.dispatchEvent(new CustomEvent('update:notification_count', {
+                        detail: { userId: tokenRecord.user_id }
+                    }));
+                }
+            } catch (error) {
+                console.error('Failed to trigger real-time update:', error);
+            }
+        } catch (notificationError) {
+            console.error('Failed to create password change notification:', notificationError);
+        }
 
         return res.status(200).json({
             message: "Password updated successfully."

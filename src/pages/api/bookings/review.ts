@@ -130,6 +130,19 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       data: { experience: avg._avg.rating ?? 0 }, // หรือสร้างฟิลด์ average_rating แยกต่างหาก
     })
 
+    // NOTIFICATION SYSTEM: สร้าง notification เมื่อมีรีวิวใหม่
+    try {
+      const { notifyNewReview } = await import('@/lib/notifications/pet-sitter-notifications');
+      
+      // ใช้ user_sitter_id แทน sitterId เพื่อส่ง notification ไปยัง user account ของ sitter
+      const sitterUserId = sitter.user_sitter_id;
+      if (sitterUserId) {
+        await notifyNewReview(sitterUserId, user.name || 'Customer', rating);
+      }
+    } catch {
+      // ไม่ throw error เพื่อไม่ให้กระทบการรีวิว
+    }
+
     return res.status(201).json({ message: "Review submitted successfully", review })
   } catch (err) {
     console.error("❌ Review error:", err)

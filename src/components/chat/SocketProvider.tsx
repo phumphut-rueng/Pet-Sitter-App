@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useEffect, useState } from 'react';
+import React, { createContext, useContext, useEffect, useState, useRef } from 'react';
 import { useSocket } from '@/hooks/useSocket';
 import { MessagePayload, UnreadUpdateData, ChatListUpdateData, SendMessageData } from '@/types/socket.types';
 import axios from 'axios';
@@ -36,6 +36,7 @@ export const SocketProvider: React.FC<SocketProviderProps> = ({ children }) => {
   const [messages, setMessages] = useState<MessagePayload[]>([]);
   const [unreadUpdates, setUnreadUpdates] = useState<UnreadUpdateData[]>([]);
   const [onlineUsers, setOnlineUsers] = useState<string[]>([]);
+  const processedMessageIds = useRef<Set<string>>(new Set());
 
   // ฟังก์ชันสำหรับส่งข้อความ
   const sendMessage = (data: SendMessageData) => {
@@ -46,7 +47,10 @@ export const SocketProvider: React.FC<SocketProviderProps> = ({ children }) => {
     }
   };
 
-  useEffect(() => {
+        useEffect(() => {
+    // Copy ref values to avoid cleanup warnings
+    const currentProcessedIds = processedMessageIds.current;
+
     // โหลด online users เริ่มต้นจาก API
     const fetchOnlineUsers = async () => {
       try {
@@ -66,8 +70,43 @@ export const SocketProvider: React.FC<SocketProviderProps> = ({ children }) => {
     }
 
     // ฟังก์ชันสำหรับจัดการ custom events
-    const handleReceiveMessage = (event: CustomEvent<MessagePayload>) => {
-      setMessages(prev => [...prev, event.detail]);
+    const handleReceiveMessage = async (event: CustomEvent<MessagePayload>) => {
+      const message = event.detail;
+      
+      // สร้าง unique key สำหรับข้อความ
+      const messageKey = `${message.id || message.senderId}-${message.content}-${message.timestamp}`;
+      
+      // ตรวจสอบว่าเป็นข้อความใหม่หรือไม่ (ใช้ useRef เพื่อป้องกันการสร้าง notification ซ้ำ)
+      if (processedMessageIds.current.has(messageKey)) {
+        console.log(' Duplicate message detected, skipping notification creation');
+        return;
+      }
+      
+      // เพิ่ม message key ลงใน Set
+      processedMessageIds.current.add(messageKey);
+      
+      setMessages(prev => [...prev, message]);
+      
+      // สร้าง notification สำหรับข้อความใหม่ (เฉพาะเมื่อผู้ใช้ปัจจุบันเป็นผู้รับ)
+      if (message.senderId !== userId) {
+        try {
+          const response = await axios.post('/api/notifications/create', {
+            userId: parseInt(userId || '0'),
+            type: 'message',
+            title: 'New Message 💬',
+            message: `You have a new message from ${message.senderName}`,
+          });
+          
+          if (response.data.success) {
+            // Trigger notification refresh
+            window.dispatchEvent(new CustomEvent('socket:notification_refresh', { 
+              detail: { userId: parseInt(userId || '0') } 
+            }));
+          }
+        } catch (error) {
+          console.error('Failed to create notification:', error);
+        }
+      }
     };
 
     const handleUnreadUpdate = (event: CustomEvent<UnreadUpdateData>) => {
@@ -99,29 +138,51 @@ export const SocketProvider: React.FC<SocketProviderProps> = ({ children }) => {
 
     const handleConnectionError = (event: CustomEvent<Error>) => {
       console.error('Socket connection error received:', event.detail);
-      // สามารถเพิ่ม logic สำหรับจัดการ error ได้ที่นี่
+      // Can add logic for error handling here
     };
 
-    // เพิ่ม event listeners
-    window.addEventListener('socket:receive_message', handleReceiveMessage as EventListener);
+           // Add handler for notification refresh
+           const handleNotificationRefresh = async (event: CustomEvent) => {
+             const { userId: refreshUserId } = event.detail;
+
+             // If it's the current user, fetch new notification count
+             if (refreshUserId === parseInt(userId || '0')) {
+               try {
+                 // Trigger notification count update
+                 // Send event to NotificationBell component
+                 window.dispatchEvent(new CustomEvent('update:notification_count'));
+               } catch (error) {
+                 console.error('Failed to update notification count:', error);
+               }
+             }
+           };
+
+    // Add event listeners
+    window.addEventListener('socket:receive_message', handleReceiveMessage as unknown as EventListener);
     window.addEventListener('socket:unread_update', handleUnreadUpdate as EventListener);
     window.addEventListener('socket:user_online', handleUserOnline as EventListener);
     window.addEventListener('socket:user_offline', handleUserOffline as EventListener);
     window.addEventListener('socket:online_users_list', handleOnlineUsersList as EventListener);
     window.addEventListener('socket:chat_list_update', handleChatListUpdate as EventListener);
     window.addEventListener('socket:connection_error', handleConnectionError as EventListener);
+    window.addEventListener('socket:notification_refresh', handleNotificationRefresh as unknown as EventListener);
 
     // Cleanup event listeners
     return () => {
-      window.removeEventListener('socket:receive_message', handleReceiveMessage as EventListener);
+      window.removeEventListener('socket:receive_message', handleReceiveMessage as unknown as EventListener);
       window.removeEventListener('socket:unread_update', handleUnreadUpdate as EventListener);
       window.removeEventListener('socket:user_online', handleUserOnline as EventListener);
       window.removeEventListener('socket:user_offline', handleUserOffline as EventListener);
       window.removeEventListener('socket:online_users_list', handleOnlineUsersList as EventListener);
       window.removeEventListener('socket:chat_list_update', handleChatListUpdate as EventListener);
       window.removeEventListener('socket:connection_error', handleConnectionError as EventListener);
+      window.removeEventListener('socket:notification_refresh', handleNotificationRefresh as unknown as EventListener);
+      
+           // Clear processed message IDs
+           currentProcessedIds.clear();
     };
-  }, [isConnected]);
+  }, [isConnected, messages, userId]);
+
 
   const value: SocketContextType = {
     socket,
