@@ -37,6 +37,7 @@ export const SocketProvider: React.FC<SocketProviderProps> = ({ children }) => {
   const [unreadUpdates, setUnreadUpdates] = useState<UnreadUpdateData[]>([]);
   const [onlineUsers, setOnlineUsers] = useState<string[]>([]);
   const processedMessageIds = useRef<Set<string>>(new Set());
+  const [hasShownInitialLoading, setHasShownInitialLoading] = useState(false);
 
   // ฟังก์ชันสำหรับส่งข้อความ
   const sendMessage = (data: SendMessageData) => {
@@ -183,6 +184,12 @@ export const SocketProvider: React.FC<SocketProviderProps> = ({ children }) => {
     };
   }, [isConnected, messages, userId]);
 
+  // ติดตามการเชื่อมต่อ socket และอัปเดตสถานะ loading
+  useEffect(() => {
+    if (isConnected && hasShownInitialLoading) {
+      setHasShownInitialLoading(true);
+    }
+  }, [isConnected, hasShownInitialLoading]);
 
   const value: SocketContextType = {
     socket,
@@ -196,13 +203,12 @@ export const SocketProvider: React.FC<SocketProviderProps> = ({ children }) => {
     onlineUsers,
   };
 
-  // แสดง loading เฉพาะเมื่อ socket server instance กำลังถูกสร้างครั้งแรกบน server
-  // (เมื่อ !res.socket?.server?.io === true)
-  const shouldShowLoading = isAuthenticated && isWaitingForSocket && !isSocketReady;
+  // ไม่แสดง loading modal เลย - ให้ socket เชื่อมต่อในพื้นหลัง
+  // const shouldShowLoading = isAuthenticated && isWaitingForSocket && !isSocketReady && !hasShownInitialLoading;
   
-  if (shouldShowLoading) {
-    return <SocketLoading message="Initializing chat server instance..." />;
-  }
+  // if (shouldShowLoading) {
+  //   return <SocketLoading message="Initializing chat server instance..." />;
+  // }
 
   return (
     <SocketContext.Provider value={value}>
