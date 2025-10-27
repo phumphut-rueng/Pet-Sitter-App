@@ -92,7 +92,7 @@ const Navbar: React.FC = () => {
   }, []);
 
   return (
-    <nav className="w-full bg-white">
+    <nav className="w-full bg-white relative z-30">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 md:px-8 relative">
         <div className="flex justify-between items-center h-12 py-3 md:h-20">
           {/* Logo */}

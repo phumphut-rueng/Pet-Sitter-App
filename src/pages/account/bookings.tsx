@@ -29,7 +29,7 @@ export default function BookingHistoryPage() {
   const [openSummary, setOpenSummary] = useState(false);
   const [openDetail, setOpenDetail] = useState(false);
   const [openChangeDialog, setOpenChangeDialog] = useState(false);
-  const { createChatAndNavigate, loading: creatingChat } = useCreateChat();
+  const { createChatAndNavigate } = useCreateChat();
   const [showSelfMessageModal, setShowSelfMessageModal] = useState(false);
   const [reviewData, setReviewData] = useState<{
     rating: number;

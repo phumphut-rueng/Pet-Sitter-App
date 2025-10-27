@@ -4,6 +4,7 @@ import { useRouter } from 'next/router';
 import ChatList from '@/components/chat/ChatList';
 import ChatContainer from '@/components/chat/ChatContainer';
 import { useSocketContext } from '@/components/chat/SocketProvider';
+import { PetPawLoadingSmall } from '@/components/loading/PetPawLoadingSmall';
 
 // Real data interfaces based on schema
 interface User {
@@ -509,7 +510,7 @@ export default function ChatWidget() {
   if (loading) {
     return (
       <div className="flex h-full bg-white rounded-lg shadow-lg overflow-hidden items-center justify-center">
-        <div className="text-gray-500">Loading chats...</div>
+        <PetPawLoadingSmall message="Loading chats..." />
       </div>
     );
   }

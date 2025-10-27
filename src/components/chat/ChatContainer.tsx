@@ -4,6 +4,7 @@ import ChatBubble from './ChatBubble';
 import { uploadAndGetPublicId } from '@/lib/cloudinary/image-upload';
 import ImageModal from '../modal/ImageModal';
 import { PetPawLoadingSmall } from '@/components/loading/PetPawLoadingSmall';
+import toast from 'react-hot-toast';
 
 interface Message {
   id: string;
@@ -218,8 +219,8 @@ const ChatContainer: React.FC<ChatContainerProps> = ({
       onSendMessage(uploadResult.url || '');
       
     } catch (error) {
-      console.error('Error uploading image:', error);
-      alert('Failed to upload image. Please try again.');
+      console.error('Image upload failed:', error);
+      toast.error('Failed to upload image. Please try again.');
     } finally {
       setIsUploading(false);
     }
@@ -239,13 +240,13 @@ const ChatContainer: React.FC<ChatContainerProps> = ({
       // ตรวจสอบประเภทไฟล์ (เฉพาะ jpg, png, gif)
       const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif'];
       if (!allowedTypes.includes(file.type)) {
-        alert('Please select only JPG, PNG, or GIF image files.');
+        toast.error('Please select only JPG, PNG, or GIF image files.');
         return;
       }
       
       // ตรวจสอบขนาดไฟล์ (5MB max)
       if (file.size > 5 * 1024 * 1024) {
-        alert('Image size must be less than 5MB.');
+        toast.error('Image size must be less than 5MB.');
         return;
       }
       
