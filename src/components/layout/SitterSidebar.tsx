@@ -95,9 +95,9 @@ export default function SitterSidebar({
       <div className="border-b border-border px-5 pt-8 pb-6">
         <Link href="/">
           <Image
-            src="/icons/sitter-logo-1.svg"
+            src="/images/logo-draft9.png"
             alt="Sitter"
-            width={131}
+            width={200}
             height={40}
             priority
           />
