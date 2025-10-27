@@ -1,24 +1,54 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 import { prisma } from "@/lib/prisma/prisma";
+import { sendError, toInt, toPositiveInt } from "@/lib/api/api-utils";
 
-
-function sendError(res: NextApiResponse, status: number, message: string) {
-  return res.status(status).json({ message });
-}
-
-// รองรับทั้ง /owners/[ownerId]/reviews และ fallback ?id=
-function parseOwnerId(q: NextApiRequest["query"]): number | null {
-  const raw = (q.ownerId ?? q.id) as string | string[] | undefined;
-  const v = Array.isArray(raw) ? raw[0] : raw;
-  const n = Number(v);
-  return Number.isFinite(n) ? n : null;
-}
-
-function parsePositiveInt(v: unknown, fallback: number): number {
-  const n = Number(v);
-  return Number.isFinite(n) && n > 0 ? Math.floor(n) : fallback;
-}
-
+/**
+ * @openapi
+ * /admin/owners/{ownerId}/reviews:
+ *   get:
+ *     tags: [Admin]
+ *     summary: List reviews of an owner (admin)
+ *     description: Return paginated reviews written for the specified owner, including sitter info and average rating.
+ *     parameters:
+ *       - in: path
+ *         name: ownerId
+ *         required: true
+ *         schema: { type: integer }
+ *         description: Owner ID
+ *       - in: query
+ *         name: page
+ *         required: false
+ *         schema:
+ *           type: integer
+ *           minimum: 1
+ *           default: 1
+ *         description: Page number (1-based)
+ *       - in: query
+ *         name: pageSize
+ *         required: false
+ *         schema:
+ *           type: integer
+ *           minimum: 1
+ *           maximum: 50
+ *           default: 10
+ *         description: Items per page (max 50)
+ *     responses:
+ *       200:
+ *         description: Reviews list with pagination meta and average rating
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/AdminOwnerReviewsResponse'
+ *       400:
+ *         description: Invalid owner id
+ *       405:
+ *         description: Method not allowed
+ *       500:
+ *         description: Internal Server Error
+ *     security:
+ *       - cookieAuth: []
+ *       - AdminApiKey: []
+ */
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== "GET") {
@@ -26,12 +56,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     return sendError(res, 405, "Method not allowed");
   }
 
-  const ownerId = parseOwnerId(req.query);
-  if (ownerId == null) return sendError(res, 400, "Invalid owner id");
+  const ownerId = toPositiveInt(req.query.ownerId ?? req.query.id);
+  if (!ownerId) return sendError(res, 400, "Invalid owner id");
 
   // pagination (ปลอดภัย + ค่าดีฟอลต์)
-  const page = Math.max(1, parsePositiveInt(req.query.page, 1));
-  const pageSize = Math.min(50, Math.max(1, parsePositiveInt(req.query.pageSize, 10)));
+  const page = Math.max(1, toInt(req.query.page, 1));
+  const pageSize = Math.min(50, Math.max(1, toInt(req.query.pageSize, 10)));
   const skip = (page - 1) * pageSize;
 
   try {

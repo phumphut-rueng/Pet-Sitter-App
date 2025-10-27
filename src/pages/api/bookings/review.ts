@@ -2,6 +2,73 @@ import { prisma } from "@/lib/prisma/prisma"
 import type { NextApiRequest, NextApiResponse } from "next"
 import { ReviewSchema } from "@/lib/validators/booking"
 
+/**
+ * @openapi
+ * /bookings/review:
+ *   post:
+ *     tags: [Bookings]
+ *     summary: Submit a review for a sitter
+ *     description: Create a review if the user has a completed booking with the sitter and has not reviewed before.
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [sitterId, userId, rating]
+ *             properties:
+ *               sitterId:
+ *                 type: integer
+ *                 example: 45
+ *               userId:
+ *                 type: integer
+ *                 example: 123
+ *               rating:
+ *                 type: number
+ *                 minimum: 1
+ *                 maximum: 5
+ *                 example: 4.5
+ *               comment:
+ *                 type: string
+ *                 example: "Great communication and very caring."
+ *           examples:
+ *             sample:
+ *               summary: Basic review
+ *               value:
+ *                 sitterId: 45
+ *                 userId: 123
+ *                 rating: 5
+ *                 comment: "Highly recommended."
+ *     responses:
+ *       201:
+ *         description: Review submitted successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: Review submitted successfully
+ *                 review:
+ *                   type: object
+ *                   additionalProperties: true
+ *       400:
+ *         description: Invalid input
+ *       403:
+ *         description: User has no successful booking with this sitter
+ *       404:
+ *         description: User or sitter not found
+ *       409:
+ *         description: Duplicate review for this sitter by the same user
+ *       405:
+ *         description: Method not allowed
+ *       500:
+ *         description: Failed to submit review
+ *     # ถ้าต้องการล็อกอินก่อน ค่อยเปิดส่วนนี้
+ *     # security:
+ *     #   - cookieAuth: []
+ */
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== "POST")
@@ -62,6 +129,19 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       where: { id: sitterId },
       data: { experience: avg._avg.rating ?? 0 }, // หรือสร้างฟิลด์ average_rating แยกต่างหาก
     })
+
+    // NOTIFICATION SYSTEM: สร้าง notification เมื่อมีรีวิวใหม่
+    try {
+      const { notifyNewReview } = await import('@/lib/notifications/pet-sitter-notifications');
+      
+      // ใช้ user_sitter_id แทน sitterId เพื่อส่ง notification ไปยัง user account ของ sitter
+      const sitterUserId = sitter.user_sitter_id;
+      if (sitterUserId) {
+        await notifyNewReview(sitterUserId, user.name || 'Customer', rating);
+      }
+    } catch {
+      // ไม่ throw error เพื่อไม่ให้กระทบการรีวิว
+    }
 
     return res.status(201).json({ message: "Review submitted successfully", review })
   } catch (err) {

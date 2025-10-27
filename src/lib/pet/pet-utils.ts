@@ -4,129 +4,82 @@ import { Pet, PetFormValues, PetType } from "@/types/pet.types";
 import { uploadToCloudinary } from "@/lib/cloudinary/upload-to-cloudinary";
 import { api } from "@/lib/api/axios";
 import { isAxiosError } from "axios";
-import { PET_ERROR_MESSAGES, PET_SUCCESS_MESSAGES } from "@/lib/constants/messages";
+import { getErrorMessage as getErrorMsg } from "@/lib/utils/error";
+import { PET_ERROR_MESSAGES } from "@/lib/constants/messages";
+import { isDataUrl, dataUrlToFile } from "@/lib/cloudinary/image-helpers";
 
+/** Re-exports */
 export type { Pet, PetFormValues, PetType };
+export { PET_ERROR_MESSAGES as ERROR_MESSAGES } from "@/lib/constants/messages";
 
-
+/** Routes */
 export const ROUTES = {
   petList: "/account/pet",
   createPet: "/account/pet/create",
   editPet: (id: number) => `/account/pet/${id}`,
 } as const;
 
+/** Navigation */
 export const NAVIGATION_DELAY = 900;
-
-// Re-export messages for convenience
-export { PET_ERROR_MESSAGES as ERROR_MESSAGES, PET_SUCCESS_MESSAGES as SUCCESS_MESSAGES };
-
-
-
-export function getErrorMessage(error: unknown): string {
-  if (isAxiosError(error)) {
-    const data = error.response?.data as { message?: string; error?: string } | undefined;
-    return (
-      data?.message ||
-      data?.error ||
-      error.response?.statusText ||
-      error.message ||
-      PET_ERROR_MESSAGES.unknown
-    );
-  }
-
-  if (typeof error === "string") return error;
-  if (error instanceof Error) return error.message;
-
-  try {
-    return JSON.stringify(error);
-  } catch {
-    return PET_ERROR_MESSAGES.unknown;
-  }
-}
-
-
-
-export function parsePetId(routerQuery: unknown): number | undefined {
-  const raw = Array.isArray(routerQuery) ? routerQuery[0] : routerQuery;
-  const parsed = raw ? Number(raw) : NaN;
-  return Number.isFinite(parsed) && parsed > 0 ? parsed : undefined;
-}
-
 export function delayedNavigation(
   router: Pick<NextRouter, "push">,
   path: string,
   delay: number = NAVIGATION_DELAY
 ) {
-  setTimeout(() => {
-    void router.push(path);
-  }, delay);
+  const ms = Math.max(0, Number(delay) || 0);
+  setTimeout(() => void router.push(path), ms);
 }
 
+/** Error helpers */
+export function getErrorMessage(error: unknown): string {
+  return getErrorMsg(error, PET_ERROR_MESSAGES.unknown);
+}
 
+/** Image & file */
 export function validateImageUrl(url?: string | null): string {
   const trimmed = (url ?? "").trim();
-  const isValid =
+  const ok =
     trimmed &&
-    (trimmed.startsWith("http") || trimmed.startsWith("data:") || trimmed.startsWith("/"));
-  return isValid ? trimmed : "";
-}
-
-function isDataUrl(url?: string): boolean {
-  return !!url && /^data:image\/[a-zA-Z]+;base64,/.test(url);
-}
-
-function dataUrlToFile(dataUrl: string, filename = "pet.png"): File {
-  const match = dataUrl.match(/^data:([^;]+);base64,(.+)$/);
-  if (!match) throw new Error("Invalid data URL");
-
-  const [, mime = "image/png", base64] = match;
-  const binary = atob(base64);
-  const bytes = new Uint8Array(binary.length);
-
-  for (let i = 0; i < binary.length; i++) {
-    bytes[i] = binary.charCodeAt(i);
-  }
-
-  const blob = new Blob([bytes], { type: mime });
-  return new File([blob], filename, { type: mime });
+    (trimmed.startsWith("http://") ||
+      trimmed.startsWith("https://") ||
+      trimmed.startsWith("data:") ||
+      trimmed.startsWith("/"));
+  return ok ? trimmed : "";
 }
 
 export function fileToDataURL(file: File): Promise<string> {
   return new Promise((resolve) => {
     const reader = new FileReader();
-    reader.onload = () => {
-      resolve(typeof reader.result === "string" ? reader.result : "");
-    };
+    reader.onload = () => resolve(typeof reader.result === "string" ? reader.result : "");
     reader.readAsDataURL(file);
   });
 }
 
-// ==========================================
-// Form Input Sanitizers
-// ==========================================
-
+/** =========================
+ *  Form Sanitizers
+ *  ========================= */
 export function sanitizeAgeInput(value: string): string {
   return value.replace(/\D+/g, "").slice(0, 3);
 }
 
 export function sanitizeWeightInput(value: string): string {
+  // keep only digits and single dot, clamp to 2 dp, and max 100
   const cleaned = value
     .replace(/,/g, "")
     .replace(/[^\d.]/g, "")
-    .replace(/^(\d*\.\d*).*$/, "$1");
-
-  const num = parseFloat(cleaned);
-  if (!isNaN(num) && num > 100) {
-    return "100";
-  }
-
-  return cleaned;
+    .replace(/(\..*)\./g, "$1") // only first dot
+    .replace(/^0+(\d)/, "$1"); // strip leading zeros
+  const num = Number(cleaned);
+  if (!Number.isFinite(num)) return cleaned;
+  const clamped = Math.min(num, 100);
+  const fixed = /\.\d{3,}$/.test(cleaned) ? clamped.toFixed(2) : String(clamped);
+  return fixed.replace(/\.0+$/, ""); // remove trailing .0
 }
 
-// ==========================================
-// Pet Type Resolution
-// ==========================================
-
+/** =========================
+ *  Pet Type Resolution
+ *  ========================= */
+// include common Thai/EN variants
 const PET_TYPE_ALIASES: Record<string, string[]> = {
   dog: ["dog", "dogs", "canine", "สุนัข", "หมา"],
   cat: ["cat", "cats", "feline", "แมว"],
@@ -134,8 +87,12 @@ const PET_TYPE_ALIASES: Record<string, string[]> = {
   rabbit: ["rabbit", "rabbits", "กระต่าย"],
 };
 
+function stripDiacritics(s: string): string {
+  return s.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+}
+
 function normalizeName(text: string): string {
-  return text
+  return stripDiacritics(text)
     .normalize("NFKC")
     .toLowerCase()
     .replace(/\s+/g, "")
@@ -143,44 +100,52 @@ function normalizeName(text: string): string {
     .trim();
 }
 
+/** cache available type names → id for fast lookup within a single call */
+function buildTypeIndex(types: PetType[]): Map<string, number> {
+  const map = new Map<string, number>();
+  for (const t of types ?? []) {
+    map.set(normalizeName(t.name), t.id);
+  }
+  return map;
+}
+
 function findPetTypeId(typeName: string, availableTypes: PetType[]): number | null {
   if (!availableTypes?.length || !typeName) return null;
 
+  const idx = buildTypeIndex(availableTypes);
   const normalized = normalizeName(typeName);
 
-  // ลองหา exact match ก่อน
-  const exactMatch = availableTypes.find((t) => normalizeName(t.name) === normalized);
-  if (exactMatch) return exactMatch.id;
+  // exact
+  if (idx.has(normalized)) return idx.get(normalized)!;
 
-  // ลองหา partial match
-  const partialMatch = availableTypes.find((t) => {
-    const tn = normalizeName(t.name);
-    return tn.includes(normalized) || normalized.includes(tn);
-  });
-  if (partialMatch) return partialMatch.id;
+  // partial (either side contains the other)
+  for (const [key, id] of idx) {
+    if (key.includes(normalized) || normalized.includes(key)) return id;
+  }
 
-  // ลองหาจาก aliases
+  // alias
   const aliasKey = Object.keys(PET_TYPE_ALIASES).find((key) =>
-    PET_TYPE_ALIASES[key].includes(normalized)
+    PET_TYPE_ALIASES[key].some((v) => normalizeName(v) === normalized)
   );
-
   if (aliasKey) {
-    const byAlias = availableTypes.find((t) => normalizeName(t.name) === normalizeName(aliasKey));
-    if (byAlias) return byAlias.id;
-
-    const capitalized = aliasKey[0].toUpperCase() + aliasKey.slice(1);
-    const byCapitalized = availableTypes.find((t) => normalizeName(t.name) === normalizeName(capitalized));
-    if (byCapitalized) return byCapitalized.id;
+    const keyNorm = normalizeName(aliasKey);
+    if (idx.has(keyNorm)) return idx.get(keyNorm)!;
+    // try capitalized display names in DB
+    const cap = aliasKey[0].toUpperCase() + aliasKey.slice(1);
+    const capNorm = normalizeName(cap);
+    if (idx.has(capNorm)) return idx.get(capNorm)!;
   }
 
   return null;
 }
 
-// ==========================================
-// Data Transformation
-// ==========================================
+/** =========================
+ *  Data Transformation
+ *  ========================= */
+type SexForm = PetFormValues["sex"]; // "" | "Male" | "Female"
+type SexPayload = Extract<PetInput["sex"], "Male" | "Female">;
 
-function toFormSex(value: unknown): PetFormValues["sex"] {
+function toFormSex(value: unknown): SexForm {
   return value === "Male" || value === "Female" ? value : "";
 }
 
@@ -198,50 +163,81 @@ export function petResponseToFormValues(pet: Pet): PetFormValues {
   };
 }
 
+const MAX_DATA_URL_BYTES = 6 * 1024 * 1024; // 6MB guard for uploads
+
+function approxDataUrlBytes(dataUrl: string): number {
+  // rough: length of base64 payload after "base64," → each char ~1 byte
+  const i = dataUrl.indexOf("base64,");
+  if (i === -1) return dataUrl.length;
+  return dataUrl.length - (i + 7);
+}
+
 export async function formValuesToPayload(
   values: PetFormValues,
   getPetTypes: () => Promise<PetType[]>
 ): Promise<PetInput> {
   const types = await getPetTypes();
   const petTypeId = findPetTypeId(values.type, types);
-
-  if (petTypeId == null) {
-    throw new Error(PET_ERROR_MESSAGES.invalidPetType);
-  }
+  if (petTypeId == null) throw new Error(PET_ERROR_MESSAGES.invalidPetType);
 
   let imageUrl = (values.image ?? "").trim();
 
   if (isDataUrl(imageUrl)) {
+    if (approxDataUrlBytes(imageUrl) > MAX_DATA_URL_BYTES) {
+      throw new Error("Image is too large.");
+    }
     const file = dataUrlToFile(imageUrl, "pet.png");
     imageUrl = await uploadToCloudinary(file, { folder: "pet-profile" });
   }
+
+  const sex: SexPayload = values.sex === "Female" ? "Female" : "Male";
+
+  const ageMonth = Number(values.ageMonth || 0);
+  const weightKg = Number(values.weightKg || 0);
 
   return {
     petTypeId,
     name: values.name.trim(),
     breed: values.breed.trim(),
-    sex: values.sex === "Female" ? "Female" : "Male",
-    ageMonth: Number(values.ageMonth || 0),
+    sex,
+    ageMonth: Number.isFinite(ageMonth) ? ageMonth : 0,
     color: values.color.trim(),
-    weightKg: Number(values.weightKg || 0),
+    weightKg: Number.isFinite(weightKg) ? weightKg : 0,
     about: values.about?.trim() || "",
     imageUrl,
   };
 }
 
-// ==========================================
-// API Service
-// ==========================================
-
+/** =========================
+ *  API Service
+ *  ========================= */
 function parseApiErrorMessage(payload: unknown): string | null {
-  if (typeof payload !== "object" || payload === null) return null;
+  if (!payload || typeof payload !== "object") return null;
 
   const data = payload as Record<string, unknown>;
-  const message = data.message;
-  const error = data.error;
 
-  if (typeof message === "string") return message;
-  if (typeof error === "string") return error;
+  // Common shapes:
+  // { message: string } | { error: string } | { errors: string[] | {msg:string}[] } | { detail: string }
+  const msg = data.message;
+  if (typeof msg === "string" && msg.trim()) return msg;
+
+  const err = data.error;
+  if (typeof err === "string" && err.trim()) return err;
+
+  const detail = data.detail;
+  if (typeof detail === "string" && detail.trim()) return detail;
+
+  const errors = data.errors;
+  if (Array.isArray(errors) && errors.length > 0) {
+    // map string[] or { msg }[]
+    const first = errors.find((e: unknown) => typeof e === "string") as string | undefined;
+    if (first && typeof first === "string" && first.trim()) return first;
+    
+    const msgItem = errors.find((e: unknown) => 
+      typeof e === "object" && e !== null && "msg" in e && typeof (e as Record<string, unknown>).msg === "string"
+    ) as { msg: string } | undefined;
+    if (msgItem?.msg && typeof msgItem.msg === "string" && msgItem.msg.trim()) return msgItem.msg;
+  }
 
   return null;
 }

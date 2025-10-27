@@ -3,6 +3,43 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "../auth/[...nextauth]";
 import { prisma } from "@/lib/prisma/prisma";
 
+/**
+ * @openapi
+ * /sitter/get-booking:
+ *   get:
+ *     tags: [Sitter]
+ *     summary: List sitter bookings or get one booking detail
+ *     description: Return bookings of the authenticated sitter (from session cookie). If query param "id" is provided, returns only that booking detail.
+ *     parameters:
+ *       - in: query
+ *         name: id
+ *         required: false
+ *         schema:
+ *           type: integer
+ *         description: Booking ID (optional). When provided, returns a single booking detail.
+ *     responses:
+ *       200:
+ *         description: OK. When "id" is not provided, returns an array; when "id" is provided, returns an object.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               oneOf:
+ *                 - type: array
+ *                   items:
+ *                     type: object
+ *                     additionalProperties: true
+ *                 - type: object
+ *                   additionalProperties: true
+ *       401:
+ *         description: Unauthorized
+ *       404:
+ *         description: Booking not found (when "id" is provided but not owned by sitter)
+ *       405:
+ *         description: Method not allowed
+ *     security:
+ *       - cookieAuth: []
+ */
+
 function mapStatusNameToKey(name: string) {
   switch (name.toLowerCase()) {
     case "waiting for confirm":
@@ -82,6 +119,7 @@ export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse
 ) {
+
   const session = await getServerSession(req, res, authOptions);
   if (!session?.user?.email)
     return res.status(401).json({ message: "Unauthorized" });
@@ -90,9 +128,45 @@ export default async function handler(
     where: { user_sitter_id: Number(session.user.id) },
   });
 
+  console.log("sitter", sitter);
   if (!sitter) return res.status(404).json({ message: "Sitter not found" });
 
   if (req.method === "GET") {
+
+    if (req.query.payout) {
+      const bookings = await prisma.booking.findMany({
+        where: { pet_sitter_id: sitter.id },
+        include: {
+          status_booking_booking_status_idTostatus: true,
+        },
+        orderBy: {
+          date_start: "desc", // เรียงวันที่ล่าสุดก่อน
+        },
+      });
+
+      const filtered = bookings.filter((b) => {
+        const paymentType = b.payment_type?.toLowerCase() ?? "";
+        const statusId = b.status_booking_booking_status_idTostatus?.id ?? null;
+
+        if (paymentType === "credit" && statusId !== 8) return true; // แสดงได้ทุกสถานะ ยกเว้น canceled
+        if (paymentType === "cash" && statusId === 7) return true; // ต้อง success เท่านั้น
+        return false;
+      });
+
+      const payoutList = filtered.map((b) => ({
+        date: new Date(b.date_start).toLocaleDateString("en-GB", {
+          day: "numeric",
+          month: "short",
+          year: "numeric",
+        }),
+        from: b.name,
+        transactionNo: b.transaction_id ?? "-",
+        amount: parseFloat(b.amount.toString()),
+      }));
+
+      return res.status(200).json(payoutList);
+    }
+
     const bookingId = req.query.id ? Number(req.query.id) : null;
 
     if (bookingId) {
@@ -144,7 +218,7 @@ export default async function handler(
         totalPaid: b.amount.toFixed(2),
         paymentMethod: b.payment_type ?? "-",
         transactionDate: b.transaction_date
-        ? new Date(b.transaction_date).toLocaleString("en-US", {
+          ? new Date(b.transaction_date).toLocaleString("en-US", {
             day: "numeric",
             month: "short",
             year: "numeric",
@@ -153,12 +227,12 @@ export default async function handler(
             hour12: true,
             timeZone: "Asia/Bangkok",
           })
-        : "-",
+          : "-",
         transactionId: b.transaction_id ?? "-",
         message: b.additional ?? "-",
         status: mapStatusNameToKey(
           b.status_booking_booking_status_idTostatus?.name ??
-            "waiting for confirm"
+          "waiting for confirm"
         ),
         petsDetail: pets,
         ownerEmail: b.email,
@@ -166,10 +240,10 @@ export default async function handler(
         ownerIdNumber: b.booking?.id_number ?? "-",
         ownerDOB: b.booking?.dob
           ? new Date(b.booking.dob).toLocaleDateString("en-GB", {
-              day: "numeric",
-              month: "short",
-              year: "numeric",
-            })
+            day: "numeric",
+            month: "short",
+            year: "numeric",
+          })
           : "-",
         avatarUrl: b.booking?.profile_image || "/icons/avatar-placeholder.svg",
       };
@@ -200,8 +274,11 @@ export default async function handler(
         ),
         status: mapStatusNameToKey(
           b.status_booking_booking_status_idTostatus?.name ??
-            "waiting for confirm"
+          "waiting for confirm"
         ),
+        date_start: b.date_start,
+        transaction_id: b.transaction_id || "-",
+        amount: parseFloat(b.amount.toString()),
       }));
 
       return res.status(200).json(list);

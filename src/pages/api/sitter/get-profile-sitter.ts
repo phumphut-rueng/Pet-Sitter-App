@@ -4,6 +4,68 @@ import { prisma } from "@/lib/prisma/prisma";
 import { authOptions } from "../auth/[...nextauth]";
 import { Prisma } from "@prisma/client";
 
+/**
+ * @openapi
+ * /sitter/get-profile-sitter:
+ *   get:
+ *     tags: [Sitter]
+ *     summary: Get current sitter profile (by session)
+ *     description: Return sitter profile of the currently logged-in user (cookie session). If the user has not created a sitter profile, `exists=false` and `sitter=null`.
+ *     responses:
+ *       200:
+ *         description: OK
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 exists:
+ *                   type: boolean
+ *                   example: true
+ *                 user:
+ *                   type: object
+ *                   additionalProperties: true
+ *                   example:
+ *                     id: 123
+ *                     email: "jane@example.com"
+ *                     phone: "0812345678"
+ *                     name: "Jane"
+ *                     profile_image: "https://cdn.example.com/u/123.png"
+ *                     approval_status_id: 4
+ *                     sitter_approval_status: { status_name: "Approved" }
+ *                 sitter:
+ *                   oneOf:
+ *                     - type: "null"
+ *                     - type: object
+ *                       additionalProperties: true
+ *                       example:
+ *                         id: 55
+ *                         name: "Happy Paws"
+ *                         phone: "0891112222"
+ *                         experience: 4.5
+ *                         introduction: "Dog & cat lover"
+ *                         service_description: "Home visits, walking"
+ *                         address_detail: "123/4"
+ *                         address_province: "Bangkok"
+ *                         address_district: "Bang Kapi"
+ *                         address_sub_district: "Hua Mak"
+ *                         address_post_code: "10240"
+ *                         admin_note: null
+ *                         latitude: 13.7
+ *                         longitude: 100.6
+ *                         images: ["https://cdn.example.com/sitter/1.jpg"]
+ *                         petTypes: [{ id: 1, name: "Dog" }]
+ *       401:
+ *         description: Unauthorized
+ *       404:
+ *         description: User not found
+ *       405:
+ *         description: Method not allowed
+ *     security:
+ *       - cookieAuth: []
+ */
+
+
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   try {
     if (req.method !== "GET") {
@@ -76,6 +138,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         latitude: sitter.latitude,
         longitude: sitter.longitude,
         images: sitter.sitter_image.map((i) => i.image_url),
+        bank_name: sitter.bank_name,
+        bank_account_number: sitter.bank_account_number,
+        account_name: sitter.account_name,
+        book_bank_image: sitter.book_bank_image,
         petTypes: sitter.sitter_pet_type.map((sp) => ({
           id: sp.pet_type_id,
           name: sp.pet_type.pet_type_name,

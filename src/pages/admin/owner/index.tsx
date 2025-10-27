@@ -1,7 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import Head from "next/head";
 import toast from "react-hot-toast";
-
 import AdminSidebar from "@/components/layout/AdminSidebar";
 import SearchInput from "@/components/input/SearchInput";
 import { Pagination } from "@/components/pagination/Pagination";
@@ -28,9 +27,11 @@ export default function AdminOwnerListPage() {
   const [page, setPage] = useState(1);
   const [rows, setRows] = useState<OwnerRow[]>([]);
   const [total, setTotal] = useState(0);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
 
   const totalPages = useMemo(() => Math.max(1, Math.ceil(total / LIMIT)), [total]);
+  const from = rows.length === 0 ? 0 : (page - 1) * LIMIT + 1;
+  const to = (page - 1) * LIMIT + rows.length;
 
   useEffect(() => {
     let alive = true;
@@ -38,7 +39,8 @@ export default function AdminOwnerListPage() {
     async function fetchOwners() {
       setLoading(true);
       try {
-        const { data } = await api.get<OwnerListResponse>("admin/owners/get-owners", {
+
+        const { data } = await api.get<OwnerListResponse>("/admin/owners", {
           params: { page, limit: LIMIT, q: q.trim() },
         });
         if (!alive) return;
@@ -60,9 +62,6 @@ export default function AdminOwnerListPage() {
     fetchOwners();
     return () => { alive = false; };
   }, [page, q]);
-
-  const from = rows.length === 0 ? 0 : (page - 1) * LIMIT + 1;
-  const to = (page - 1) * LIMIT + rows.length;
 
   return (
     <>
@@ -86,28 +85,31 @@ export default function AdminOwnerListPage() {
           </PageHeader>
 
           <div className="relative min-h-[400px] rounded-2xl border border-gray-2 bg-white p-4 shadow-sm md:p-5">
-            <OwnersTable rows={rows} />
-
-            <div className="mt-6 grid grid-cols-3 items-center">
-              <div className="text-xs2-regular text-muted">
-                Showing {from}–{to} of {total}
-              </div>
-
-              <div className="flex justify-center">
-                <Pagination
-                  currentPage={page}
-                  totalPages={totalPages}
-                  onClick={setPage}
-                />
-              </div>
-
-              <div />
-            </div>
-
-            {loading && (
-              <div className="absolute inset-0 flex items-center justify-center rounded-2xl ">
+            {/* ช็ค loading ก่อนแสดงตาราง */}
+            {loading ? (
+              <div className="flex items-center justify-center h-[400px]">
                 <PetPawLoading message="Loading Pet Owners..." size="md" />
               </div>
+            ) : (
+              <>
+                <OwnersTable rows={rows} />
+
+                <div className="mt-6 grid grid-cols-3 items-center">
+                  <div className="text-xs2-regular text-muted">
+                    Showing {from}–{to} of {total}
+                  </div>
+
+                  <div className="flex justify-center">
+                    <Pagination
+                      currentPage={page}
+                      totalPages={totalPages}
+                      onClick={setPage}
+                    />
+                  </div>
+
+                  <div />
+                </div>
+              </>
             )}
           </div>
         </main>

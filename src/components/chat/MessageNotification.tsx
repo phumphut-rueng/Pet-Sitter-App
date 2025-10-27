@@ -2,16 +2,20 @@ import React, { useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
 import { useRouter } from 'next/router';
 import { useSocketContext } from './SocketProvider';
+import { MessageSquare } from 'lucide-react';
 
 const MessageNotification: React.FC = () => {
   const { messages, userId } = useSocketContext();
   const [lastMessageCount, setLastMessageCount] = useState(0);
   const router = useRouter();
 
+  // Reset lastMessageCount เมื่อเปลี่ยนหน้า
   useEffect(() => {
-    console.log('MessageNotification: messages.length =', messages.length, 'lastMessageCount =', lastMessageCount);
-    
-    if (messages.length > lastMessageCount && lastMessageCount > 0) {
+    setLastMessageCount(messages.length);
+  }, [router.pathname, messages.length]);
+
+  useEffect(() => {
+    if (messages.length > lastMessageCount && lastMessageCount >= 0) {
       const latestMessage = messages[messages.length - 1];
       
       // ตรวจสอบว่าเป็นข้อความที่ส่งมาหาผู้ใช้ปัจจุบันหรือไม่ (ไม่ใช่ข้อความที่ผู้ใช้ส่งเอง)
@@ -20,26 +24,30 @@ const MessageNotification: React.FC = () => {
       // ตรวจสอบว่าผู้ใช้ไม่ได้อยู่หน้าแชท
       const isNotOnChatPage = !router.pathname.startsWith('/chat');
       
-      console.log('MessageNotification: isMessageForCurrentUser =', isMessageForCurrentUser, 'isNotOnChatPage =', isNotOnChatPage);
-      
       if (isMessageForCurrentUser && isNotOnChatPage) {
-        console.log('MessageNotification: Showing toast for new message');
         // Show toast notification for new message
-        toast.success(`📨 New Message from ${latestMessage.senderName}!`, {
-          duration: 3000,
+        toast.custom((t) => (
+          <div
+            className={`${
+              t.visible ? 'animate-enter' : 'animate-leave'
+            } w-auto max-w-sm bg-white text-orange-5 border-none rounded-xl p-3 shadow-lg pointer-events-auto`}
+          >
+            <div className="flex items-start">
+              <div className="flex-shrink-0">
+                <div className="w-8 h-8 rounded-full bg-orange-5 flex items-center justify-center">
+                  <MessageSquare className="w-4 h-4 text-white" />
+                </div>
+              </div>
+              <div className="ml-3 flex-1">
+                <p className="text-sm2-medium text-orange-5">
+                  New Message from {latestMessage.senderName}!
+                </p>
+              </div>
+            </div>
+          </div>
+        ), {
+          duration: 3000, // 3 วินาทีแล้วหายไป
           position: 'top-right',
-          style: {
-            background: 'var(--green-bg)',
-            color: 'var(--green)',
-            border: '1px solid rgba(28, 205, 131, 0.3)',
-            borderRadius: '14px',
-            padding: '10px 14px',
-            boxShadow: '0 10px 30px rgba(16,24,40,.12)',
-          },
-          iconTheme: { 
-            primary: 'var(--green)', 
-            secondary: '#fff' 
-          },
         });
       }
     }

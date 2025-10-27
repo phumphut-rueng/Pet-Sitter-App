@@ -2,6 +2,7 @@ import * as React from "react";
 import { api } from "@/lib/api/axios";
 import { isAxiosError, CanceledError } from "axios";
 import type { OwnerDetail } from "@/types/admin/owners";
+import { getErrorMessage } from "@/lib/utils/error";
 
 export type Tab = "profile" | "pets" | "reviews";
 
@@ -19,16 +20,6 @@ function isCanceled(error: unknown): boolean {
     error instanceof CanceledError ||
     (isAxiosError(error) && error.code === "ERR_CANCELED")
   );
-}
-
-function getErrorMessage(error: unknown): string {
-  if (isAxiosError(error)) {
-    const data = error.response?.data as { message?: string; error?: string };
-    return data?.message || data?.error || error.message || "Failed to load";
-  }
-  if (error instanceof Error) return error.message;
-  if (typeof error === "string") return error;
-  return "Failed to load";
 }
 
 export function useOwnerDetail(id?: string): UseOwnerDetailReturn {
@@ -53,8 +44,7 @@ export function useOwnerDetail(id?: string): UseOwnerDetailReturn {
       setError(null);
 
       try {
-        const { data } = await api.get<OwnerDetail>("admin/owners/get-owner-by-id", {
-          params: { id },
+        const { data } = await api.get<OwnerDetail>(`admin/owners/${id}`, {
           signal: controller.signal,
         });
         
@@ -63,7 +53,7 @@ export function useOwnerDetail(id?: string): UseOwnerDetailReturn {
         }
       } catch (err) {
         if (!isCanceled(err) && !controller.signal.aborted) {
-          setError(getErrorMessage(err));
+          setError(getErrorMessage(err, "Failed to load"));
         }
       } finally {
         if (!controller.signal.aborted) {

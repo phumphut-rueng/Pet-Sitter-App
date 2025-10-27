@@ -3,6 +3,63 @@ import { getServerSession } from "next-auth/next";
 import { authOptions } from "../auth/[...nextauth]";
 import { prisma } from "@/lib/prisma/prisma";
 
+/**
+ * @openapi
+ * /sitter/profile-test:
+ *   get:
+ *     tags: [Sitter]
+ *     summary: Get sitter profile (me)
+ *     description: Return the signed-in user's basic profile and roles.
+ *     responses:
+ *       200:
+ *         description: OK
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 id: { type: integer, example: 123 }
+ *                 name: { type: string, nullable: true, example: "Jane Sitter" }
+ *                 email: { type: string, example: "jane@example.com" }
+ *                 phone: { type: string, nullable: true, example: "0812345678" }
+ *                 profile_image: { type: string, nullable: true, example: "https://..." }
+ *                 roles:
+ *                   type: array
+ *                   items: { type: string }
+ *                   example: ["Sitter","Owner"]
+ *       401: { description: Unauthorized }
+ *       404: { description: User not found }
+ *     security:
+ *       - cookieAuth: []
+ *   put:
+ *     tags: [Sitter]
+ *     summary: Update sitter profile (me)
+ *     description: Update profile fields (currently supports name, profile_image).
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               name: { type: string, nullable: true, example: "Jane Sitter" }
+ *               profile_image: { type: string, nullable: true, example: "https://..." }
+ *     responses:
+ *       200:
+ *         description: Updated
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               additionalProperties: true
+ *       400: { description: Invalid user ID }
+ *       401: { description: Unauthorized }
+ *       405: { description: Method not allowed }
+ *     security:
+ *       - cookieAuth: []
+ */
+
+
 // API สำหรับจัดการข้อมูลโปรไฟล์ผู้ดูแลสัตว์
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   try {

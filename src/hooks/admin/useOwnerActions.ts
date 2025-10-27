@@ -1,16 +1,6 @@
 import { useState, useCallback } from "react";
 import { api } from "@/lib/api/axios";
-import { isAxiosError } from "axios";
-
-function getErrorMessage(error: unknown, fallback = "An error occurred"): string {
-  if (isAxiosError(error)) {
-    const data = error.response?.data as { message?: string; error?: string };
-    return data?.message || data?.error || error.message || fallback;
-  }
-  if (error instanceof Error) return error.message;
-  if (typeof error === "string") return error;
-  return fallback;
-}
+import { getErrorMessage } from "@/lib/utils/error";
 
 type UseOwnerActionsReturn = {
   banOwner: (reason?: string, cascadePets?: boolean) => Promise<void>;

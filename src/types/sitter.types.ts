@@ -37,6 +37,7 @@ export interface Sitter {
   id: number;
   user_sitter_id: number;
   user_name: string;
+  user_profile_image?: string | null;
   name: string;
   location_description: string;
   phone: string;
@@ -51,13 +52,13 @@ export interface Sitter {
   updated_at: string | null;
   experience: number;
   service_description: string | null;
+  latitude?: number | null;
+  longitude?: number | null;
   owner: User;
   sitter_image: SitterImage[];
   sitter_pet_type: SitterPetType[];
   reviews: Review[];
   averageRating: number | null;
-  latitude: number;
-  longitude: number;
 
   reviewPagination?: {
     page: number;

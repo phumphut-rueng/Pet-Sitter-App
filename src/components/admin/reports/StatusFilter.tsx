@@ -1,5 +1,6 @@
 import * as React from "react";
 import type { ReportStatusUI } from "@/types/admin/reports";
+import { CustomSelect } from "@/components/dropdown/CustomSelect";
 
 type Props = {
   value: ReportStatusUI | "all";
@@ -7,33 +8,26 @@ type Props = {
   className?: string;
 };
 
-const STATUS_OPTIONS = [
+const STATUS_OPTIONS: Array<{ value: string; label: string }> = [
   { value: "all", label: "All status" },
   { value: "newReport", label: "New Report" },
   { value: "pending", label: "Pending" },
   { value: "resolved", label: "Resolved" },
   { value: "canceled", label: "Canceled" },
-] as const;
+];
 
 export default function StatusFilter({ value, onChange, className = "" }: Props) {
   return (
     <div className={className}>
-      <select
-        value={value}
-        onChange={(e) => onChange(e.target.value as ReportStatusUI | "all")}
-        className="w-[200px] h-[44px] px-4 
-        rounded-xl 
-        border border-gray-2 bg-white 
-        text-sm2-medium text-ink 
-        focus-visible:outline-none focus-visible:ring-2 ring-brand ring-offset-2 ring-offset-bg 
-        cursor-pointer transition-colors hover:border-gray-4"
-      >
-        {STATUS_OPTIONS.map((option) => (
-          <option key={option.value} value={option.value}>
-            {option.label}
-          </option>
-        ))}
-      </select>
+      <div className="[&_button]:!w-[240px] [&_button]:!h-12 [&_button]:!py-3 [&_button]:!pr-4 [&_button]:!pl-3 [&_button]:!gap-2 [&_button]:!rounded-lg [&_button]:!border [&_button]:!border-gray-2 [&_button]:!text-sm2-medium [&_button]:!text-gray-3 [&_button:focus]:!outline-none [&_button:focus]:!border-orange-5 [&_button:focus]:!ring-0">
+        <CustomSelect
+          value={value}
+          onChange={(val) => onChange(val as ReportStatusUI | "all")}
+          options={STATUS_OPTIONS}
+          variant="filter"
+          triggerSize=""
+        />
+      </div>
     </div>
   );
 }

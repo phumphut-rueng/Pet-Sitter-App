@@ -3,6 +3,50 @@ import { prisma } from '@/lib/prisma/prisma';
 import { getServerSession } from 'next-auth/next';
 import { authOptions } from '../auth/[...nextauth]';
 
+/**
+ * @openapi
+ * /chat/hide:
+ *   post:
+ *     tags: [Chat]
+ *     summary: Hide a chat for the current user
+ *     description: >
+ *       Hide (archive) a chat from the current user's chat list. Requires a valid session cookie.
+ *     security:
+ *       - cookieAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [chatId]
+ *             properties:
+ *               chatId:
+ *                 type: integer
+ *                 example: 123
+ *     responses:
+ *       200:
+ *         description: Chat hidden
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success: { type: boolean, example: true }
+ *                 message: { type: string, example: "Chat hidden successfully" }
+ *       400:
+ *         description: Chat ID is required
+ *       401:
+ *         description: Unauthorized
+ *       403:
+ *         description: Access denied to this chat
+ *       405:
+ *         description: Method Not Allowed
+ *       500:
+ *         description: Internal server error
+ */
+
+
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'POST') {
     return res.status(405).json({ 

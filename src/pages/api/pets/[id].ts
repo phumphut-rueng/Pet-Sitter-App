@@ -5,6 +5,130 @@ import { authOptions } from "@/pages/api/auth/[...nextauth]";
 import { petSchema } from "@/lib/validators/pet";
 import { Prisma } from "@prisma/client";
 
+
+/**
+ * @openapi
+ * /pets/{id}:
+ *   get:
+ *     tags: [Pets]
+ *     summary: Get a pet owned by the current user
+ *     description: Return a single pet by id. The pet must belong to the current session user.
+ *     security:
+ *       - cookieAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: Pet ID
+ *     responses:
+ *       200:
+ *         description: Pet found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 id: { type: integer, example: 10 }
+ *                 name: { type: string, nullable: true, example: "Milo" }
+ *                 breed: { type: string, nullable: true, example: "Shiba" }
+ *                 sex: { type: string, enum: ["Male","Female"], example: "Male" }
+ *                 ageMonth: { type: integer, nullable: true, example: 18 }
+ *                 color: { type: string, nullable: true, example: "brown" }
+ *                 weightKg: { type: number, nullable: true, example: 8.2 }
+ *                 about: { type: string, example: "Friendly and energetic" }
+ *                 imageUrl: { type: string, nullable: true, example: null }
+ *                 petTypeId: { type: integer, nullable: true, example: 1 }
+ *                 petTypeName: { type: string, example: "Dog" }
+ *       401:
+ *         description: Unauthorized
+ *       404:
+ *         description: Pet not found
+ *       500:
+ *         description: Internal Server Error
+ *
+ *   put:
+ *     tags: [Pets]
+ *     summary: Update a pet
+ *     description: Update a pet owned by the current session user.
+ *     security:
+ *       - cookieAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: Pet ID
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [petTypeId, name, sex, ageMonth]
+ *             properties:
+ *               petTypeId: { type: integer, nullable: true, example: 1 }
+ *               name: { type: string, example: "Milo" }
+ *               breed: { type: string, nullable: true, example: "Shiba" }
+ *               sex: { type: string, enum: ["Male","Female"], example: "Male" }
+ *               ageMonth: { type: integer, nullable: true, example: 18 }
+ *               color: { type: string, nullable: true, example: "brown" }
+ *               weightKg: { type: number, nullable: true, example: 8.2 }
+ *               about: { type: string, nullable: true, example: "Gentle and playful" }
+ *               imageUrl: { type: string, nullable: true, example: null }
+ *     responses:
+ *       200:
+ *         description: Updated
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message: { type: string, example: "OK" }
+ *       400:
+ *         description: Validation failed or invalid id
+ *       401:
+ *         description: Unauthorized
+ *       404:
+ *         description: Pet not found
+ *       500:
+ *         description: Internal Server Error
+ *
+ *   delete:
+ *     tags: [Pets]
+ *     summary: Delete a pet
+ *     description: Delete a pet owned by the current session user.
+ *     security:
+ *       - cookieAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: Pet ID
+ *     responses:
+ *       200:
+ *         description: Deleted
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message: { type: string, example: "Deleted" }
+ *       401:
+ *         description: Unauthorized
+ *       404:
+ *         description: Pet not found
+ *       409:
+ *         description: Conflict due to foreign key references
+ *       500:
+ *         description: Internal Server Error
+ */
+
+
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   const session = await getServerSession(req, res, authOptions);
   const userIdStr = session?.user?.id;

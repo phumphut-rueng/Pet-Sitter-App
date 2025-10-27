@@ -1,6 +1,56 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 import { prisma } from "@/lib/prisma/prisma";
-import { apiHandler, methodNotAllowed } from "@/lib/api/api-utils";
+import { apiHandler, methodNotAllowed, toInt, toPositiveInt } from "@/lib/api/api-utils";
+import type { ErrorResponse } from "@/lib/types/api";
+
+/**
+ * @openapi
+ * /admin/owners/{ownerId}/pet:
+ *   get:
+ *     tags: [Admin]
+ *     summary: List pets by owner (admin)
+ *     description: Return paginated pets of a given owner for admin dashboard.
+ *     parameters:
+ *       - in: path
+ *         name: ownerId
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: Owner ID
+ *       - in: query
+ *         name: page
+ *         required: false
+ *         schema:
+ *           type: integer
+ *           minimum: 1
+ *           default: 1
+ *         description: Page number (1-based)
+ *       - in: query
+ *         name: limit
+ *         required: false
+ *         schema:
+ *           type: integer
+ *           minimum: 1
+ *           maximum: 50
+ *           default: 12
+ *         description: Items per page (max 50)
+ *     responses:
+ *       200:
+ *         description: List of pets
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/AdminOwnerPetList'
+ *       400:
+ *         description: Invalid owner id
+ *       405:
+ *         description: Method not allowed
+ *       500:
+ *         description: Failed to load pets
+ *     security:
+ *       - cookieAuth: []
+ *       - AdminApiKey: []
+ */
 
 type PetListResponse = {
   items: Array<{
@@ -23,20 +73,6 @@ type PetListResponse = {
   total: number;
 };
 
-type ErrorResponse = { message: string };
-
-function getOwnerId(query: NextApiRequest["query"]): number | null {
-  const raw = query.ownerId ?? query.id;
-  const value = Array.isArray(raw) ? raw[0] : raw;
-  const id = Number(value);
-  return Number.isFinite(id) ? id : null;
-}
-
-function toPositiveInt(value: unknown, fallback: number): number {
-  const num = Number(value);
-  return Number.isFinite(num) && num > 0 ? Math.floor(num) : fallback;
-}
-
 async function handler(
   req: NextApiRequest,
   res: NextApiResponse<PetListResponse | ErrorResponse>
@@ -45,13 +81,13 @@ async function handler(
     return methodNotAllowed(res, ["GET"]);
   }
 
-  const ownerId = getOwnerId(req.query);
+  const ownerId = toPositiveInt(req.query.ownerId ?? req.query.id);
   if (!ownerId) {
     return res.status(400).json({ message: "Invalid owner id" });
   }
 
-  const page = Math.max(1, toPositiveInt(req.query.page, 1));
-  const limit = Math.min(50, Math.max(1, toPositiveInt(req.query.limit, 12)));
+  const page = Math.max(1, toInt(req.query.page, 1));
+  const limit = Math.min(50, Math.max(1, toInt(req.query.limit, 12)));
   const skip = (page - 1) * limit;
 
   try {

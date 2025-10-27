@@ -1,6 +1,32 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import { prisma } from '@/lib/prisma/prisma';
 
+/**
+ * @openapi
+ * /sitter/search-suggestions:
+ *   get:
+ *     tags: [Public]
+ *     summary: Autocomplete sitter / owner name and location
+ *     parameters:
+ *       - in: query
+ *         name: q
+ *         required: true
+ *         schema: { type: string, minLength: 2 }
+ *     responses:
+ *       200:
+ *         description: Suggestions list
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 suggestions:
+ *                   type: array
+ *                   items: { type: string }
+ *       405: { description: Method not allowed }
+ *       500: { description: Internal server error }
+ */
+
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'GET') {
     return res.status(405).json({ message: `Method ${req.method} not allowed` });

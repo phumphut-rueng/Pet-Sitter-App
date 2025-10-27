@@ -1,8 +1,9 @@
 import React, { useEffect, useState, useCallback } from "react";
 import { useRouter } from "next/router";
-import { Bell, MessageSquare, Menu, X } from "lucide-react";
+import { MessageSquare, Menu, X } from "lucide-react";
 import IconButton from "./IconButton";
 import PrimaryButton from "@/components/buttons/PrimaryButton";
+import NotificationButton from "@/components/notifications/NotificationButton";
 import { NavigationProps, MenuItem } from "@/types/navigation.types";
 import { useUnreadCount } from "@/hooks/useUnreadCount";
 
@@ -28,6 +29,7 @@ const MobileNav: React.FC<NavigationProps> = ({
     setIsMobileMenuOpen(false);
     document.body.style.overflow = "";
   }, []);
+
 
   const toggleMobileMenu = useCallback(() => {
     if (isMobileMenuOpen) {
@@ -75,14 +77,7 @@ const MobileNav: React.FC<NavigationProps> = ({
     <div className="md:hidden flex items-center justify-end gap-6">
       {isAuthenticated && (
         <>
-          <IconButton
-            icon={Bell}
-            route="/notifications"
-            hasIndicator={false}
-            aria-label="Notifications"
-            onNavigate={onNavigate}
-            variant="mobile"
-          />
+          <NotificationButton />
           <IconButton
             icon={MessageSquare}
             route="/chat"

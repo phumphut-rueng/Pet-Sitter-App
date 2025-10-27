@@ -5,6 +5,74 @@ import { prisma } from '@/lib/prisma/prisma';
 import { getServerSession } from 'next-auth/next';
 import { authOptions } from '../../auth/[...nextauth]';
 
+
+/**
+ * @openapi
+ * /chat/{chatId}/message:
+ *   get:
+ *     tags: [Chat]
+ *     summary: Get messages in a chat and mark them as read
+ *     description: >
+ *       Return chronological messages of a chat the current user participates in.
+ *       Also resets the user's unread count and marks received messages as read.
+ *     parameters:
+ *       - in: path
+ *         name: chatId
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: Chat ID
+ *     responses:
+ *       200:
+ *         description: Messages retrieved successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   example: Messages retrieved successfully
+ *                 messages:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       id: { type: integer, example: 101 }
+ *                       chat_id: { type: integer, example: 55 }
+ *                       sender_id: { type: integer, example: 123 }
+ *                       message_type: { type: string, example: "text" }
+ *                       content: { type: string, nullable: true, example: "Hello!" }
+ *                       image_url: { type: string, nullable: true, example: null }
+ *                       timestamp: { type: string, example: "2025-10-21T12:34:56.000Z" }
+ *                       is_read: { type: boolean, example: true }
+ *                       sender:
+ *                         type: object
+ *                         properties:
+ *                           id: { type: integer, example: 123 }
+ *                           name: { type: string, nullable: true, example: "Alice" }
+ *                           email: { type: string, example: "" }
+ *                           profile_image: { type: string, nullable: true, example: "https://cdn.example.com/u/123.png" }
+ *                           is_online: { type: string, nullable: true, example: null }
+ *                           last_seen: { type: string, nullable: true, example: null }
+ *       400:
+ *         description: Invalid chat ID
+ *       401:
+ *         description: Unauthorized
+ *       403:
+ *         description: Access denied to this chat or chat is hidden
+ *       405:
+ *         description: Method not allowed
+ *       500:
+ *         description: Internal server error
+ *     security:
+ *       - cookieAuth: []
+ */
+
+
 export default async function handle(req: NextApiRequest, res: NextApiResponse) {
   const { chatId } = req.query;
   

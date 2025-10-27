@@ -7,6 +7,8 @@ import {
   formatBookingDateRange,
 } from "@/lib/utils/booking-helpers";
 import type { BookingCardProps } from "@/components/cards/BookingCard";
+import { useCallback } from "react";
+import { openMaps } from "@/lib/utils/openMaps";
 
 // ---------- Types ----------
 type ReportPayload = {
@@ -84,7 +86,21 @@ export function useBookingActions({
   setOpenSummary,
   setOpenChangeDialog,
   setSelectedBooking,
+  
 }: UseBookingActionsArgs) {
+
+  const handleViewMap = useCallback(() => {
+    const lat = selectedBooking?.sitterLat;
+    const lng = selectedBooking?.sitterLng;
+
+    if (typeof lat !== "number" || typeof lng !== "number") {
+      toast.error("Sitter location not available.");
+      return;
+    }
+
+    openMaps({ lat, lng, name: selectedBooking?.sitterName });
+  }, [selectedBooking]);
+
   const handleReportSubmit = async (data: { issue: string; description: string }) => {
     if (!selectedBooking || !userId) return;
 
@@ -134,21 +150,60 @@ export function useBookingActions({
       const payload: ReviewPayload = { sitterId, userId, rating, comment };
       const res = await axios.post("/api/bookings/review", payload);
       if (res.status === 201) {
-        toast.success("Your review has been submitted. Thank you!");
+  toast.success("Your review has been submitted. Thank you!");
 
-        setOpenReview(false);
-        setReviewData({
-          rating,
-          review: comment,
-          date: new Date().toLocaleDateString("en-GB", {
-            weekday: "short",
-            day: "2-digit",
-            month: "short",
-            year: "numeric",
-          }),
-        });
-        setOpenSummary(true);
-      }
+  // ถ้า API ตอบวันที่กลับมา ใช้นั้น; ไม่งั้น fallback เป็น now
+  const serverReview = (res.data && res.data.review) || null;
+  const reviewDateISO = serverReview?.created_at
+    ? new Date(serverReview.created_at).toISOString()
+    : new Date().toISOString();
+
+  // 1) อัปเดต list ทั้งหมด เพื่อให้การ์ดเปลี่ยนปุ่มเป็น "Your Review"
+  setBookings(prev =>
+    prev.map(b =>
+      b.id === selectedBooking.id
+        ? {
+            ...b,
+            hasUserReview: true,
+            userReview: {
+              rating,
+              comment,
+              date: reviewDateISO, // เก็บ ISO แล้วไปฟอร์แมตตอนแสดงผล
+            },
+          }
+        : b
+    )
+  );
+
+  // 2) อัปเดต selectedBooking (ถ้ามี dialog อื่นเปิดอยู่)
+  setSelectedBooking(prev =>
+    prev
+      ? {
+          ...prev,
+          hasUserReview: true,
+          userReview: {
+            rating,
+            comment,
+            date: reviewDateISO,
+          },
+        }
+      : prev
+  );
+
+  // 3) ปิดฟอร์มรีวิว แล้วเปิดสรุปรีวิว
+  setOpenReview(false);
+  setReviewData({
+    rating,
+    review: comment,
+    date: new Date(reviewDateISO).toLocaleDateString("en-GB", {
+      weekday: "short",
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
+    }),
+  });
+  setOpenSummary(true);
+}
     } catch (err: unknown) {
       const msg = extractErrorMessage(err);
       console.error("❌ Review error:", msg);
@@ -236,5 +291,5 @@ export function useBookingActions({
     }
   };
 
-  return { handleReportSubmit, handleReviewSubmit, handleChangeDate };
+  return { handleReportSubmit, handleReviewSubmit, handleChangeDate, handleViewMap, };
 }

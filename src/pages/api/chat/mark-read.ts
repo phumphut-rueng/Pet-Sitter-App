@@ -3,6 +3,49 @@ import { prisma } from '@/lib/prisma/prisma';
 import { getServerSession } from 'next-auth/next';
 import { authOptions } from '../auth/[...nextauth]';
 
+/**
+ * @openapi
+ * /chat/mark-read:
+ *   post:
+ *     tags: [Chat]
+ *     summary: Mark a chat as read
+ *     description: >
+ *       Set the current user's `unread_count` for the given chat to 0.
+ *       Requires a valid NextAuth session cookie. Idempotent.
+ *     security:
+ *       - cookieAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [chatId]
+ *             properties:
+ *               chatId:
+ *                 type: integer
+ *                 example: 42
+ *     responses:
+ *       200:
+ *         description: Chat marked as read
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success: { type: boolean, example: true }
+ *                 message: { type: string, example: "Chat marked as read" }
+ *       400:
+ *         description: Chat ID is required
+ *       401:
+ *         description: Unauthorized - Please login first
+ *       405:
+ *         description: Method Not Allowed
+ *       500:
+ *         description: Internal server error
+ */
+
+
 export default async function handle(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'POST') {
     return res.status(405).json({ 

@@ -4,6 +4,86 @@ import { authOptions } from "@/pages/api/auth/[...nextauth]";
 import { prisma } from "@/lib/prisma/prisma";
 import { petSchema } from "@/lib/validators/pet";
 
+/**
+ * @openapi
+ * /pets:
+ *   get:
+ *     tags: [Pets]
+ *     summary: List pets of current user
+ *     description: Return all pets belonging to the current session user.
+ *     security:
+ *       - cookieAuth: []
+ *     responses:
+ *       200:
+ *         description: List of pets
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 type: object
+ *                 properties:
+ *                   id: { type: integer, example: 10 }
+ *                   name: { type: string, nullable: true, example: "Milo" }
+ *                   petTypeId: { type: integer, nullable: true, example: 1 }
+ *                   petTypeName: { type: string, example: "Dog" }
+ *                   breed: { type: string, nullable: true, example: "Shiba" }
+ *                   sex: { type: string, enum: ["Male","Female"], example: "Male" }
+ *                   ageMonth: { type: integer, nullable: true, example: 18 }
+ *                   color: { type: string, nullable: true, example: "brown" }
+ *                   weightKg: { type: number, nullable: true, example: 8.2 }
+ *                   about: { type: string, example: "Friendly and energetic" }
+ *                   imageUrl: { type: string, example: "" }
+ *       401:
+ *         description: Unauthorized
+ *       500:
+ *         description: Internal Server Error
+ *
+ *   post:
+ *     tags: [Pets]
+ *     summary: Create a pet
+ *     description: Create a pet for the current session user.
+ *     security:
+ *       - cookieAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [petTypeId, name, sex, ageMonth]
+ *             properties:
+ *               petTypeId: { type: integer, nullable: true, example: 1 }
+ *               name: { type: string, example: "Milo" }
+ *               breed: { type: string, nullable: true, example: "Shiba" }
+ *               sex: { type: string, enum: ["Male","Female"], example: "Male" }
+ *               ageMonth: { type: integer, nullable: true, example: 18 }
+ *               color: { type: string, nullable: true, example: "brown" }
+ *               weightKg: { type: number, nullable: true, example: 8.2 }
+ *               about: { type: string, nullable: true, example: "Gentle and playful" }
+ *               imageUrl: { type: string, nullable: true, example: null }
+ *     responses:
+ *       201:
+ *         description: Pet created
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 id: { type: integer, example: 25 }
+ *                 name: { type: string, example: "Milo" }
+ *                 petTypeId: { type: integer, example: 1 }
+ *                 petTypeName: { type: string, example: "Dog" }
+ *       400:
+ *         description: Validation failed
+ *       401:
+ *         description: Unauthorized
+ *       405:
+ *         description: Method not allowed
+ *       500:
+ *         description: Internal Server Error
+ */
+
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   const session = await getServerSession(req, res, authOptions);
   const userIdStr = session?.user?.id;
@@ -66,6 +146,35 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         },
         include: { pet_type: true },
       });
+
+      // NOTIFICATION SYSTEM: Create notification when adding new pet
+      try {
+        const { createSystemNotification } = await import('@/lib/notifications/notification-utils');
+        
+        // Create notification directly
+        await createSystemNotification(
+          ownerId,
+          'Pet Added! 🐾',
+          `Your pet "${created.name}" (${created.pet_type?.pet_type_name ?? ""}) has been added to your profile.`
+        );
+        
+        // Trigger real-time notification update
+        try {
+          // Send event to frontend directly
+          if (typeof global !== 'undefined' && global.window) {
+            global.window.dispatchEvent(new CustomEvent('socket:notification_refresh', {
+              detail: { userId: ownerId }
+            }));
+            global.window.dispatchEvent(new CustomEvent('update:notification_count', {
+              detail: { userId: ownerId }
+            }));
+          }
+        } catch (error) {
+          console.error('Failed to trigger real-time update:', error);
+        }
+      } catch (notificationError) {
+        console.error('Failed to create pet registration notification:', notificationError);
+      }
 
       return res.status(201).json({
         id: created.id,

@@ -2,16 +2,7 @@ import type { NextApiRequest, NextApiResponse } from "next";
 import { prisma } from "@/lib/prisma/prisma";
 import { Prisma, report_status as ReportStatusValue } from "@prisma/client";
 import type { report_status as ReportStatus } from "@prisma/client";
-
-function sendError(res: NextApiResponse, status: number, message: string) {
-  return res.status(status).json({ message });
-}
-
-function toPositiveInt(v: unknown, fallback: number): number {
-  const n = Number(v);
-  if (Number.isFinite(n) && n > 0) return Math.floor(n);
-  return fallback;
-}
+import { sendError, toInt } from "@/lib/api/api-utils";
 
 function normalizeStatus(v: unknown): ReportStatus | undefined {
   if (typeof v !== "string") return undefined;
@@ -57,8 +48,8 @@ export default async function handler(
   }
 
   try {
-    const page = Math.max(1, toPositiveInt(req.query.page, 1));
-    const limit = Math.min(100, Math.max(1, toPositiveInt(req.query.limit, 10)));
+    const page = Math.max(1, toInt(req.query.page, 1));
+    const limit = Math.min(100, Math.max(1, toInt(req.query.limit, 10)));
     const skip = (page - 1) * limit;
 
     const keyword = typeof req.query.q === "string" ? req.query.q.trim() : "";

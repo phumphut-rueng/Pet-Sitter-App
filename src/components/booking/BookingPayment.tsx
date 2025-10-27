@@ -111,7 +111,7 @@ export default function BookingPayment(
                                     name="cvc"
                                     value={form.cvc}
                                     placeholder="xxx"
-                                    type="text"
+                                    type="password"
                                     variant={!error.cvc ? "default" : "error"}
                                     inputMode="numeric"
                                     onChange={handleCVCChange}

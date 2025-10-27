@@ -128,7 +128,7 @@ export default function BookingSelect({
                                 text="Continue"
                                 bgColor="primary"
                                 textColor="white"
-                                type="submit"
+                                type="button"
                                 className="w-full"
                                 onClick={hendleOnSubmit}
                             />

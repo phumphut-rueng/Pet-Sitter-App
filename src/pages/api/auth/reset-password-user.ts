@@ -1,65 +1,146 @@
-//  Reset Password สำหรับผู้ใช้ปกติ
-import type { NextApiRequest, NextApiResponse } from "next";
-import crypto from "crypto";
 import bcrypt from "bcryptjs";
+import { NextApiRequest, NextApiResponse } from "next";
 import { prisma } from "@/lib/prisma/prisma";
-import { PASSWORD_ERROR_MESSAGES, PASSWORD_SUCCESS_MESSAGES } from "@/lib/constants/messages";
 
-export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-  if (req.method !== "POST") {
-    res.setHeader("Allow", ["POST"]);
-    return res.status(405).json({ message: `Method ${req.method} not allowed` });
-  }
+/**
+ * @openapi
+ * /auth/reset-password-user:
+ *   post:
+ *     tags:
+ *       - Auth
+ *     summary: Reset password with email + token
+ *     description: >
+ *       รีเซ็ตรหัสผ่านของผู้ใช้แบบรหัสผ่าน (credentials) โดยยืนยันผ่านอีเมลและโทเค็นรีเซ็ตที่ยังไม่หมดอายุ.
+ *       ระบบจะตรวจสอบโทเค็น (แบบ hash) ที่ตาราง password_reset_tokens จากนั้นอัปเดตรหัสผ่านใหม่และลบโทเค็นที่ใช้แล้ว.
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [email, token, newPassword]
+ *             properties:
+ *               email:
+ *                 type: string
+ *                 format: email
+ *               token:
+ *                 type: string
+ *                 description: Raw reset token ที่ผู้ใช้ได้รับจากลิงก์รีเซ็ต
+ *               newPassword:
+ *                 type: string
+ *                 minLength: 8
+ *                 description: ต้องมีทั้งตัวอักษรและตัวเลขอย่างน้อยอย่างละหนึ่งตัว
+ *           examples:
+ *             sample:
+ *               value:
+ *                 email: "john@example.com"
+ *                 token: "4f0a1c...<truncated>"
+ *                 newPassword: "NewPassw0rd!"
+ *     responses:
+ *       200:
+ *         description: Password reset success
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "Your password has been reset successfully."
+ *       400:
+ *         description: Missing/invalid data or token expired/invalid
+ *       405:
+ *         description: Method not allowed
+ *       500:
+ *         description: Unknown server error
+ */
 
-  try {
-    const email = String(req.body?.email || "").trim().toLowerCase();
-    const token = String(req.body?.token || "");
-    const newPassword = String(req.body?.newPassword || "");
 
-    if (!email || !token || !newPassword) {
-      return res.status(400).json({ message: PASSWORD_ERROR_MESSAGES.missingData });
+export default async function handler(
+    req: NextApiRequest,
+    res: NextApiResponse
+) {
+    if (req.method !== "POST") {
+        res.setHeader("Allow", ["POST"]);
+        return res.status(405).json({ message: `Method ${req.method} not allowed` });
     }
-    
-    if (!/^(?=.*[A-Za-z])(?=.*\d).{8,}$/.test(newPassword)) {
-      return res.status(400).json({ message: PASSWORD_ERROR_MESSAGES.passwordRequirements });
+
+    try {
+        const { token, password } = await req.body
+
+        const tokenRecord = await prisma.password_reset_tokens.findUnique({
+            where: { token },
+            include: { user: { include: { accounts: true } } },
+        })
+
+        if (!tokenRecord) {
+            return res.status(400).json({ message: "Invalid or expired token." })
+        }
+
+        // ตรวจสอบวันหมดอายุ
+        if (tokenRecord.expires_at < new Date()) {
+            return res.status(400).json({ message: "Token expired." })
+        }
+
+        // ถ้ามี account ที่มาจาก OAuth (เช่น Google)
+        const oauthAccount = tokenRecord.user.accounts.find(
+            (a) => a.provider !== "credentials"
+        )
+        if (oauthAccount) {
+            return res.status(403).json(
+                {
+                    message: "This account uses OAuth login and cannot reset password."
+                }
+            )
+        }
+
+        // hash password ใหม่
+        const hashedPassword = await bcrypt.hash(password, 10)
+
+        // Update password
+        await prisma.user.update({
+            where: { id: tokenRecord.user_id },
+            data: { password: hashedPassword },
+        })
+
+        // Delete token after use
+        await prisma.password_reset_tokens.delete({ where: { id: tokenRecord.id } })
+
+        // NOTIFICATION SYSTEM: Create notification when reset password
+        try {
+            const { createSystemNotification } = await import('@/lib/notifications/notification-utils');
+            await createSystemNotification(
+                tokenRecord.user_id,
+                'Password Changed 🔑',
+                'Your password has been successfully changed. If you did not make this change, please contact support immediately.'
+            );
+            
+            // Trigger real-time notification update
+            try {
+                // Send event to frontend directly
+                if (typeof global !== 'undefined' && global.window) {
+                    global.window.dispatchEvent(new CustomEvent('socket:notification_refresh', {
+                        detail: { userId: tokenRecord.user_id }
+                    }));
+                    global.window.dispatchEvent(new CustomEvent('update:notification_count', {
+                        detail: { userId: tokenRecord.user_id }
+                    }));
+                }
+            } catch (error) {
+                console.error('Failed to trigger real-time update:', error);
+            }
+        } catch (notificationError) {
+            console.error('Failed to create password change notification:', notificationError);
+        }
+
+        return res.status(200).json({
+            message: "Password updated successfully."
+        })
+    } catch (error) {
+        console.error("Reset password error:", error)
+        return res.status(500).json({
+            message: "Internal server error"
+        })
     }
-
-    const user = await prisma.user.findUnique({ 
-      where: { email }, 
-      select: { id: true } 
-    });
-    
-    if (!user) {
-      return res.status(400).json({ message: PASSWORD_ERROR_MESSAGES.invalidToken });
-    }
-
-    const tokenHash = crypto.createHash("sha256").update(token).digest("hex");
-    const rec = await prisma.password_reset_tokens.findFirst({
-      where: { 
-        user_id: user.id, 
-        token: tokenHash, 
-        expires_at: { gt: new Date() } 
-      },
-    });
-    
-    if (!rec) {
-      return res.status(400).json({ message: PASSWORD_ERROR_MESSAGES.invalidToken });
-    }
-
-    const hashed = await bcrypt.hash(newPassword, 10);
-    await prisma.$transaction([
-      prisma.user.update({ 
-        where: { id: user.id }, 
-        data: { password: hashed } 
-      }),
-      prisma.password_reset_tokens.delete({ 
-        where: { id: rec.id } 
-      }),
-    ]);
-
-    return res.status(200).json({ message: PASSWORD_SUCCESS_MESSAGES.passwordReset });
-  } catch (e) {
-    console.error(e);
-    return res.status(500).json({ message: PASSWORD_ERROR_MESSAGES.unknown });
-  }
 }
+

@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { api } from "@/lib/api/axios";
-import { getErrorMessage } from "@/lib/api/api-utils";
+import { getErrorMessage } from "@/lib/utils/error";
 import type { ReviewItem } from "@/types/admin/owners";
 
 type ReviewResponse = {

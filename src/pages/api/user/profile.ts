@@ -2,7 +2,7 @@ import type { NextApiRequest, NextApiResponse } from "next";
 import { getServerSession } from "next-auth";
 import { Prisma } from "@prisma/client";
 import { authOptions } from "../auth/[...nextauth]";
-
+import type { ErrorResponse } from "@/lib/types/api";
 import { HTTP_STATUS } from "@/lib/api/api-http";
 import {
   updateProfileSchema,
@@ -18,14 +18,80 @@ import { userRepository, type UpdateData } from "@/lib/repo/user.repo";
 
 type UnknownRecord = Record<string, unknown>;
 
-function sendError(
-  res: NextApiResponse,
-  status: number,
-  message: string,
-  extra?: Record<string, unknown>
-) {
-  return res.status(status).json({ message, ...(extra ?? {}) });
-}
+// Now using sendError from api-utils
+import { sendError } from "@/lib/api/api-utils";
+
+/**
+ * @openapi
+ * /user/profile:
+ *   get:
+ *     tags: [User]
+ *     summary: Get my profile
+ *     description: Return the current user's profile from the NextAuth session.
+ *     security:
+ *       - cookieAuth: []
+ *     responses:
+ *       '200':
+ *         description: OK
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 name: { type: string, example: "Jane Doe" }
+ *                 email: { type: string, example: "jane@example.com" }
+ *                 phone: { type: string, example: "0812345678" }
+ *                 dob: { type: string, description: "YYYY-MM-DD", example: "1995-05-01" }
+ *                 idNumber: { type: string, nullable: true, example: "1103700XXXXXXX" }
+ *                 image: { type: string, nullable: true, description: "Public ID (if set) หรือ URL", example: "users/abc123" }
+ *                 profileImage: { type: string, example: "https://cdn.example.com/u/123.png" }
+ *                 profileImagePublicId: { type: string, nullable: true, example: "users/abc123" }
+ *       '401':
+ *         description: Unauthorized
+ *       '404':
+ *         description: User not found
+ *       '500':
+ *         description: Internal server error
+ *
+ *   put:
+ *     tags: [User]
+ *     summary: Update my profile
+ *     description: "Update profile fields. Server validates uniqueness of email/phone and ID number."
+ *     security:
+ *       - cookieAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               name: { type: string, example: "Jane Doe" }
+ *               email: { type: string, example: "jane@example.com" }
+ *               phone: { type: string, example: "0812345678" }
+ *               dob: { type: string, description: "YYYY-MM-DD", example: "1995-05-01" }
+ *               idNumber: { type: string, nullable: true, example: "1103700XXXXXXX" }
+ *               profileImage: { type: string, nullable: true, example: "https://cdn.example.com/u/123.png" }
+ *               profileImagePublicId: { type: string, nullable: true, example: "users/abc123" }
+ *     responses:
+ *       '200':
+ *         description: Updated
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message: { type: string, example: "Profile updated successfully" }
+ *       '400':
+ *         description: Validation error
+ *       '401':
+ *         description: Unauthorized
+ *       '409':
+ *         description: Conflict (email/phone/idNumber already taken)
+ *       '500':
+ *         description: Failed to update profile
+ */
+
 
 function getProp<T = unknown>(obj: unknown, key: string): T | undefined {
   if (obj && typeof obj === "object") {
@@ -62,14 +128,13 @@ type UserProfileResponse = {
   phone: string;
   dob: string;
   idNumber?: string;
-  image?: string; // ← เพิ่มบรรทัดนี้
+  image?: string;
   profileImage: string;
   profileImagePublicId?: string;
 };
 
 type UpdateResponse = { message: string };
-type ErrorResponse = {
-  message: string;
+type ProfileErrorResponse = ErrorResponse & {
   details?: ValidationDetails;
   fields?: string[];
 };
@@ -98,7 +163,7 @@ async function handleGetProfile(
 async function handleUpdateProfile(
   userId: number,
   req: NextApiRequest,
-  res: NextApiResponse<UpdateResponse | ErrorResponse>
+  res: NextApiResponse<UpdateResponse | ProfileErrorResponse>
 ) {
   const idNumberRaw = pickIdNumber(req.body);
 
@@ -139,6 +204,35 @@ async function handleUpdateProfile(
 
   try {
     await userRepository.updateById(userId, updateData);
+    
+    // NOTIFICATION SYSTEM: Create notification when updating profile
+    try {
+      // Create notification directly
+      const { createSystemNotification } = await import('@/lib/notifications/notification-utils');
+      await createSystemNotification(
+        userId,
+        'Profile Updated! 👤',
+        'Your profile information has been successfully updated.'
+      );
+      
+      // Trigger real-time notification update
+      try {
+        // Send event to frontend directly
+        if (typeof global !== 'undefined' && global.window) {
+          global.window.dispatchEvent(new CustomEvent('socket:notification_refresh', {
+            detail: { userId }
+          }));
+          global.window.dispatchEvent(new CustomEvent('update:notification_count', {
+            detail: { userId }
+          }));
+        }
+      } catch (error) {
+        console.error('Failed to trigger real-time update:', error);
+      }
+    } catch (notificationError) {
+      console.error('Failed to create profile update notification:', notificationError);
+    }
+    
     return res.status(HTTP_STATUS.OK).json({ message: "Profile updated successfully" });
   } catch (error: unknown) {
     if (isP2002(error)) {
@@ -164,7 +258,7 @@ async function handleUpdateProfile(
 
 export default async function handler(
   req: NextApiRequest,
-  res: NextApiResponse<UserProfileResponse | UpdateResponse | ErrorResponse>
+  res: NextApiResponse<UserProfileResponse | UpdateResponse | ProfileErrorResponse>
 ) {
   try {
     const userId = await getUserIdFromSession(req, res);

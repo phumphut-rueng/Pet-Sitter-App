@@ -1,12 +1,14 @@
 import NextAuth, { type NextAuthOptions, type User } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
 import GoogleProvider from "next-auth/providers/google";
-import FacebookProvider from "next-auth/providers/facebook";
 import bcrypt from "bcryptjs";
 import type { JWT } from "next-auth/jwt";
 import { prisma } from "@/lib/prisma/prisma";
 
-type UserWithRoles = User & { roles?: string[] };
+type UserWithRoles = User & {
+  roles?: string[];
+  rememberMe?: boolean;
+};
 
 export const authOptions: NextAuthOptions = {
   secret: process.env.NEXTAUTH_SECRET,
@@ -23,18 +25,15 @@ export const authOptions: NextAuthOptions = {
         }
       }
     }),
-    FacebookProvider({
-      clientId: process.env.FACEBOOK_CLIENT_ID!,
-      clientSecret: process.env.FACEBOOK_CLIENT_SECRET!,
-    }),
     CredentialsProvider({
       name: "credentials",
       credentials: {
         email: { label: "Email", type: "email" },
         password: { label: "Password", type: "password" },
+        rememberMe: { label: "Remember Me", type: "checkbox" },
       },
       async authorize(
-        credentials: Record<"email" | "password", string> | undefined
+        credentials: Record<"email" | "password" | "rememberMe", string> | undefined
       ) {
         if (!credentials?.email || !credentials?.password) return null;
 
@@ -58,6 +57,7 @@ export const authOptions: NextAuthOptions = {
             name: user.name,
             image: user.profile_image || undefined,
             roles,
+            rememberMe: credentials.rememberMe === "true",
           };
           return result;
         } catch {
@@ -69,13 +69,13 @@ export const authOptions: NextAuthOptions = {
 
   session: {
     strategy: "jwt",
-    maxAge: 30 * 24 * 60 * 60, // 30 วัน
+    maxAge: 7 * 24 * 60 * 60, // 30 วัน
   },
 
   callbacks: {
     async signIn({ user, account }) {
-      // ถ้าเป็น OAuth provider (Google, Facebook)
-      if (account?.provider === "google" || account?.provider === "facebook") {
+      // ถ้าเป็น OAuth provider (Google)
+      if (account?.provider === "google") {
         try {
           // ตรวจสอบว่ามี user ในระบบหรือยัง
           const existingUser = await prisma.user.findUnique({
@@ -171,6 +171,8 @@ export const authOptions: NextAuthOptions = {
       user?: User | undefined;
       trigger?: "signIn" | "update" | "signUp" | undefined;
     }): Promise<JWT> {
+      const userWithRoles = user as UserWithRoles | undefined;
+
       // กรณี sign-in ครั้งแรก
       if (user && user.email) {
         try {
@@ -191,11 +193,18 @@ export const authOptions: NextAuthOptions = {
         } catch (error) {
           console.error("Error fetching user roles:", error);
         }
+
+        if (userWithRoles?.rememberMe) {
+          token.exp = Math.floor(Date.now() / 1000) + (30 * 24 * 60 * 60); // 30 วัน
+        } else {
+          token.exp = Math.floor(Date.now() / 1000) + (7 * 24 * 60 * 60); // 7 วัน
+        }
       }
 
-      const u = user as UserWithRoles | undefined;
-      if (u?.roles) token.roles = u.roles;
+      // เก็บ roles
+      if (userWithRoles?.roles) token.roles = userWithRoles.roles;
 
+      // กรณี update session
       if (trigger === "update" && token.sub) {
         try {
           const userId = parseInt(token.sub);
@@ -239,11 +248,9 @@ export const authOptions: NextAuthOptions = {
       return session;
     },
 
-    // ✅ default redirect หลังล็อกอิน (เมื่อไม่มี callbackUrl)
+    // default redirect หลังล็อกอิน (เมื่อไม่มี callbackUrl)
     async redirect({ url, baseUrl }) {
-      // มี callbackUrl แบบ internal → ตามนั้นก่อน
       if (url.startsWith("/")) return `${baseUrl}${url}`;
-      // อยู่โดเมนเดียวกัน → ตามนั้น
       try {
         if (new URL(url).origin === baseUrl) return url;
       } catch { /* ignore */ }

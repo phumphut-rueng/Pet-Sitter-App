@@ -1,19 +1,22 @@
 import { useState, useEffect, useCallback } from "react";
 import Head from "next/head";
-import Image from "next/image";
 import AdminSidebar from "@/components/layout/AdminSidebar";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { Search } from "lucide-react";
-import { StatusBadge, StatusKey } from "@/components/badges/StatusBadge";
-import { PetPawLoadingSmall } from "@/components/loading/PetPawLoadingSmall";
+import { PetPawLoading } from "@/components/loading/PetPawLoading";
 import { Pagination } from "@/components/pagination/Pagination";
+import SittersTable from "@/components/admin/sitters/SittersTable";
 import axios from "axios";
+import { CustomSelect } from "@/components/dropdown/CustomSelect";
+import { SortOrderSelect, StatusAdminSelect } from "@/lib/utils/data-select";
+
+function PageHeader({ title, children }: { title: string; children?: React.ReactNode }) {
+  return (
+    <div className="mb-5 flex items-center justify-between gap-4">
+      <h1 className="h3 text-ink tracking-normal">{title}</h1>
+      {children}
+    </div>
+  );
+}
 
 interface SitterData {
   id: number;
@@ -68,7 +71,7 @@ export default function AdminPetSitterPage() {
   const [loading, setLoading] = useState(true);
   const [pagination, setPagination] = useState({
     page: 1,
-    limit: 8,
+    limit: 10,
     totalCount: 0,
     totalPages: 0,
   });
@@ -228,19 +231,6 @@ export default function AdminPetSitterPage() {
     setSelectedSuggestion(""); // รีเซ็ตเมื่อพิมพ์ใหม่
   };
 
-  // ฟังก์ชันสำหรับแปลงสถานะเป็น StatusKey
-  const getStatusKey = (status: string): StatusKey => {
-    switch (status) {
-      case "Waiting for approve":
-        return "waitingApprove";
-      case "Approved":
-        return "approved";
-      case "Rejected":
-        return "rejected";
-      default:
-        return "waitingApprove"; // fallback เป็น waitingApprove
-    }
-  };
 
   return (
     <>
@@ -248,229 +238,137 @@ export default function AdminPetSitterPage() {
         <title>Admin • Pet Sitter</title>
       </Head>
 
-      <div className="mx-auto w-full max-w-[1200px]">
-        <div className="flex gap-6">
-          <aside className="hidden md:block md:w-[240px] shrink-0">
-            <AdminSidebar sticky />
-          </aside>
+      <div className="flex min-h-screen w-full">
+        <aside className="hidden shrink-0 md:block md:w-[240px]">
+          <AdminSidebar sticky />
+        </aside>
 
-          {/* Main */}
-          <main className="flex-1 min-w-0 px-4 py-6 lg:px-6">
-            {/* Header and Search/Filter Bar */}
-            <div className="flex items-center justify-between mb-6">
-              {/* Header */}
-              <h1 className="text-2xl font-bold text-ink">Pet Sitter</h1>
+        <main className="flex-1 px-6 py-6 lg:px-8">
+          <PageHeader title="Pet Sitter">
+            <div className="flex items-center space-x-4">
+              {/* Search Input with Auto-complete */}
+              <div className="relative search-container">
+                <input
+                  type="text"
+                  placeholder="Search by name..."
+                  value={searchTerm}
+                  onChange={handleInputChange}
+                  className="w-64 h-10 px-3 py-2 text-sm border border-border rounded-md bg-white placeholder:text-muted-text focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent pr-10"
+                />
+                {searchTerm && (
+                  <button
+                    onClick={handleClearSearch}
+                    className="absolute right-8 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-text hover:text-ink flex items-center justify-center"
+                  >
+                    ×
+                  </button>
+                )}
+                <Search className="absolute right-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-text" />
 
-              {/* Search and Filter */}
-              <div className="flex items-center space-x-4">
-                {/* Search Input with Auto-complete */}
-                <div className="relative search-container">
-                  <input
-                    type="text"
-                    placeholder="Search by name..."
-                    value={searchTerm}
-                    onChange={handleInputChange}
-                    className="w-64 h-10 px-3 py-2 text-sm border border-border rounded-md bg-white placeholder:text-muted-text focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent pr-10"
-                  />
-                  {searchTerm && (
-                    <button
-                      onClick={handleClearSearch}
-                      className="absolute right-8 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-text hover:text-ink flex items-center justify-center"
-                    >
-                      ×
-                    </button>
-                  )}
-                  <Search className="absolute right-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-text" />
+                {/* Suggestions Dropdown */}
+                {showSuggestions && suggestions.length > 0 && (
+                  <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-border rounded-md shadow-lg z-50 max-h-60 overflow-y-auto">
+                    {suggestions.map((suggestion, index) => {
+                      const displayName =
+                        suggestion.type === "sitter"
+                          ? suggestion.sitterName
+                          : suggestion.userName;
+                      const typeLabel =
+                        suggestion.type === "sitter"
+                          ? "Pet Sitter"
+                          : "Full Name";
 
-                  {/* Suggestions Dropdown */}
-                  {showSuggestions && suggestions.length > 0 && (
-                    <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-border rounded-md shadow-lg z-50 max-h-60 overflow-y-auto">
-                      {suggestions.map((suggestion, index) => {
-                        const displayName =
-                          suggestion.type === "sitter"
-                            ? suggestion.sitterName
-                            : suggestion.userName;
-                        const typeLabel =
-                          suggestion.type === "sitter"
-                            ? "Pet Sitter"
-                            : "Full Name";
-
-                        return (
-                          <div
-                            key={index}
-                            onClick={() => handleSuggestionClick(suggestion)}
-                            className="px-3 py-2 text-sm cursor-pointer hover:bg-muted border-b border-border last:border-b-0"
-                          >
-                            <div className="font-medium text-ink">
-                              {displayName}
-                            </div>
-                            <div className="text-xs text-muted-text">
-                              {typeLabel}
-                            </div>
+                      return (
+                        <div
+                          key={index}
+                          onClick={() => handleSuggestionClick(suggestion)}
+                          className="px-3 py-2 text-sm cursor-pointer hover:bg-muted border-b border-border last:border-b-0"
+                        >
+                          <div className="font-medium text-ink">
+                            {displayName}
                           </div>
-                        );
-                      })}
-                    </div>
-                  )}
-                </div>
-
-                {/* Sort Order Select */}
-                <Select value={sortOrder} onValueChange={setSortOrder}>
-                  <SelectTrigger className="w-32 h-10">
-                    <SelectValue placeholder="Sort by" />
-                  </SelectTrigger>
-                  <SelectContent className="bg-white">
-                    <SelectItem value="newest" className="hover:bg-muted">
-                      Newest
-                    </SelectItem>
-                    <SelectItem value="oldest" className="hover:bg-muted">
-                      Oldest
-                    </SelectItem>
-                  </SelectContent>
-                </Select>
-
-                {/* Status Select */}
-                <Select value={statusFilter} onValueChange={setStatusFilter}>
-                  <SelectTrigger className="w-40 h-10">
-                    <SelectValue placeholder="All status" />
-                  </SelectTrigger>
-                  <SelectContent className="bg-white">
-                    <SelectItem value="all" className="hover:bg-muted">
-                      All status
-                    </SelectItem>
-                    <SelectItem value="waiting" className="hover:bg-muted">
-                      Waiting for approve
-                    </SelectItem>
-                    <SelectItem value="approved" className="hover:bg-muted">
-                      Approved
-                    </SelectItem>
-                    <SelectItem value="rejected" className="hover:bg-muted">
-                      Rejected
-                    </SelectItem>
-                  </SelectContent>
-                </Select>
+                          <div className="text-xs text-muted-text">
+                            {typeLabel}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
               </div>
+
+              {/* Sort Order Select */}
+              {/* nuk แก้ สร้าง component dropdown มาเพราะเห็นใช้หลายหน้า */}
+              <CustomSelect
+                value={sortOrder}
+                onChange={setSortOrder}
+                options={SortOrderSelect}
+                variant="default"
+                triggerSize="w-32 h-10"
+                placeholder="Sort by"
+              />
+
+              <CustomSelect
+                value={statusFilter}
+                onChange={setStatusFilter}
+                options={StatusAdminSelect}
+                variant="default"
+                triggerSize="w-40 h-10"
+                placeholder="All status"
+              />
+              {/* <Select value={sortOrder} onValueChange={setSortOrder}>
+                <SelectTrigger className="w-32 h-10">
+                  <SelectValue placeholder="Sort by" />
+                </SelectTrigger>
+                <SelectContent className="bg-white">
+                  <SelectItem value="newest" className="hover:bg-muted">
+                    Newest
+                  </SelectItem>
+                  <SelectItem value="oldest" className="hover:bg-muted">
+                    Oldest
+                  </SelectItem>
+                </SelectContent>
+              </Select> */}
+
+              {/* Status Select */}
+              {/* <Select value={statusFilter} onValueChange={setStatusFilter}>
+                <SelectTrigger className="w-40 h-10">
+                  <SelectValue placeholder="All status" />
+                </SelectTrigger>
+                <SelectContent className="bg-white">
+                  <SelectItem value="all" className="hover:bg-muted">
+                    All status
+                  </SelectItem>
+                  <SelectItem value="waiting" className="hover:bg-muted">
+                    Waiting for approve
+                  </SelectItem>
+                  <SelectItem value="approved" className="hover:bg-muted">
+                    Approved
+                  </SelectItem>
+                  <SelectItem value="rejected" className="hover:bg-muted">
+                    Rejected
+                  </SelectItem>
+                </SelectContent>
+              </Select> */}
             </div>
+          </PageHeader>
 
-            {/* Table */}
-            <div className="overflow-hidden rounded-2xl border border-gray-200 bg-white">
-              <table className="min-w-full">
-                <thead>
-                  <tr className="bg-ink/[0.92] text-white text-left">
-                    <th className="px-5 py-3 caption font-medium">Full Name</th>
-                    <th className="px-5 py-3 caption font-medium">
-                      Pet Sitter Name
-                    </th>
-                    <th className="px-5 py-3 caption font-medium">Email</th>
-                    <th className="px-5 py-3 caption font-medium">Status</th>
-                  </tr>
-                </thead>
+          <div className="relative min-h-[400px] rounded-2xl border border-gray-2 bg-white p-4 shadow-sm md:p-5">
+            {loading ? (
+              <div className="absolute inset-0 flex items-center justify-center">
+                <PetPawLoading message="Loading Pet Sitters..." size="md" />
+              </div>
+            ) : (
+              <SittersTable rows={sitters} />
+            )}
 
-                <tbody>
-                  {loading ? (
-                    <tr>
-                      <td
-                        colSpan={4}
-                        className="px-5 py-8 text-center text-gray-500 body-sm"
-                      >
-                        <PetPawLoadingSmall message="Loading Pet Sitters" />
-                      </td>
-                    </tr>
-                  ) : sitters.length === 0 ? (
-                    <tr>
-                      <td
-                        colSpan={4}
-                        className="px-5 py-8 text-center text-gray-500 body-sm"
-                      >
-                        No data
-                      </td>
-                    </tr>
-                  ) : (
-                    sitters.map((sitter) => {
-                      const statusKey = getStatusKey(sitter.approval_status);
-                      const initials = sitter.user_name
-                        ? sitter.user_name
-                            .split(" ")
-                            .map((name) => name.charAt(0))
-                            .join("")
-                            .toUpperCase()
-                            .slice(0, 2)
-                        : sitter.user_email.charAt(0).toUpperCase();
-
-                       return (
-                         <tr
-                           key={sitter.id}
-                           className="border-t last:border-b hover:bg-gray-50 cursor-pointer"
-                           onClick={() => window.location.href = `/admin/petsitter/${sitter.id}`}
-                         >
-                           {/* Full Name */}
-                           <td className="px-5 py-4">
-                             <div className="flex items-center gap-3 min-w-0">
-                               <div className="flex-shrink-0 h-10 w-10">
-                                 {sitter.user_profile_image ? (
-                                   <Image
-                                     className="h-10 w-10 rounded-full object-cover"
-                                     src={sitter.user_profile_image}
-                                     alt={sitter.user_name}
-                                     width={40}
-                                     height={40}
-                                   />
-                                 ) : (
-                                   <div className="h-10 w-10 rounded-full bg-brand flex items-center justify-center">
-                                     <span className="text-sm font-medium text-white">
-                                       {initials}
-                                     </span>
-                                   </div>
-                                 )}
-                               </div>
-                               <div className="min-w-0">
-                                 <div className="body-sm text-ink/90 truncate max-w-[200px]">
-                                   {sitter.user_name}
-                                 </div>
-                               </div>
-                             </div>
-                           </td>
-
-                           {/* Pet Sitter Name */}
-                           <td className="px-5 py-4">
-                             <div className="body-sm text-ink/80 max-w-[200px] line-clamp-2">
-                               {sitter.name || "No trade name"}
-                             </div>
-                           </td>
-
-                           {/* Email */}
-                           <td className="px-5 py-4">
-                             <div className="body-sm text-ink/80 truncate max-w-[250px]">
-                               {sitter.user_email}
-                             </div>
-                           </td>
-
-                           {/* Status */}
-                           <td className="px-5 py-4">
-                             <StatusBadge status={statusKey} />
-                           </td>
-                         </tr>
-                       );
-                    })
-                  )}
-                </tbody>
-              </table>
-            </div>
-
-            {/* Pagination */}
             {!loading && sitters.length > 0 && (
               <div className="mt-6 grid grid-cols-3 items-center">
-                <div className="text-sm text-gray-500">
-                  Showing{" "}
-                  {sitters.length === 0 ? 0 : (pagination.page - 1) * pagination.limit + 1}
-                  {sitters.length > 0 && (
-                    <>
-                      {" - "}
-                      {(pagination.page - 1) * pagination.limit + sitters.length}
-                    </>
-                  )}{" "}
-                  of {pagination.totalCount}
+                <div className="text-xs2-regular text-muted">
+                  Showing {sitters.length === 0 ? 0 : (pagination.page - 1) * pagination.limit + 1}–
+                  {(pagination.page - 1) * pagination.limit + sitters.length} of {pagination.totalCount}
                 </div>
+
                 <div className="flex justify-center">
                   <Pagination
                     currentPage={pagination.page}
@@ -478,11 +376,13 @@ export default function AdminPetSitterPage() {
                     onClick={handlePageChange}
                   />
                 </div>
-                <div /> {/* right spacer */}
+
+                <div />
               </div>
             )}
-          </main>
-        </div>
+
+          </div>
+        </main>
       </div>
     </>
   );
