@@ -53,9 +53,13 @@ const LocationIcon: React.FC<{ className?: string }> = ({ className = "h-4 w-4" 
 );
 
 const StarIcon: React.FC<{ className?: string }> = ({ className = "h-4 w-4" }) => (
-  <svg viewBox="0 0 24 24" aria-hidden className={cn("fill-current", className)}>
-    <path d="M12 3.75l2.72 5.51 6.08.88-4.4 4.29 1.04 6.07L12 17.77l-5.44 2.85 1.04-6.07-4.4-4.29 6.08-.88L12 3.75z" />
-  </svg>
+  <Image
+    src="/icons/Rating-Star.svg"
+    alt="star"
+    width={16}
+    height={16}
+    className={cn("fill-current", className)}
+  />
 );
 
 
@@ -63,11 +67,11 @@ const StarRating: React.FC<{ value: number; size: keyof typeof RATING_SIZES }> =
   ({ value = 0, size = "md" }) => {
     const starSize = RATING_SIZES[size];
     const stars = React.useMemo(() => {
-      const result: (1 | 0.5 | 0)[] = [];
+      const result: (1 | 0)[] = [];
+      // ปัดเศษลงเพื่อไม่แสดงดาวครึ่งดวง
+      const roundedValue = Math.floor(value);
       for (let i = 0; i < 5; i++) {
-        if (i < Math.floor(value)) result.push(1);
-        else if (i === Math.floor(value) && value % 1 >= 0.5) result.push(0.5);
-        else result.push(0);
+        result.push(i < roundedValue ? 1 : 0);
       }
       return result;
     }, [value]);
@@ -78,11 +82,6 @@ const StarRating: React.FC<{ value: number; size: keyof typeof RATING_SIZES }> =
           <div key={i} className={starSize}>
             {star === 1 ? (
               <StarIcon className={starSize} />
-            ) : star === 0.5 ? (
-              <div className="relative">
-                <StarIcon className={starSize} />
-                <div className="absolute inset-y-0 right-0 w-1/2 bg-white" />
-              </div>
             ) : (
               <div className="opacity-30">
                 <StarIcon className={starSize} />
@@ -107,7 +106,7 @@ const PetSitterCardLargeBase: React.FC<PetSitterCardProps> = ({
   title,
   hostName,
   location,
-  rating = 5,
+  rating = 0,
   tags,
   coverUrl,
   avatarUrl,

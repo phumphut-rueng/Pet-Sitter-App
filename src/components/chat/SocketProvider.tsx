@@ -2,7 +2,6 @@ import React, { createContext, useContext, useEffect, useState, useRef } from 'r
 import { useSocket } from '@/hooks/useSocket';
 import { MessagePayload, UnreadUpdateData, ChatListUpdateData, SendMessageData } from '@/types/socket.types';
 import axios from 'axios';
-import SocketLoading from '@/components/loading/SocketLoading';
 import { Socket } from 'socket.io-client';
 
 interface SocketContextType {
@@ -32,7 +31,7 @@ interface SocketProviderProps {
 }
 
 export const SocketProvider: React.FC<SocketProviderProps> = ({ children }) => {
-  const { socket, isConnected, isLoading, isAuthenticated, userId, isSocketReady, isWaitingForSocket } = useSocket();
+  const { socket, isConnected, isLoading, isAuthenticated, userId } = useSocket();
   const [messages, setMessages] = useState<MessagePayload[]>([]);
   const [unreadUpdates, setUnreadUpdates] = useState<UnreadUpdateData[]>([]);
   const [onlineUsers, setOnlineUsers] = useState<string[]>([]);

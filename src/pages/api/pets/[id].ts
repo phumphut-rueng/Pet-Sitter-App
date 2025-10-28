@@ -174,6 +174,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         });
       }
       const data = parsed.data;
+      
+      // Format weight to remove trailing zeros
+      const { formatWeightForStorage } = await import('@/lib/pet/pet-utils');
+      const formattedWeight = formatWeightForStorage(String(data.weightKg));
 
       const updated = await prisma.pet.updateMany({
         where: { id, owner_id: userId },
@@ -184,7 +188,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           sex: data.sex, // "Male" | "Female"
           age_month: data.ageMonth,
           color: data.color,
-          weight_kg: data.weightKg,
+          weight_kg: Number(formattedWeight),
           about: data.about || null,
           image_url: data.imageUrl || null,
           updated_at: new Date(),

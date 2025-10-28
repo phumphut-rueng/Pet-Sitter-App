@@ -63,17 +63,57 @@ export function sanitizeAgeInput(value: string): string {
 }
 
 export function sanitizeWeightInput(value: string): string {
-  // keep only digits and single dot, clamp to 2 dp, and max 100
-  const cleaned = value
-    .replace(/,/g, "")
-    .replace(/[^\d.]/g, "")
-    .replace(/(\..*)\./g, "$1") // only first dot
-    .replace(/^0+(\d)/, "$1"); // strip leading zeros
-  const num = Number(cleaned);
-  if (!Number.isFinite(num)) return cleaned;
-  const clamped = Math.min(num, 100);
-  const fixed = /\.\d{3,}$/.test(cleaned) ? clamped.toFixed(2) : String(clamped);
-  return fixed.replace(/\.0+$/, ""); // remove trailing .0
+  // Remove commas and keep only digits and dots
+  let cleaned = value.replace(/,/g, "").replace(/[^\d.]/g, "");
+  
+  // Handle multiple dots - keep only the first one
+  const dotCount = (cleaned.match(/\./g) || []).length;
+  if (dotCount > 1) {
+    const firstDotIndex = cleaned.indexOf('.');
+    cleaned = cleaned.substring(0, firstDotIndex + 1) + 
+              cleaned.substring(firstDotIndex + 1).replace(/\./g, '');
+  }
+  
+  // Don't remove leading zeros for decimal numbers (e.g., 0.5)
+  if (!cleaned.startsWith('0.') && cleaned.length > 1) {
+    cleaned = cleaned.replace(/^0+/, '') || '0';
+  }
+  
+  // Limit decimal places to 2
+  if (cleaned.includes('.')) {
+    const [integer, decimal] = cleaned.split('.');
+    if (decimal && decimal.length > 2) {
+      cleaned = integer + '.' + decimal.substring(0, 2);
+    }
+  }
+  
+  // Validate the number
+  const num = parseFloat(cleaned);
+  if (isNaN(num) || num <= 0) {
+    return cleaned; // Return the cleaned string even if invalid
+  }
+  
+  // Clamp to maximum 100
+  if (num > 100) {
+    return '100';
+  }
+  
+  return cleaned;
+}
+
+export function formatWeightForStorage(weight: string): string {
+  // Remove trailing zeros and unnecessary decimal point for storage
+  let formatted = weight.replace(/\.0+$/, '').replace(/\.$/, '');
+  
+  // Also remove trailing zeros after non-zero digits (e.g., 22.50 -> 22.5)
+  if (formatted.includes('.')) {
+    formatted = formatted.replace(/0+$/, '');
+    if (formatted.endsWith('.')) {
+      formatted = formatted.slice(0, -1);
+    }
+  }
+  
+  return formatted;
 }
 
 /** =========================
@@ -193,7 +233,7 @@ export async function formValuesToPayload(
   const sex: SexPayload = values.sex === "Female" ? "Female" : "Male";
 
   const ageMonth = Number(values.ageMonth || 0);
-  const weightKg = Number(values.weightKg || 0);
+  const weightKg = Number(formatWeightForStorage(values.weightKg || "0"));
 
   return {
     petTypeId,
