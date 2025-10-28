@@ -64,14 +64,18 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
     } catch (err) {
       console.error('Error fetching notifications:', err);
       
-      if (axios.isAxiosError(err) && err.response?.status === 401) {
-        setNotifications([]);
-        setError(null);
-      } else if (axios.isAxiosError(err) && err.response?.status === 500) {
-        setNotifications([]);
-        setError(null);
-      } else {
-        setError('Failed to load notifications');
+      // จัดการ error ทุกประเภทให้ไม่แสดง error message
+      // เพื่อไม่ให้กระทบต่อการใช้งานหลักของแอป
+      setNotifications([]);
+      setError(null);
+      
+      // Log error สำหรับ debugging
+      if (axios.isAxiosError(err)) {
+        console.warn('Notification API Error:', {
+          status: err.response?.status,
+          message: err.message,
+          url: err.config?.url
+        });
       }
     } finally {
       setLoading(false);

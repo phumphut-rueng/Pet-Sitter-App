@@ -129,6 +129,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         });
       }
       const data = parsed.data;
+      
+      // Format weight to remove trailing zeros
+      const { formatWeightForStorage } = await import('@/lib/pet/pet-utils');
+      const formattedWeight = formatWeightForStorage(String(data.weightKg));
+      
       const created = await prisma.pet.create({
         data: {
           owner_id: ownerId,
@@ -138,7 +143,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           sex: data.sex,
           age_month: data.ageMonth,
           color: data.color,
-          weight_kg: data.weightKg,
+          weight_kg: Number(formattedWeight),
           about: data.about || null,
           image_url: data.imageUrl || null,
           created_at: new Date(),
