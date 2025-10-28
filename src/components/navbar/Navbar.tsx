@@ -99,11 +99,11 @@ const Navbar: React.FC = () => {
           <div className="flex-shrink-0">
             <Link href="/" className="block hover:opacity-70 transition-opacity duration-200" aria-label="Go to landing page">
               <Image
-                src="/icons/logo.svg"
+                src="/images/logo-draft9.png"
                 alt="Logo"
-                width={131}
+                width={135}
                 height={100}
-                className="h-6 md:h-10 w-auto object-contain cursor-pointer"
+                className="h-6 w-[90px] md:w-[147px] object-contain cursor-pointer"
                 priority
               />
             </Link>
