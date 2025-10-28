@@ -68,8 +68,8 @@ const StarRating: React.FC<{ value: number; size: keyof typeof RATING_SIZES }> =
     const starSize = RATING_SIZES[size];
     const stars = React.useMemo(() => {
       const result: (1 | 0)[] = [];
-      // ปัดเศษขึ้นเพื่อไม่แสดงดาวครึ่งดวง
-      const roundedValue = Math.ceil(value);
+      // ปัดเศษลงเพื่อไม่แสดงดาวครึ่งดวง
+      const roundedValue = Math.floor(value);
       for (let i = 0; i < 5; i++) {
         result.push(i < roundedValue ? 1 : 0);
       }
@@ -106,7 +106,7 @@ const PetSitterCardLargeBase: React.FC<PetSitterCardProps> = ({
   title,
   hostName,
   location,
-  rating = 5,
+  rating = 0,
   tags,
   coverUrl,
   avatarUrl,
